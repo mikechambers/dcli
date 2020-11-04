@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+
+import argparse
+import urllib.request
+import json
+import ssl
+import zipfile
+import io
+import os.path
+
+MANIFEST_URL = "https://www.bungie.net/Platform/Destiny2/Manifest/"
+BASE_URL = "https://www.bungie.net"
+VERSION = "0.85"
+
+INFO_NAME="manifest-info.json"
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Manage local and remote Destiny 2 API Manifest Database")
+
+    #--info, --force
+    #by default, it will check for a new version and update if there is
+    #--force flag forces update even if not new
+    #--check output whether there is an updated version avaliable
+    #mutually exclusive --check, --info, --force
+
+    parser.add_argument("--key", "-k", required=True, help="Destiny 2 API Key")
+    parser.add_argument("--manifest_dir", "-o", required=True, help="Directory to store manifest")
+    parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+    parser.add_argument('--info', help="Print info on local or remote manifest.", choices=['local.version', 'local.url', 'remote.version', 'remote.url'])
+
+    args = parser.parse_args()
+
+    key = args.key
+    manifest_dir = args.manifest_dir
+
+    info_path = os.path.join(manifest_dir, INFO_NAME);
+
+    local_manifest_info = ManifestInfo(BASE_URL)
+    if os.path.exists(info_path):
+        tmp_info = read_manifest_info(info_path)
+        local_manifest_info.fromJson(tmp_info)
+        
+
+    remote_manifest_info = retrieve_manifest_info(key)
+
+    if local_manifest_info == None or local_manifest_info.url != remote_manifest_info.url:
+        print("")
+        #load new manifest
+        #write new manifest info
+
+    print(remote_manifest_info.version)
+    print(remote_manifest_info.url)
+
+
+def read_manifest_info(info_path):
+    with open(info_path) as f:
+        jData = json.load(f);
+
+#downloads and uncompresses the manifest sqlite file
+#returns path to uncompressed manifest file
+def download_manifest(manifest_info, output_path, key):
+    #"$_baseUrl${manifestData["Response"]["mobileWorldContentPaths"]["en"]}"
+    url = BASE_URL + manifest_info["Response"]["mobileWorldContentPaths"]["en"]
+    bytes = retrieve_url(url, key)
+    z = zipfile.ZipFile(io.BytesIO(bytes))
+
+    names = z.namelist()
+    manifest_name = names[0]
+
+    z.extract(manifest_name, output_path)
+    return output_path + manifest_name
+
+def retrieve_manifest_info(key):
+    body = retrieve_url_string(MANIFEST_URL, key)
+    j = json.loads(body)
+
+    info = ManifestInfo(BASE_URL)
+    info.parse(j)
+    return info
+
+def retrieve_url(url, key=None):
+
+    if(key != None):
+        headers={"X-API-Key":key}
+        request = urllib.request.Request(url, headers=headers)
+    else:
+        request = urllib.request.Request(url)
+
+    
+    #ignore certs
+    response = urllib.request.urlopen(request, context=ssl.SSLContext())
+    bytes = response.read()
+    return bytes
+
+def retrieve_url_string(url, key=None):
+    bytes = retrieve_url(url, key)
+    body = bytes.decode("utf8")
+
+    return body
+
+
+class ManifestInfo:
+        
+    def __init__(self, base_url):
+        self.version = None
+        self.url = None
+        self.base_url = base_url
+
+    #parses remote manifest json
+    def parse(self, jData):
+        self.version = jData["Response"]["version"]
+        self.url = self.base_url + jData["Response"]["mobileWorldContentPaths"]["en"];
+
+    #parses local manifest json
+    def fromJson(self, infoData):
+        self.version = infoData["version"]
+        self.version = infoData["url"]
+
+    #creates local manifest json
+    def toJson(self):
+        out = {}
+        out["version"] = self.version
+        out["url"] = self.url
+        j = json.encoder(out)
+        return j
+
+main()
