@@ -7,12 +7,18 @@ import ssl
 import zipfile
 import io
 import os.path
+import sys
 
 MANIFEST_URL = "https://www.bungie.net/Platform/Destiny2/Manifest/"
 BASE_URL = "https://www.bungie.net"
 VERSION = "0.85"
 
 INFO_NAME="manifest-info.json"
+
+LOCAL_VERSION="local.version"
+LOCAL_URL="local.url"
+REMOTE_VERSION="remote.version"
+REMOTE_URL="remote.url"
 
 
 def main():
@@ -24,25 +30,47 @@ def main():
     #--check output whether there is an updated version avaliable
     #mutually exclusive --check, --info, --force
 
-    parser.add_argument("--key", "-k", required=True, help="Destiny 2 API Key")
-    parser.add_argument("--manifest_dir", "-o", required=True, help="Directory to store manifest")
-    parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
-    parser.add_argument('--info', help="Print info on local or remote manifest.", choices=['local.version', 'local.url', 'remote.version', 'remote.url'])
+    parser.add_argument("--key", "-k", 
+                                    required=True, help="Destiny 2 API Key")
+    parser.add_argument("--manifest_dir", "-o",
+                            required=True, help="Directory to store manifest")
+    parser.add_argument('--version', 
+                                action='version', version='%(prog)s ' + VERSION)
+
+    parser.add_argument('--info', 
+            help="Print info on local or remote manifest.", 
+            choices=[LOCAL_VERSION, LOCAL_URL, REMOTE_VERSION, REMOTE_URL])
 
     args = parser.parse_args()
 
     key = args.key
     manifest_dir = args.manifest_dir
 
-    info_path = os.path.join(manifest_dir, INFO_NAME);
+    info_path = os.path.join(manifest_dir, INFO_NAME)
 
-    local_manifest_info = ManifestInfo(BASE_URL)
-    if os.path.exists(info_path):
-        tmp_info = read_manifest_info(info_path)
-        local_manifest_info.fromJson(tmp_info)
+    info_file_exists = os.path.exists(info_path)
+    if info_file_exists:
+        local_manifest_info = get_local_manifest_info(info_path)
+
+    remote_manifest_info = retrieve_manifest_info(key)    
         
+    if args.info != None:
 
-    remote_manifest_info = retrieve_manifest_info(key)
+        if args.info == LOCAL_VERSION:
+            if info_file_exists == False:
+                sys.exit(0)
+            print(local_manifest_info.version)
+        elif args.info == LOCAL_URL:
+            if info_file_exists == False:
+                sys.exit(0)
+            print(local_manifest_info.url)
+        elif args.info == REMOTE_URL:
+            print(remote_manifest_info.url)
+        elif args.info == REMOTE_VERSION:
+            print(remote_manifest_info.version)
+        
+        sys.exit(0)
+        
 
     if local_manifest_info == None or local_manifest_info.url != remote_manifest_info.url:
         print("")
@@ -53,9 +81,13 @@ def main():
     print(remote_manifest_info.url)
 
 
-def read_manifest_info(info_path):
+def get_local_manifest_info(info_path):
     with open(info_path) as f:
         jData = json.load(f);
+
+    info = ManifestInfo(BASE_URL)
+    info.fromJson(tmp_info)
+    return info
 
 #downloads and uncompresses the manifest sqlite file
 #returns path to uncompressed manifest file
