@@ -14,6 +14,7 @@ BASE_URL = "https://www.bungie.net"
 VERSION = "0.85"
 
 INFO_NAME="manifest-info.json"
+MANIFEST_NAME="manifest.sqlite"
 
 LOCAL_VERSION="local.version"
 LOCAL_URL="local.url"
@@ -40,14 +41,22 @@ def main():
     parser.add_argument('--info', 
             help="Print info on local or remote manifest.", 
             choices=[LOCAL_VERSION, LOCAL_URL, REMOTE_VERSION, REMOTE_URL])
+    
+    parser.add_argument("--check", help="Check whether there is an updated remote manifest file.", action="store_true")
+
+    parser.add_argument("--force", help="Force download and update of manifest file.", action="store_true")
 
     args = parser.parse_args()
 
     key = args.key
     manifest_dir = args.manifest_dir
 
-    info_path = os.path.join(manifest_dir, INFO_NAME)
+    
+    manifest_path = os.path.join(manifest_dir, MANIFEST_NAME)
+    manifest_exists = os.path.exists(manifest_path)
 
+    #todo: rename to local_info_path or manifest_info_path
+    info_path = os.path.join(manifest_dir, INFO_NAME)
     info_file_exists = os.path.exists(info_path)
     if info_file_exists:
         local_manifest_info = get_local_manifest_info(info_path)
@@ -57,11 +66,11 @@ def main():
     if args.info != None:
 
         if args.info == LOCAL_VERSION:
-            if info_file_exists == False:
+            if info_file_exists == False or manifest_exists == False:
                 sys.exit(0)
             print(local_manifest_info.version)
         elif args.info == LOCAL_URL:
-            if info_file_exists == False:
+            if info_file_exists == False or manifest_exists == False:
                 sys.exit(0)
             print(local_manifest_info.url)
         elif args.info == REMOTE_URL:
@@ -70,38 +79,65 @@ def main():
             print(remote_manifest_info.version)
         
         sys.exit(0)
-        
 
-    if local_manifest_info == None or local_manifest_info.url != remote_manifest_info.url:
-        print("")
-        #load new manifest
-        #write new manifest info
+    updated_manifest_is_available = False
+    if info_file_exists == False or manifest_exists == False:
+        updated_manifest_is_available = True
+    else:
+        updated_manifest_is_available = (local_manifest_info.url !=
+                                                remote_manifest_info.url)
 
-    print(remote_manifest_info.version)
-    print(remote_manifest_info.url)
+    if args.check:
+        if updated_manifest_is_available:
+            print("Updated manifest found")
+            print("version  : " + remote_manifest_info.version)
+            print("url      : " + remote_manifest_info.url)
+        else:
+            print("No new manifest version found")
+
+        sys.exit(0) 
+
+    
+    if updated_manifest_is_available == False and args.force == False:
+        sys.exit(0)
+
+    f = download_manifest(remote_manifest_info, manifest_dir, key)
+    os.rename(f, manifest_path)
+
+    write_manifest_info(remote_manifest_info, info_path)
+    
 
 
 def get_local_manifest_info(info_path):
     with open(info_path) as f:
-        jData = json.load(f);
+        j_data = json.load(f)
 
     info = ManifestInfo(BASE_URL)
-    info.fromJson(tmp_info)
+    info.fromJson(j_data)
     return info
 
 #downloads and uncompresses the manifest sqlite file
 #returns path to uncompressed manifest file
-def download_manifest(manifest_info, output_path, key):
-    #"$_baseUrl${manifestData["Response"]["mobileWorldContentPaths"]["en"]}"
-    url = BASE_URL + manifest_info["Response"]["mobileWorldContentPaths"]["en"]
+def download_manifest(manifest_info, manifest_dir, key):
+    url = manifest_info.url
     bytes = retrieve_url(url, key)
     z = zipfile.ZipFile(io.BytesIO(bytes))
 
     names = z.namelist()
+
+    #name of file in manifest
     manifest_name = names[0]
 
-    z.extract(manifest_name, output_path)
-    return output_path + manifest_name
+    f = z.extract(manifest_name, manifest_dir)
+
+    return f
+
+def write_manifest_info(manifest_info, output_path):
+    data = manifest_info.toJson()
+
+    with open(output_path, 'w') as f:
+        #dump writes to a file
+        json.dump(data, f)
 
 def retrieve_manifest_info(key):
     body = retrieve_url_string(MANIFEST_URL, key)
@@ -142,7 +178,7 @@ class ManifestInfo:
     #parses remote manifest json
     def parse(self, jData):
         self.version = jData["Response"]["version"]
-        self.url = self.base_url + jData["Response"]["mobileWorldContentPaths"]["en"];
+        self.url = self.base_url + jData["Response"]["mobileWorldContentPaths"]["en"]
 
     #parses local manifest json
     def fromJson(self, infoData):
@@ -154,7 +190,10 @@ class ManifestInfo:
         out = {}
         out["version"] = self.version
         out["url"] = self.url
-        j = json.encoder(out)
+
+        #dumpS writes to a string
+        #TODO: note its adding extra strings
+        j = json.dumps(out)
         return j
 
 main()
