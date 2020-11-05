@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2020 Mike Chambers
+# Released under an MIT License
+#
+# https://github.com/mikechambers/dcli
+# 
+# dclid : Command line program for syncing and managing
+# the manifest database for the Destiny 2 API
+
 import argparse
 import urllib.request
 import json
@@ -9,13 +17,15 @@ import io
 import os.path
 import sys
 
+VERSION = "0.85"
+
 MANIFEST_URL = "https://www.bungie.net/Platform/Destiny2/Manifest/"
 BASE_URL = "https://www.bungie.net"
-VERSION = "0.85"
 
 INFO_NAME="manifest-info.json"
 MANIFEST_NAME="manifest.sqlite"
 
+#constants for command         #TODO: note its adding extra stringsline flags
 LOCAL_VERSION="local.version"
 LOCAL_URL="local.url"
 REMOTE_VERSION="remote.version"
@@ -24,12 +34,6 @@ REMOTE_URL="remote.url"
 
 def main():
     parser = argparse.ArgumentParser(description="Manage local and remote Destiny 2 API Manifest Database")
-
-    #--info, --force
-    #by default, it will check for a new version and update if there is
-    #--force flag forces update even if not new
-    #--check output whether there is an updated version avaliable
-    #mutually exclusive --check, --info, --force
 
     parser.add_argument("--key", "-k", 
                                     required=True, help="Destiny 2 API Key")
@@ -48,23 +52,36 @@ def main():
 
     args = parser.parse_args()
 
+    #Bungie / Destiny 2 API Key
     key = args.key
+
+    #directory where we will store maniinfo_pathfest and manifest info files.
     manifest_dir = args.manifest_dir
 
-    
+    #leave it up to the user to pass in a dir that already exists
+    if os.path.exists(manifest_dir) == False:
+        print("Error : --manifest_dir does not exists")
+        sys.exit(1)
+
+    #path to the manifest db file
     manifest_path = os.path.join(manifest_dir, MANIFEST_NAME)
     manifest_exists = os.path.exists(manifest_path)
 
-    #todo: rename to local_info_path or manifest_info_path
-    info_path = os.path.join(manifest_dir, INFO_NAME)
-    info_file_exists = os.path.exists(info_path)
-    if info_file_exists:
-        local_manifest_info = get_local_manifest_info(info_path)
+    #path to the manifest info json file
+    manifest_info_path = os.path.join(manifest_dir, INFO_NAME)
+    info_file_exists = os.path.exists(manifest_info_path)
 
+    if info_file_exists:
+        #read info file if it exists
+        local_manifest_info = get_local_manifest_info(manifest_info_path)
+
+    #retrieve remote manifest info from bungie API
     remote_manifest_info = retrieve_manifest_info(key)    
         
+    #check if request is to just get manifest info
+    #if local data is requested, and it doesnt exist, we just quietly
+    #exit    
     if args.info != None:
-
         if args.info == LOCAL_VERSION:
             if info_file_exists == False or manifest_exists == False:
                 sys.exit(0)
@@ -82,8 +99,11 @@ def main():
 
     updated_manifest_is_available = False
     if info_file_exists == False or manifest_exists == False:
+        #if local manifest or info file are missing
         updated_manifest_is_available = True
     else:
+        #compare manifest URLs to see if tare different (and thus 
+        # remote has been updated)
         updated_manifest_is_available = (local_manifest_info.url !=
                                                 remote_manifest_info.url)
 
@@ -98,18 +118,31 @@ def main():
         sys.exit(0) 
 
     
+    #if we havent found an updated manifest and are not forcing and update
     if updated_manifest_is_available == False and args.force == False:
         sys.exit(0)
 
-    f = download_manifest(remote_manifest_info, manifest_dir, key)
-    os.rename(f, manifest_path)
+    try:
+        #download and unzip the remote manifest DB file
+        f = download_manifest(remote_manifest_info, manifest_dir, key)
+        os.rename(f, manifest_path)
+    except Exception:
+        print("Error downloading and saving manifest file : " + manifest_path)
+        print("Using manifest URL : " + remote_manifest_info.url)
+        print(sys.exc_info())
+        sys.exit(1)
 
-    write_manifest_info(remote_manifest_info, info_path)
-    
+    try:
+        #write out the manifest info file
+        write_manifest_info(remote_manifest_info, manifest_info_path)
+    except Exception:
+        print("Error saving manifest info file : " + manifest_info_path)
+        print(sys.exc_info())
+        sys.exit(1)
 
-
-def get_local_manifest_info(info_path):
-    with open(info_path) as f:
+#load local manifest info
+def get_local_manifest_info(manifest_info_path):
+    with open(manifest_info_path) as f:
         j_data = json.load(f)
 
     info = ManifestInfo(BASE_URL)
@@ -128,17 +161,21 @@ def download_manifest(manifest_info, manifest_dir, key):
     #name of file in manifest
     manifest_name = names[0]
 
+    #write out file to file system
     f = z.extract(manifest_name, manifest_dir)
 
+    #path to uncompressed file
     return f
 
+#write out manifest info to file system
 def write_manifest_info(manifest_info, output_path):
     data = manifest_info.toJson()
 
     with open(output_path, 'w') as f:
         #dump writes to a file
-        json.dump(data, f)
+        f.write(data)
 
+#load manifest data from bungie api
 def retrieve_manifest_info(key):
     body = retrieve_url_string(MANIFEST_URL, key)
     j = json.loads(body)
@@ -147,6 +184,7 @@ def retrieve_manifest_info(key):
     info.parse(j)
     return info
 
+#retrieves raw bytes from a URL request
 def retrieve_url(url, key=None):
 
     if(key != None):
@@ -155,19 +193,18 @@ def retrieve_url(url, key=None):
     else:
         request = urllib.request.Request(url)
 
-    
-    #ignore certs
-    response = urllib.request.urlopen(request, context=ssl.SSLContext())
+    response = urllib.request.urlopen(request)
     bytes = response.read()
     return bytes
 
+#retrieves body of a url request as a string
 def retrieve_url_string(url, key=None):
     bytes = retrieve_url(url, key)
     body = bytes.decode("utf8")
 
     return body
 
-
+#class to work with manifest info data
 class ManifestInfo:
         
     def __init__(self, base_url):
@@ -187,12 +224,11 @@ class ManifestInfo:
 
     #creates local manifest json
     def toJson(self):
-        out = {}
+        out = {}    
         out["version"] = self.version
         out["url"] = self.url
 
         #dumpS writes to a string
-        #TODO: note its adding extra strings
         j = json.dumps(out)
         return j
 
