@@ -6,6 +6,8 @@ The apps require an API key from Bungie for working with the API. More info at: 
 
 ## Utilities
 
+All utilities require Python 3.
+
 ### dclid
 
 Command line utilitie for managing and syncing the remote Destiny 2 API manifest database. The utility can be used to:
@@ -21,4 +23,6 @@ usage: dclid [-h] --key KEY --manifest_dir MANIFEST_DIR [--version]
              [--check] [--force]
 ```
 
+The `--manifest_dir` argument is required, and should point a directory where the manifest and manifest info file can be saved anand maintained.
 
+The `--key` argument is required and specifies the API key from Bungie.
