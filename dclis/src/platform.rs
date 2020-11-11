@@ -17,7 +17,6 @@ pub enum Platform {
     Stadia,
 }
 
-
 /*
     https://bungie-net.github.io/multi/schema_BungieMembershipType.html#schema_BungieMembershipType
     None: 0

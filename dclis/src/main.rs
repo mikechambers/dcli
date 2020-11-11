@@ -1,11 +1,11 @@
 mod platform;
 
 use exitfailure::ExitFailure;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use platform::Platform;
 use reqwest::Url;
 use serde_derive::{Deserialize, Serialize};
 use structopt::StructOpt;
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 const DESTINY_API_KEY: &'static str = env!("DESTINY_API_KEY");
 
@@ -50,6 +50,83 @@ struct Opt {
     //json:bool,
 }
 
+struct ApiCallError {
+    message: String,
+    error_type: ApiCallErrorType,
+}
+
+enum ApiCallErrorType {
+    Request,
+    Parse,
+}
+
+async fn retrieve_member_id(id: String, platform: Platform) -> Result<String, ApiCallError> {
+    //TODO: add input
+    //TODO: urlencode input
+    //TODO:: need to branch for steam
+    let url = format!(
+        "https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/{platform_id}/{id}/",
+        platform_id = platform.to_id(),
+        id = utf8_percent_encode(&id, NON_ALPHANUMERIC),
+    );
+
+    println!("{}", url);
+
+    //custom header
+    //TODO: handle parsing error
+    let url = Url::parse(&url).unwrap();
+
+    let client = reqwest::Client::new();
+
+    let resp = match client
+        .get(url)
+        .header("X-API-Key", DESTINY_API_KEY)
+        .send()
+        .await
+    {
+        Ok(e) => e,
+        Err(e) => {
+            return Err(ApiCallError {
+                message: get_request_error_message(e),
+                error_type: ApiCallErrorType::Request,
+            })
+        }
+    };
+
+    let resp = match resp.json::<DestinyResponse>().await {
+        Ok(e) => e,
+        Err(e) => {
+            return Err(ApiCallError {
+                message: get_request_error_message(e),
+                error_type: ApiCallErrorType::Parse,
+            })
+        }
+    };
+
+    ////TODO: parse member_id here
+    Ok(String::from("MEMBER_ID"))
+}
+
+fn get_request_error_message(error: reqwest::Error) -> String {
+    format!("{}", error)
+
+    /*
+    if error.is_http() {
+
+    } else if error.is_serialization() {
+
+    } else if error.is_redirect() {
+
+    } else if error.is_client_error() {
+
+    } else if error.is_server_error() {
+
+    } else {
+
+    }
+    */
+}
+
 #[tokio::main]
 async fn main() -> Result<(), ExitFailure> {
     let opt = Opt::from_args();
@@ -59,42 +136,22 @@ async fn main() -> Result<(), ExitFailure> {
         platform = opt.platform,
     );
 
-    //TODO: add input
-    //TODO: urlencode input
-    //TODO:: need to branch for steam
-    let url = format!("https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/{platform_id}/{id}/",
-        platform_id=opt.platform.to_id(),
-        id=utf8_percent_encode(&opt.id, NON_ALPHANUMERIC),
-);
+    let member_id = retrieve_member_id(opt.id, opt.platform).await;
 
-    println!("{}", url);
-
-    //custom header
-    let url = Url::parse(&url)?;
-
-    let client = reqwest::Client::new();
-
-    let resp = client
-        .get(url)
-        .header("X-API-Key", DESTINY_API_KEY)
-        .send()
-        .await;
-
-    let resp = match resp {
+    let member_id = match member_id {
         Ok(e) => e,
-        Err(e) => panic!("ERROR calling API : {}", e),
+        Err(e) => {
+            println!("{}", e.message);
+            std::process::exit(1);
+        },
     };
-
-    let resp = resp.json::<DestinyResponse>().await.unwrap_or_else(|err| {
-        panic!("Error Parsing JSON Response : {}", err);
-    });
 
     //TODO: compare original input to what was returned to make sure we got an exact
     //match
 
     //println!("Data Loaded : Error Status {:?}", resp);
 
-    println!("Data Loaded : Error Status {:?}", resp.error_status);
+    println!("Member ID: {}", member_id);
 
     Ok(())
 }
