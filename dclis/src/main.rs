@@ -1,31 +1,28 @@
 mod platform;
 
-use platform::Platform;
-use structopt::StructOpt;
-use serde_derive::{Deserialize, Serialize};
-use reqwest::{Url};
 use exitfailure::ExitFailure;
+use platform::Platform;
+use reqwest::Url;
+use serde_derive::{Deserialize, Serialize};
+use structopt::StructOpt;
 
 const DESTINY_API_KEY: &'static str = env!("DESTINY_API_KEY");
 
-
 #[derive(Serialize, Deserialize, Debug)]
 struct DestinyResponse {
-
     #[serde(rename = "ErrorCode")]
-    error_code:u32,
-    
+    error_code: u32,
+
     #[serde(rename = "ThrottleSeconds")]
-    throttle_seconds:u32,
+    throttle_seconds: u32,
 
     #[serde(rename = "ErrorStatus")]
-    error_status:String,
+    error_status: String,
 
     #[serde(rename = "Message")]
-    message:String,
+    message: String,
     //MessageData : {}
 }
-
 
 #[derive(StructOpt)]
 /// Command line tool for retrieving Destiny 2 member ids.
@@ -45,7 +42,6 @@ struct Opt {
     ///
     /// User name or steam 64 idr
     id: String,
-
     //#[structopt(required = false)]
     //verbose:bool,
 
@@ -66,9 +62,9 @@ async fn main() -> Result<(), ExitFailure> {
 
     println!("{}", url);
 
-    //custom header 
+    //custom header
     let url = Url::parse(&url)?; //? propogates the error (need to look up)
-    //let resp = reqwest::get(url).await?.json::<DestinyResponse>.await?;
+                                 //let resp = reqwest::get(url).await?.json::<DestinyResponse>.await?;
 
     let client = reqwest::Client::new();
 
@@ -76,21 +72,20 @@ async fn main() -> Result<(), ExitFailure> {
         .get(url)
         .header("X-API-Key", DESTINY_API_KEY)
         .send()
-        .await?
-        .json::<DestinyResponse>().await;
+        .await;
 
-    //maybe something with unwrap?
     let resp = match resp {
         Ok(e) => e,
-        Err(e) => panic!("Error"),
+        Err(e) => panic!("ERROR calling API : {}", e),
     };
+
+    let resp = resp.json::<DestinyResponse>().await.unwrap_or_else(|err| {
+        panic!("Error Parsing JSON Response");
+    });
 
     //println!("Data Loaded : Error Status {:?}", resp);
 
     println!("Data Loaded : Error Status {:?}", resp.error_status);
-
-    //bungie.net/Platform/
-    //Destiny2/SearchDestinyPlayer/{membershipType}/{displayName}/ 
 
     Ok(())
 }
