@@ -17,6 +17,29 @@ pub enum Platform {
     Stadia,
 }
 
+
+/*
+    https://bungie-net.github.io/multi/schema_BungieMembershipType.html#schema_BungieMembershipType
+    None: 0
+    TigerXbox: 1
+    TigerPsn: 2
+    TigerSteam: 3
+    TigerBlizzard: 4
+    TigerStadia: 5
+    TigerDemon: 10
+    BungieNext: 254
+*/
+impl Platform {
+    pub fn to_id(&self) -> u32 {
+        match self {
+            Platform::Xbox => 1,
+            Platform::Playstation => 2,
+            Platform::Steam => 3,
+            Platform::Stadia => 5,
+        }
+    }
+}
+
 impl FromStr for Platform {
     type Err = &'static str;
 

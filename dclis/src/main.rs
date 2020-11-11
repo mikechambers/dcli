@@ -5,6 +5,7 @@ use platform::Platform;
 use reqwest::Url;
 use serde_derive::{Deserialize, Serialize};
 use structopt::StructOpt;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 const DESTINY_API_KEY: &'static str = env!("DESTINY_API_KEY");
 
@@ -58,13 +59,18 @@ async fn main() -> Result<(), ExitFailure> {
         platform = opt.platform,
     );
 
-    let url = format!("https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/1/mesh/");
+    //TODO: add input
+    //TODO: urlencode input
+    //TODO:: need to branch for steam
+    let url = format!("https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/{platform_id}/{id}/",
+        platform_id=opt.platform.to_id(),
+        id=utf8_percent_encode(&opt.id, NON_ALPHANUMERIC),
+);
 
     println!("{}", url);
 
     //custom header
-    let url = Url::parse(&url)?; //? propogates the error (need to look up)
-                                 //let resp = reqwest::get(url).await?.json::<DestinyResponse>.await?;
+    let url = Url::parse(&url)?;
 
     let client = reqwest::Client::new();
 
@@ -80,8 +86,11 @@ async fn main() -> Result<(), ExitFailure> {
     };
 
     let resp = resp.json::<DestinyResponse>().await.unwrap_or_else(|err| {
-        panic!("Error Parsing JSON Response");
+        panic!("Error Parsing JSON Response : {}", err);
     });
+
+    //TODO: compare original input to what was returned to make sure we got an exact
+    //match
 
     //println!("Data Loaded : Error Status {:?}", resp);
 
