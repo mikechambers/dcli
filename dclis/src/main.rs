@@ -60,6 +60,24 @@ enum ApiCallErrorType {
     Parse,
 }
 
+async fn call_api(url: String) -> Result<reqwest::Response, reqwest::Error> {
+    let url = Url::parse(&url).unwrap();
+
+    let client = reqwest::Client::new();
+
+    let resp = match client
+        .get(url)
+        .header("X-API-Key", DESTINY_API_KEY)
+        .send()
+        .await
+    {
+        Ok(e) => e,
+        Err(e) => return Err(e),
+    };
+
+    Ok(resp)
+}
+
 async fn retrieve_member_id(id: String, platform: Platform) -> Result<String, ApiCallError> {
     //TODO: add input
     //TODO: urlencode input
@@ -74,16 +92,8 @@ async fn retrieve_member_id(id: String, platform: Platform) -> Result<String, Ap
 
     //custom header
     //TODO: handle parsing error
-    let url = Url::parse(&url).unwrap();
 
-    let client = reqwest::Client::new();
-
-    let resp = match client
-        .get(url)
-        .header("X-API-Key", DESTINY_API_KEY)
-        .send()
-        .await
-    {
+    let resp = match call_api(url).await {
         Ok(e) => e,
         Err(e) => {
             return Err(ApiCallError {
@@ -143,7 +153,7 @@ async fn main() -> Result<(), ExitFailure> {
         Err(e) => {
             println!("{}", e.message);
             std::process::exit(1);
-        },
+        }
     };
 
     //TODO: compare original input to what was returned to make sure we got an exact
