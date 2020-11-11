@@ -1,0 +1,96 @@
+mod platform;
+
+use platform::Platform;
+use structopt::StructOpt;
+use serde_derive::{Deserialize, Serialize};
+use reqwest::{Url};
+use exitfailure::ExitFailure;
+
+const DESTINY_API_KEY: &'static str = env!("DESTINY_API_KEY");
+
+
+#[derive(Serialize, Deserialize, Debug)]
+struct DestinyResponse {
+
+    #[serde(rename = "ErrorCode")]
+    error_code:u32,
+    
+    #[serde(rename = "ThrottleSeconds")]
+    throttle_seconds:u32,
+
+    #[serde(rename = "ErrorStatus")]
+    error_status:String,
+
+    #[serde(rename = "Message")]
+    message:String,
+    //MessageData : {}
+}
+
+
+#[derive(StructOpt)]
+/// Command line tool for retrieving Destiny 2 member ids.
+///
+/// Retrieves the Destiny 2 member id for specified username or
+/// steam 64 id and platform.
+struct Opt {
+    //exitfailure = "0.5.1"/ Platform for specified id
+    ///
+    /// Platform for specified id. Valid values are:
+    /// xbox, playstation, stadia or steam
+    #[structopt(short = "p", long = "platform", required = true)]
+    platform: Platform,
+
+    #[structopt(short = "i", long = "id", required = true)]
+    /// User name or steam 64 id
+    ///
+    /// User name or steam 64 idr
+    id: String,
+
+    //#[structopt(required = false)]
+    //verbose:bool,
+
+    //#[structopt(required = false)]
+    //json:bool,
+}
+
+#[tokio::main]
+async fn main() -> Result<(), ExitFailure> {
+    let opt = Opt::from_args();
+    println!(
+        "Searching for {id} on {platform}",
+        id = opt.id,
+        platform = opt.platform,
+    );
+
+    let url = format!("https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/1/mesh/");
+
+    println!("{}", url);
+
+    //custom header 
+    let url = Url::parse(&url)?; //? propogates the error (need to look up)
+    //let resp = reqwest::get(url).await?.json::<DestinyResponse>.await?;
+
+    let client = reqwest::Client::new();
+
+    let resp = client
+        .get(url)
+        .header("X-API-Key", DESTINY_API_KEY)
+        .send()
+        .await?
+        .json::<DestinyResponse>().await;
+
+    //maybe something with unwrap?
+    let resp = match resp {
+        Ok(e) => e,
+        Err(e) => panic!("Error"),
+    };
+
+    //println!("Data Loaded : Error Status {:?}", resp);
+
+    println!("Data Loaded : Error Status {:?}", resp.error_status);
+
+    //bungie.net/Platform/
+    //Destiny2/SearchDestinyPlayer/{membershipType}/{displayName}/ 
+
+    Ok(())
+}
