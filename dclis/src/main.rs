@@ -182,7 +182,7 @@ async fn retrieve_member_id(
     }
 
     let m = Membership {
-        id: format!("{}", results[0].membership_id),
+        id:String::from(results[0].membership_id.as_str()),
         platform: Platform::from_id(results[0].membership_type),
     };
 
