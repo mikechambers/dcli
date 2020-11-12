@@ -28,11 +28,13 @@ OPTIONS:
     -p, --platform <platform>    Platform for specified id
 ```
 
+Valid platforms are xbox, playstation, steam and stadia.
+
 ##### Example
 
 Retrieve membership id for a player on xbox and print the url for the API call:
 ```
-dclis --id mesh --platform mesh --url
+dclis --id mesh --platform xbox --url
 ```
 
 Search for the membership id using the steam 64 id, and print out in compact format membershipid:platform_id
@@ -64,4 +66,8 @@ usage: dclidp.py [-h] --key KEY --manifest_dir MANIFEST_DIR [--version]
 
 The `--manifest_dir` argument is required, and should point a directory where the manifest and manifest info file can be saved anand maintained.
 
-The `--key` argument is required and specifies the API key from Bungie.
+The `--key` argument is required and specifies the API key from Bungie.mesh
+
+## License
+
+All utilities released under and [MIT License](LICENSE.md).
