@@ -50,7 +50,6 @@ struct DestinyResponseSteam {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct DestinyResponseMember {
-
     #[serde(rename = "membershipType")]
     membership_type: u64,
 
@@ -71,7 +70,7 @@ struct Membership {
 /// that the one specified, depending on the cross save status of the account. It
 /// will return the primary membershipId that all data will be associate with.
 struct Opt {
-    //exitfailure = "0.5.1"/ Platform for specified id
+    /// Platform for specified id
     ///
     /// Platform for specified id. Valid values are:
     /// xbox, playstation, stadia or steam
@@ -83,16 +82,19 @@ struct Opt {
     ///
     /// User name or steam 64 id in the format 00000000000000000 (17 digit ID)
     id: String,
-    //#[structopt(required = false)]
-    //verbose:bool,
 
-    //#[structopt(required = false)]
-    //json:bool,
+    ///Compact output in the form of membership_id:platform_id
+    #[structopt(short = "c", long = "compact")]
+    compact: bool,
+
+    ///Print out the url used for the API call
+    #[structopt(short = "u", long = "url")]
+    url: bool,
 }
 
 struct ApiCallError {
     message: String,
-    error_type: ApiCallErrorType,
+    _error_type: ApiCallErrorType,
 }
 
 enum ApiCallErrorType {
@@ -113,7 +115,7 @@ async fn retrieve_member_id_from_steam(
         Err(e) => {
             return Some(Err(ApiCallError {
                 message: get_request_error_message(e),
-                error_type: ApiCallErrorType::Request,
+                _error_type: ApiCallErrorType::Request,
             }))
         }
     };
@@ -123,7 +125,7 @@ async fn retrieve_member_id_from_steam(
         Err(e) => {
             return Some(Err(ApiCallError {
                 message: get_request_error_message(e),
-                error_type: ApiCallErrorType::Parse,
+                _error_type: ApiCallErrorType::Parse,
             }))
         }
     };
@@ -161,7 +163,7 @@ async fn retrieve_member_id(
         Err(e) => {
             return Some(Err(ApiCallError {
                 message: get_request_error_message(e),
-                error_type: ApiCallErrorType::Request,
+                _error_type: ApiCallErrorType::Request,
             }))
         }
     };
@@ -171,18 +173,18 @@ async fn retrieve_member_id(
         Err(e) => {
             return Some(Err(ApiCallError {
                 message: get_request_error_message(e),
-                error_type: ApiCallErrorType::Parse,
+                _error_type: ApiCallErrorType::Parse,
             }))
         }
     };
 
-    let results:Vec<DestinyResponseMember> = resp.response;
+    let results: Vec<DestinyResponseMember> = resp.response;
     if results.len() == 0 {
         return None;
     }
 
     let m = Membership {
-        id:String::from(results[0].membership_id.as_str()),
+        id: String::from(results[0].membership_id.as_str()),
         platform: Platform::from_id(results[0].membership_type),
     };
 
@@ -196,7 +198,7 @@ fn get_request_error_message(error: reqwest::Error) -> String {
 fn is_valid_steam_id(steam_id: &String) -> bool {
     //make sure it can be parsed into a u64
     let parses = match steam_id.parse::<u64>() {
-        Ok(e) => true,
+        Ok(_e) => true,
         Err(_e) => false,
     };
 
@@ -241,8 +243,20 @@ async fn main() -> Result<(), ExitFailure> {
 
     //println!("Data Loaded : Error Status {:?}", resp);
 
-    println!("membershipId: {}", membership.id);
-    println!("platform: {0} ({1})", membership.platform, membership.platform.to_id());
+    if opt.compact {
+        println!(
+            "{membership_id}:{platform_id}",
+            membership_id = membership.id,
+            platform_id = membership.platform.to_id()
+        );
+    } else {
+        println!(
+            "Membership Id : {membership_id}\nPlatform : {platform} ({platform_id})",
+            membership_id = membership.id,
+            platform = membership.platform,
+            platform_id = membership.platform.to_id()
+        );
+    };
 
     Ok(())
 }
