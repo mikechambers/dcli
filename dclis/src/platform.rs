@@ -3,6 +3,7 @@ use std::fmt;
 use std::str::FromStr;
 
 ///Destiny 2 Platforms
+#[derive(PartialEq)]
 pub enum Platform {
     ///Xbox
     Xbox,

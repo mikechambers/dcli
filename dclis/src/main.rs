@@ -11,6 +11,10 @@ const DESTINY_API_KEY: &'static str = env!("DESTINY_API_KEY");
 
 #[derive(Serialize, Deserialize, Debug)]
 struct DestinyResponse {
+
+    #[serde(rename = "Response")]
+    response:serde_json::Value,
+
     #[serde(rename = "ErrorCode")]
     error_code: u32,
 
@@ -41,7 +45,7 @@ struct Opt {
     #[structopt(short = "i", long = "id", required = true)]
     /// User name or steam 64 id
     ///
-    /// User name or steam 64 idr
+    /// User name or steam 64 id in the format 00000000000000000 (17 digit ID)
     id: String,
     //#[structopt(required = false)]
     //verbose:bool,
@@ -63,6 +67,8 @@ enum ApiCallErrorType {
 async fn call_api(url: String) -> Result<reqwest::Response, reqwest::Error> {
     let url = Url::parse(&url).unwrap();
 
+    println!("{}", url);
+
     let client = reqwest::Client::new();
 
     let resp = match client
@@ -78,7 +84,43 @@ async fn call_api(url: String) -> Result<reqwest::Response, reqwest::Error> {
     Ok(resp)
 }
 
-async fn retrieve_member_id(id: String, platform: Platform) -> Result<String, ApiCallError> {
+async fn retrieve_member_id_from_steam(steam_id:&String) -> Result<String, ApiCallError> {
+    let url = format!(
+        "https://www.bungie.net/Platform/User/GetMembershipFromHardLinkedCredential/12/{steam_id}/",
+        steam_id = utf8_percent_encode(&steam_id, NON_ALPHANUMERIC),
+    );
+
+    let resp = match call_api(url).await {
+        Ok(e) => e,
+        Err(e) => {
+            return Err(ApiCallError {
+                message: get_request_error_message(e),
+                error_type: ApiCallErrorType::Request,
+            })
+        }
+    };
+
+    let resp = match resp.json::<DestinyResponse>().await {
+        Ok(e) => e,
+        Err(e) => {
+            return Err(ApiCallError {
+                message: get_request_error_message(e),
+                error_type: ApiCallErrorType::Parse,
+            })
+        }
+    };
+
+    ////TODO: parse member_id here
+    Ok(String::from(resp.response["membershipId"].as_str().unwrap()))
+    //Ok(String::from("MEMBER_ID_FROM_STEAM"))
+}
+
+async fn retrieve_member_id(id: &String, platform: Platform) -> Result<String, ApiCallError> {
+
+    if platform == Platform::Steam {
+        return retrieve_member_id_from_steam(&id).await;
+    }
+
     //TODO: add input
     //TODO: urlencode input
     //TODO:: need to branch for steam
@@ -87,8 +129,6 @@ async fn retrieve_member_id(id: String, platform: Platform) -> Result<String, Ap
         platform_id = platform.to_id(),
         id = utf8_percent_encode(&id, NON_ALPHANUMERIC),
     );
-
-    println!("{}", url);
 
     //custom header
     //TODO: handle parsing error
@@ -137,6 +177,12 @@ fn get_request_error_message(error: reqwest::Error) -> String {
     */
 }
 
+fn is_valid_steam_id(steam_id:&String) -> bool {
+
+    //76561197960287930
+    steam_id.chars().count() == 17
+}
+
 #[tokio::main]
 async fn main() -> Result<(), ExitFailure> {
     let opt = Opt::from_args();
@@ -146,12 +192,20 @@ async fn main() -> Result<(), ExitFailure> {
         platform = opt.platform,
     );
 
-    let member_id = retrieve_member_id(opt.id, opt.platform).await;
+    if opt.platform == Platform::Steam {
+        if !is_valid_steam_id(&opt.id) {
+            println!("{}", "Invalid steam 64 id.");
+            std::process::exit(1);
+        }
+    }
+
+    let member_id = retrieve_member_id(&opt.id, opt.platform).await;
 
     let member_id = match member_id {
         Ok(e) => e,
         Err(e) => {
             println!("{}", e.message);
+            //TODO: can we just return here?
             std::process::exit(1);
         }
     };
