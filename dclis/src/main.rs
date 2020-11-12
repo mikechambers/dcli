@@ -1,66 +1,14 @@
+mod apiclient;
+mod memberidsearch;
 mod platform;
+
 use platform::Platform;
 
-mod apiclient;
-use apiclient::ApiClient;
+use memberidsearch::MemberIdSearch;
 
 use exitfailure::ExitFailure;
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
-use serde_derive::{Deserialize, Serialize};
 use structopt::StructOpt;
-
-#[derive(Serialize, Deserialize, Debug)]
-struct DestinySearchResponse {
-    #[serde(rename = "Response")]
-    response: Vec<DestinyResponseMember>,
-
-    #[serde(rename = "ErrorCode")]
-    error_code: u32,
-
-    #[serde(rename = "ThrottleSeconds")]
-    throttle_seconds: u32,
-
-    #[serde(rename = "ErrorStatus")]
-    error_status: String,
-
-    #[serde(rename = "Message")]
-    message: String,
-    //MessageData : {}
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct DestinyResponseSteam {
-    #[serde(rename = "Response")]
-    response: DestinyResponseMember,
-
-    #[serde(rename = "ErrorCode")]
-    error_code: u32,
-
-    #[serde(rename = "ThrottleSeconds")]
-    throttle_seconds: u32,
-
-    #[serde(rename = "ErrorStatus")]
-    error_status: String,
-
-    #[serde(rename = "Message")]
-    message: String,
-    //MessageData : {}
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct DestinyResponseMember {
-    #[serde(rename = "membershipType")]
-    membership_type: u64,
-
-    #[serde(rename = "membershipId")]
-    membership_id: String,
-}
-
-struct Membership {
-    platform: Platform,
-    id: String,
-}
 
 #[derive(StructOpt)]
 /// Command line tool for retrieving primary Destiny 2 member ids.
@@ -92,110 +40,7 @@ struct Opt {
     url: bool,
 }
 
-struct ApiCallError {
-    message: String,
-    _error_type: ApiCallErrorType,
-}
-
-enum ApiCallErrorType {
-    Request,
-    Parse,
-}
-
-async fn retrieve_member_id_from_steam(
-    steam_id: &String,
-) -> Option<Result<Membership, ApiCallError>> {
-    let url = format!(
-        "https://www.bungie.net/Platform/User/GetMembershipFromHardLinkedCredential/12/{steam_id}/",
-        steam_id = utf8_percent_encode(&steam_id, NON_ALPHANUMERIC),
-    );
-
-    let resp = match ApiClient::new().call_api(url).await {
-        Ok(e) => e,
-        Err(e) => {
-            return Some(Err(ApiCallError {
-                message: get_request_error_message(e),
-                _error_type: ApiCallErrorType::Request,
-            }))
-        }
-    };
-
-    let resp = match resp.json::<DestinyResponseSteam>().await {
-        Ok(e) => e,
-        Err(e) => {
-            return Some(Err(ApiCallError {
-                message: get_request_error_message(e),
-                _error_type: ApiCallErrorType::Parse,
-            }))
-        }
-    };
-
-    let m = Membership {
-        id: resp.response.membership_id,
-        platform: Platform::from_id(resp.response.membership_type),
-    };
-
-    Some(Ok(m))
-}
-
-async fn retrieve_member_id(
-    id: &String,
-    platform: Platform,
-) -> Option<Result<Membership, ApiCallError>> {
-    if platform == Platform::Steam {
-        return retrieve_member_id_from_steam(&id).await;
-    }
-
-    //TODO: add input
-    //TODO: urlencode input
-    //TODO:: need to branch for steam
-    let url = format!(
-        "https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/{platform_id}/{id}/",
-        platform_id = platform.to_id(),
-        id = utf8_percent_encode(&id, NON_ALPHANUMERIC),
-    );
-
-    //custom header
-    //TODO: handle parsing error
-
-    let resp = match ApiClient::new().call_api(url).await {
-        Ok(e) => e,
-        Err(e) => {
-            return Some(Err(ApiCallError {
-                message: get_request_error_message(e),
-                _error_type: ApiCallErrorType::Request,
-            }))
-        }
-    };
-
-    let resp = match resp.json::<DestinySearchResponse>().await {
-        Ok(e) => e,
-        Err(e) => {
-            return Some(Err(ApiCallError {
-                message: get_request_error_message(e),
-                _error_type: ApiCallErrorType::Parse,
-            }))
-        }
-    };
-
-    let results: Vec<DestinyResponseMember> = resp.response;
-    if results.len() == 0 {
-        return None;
-    }
-
-    let m = Membership {
-        id: String::from(results[0].membership_id.as_str()),
-        platform: Platform::from_id(results[0].membership_type),
-    };
-
-    Some(Ok(m))
-}
-
-fn get_request_error_message(error: reqwest::Error) -> String {
-    format!("{}", error)
-}
-
-fn is_valid_steam_id(steam_id: &String) -> bool {
+fn is_valid_steam_id(steam_id: &str) -> bool {
     //make sure it can be parsed into a u64
     let parses = match steam_id.parse::<u64>() {
         Ok(_e) => true,
@@ -208,20 +53,25 @@ fn is_valid_steam_id(steam_id: &String) -> bool {
 #[tokio::main]
 async fn main() -> Result<(), ExitFailure> {
     let opt = Opt::from_args();
-    println!(
-        "Searching for {id} on {platform}",
-        id = opt.id,
-        platform = opt.platform,
-    );
 
-    if opt.platform == Platform::Steam {
-        if !is_valid_steam_id(&opt.id) {
-            println!("{}", "Invalid steam 64 id.");
-            std::process::exit(1);
-        }
+    if opt.platform == Platform::Steam && !is_valid_steam_id(&opt.id) {
+        println!("Invalid steam 64 id.");
+        std::process::exit(1);
     }
 
-    let membership = retrieve_member_id(&opt.id, opt.platform).await;
+    if !opt.compact {
+        println!(
+            "Searching for {id} on {platform}",
+            id = opt.id,
+            platform = opt.platform,
+        );
+    }
+
+    let member_search = MemberIdSearch::new(opt.url);
+
+    let membership = member_search
+        .retrieve_member_id(&opt.id, opt.platform)
+        .await;
 
     let membership = match membership {
         Some(e) => match e {
@@ -233,6 +83,7 @@ async fn main() -> Result<(), ExitFailure> {
             }
         },
         None => {
+            //TODO: add more info on what we searched for here
             println!("Member not found");
             std::process::exit(0);
         }
@@ -240,8 +91,6 @@ async fn main() -> Result<(), ExitFailure> {
 
     //TODO: compare original input to what was returned to make sure we got an exact
     //match
-
-    //println!("Data Loaded : Error Status {:?}", resp);
 
     if opt.compact {
         println!(

@@ -1,8 +1,20 @@
 use reqwest::Url;
 
-const DESTINY_API_KEY: &'static str = env!("DESTINY_API_KEY");
+const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
 
-pub struct ApiClient {}
+pub struct ApiCallError {
+    pub message: String,
+    pub _error_type: ApiCallErrorType,
+}
+
+pub enum ApiCallErrorType {
+    Request,
+    Parse,
+}
+
+pub struct ApiClient {
+    //TODO: add verbose / print URL
+}
 
 impl ApiClient {
     pub fn new() -> ApiClient {
