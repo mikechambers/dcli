@@ -8,10 +8,9 @@ The apps require an API key from Bungie for working with the API. More info at: 
 
 ### dclis
 
-Command line interface for retrieve primary platform and membership ids for Destiny 2 players.
+Command line interface for retrieving primary platform and membership ids for Destiny 2 players.
 
-Note, in cases of players who have enabled cross save / play, the primary id
-and platform will be returned.
+Note, in cases of players who have enabled cross save / play, the primary id and platform will be returned.
 
 #### USAGE
 ```
