@@ -29,6 +29,13 @@ struct DestinyResponse {
     //MessageData : {}
 }
 
+struct Membership {
+    membership_platform:Platform,
+    membership_id:String,
+    cross_save_override_platform:Platform,
+    cross_save_override_membership_id:String,
+}
+
 #[derive(StructOpt)]
 /// Command line tool for retrieving Destiny 2 member ids.
 ///
@@ -179,8 +186,13 @@ fn get_request_error_message(error: reqwest::Error) -> String {
 
 fn is_valid_steam_id(steam_id:&String) -> bool {
 
-    //76561197960287930
-    steam_id.chars().count() == 17
+    //make sure it can be parsed into a u64
+    let parses = match steam_id.parse::<u64>() {
+        Ok(e) => true,
+        Err(_e) => false,
+    };
+
+    parses && steam_id.chars().count() == 17
 }
 
 #[tokio::main]
