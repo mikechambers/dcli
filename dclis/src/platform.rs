@@ -1,25 +1,24 @@
-//use std::string::ParseError;
 use std::fmt;
 use std::str::FromStr;
 
 ///Destiny 2 Platforms
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Platform {
     ///Xbox
-    Xbox,
+    Xbox = 1,
 
     ///Playstation
-    Playstation,
+    Playstation = 2,
 
     ///Steam
-    Steam,
+    Steam = 3,
 
     ///Stadia
-    Stadia,
+    Stadia = 5,
 
-    Blizzard,
+    Blizzard = 4,
 
-    Unknown,
+    Unknown = 0,
 }
 
 /*
@@ -35,14 +34,7 @@ pub enum Platform {
 */
 impl Platform {
     pub fn to_id(&self) -> u32 {
-        match self {
-            Platform::Unknown => 0,
-            Platform::Xbox => 1,
-            Platform::Playstation => 2,
-            Platform::Steam => 3,
-            Platform::Blizzard => 4,
-            Platform::Stadia => 5,
-        }
+        *self as u32
     }
 
     pub fn from_id(id: u64) -> Platform {
