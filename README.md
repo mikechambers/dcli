@@ -6,8 +6,8 @@ The apps require an API key from Bungie for working with the API. More info at: 
 
 ## Utilities
 
-* [dclis](dclidp/) - Command line interface for retrieving primary platform and membership ids for Destiny 2 players.
-* [dclidp]() - Command line utility for managing and syncing the remote Destiny 2 API manifest database
+* [dclis](dcli/tree/master/dclis) - Command line interface for retrieving primary platform and membership ids for Destiny 2 players.
+* [dclidp](dcli/tree/master/dclidp) - Command line utility for managing and syncing the remote Destiny 2 API manifest database
 
 ## License
 
