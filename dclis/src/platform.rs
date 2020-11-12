@@ -16,6 +16,10 @@ pub enum Platform {
 
     ///Stadia
     Stadia,
+
+    Blizzard,
+
+    Unknown,
 }
 
 /*
@@ -32,10 +36,23 @@ pub enum Platform {
 impl Platform {
     pub fn to_id(&self) -> u32 {
         match self {
+            Platform::Unknown => 0,
             Platform::Xbox => 1,
             Platform::Playstation => 2,
             Platform::Steam => 3,
+            Platform::Blizzard => 4,
             Platform::Stadia => 5,
+        }
+    }
+
+    pub fn from_id(id: u64) -> Platform {
+        match id {
+            1 => Platform::Xbox,
+            2 => Platform::Playstation,
+            3 => Platform::Steam,
+            4 => Platform::Blizzard,
+            5 => Platform::Stadia,
+            _ => Platform::Unknown,
         }
     }
 }
@@ -53,6 +70,7 @@ impl FromStr for Platform {
             "playstation" => Ok(Platform::Playstation),
             "steam" => Ok(Platform::Steam),
             "stadia" => Ok(Platform::Stadia),
+            "blizzard" => Ok(Platform::Blizzard),
             _ => Err("Unknown platform type"),
         }
     }
@@ -65,6 +83,8 @@ impl fmt::Display for Platform {
             Platform::Playstation => "Playstation",
             Platform::Steam => "Steam",
             Platform::Stadia => "Stadia",
+            Platform::Blizzard => "Blizzard",
+            Platform::Unknown => "Unknown",
         };
 
         write!(f, "{}", out)
