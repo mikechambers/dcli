@@ -20,12 +20,9 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-mod apiclient;
 mod memberidsearch;
-mod platform;
 
-use platform::Platform;
-
+use dcli::platform::Platform;
 use memberidsearch::MemberIdSearch;
 
 use exitfailure::ExitFailure;

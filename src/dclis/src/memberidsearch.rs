@@ -20,11 +20,10 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::apiclient::{ApiCallError, ApiCallErrorType, ApiClient};
-use crate::platform::Platform;
+use dcli::apiclient::{ApiCallError, ApiCallErrorType, ApiClient};
+use dcli::platform::Platform;
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-
 use serde_derive::{Deserialize, Serialize};
 
 pub struct MemberIdSearch {

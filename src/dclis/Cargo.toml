@@ -8,10 +8,12 @@ edition = "2018"
 
 [dependencies]
 structopt = "0.3"
-reqwest = { version="0.10.8", features=["json"] }
+tokio = { version="0.2.21", features=["full"] }
+exitfailure = "0.5.1"
 serde = "1.0.117"
 serde_json = "1.0.59"
 serde_derive = "1.0.117"
-tokio = { version="0.2.21", features=["full"] }
-exitfailure = "0.5.1"
 percent-encoding = "2.1.0"
+reqwest = { version="0.10.8", features=["json"] }
+
+dcli = { path = "../dcli/"}
