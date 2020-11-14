@@ -24,11 +24,13 @@ use reqwest::Url;
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
 
+#[derive(Debug)]
 pub struct ApiCallError {
     pub message: String,
     pub _error_type: ApiCallErrorType,
 }
 
+#[derive(Debug)]
 pub enum ApiCallErrorType {
     Request,
     Parse,
@@ -43,7 +45,7 @@ impl ApiClient {
         ApiClient {print_url}
     }
 
-    pub async fn call_api(&self, url: String) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn call_api(&self, url: &str) -> Result<reqwest::Response, reqwest::Error> {
         let url = Url::parse(&url).unwrap();
 
         if self.print_url {

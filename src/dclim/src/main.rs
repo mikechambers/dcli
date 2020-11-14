@@ -20,16 +20,15 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-mod manifest_info;
-
-use manifest_info::ManifestInfo;
-
 use exitfailure::ExitFailure;
 use structopt::StructOpt;
-use dcli::apiclient::{ApiClient, ApiCallError};
+use dcli::apiclient::{ApiClient, ApiCallError, ApiCallErrorType};
 
 use std::path::PathBuf;
 use std::env::current_dir;
+
+use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer};
 
 fn load_manifest_info(manifest_info_path:&PathBuf) -> Option<ManifestInfo> {
     let m = ManifestInfo {
@@ -40,13 +39,76 @@ fn load_manifest_info(manifest_info_path:&PathBuf) -> Option<ManifestInfo> {
     Some(m)
 }
 
-fn retrieve_manifest_info() -> Result<ManifestInfo, ApiCallError> {
-    let m = ManifestInfo {
-        url:String::from(""),
-        version:String::from(""),
+//TODO: we can collapse this into a single object to reuse
+//TODO: move into own file
+#[derive(Serialize, Deserialize, Debug)]
+struct Manifest {
+    #[serde(rename = "Response")]
+    response: ManifestInfo,
+
+    #[serde(rename = "ErrorCode")]
+    error_code: u32,
+
+    #[serde(rename = "ThrottleSeconds")]
+    throttle_seconds: u32,
+
+    #[serde(rename = "ErrorStatus")]
+    error_status: String,
+
+    #[serde(rename = "Message")]
+    message: String,
+    //MessageData : {}
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ManifestInfo {
+    version:String,
+    #[serde(rename = "mobileWorldContentPaths", deserialize_with = "deserialize_mobile_world_content_Paths")]
+    url:String,
+    
+}
+
+fn deserialize_mobile_world_content_Paths<'de, D>(deserializer: D) -> Result<String, D::Error> where D: serde::de::Deserializer<'de>
+{
+    #[derive(Deserialize)]
+    #[serde (rename="mobileWorldContentPaths")]
+    struct MobileWorldContentPaths {
+        en: String,
+    }
+
+    //TODO: move to URL base to constant
+    MobileWorldContentPaths::deserialize(deserializer).map(|mobileWorldContentPaths| format!("https://www.bungie.net{}",mobileWorldContentPaths.en))
+}
+
+async fn retrieve_manifest_info(print_url:bool) -> Result<ManifestInfo, ApiCallError> {
+
+    let client:ApiClient = ApiClient::new(print_url);
+    let url = "https://www.bungie.net/Platform/Destiny2/Manifest/";
+
+    //custom header
+    //TODO: handle parsing error
+
+    let resp = match client.call_api(url).await {
+        Ok(e) => e,
+        Err(e) => {
+            return Err(ApiCallError {
+                message: format!("{}", e),
+                _error_type: ApiCallErrorType::Request,
+            })
+        }
     };
 
-    Ok(m)
+    let m_info = match resp.json::<Manifest>().await {
+        Ok(e) => e.response,
+        Err(e) => {
+            return Err(ApiCallError {
+                message: format!("{}", e),
+                _error_type: ApiCallErrorType::Parse,
+            })
+        }
+    };
+
+    Ok(m_info)
 }
 
 
@@ -61,13 +123,14 @@ struct Opt {
 
     ///Print out the url used for the API calls
     #[structopt(short = "u", long = "url")]
-    _url: bool,
+    url: bool,
 
     ///Force a download of manifest regardless of whether it has been updated
     #[structopt(short = "f", long = "force")]
     force: bool,
 }
 
+//TODO: we can create an ErrorType enum for our struct if we need more info
 struct Error {
     message:String,
 }
@@ -135,11 +198,23 @@ async fn main() -> Result<(), ExitFailure> {
         force = true;
     }
 
-    //TODO: handle error
-    let local_manifest_info:ManifestInfo = load_manifest_info(&m_info_path).unwrap();
-    let remote_manifest_info = retrieve_manifest_info();
+    //TODO: unwrap this
+    let remote_manifest_info = match retrieve_manifest_info(opt.url).await {
+        Ok(e) => e,
+        Err(e) => {
+            println!("{:?}", e);
+            std::process::exit(0);
+        },
+    };
+
+    println!("{:?}", remote_manifest_info);
 
     /*
+    if !force {
+        //maybe make this an Option
+        let local_manifest_info:ManifestInfo = load_manifest_info(&m_info_path).unwrap();
+    }
+    
     if(force || local_manifest_info.url != remote_manifest_info.url) {
         //download_manifest(m_path);
         //write_manifest_info(m_info_path, remote_manifest_info);
