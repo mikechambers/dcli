@@ -50,14 +50,21 @@ struct Manifest {
     status:DestinyResponseStatus,
 }
 
-
-
 #[derive(Serialize, Deserialize, Debug)]
 struct ManifestInfo {
     version:String,
-    #[serde(rename = "mobileWorldContentPaths", deserialize_with = "deserialize_mobile_world_content_Paths")]
+
+    //#[serde(rename=(deserialize="mobileWorldContentPaths", serialize="url"), deserialize_with = "deserialize_mobile_world_content_Paths")]
+    #[serde(rename(serialize = "url", deserialize = "mobileWorldContentPaths"), deserialize_with = "deserialize_mobile_world_content_Paths")]
     url:String,
-    
+}
+
+impl ManifestInfo {
+    fn to_json(&self) -> String {
+
+        //todo: do wes need to catch errors here? Would this ever fail?
+        serde_json::to_string(self).unwrap()
+    }
 }
 
 fn deserialize_mobile_world_content_Paths<'de, D>(deserializer: D) -> Result<String, D::Error> where D: serde::de::Deserializer<'de>
@@ -78,8 +85,7 @@ async fn retrieve_manifest_info(print_url:bool) -> Result<ManifestInfo, ApiCallE
     let url = "https://www.bungie.net/Platform/Destiny2/Manifest/";
 
     //custom header
-    //TODO: handle parsing error
-
+    //TODO: handle parsing errorcontent
     let resp = match client.call_api(url).await {
         Ok(e) => e,
         Err(e) => {
@@ -199,7 +205,7 @@ async fn main() -> Result<(), ExitFailure> {
         },
     };
 
-    println!("{:?}", remote_manifest_info);
+    println!("{}", remote_manifest_info.to_json());
 
     /*
     if !force {
