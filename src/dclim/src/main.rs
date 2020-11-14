@@ -22,7 +22,7 @@
 
 use exitfailure::ExitFailure;
 use structopt::StructOpt;
-use dcli::apiclient::{ApiClient, ApiCallError, ApiCallErrorType};
+use dcli::apiclient::{ApiClient, ApiCallError, ApiCallErrorType, DestinyResponseStatus};
 
 use std::path::PathBuf;
 use std::env::current_dir;
@@ -46,19 +46,11 @@ struct Manifest {
     #[serde(rename = "Response")]
     response: ManifestInfo,
 
-    #[serde(rename = "ErrorCode")]
-    error_code: u32,
-
-    #[serde(rename = "ThrottleSeconds")]
-    throttle_seconds: u32,
-
-    #[serde(rename = "ErrorStatus")]
-    error_status: String,
-
-    #[serde(rename = "Message")]
-    message: String,
-    //MessageData : {}
+    #[serde(flatten)]
+    status:DestinyResponseStatus,
 }
+
+
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ManifestInfo {

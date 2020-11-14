@@ -21,8 +21,26 @@
 */
 
 use reqwest::Url;
+use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer};
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DestinyResponseStatus {
+    #[serde(rename = "ErrorCode")]
+    error_code: u32,
+
+    #[serde(rename = "ThrottleSeconds")]
+    throttle_seconds: u32,
+
+    #[serde(rename = "ErrorStatus")]
+    error_status: String,
+
+    #[serde(rename = "Message")]
+    message: String,
+}
 
 #[derive(Debug)]
 pub struct ApiCallError {

@@ -138,18 +138,8 @@ struct DestinySearchResponse {
     #[serde(rename = "Response")]
     response: Vec<DestinyResponseMember>,
 
-    #[serde(rename = "ErrorCode")]
-    error_code: u32,
-
-    #[serde(rename = "ThrottleSeconds")]
-    throttle_seconds: u32,
-
-    #[serde(rename = "ErrorStatus")]
-    error_status: String,
-
-    #[serde(rename = "Message")]
-    message: String,
-    //MessageData : {}
+    #[serde(flatten)]
+    status:DestinyResponseStatus,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -157,18 +147,8 @@ struct DestinyResponseSteam {
     #[serde(rename = "Response")]
     response: DestinyResponseMember,
 
-    #[serde(rename = "ErrorCode")]
-    error_code: u32,
-
-    #[serde(rename = "ThrottleSeconds")]
-    throttle_seconds: u32,
-
-    #[serde(rename = "ErrorStatus")]
-    error_status: String,
-
-    #[serde(rename = "Message")]
-    message: String,
-    //MessageData : {}
+    #[serde(flatten)]
+    status:DestinyResponseStatus,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
