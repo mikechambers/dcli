@@ -1,7 +1,9 @@
 use serde_derive::{Deserialize, Serialize};
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize};
 
 use crate::apiclient::DestinyResponseStatus;
+
+const BASE_URL: &str = "https://www.bungie.net";
 
 //TODO: we can collapse this into a single object to reuse
 //TODO: move into own file
@@ -33,7 +35,7 @@ fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error> where D
 
     //TODO: move to URL base to constant
     String::deserialize(deserializer).map(|a| {
-        let mut s = String::from("https://www.bungie.net");
+        let mut s = String::from(BASE_URL);
         s.push_str(&a);
         s
     })
