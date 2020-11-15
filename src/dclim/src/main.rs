@@ -20,7 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use dcli::apiclient::{ApiCallError, ApiCallErrorType, ApiClient};
+use dcli::apiclient::ApiClient;
+use dcli::error::Error;
 use dcli::manifest::{Manifest, ManifestResponse};
 use exitfailure::ExitFailure;
 use structopt::StructOpt;
@@ -56,44 +57,29 @@ impl ManifestInfo {
         }
     }
 
-    fn from_json(json: &str) -> ManifestInfo {
-        //TODO: handle error?
-        let m: ManifestInfo = serde_json::from_str(json).unwrap();
+    fn from_json(json: &str) -> Result<ManifestInfo, Error> {
+        let m: ManifestInfo = serde_json::from_str(json)?;
 
-        m
+        Ok(m)
     }
 
-    fn to_json(&self) -> String {
+    fn to_json(&self) -> Result<String, Error> {
         //todo: do wes need to catch errors here? Would this ever fail?
-        serde_json::to_string(self).unwrap()
+        let out = serde_json::to_string(self)?;
+
+        Ok(out)
     }
 }
 
-async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, ApiCallError> {
+async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> {
     let client: ApiClient = ApiClient::new(print_url);
     let url = "https://www.bungie.net/Platform/Destiny2/Manifest/";
 
     //custom header
     //TODO: handle parsing errorcontent
-    let resp = match client.call_api(url).await {
-        Ok(e) => e,
-        Err(e) => {
-            return Err(ApiCallError {
-                message: format!("{}", e),
-                _error_type: ApiCallErrorType::Request,
-            })
-        }
-    };
+    let resp = client.call_api(url).await?;
 
-    let response = match resp.json::<ManifestResponse>().await {
-        Ok(e) => e,
-        Err(e) => {
-            return Err(ApiCallError {
-                message: format!("{}", e),
-                _error_type: ApiCallErrorType::Parse,
-            })
-        }
-    };
+    let response = resp.json::<ManifestResponse>().await?;
 
     let m_info: ManifestInfo = ManifestInfo::from_manifest(&response.manifest);
 
@@ -117,11 +103,6 @@ struct Opt {
     force: bool,
 }
 
-//TODO: we can create an ErrorType enum for our struct if we need more info
-struct Error {
-    message: String,
-}
-
 fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
     //TODO: clean up these unwraps
     let c_dir = current_dir().unwrap();
@@ -133,52 +114,30 @@ fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
     }
 
     if !m_dir.exists() {
-        let _m = match std::fs::create_dir_all(&m_dir) {
-            Ok(e) => e,
-            Err(_e) => {
-                return Err(Error {
-                    message: String::from("Error creating directory."),
-                });
-            }
-        };
+        let _m = std::fs::create_dir_all(&m_dir)?;
     }
 
     //TODO: do we need to do this step?
-    let m_dir = match std::fs::canonicalize(&m_dir.as_path()) {
-        Ok(e) => e,
-        Err(_e) => {
-            return Err(Error {
-                message: String::from("Error creating canonicalized path."),
-            });
-        }
-    };
+    let m_dir = std::fs::canonicalize(&m_dir.as_path())?;
 
     Ok(m_dir)
 }
 
-fn save_manifest_info(manifest_info:&ManifestInfo, path:&PathBuf) -> Result<(), Error> {
-
-    let json = manifest_info.to_json();
+fn save_manifest_info(manifest_info: &ManifestInfo, path: &PathBuf) -> Result<(), Error> {
+    let json = manifest_info.to_json()?;
     //opens a file for writing. creates if it doesn't exist, otherwise
     //overwrites it
-    match fs::write(path, &json) {
-        Ok(_e) => _e,
-        Err(e) => {
-            return Err(Error {
-                message: String::from("Could not save manifest info."),
-            });
-        },
-    };
+    fs::write(path, &json)?;
 
     Ok(())
 }
 
-fn load_manifest_info(path:&PathBuf) -> Result<ManifestInfo, Error> {
-
+fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
     //TODO: check if file exists? We shouldnt need to
 
-    let json = fs::read_to_string(path).unwrap();
-    let m = ManifestInfo::from_json(&json);
+    //TODO: make sure this error type is handled by error
+    let json = fs::read_to_string(path)?;
+    let m = ManifestInfo::from_json(&json)?;
 
     Ok(m)
 }
@@ -190,7 +149,7 @@ async fn main() -> Result<(), ExitFailure> {
     let m_dir = match get_manifest_dir(&opt.manifest_dir) {
         Ok(e) => e,
         Err(e) => {
-            println!("{}", e.message);
+            println!("{}", e);
             println!("{:?}", opt.manifest_dir);
             std::process::exit(0);
         }
@@ -224,7 +183,7 @@ async fn main() -> Result<(), ExitFailure> {
     if !force {
         //maybe make this an Option
         if let Ok(e) = load_manifest_info(&m_info_path) {
-            let local_manifest_info:ManifestInfo = e;
+            let local_manifest_info: ManifestInfo = e;
             println!("{:?}", local_manifest_info);
         } else {
             force = true;
@@ -233,14 +192,12 @@ async fn main() -> Result<(), ExitFailure> {
 
     //let m = ManifestInfo::from_json(&remote_manifest_info.to_json());
     //println!("{:?}", &m);
-/*
-    match save_manifest_info(&m_info, &m_info_path) {
-        Ok(e) => e,
-        Err(e) => println!("Could not save manifest info"),
-    };
-*/
-
-
+    /*
+        match save_manifest_info(&m_info, &m_info_path) {
+            Ok(e) => e,
+            Err(e) => println!("Could not save manifest info"),
+        };
+    */
 
     /*
     if !force {

@@ -1,5 +1,5 @@
+use serde::Deserialize;
 use serde_derive::{Deserialize, Serialize};
-use serde::{Deserialize};
 
 use crate::apiclient::DestinyResponseStatus;
 
@@ -13,26 +13,27 @@ pub struct ManifestResponse {
     pub manifest: Manifest,
 
     #[serde(flatten)]
-    pub status:DestinyResponseStatus,
+    pub status: DestinyResponseStatus,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Manifest {
-    pub version:String,
+    pub version: String,
 
-    #[serde(rename="mobileWorldContentPaths")]
-    pub mobile_world_content_paths:MobileWorldContentPaths,
+    #[serde(rename = "mobileWorldContentPaths")]
+    pub mobile_world_content_paths: MobileWorldContentPaths,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MobileWorldContentPaths {
     #[serde(deserialize_with = "prepend_base_url")]
-    pub en:String,
+    pub en: String,
 }
 
-fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error> where D: serde::de::Deserializer<'de>
+fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
 {
-
     //TODO: move to URL base to constant
     String::deserialize(deserializer).map(|a| {
         let mut s = String::from(BASE_URL);
@@ -40,4 +41,3 @@ fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error> where D
         s
     })
 }
-

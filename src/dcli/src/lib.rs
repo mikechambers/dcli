@@ -1,3 +1,4 @@
 pub mod apiclient;
-pub mod platform;
+pub mod error;
 pub mod manifest;
+pub mod platform;
