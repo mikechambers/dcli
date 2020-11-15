@@ -25,6 +25,8 @@ use dcli::manifest::{Manifest, ManifestResponse};
 use exitfailure::ExitFailure;
 use structopt::StructOpt;
 
+use std::fs;
+
 use std::env::current_dir;
 use std::path::PathBuf;
 
@@ -154,6 +156,33 @@ fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
     Ok(m_dir)
 }
 
+fn save_manifest_info(manifest_info:&ManifestInfo, path:&PathBuf) -> Result<(), Error> {
+
+    let json = manifest_info.to_json();
+    //opens a file for writing. creates if it doesn't exist, otherwise
+    //overwrites it
+    match fs::write(path, &json) {
+        Ok(_e) => _e,
+        Err(e) => {
+            return Err(Error {
+                message: String::from("Could not save manifest info."),
+            });
+        },
+    };
+
+    Ok(())
+}
+
+fn load_manifest_info(path:&PathBuf) -> Result<ManifestInfo, Error> {
+
+    //TODO: check if file exists? We shouldnt need to
+
+    let json = fs::read_to_string(path).unwrap();
+    let m = ManifestInfo::from_json(&json);
+
+    Ok(m)
+}
+
 #[tokio::main]
 async fn main() -> Result<(), ExitFailure> {
     let opt = Opt::from_args();
@@ -178,6 +207,9 @@ async fn main() -> Result<(), ExitFailure> {
         force = true;
     }
 
+    //TODO:TEMP UNTIL MANIFEST SAVING IS IN
+    force = false;
+
     println!("Force : {}", force);
 
     //TODO: unwrap this
@@ -189,8 +221,26 @@ async fn main() -> Result<(), ExitFailure> {
         }
     };
 
-    let m = ManifestInfo::from_json(&remote_manifest_info.to_json());
-    println!("{:?}", &m);
+    if !force {
+        //maybe make this an Option
+        if let Ok(e) = load_manifest_info(&m_info_path) {
+            let local_manifest_info:ManifestInfo = e;
+            println!("{:?}", local_manifest_info);
+        } else {
+            force = true;
+        };
+    }
+
+    //let m = ManifestInfo::from_json(&remote_manifest_info.to_json());
+    //println!("{:?}", &m);
+/*
+    match save_manifest_info(&m_info, &m_info_path) {
+        Ok(e) => e,
+        Err(e) => println!("Could not save manifest info"),
+    };
+*/
+
+
 
     /*
     if !force {
