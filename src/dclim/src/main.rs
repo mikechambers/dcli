@@ -23,7 +23,7 @@
 use exitfailure::ExitFailure;
 use structopt::StructOpt;
 use dcli::apiclient::{ApiClient, ApiCallError, ApiCallErrorType, DestinyResponseStatus};
-use dcli::manifest::Manifest;
+use dcli::manifest::{Manifest, ManifestResponse};
 
 
 use std::path::PathBuf;
@@ -90,7 +90,7 @@ async fn retrieve_manifest_info(print_url:bool) -> Result<ManifestInfo, ApiCallE
         }
     };
 
-    let manifest = match resp.json::<Manifest>().await {
+    let response = match resp.json::<ManifestResponse>().await {
         Ok(e) => e,
         Err(e) => {
             return Err(ApiCallError {
@@ -100,7 +100,7 @@ async fn retrieve_manifest_info(print_url:bool) -> Result<ManifestInfo, ApiCallE
         }
     };
 
-    let m_info:ManifestInfo = ManifestInfo::from_manifest(&manifest);
+    let m_info:ManifestInfo = ManifestInfo::from_manifest(&response.manifest);
 
     Ok(m_info)
 }
@@ -202,7 +202,7 @@ async fn main() -> Result<(), ExitFailure> {
     };
 
     let m = ManifestInfo::from_json(&remote_manifest_info.to_json());
-    println!("{:?}", m);
+    println!("{:?}", &m);
 
     /*
     if !force {

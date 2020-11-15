@@ -6,14 +6,20 @@ use crate::apiclient::DestinyResponseStatus;
 //TODO: we can collapse this into a single object to reuse
 //TODO: move into own file
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Manifest {
+pub struct ManifestResponse {
     #[serde(rename = "Response")]
-    pub version: String,
-
-    pub mobile_world_content_paths:MobileWorldContentPaths,
+    pub manifest: Manifest,
 
     #[serde(flatten)]
     pub status:DestinyResponseStatus,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Manifest {
+    pub version:String,
+
+    #[serde(rename="mobileWorldContentPaths")]
+    pub mobile_world_content_paths:MobileWorldContentPaths,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -24,7 +30,12 @@ pub struct MobileWorldContentPaths {
 
 fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error> where D: serde::de::Deserializer<'de>
 {
+
     //TODO: move to URL base to constant
-    MobileWorldContentPaths::deserialize(deserializer).map(|a| format!("https://www.bungie.net{:?}", a))
+    String::deserialize(deserializer).map(|a| {
+        let mut s = String::from("https://www.bungie.net");
+        s.push_str(&a);
+        s
+    })
 }
 
