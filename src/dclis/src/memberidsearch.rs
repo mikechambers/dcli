@@ -20,7 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use dcli::apiclient::{ApiCallError, ApiCallErrorType, ApiClient};
+use dcli::apiclient::{ApiClient, DestinyResponseStatus, HasDestinyResponseStatus};
+use dcli::error::Error;
 use dcli::platform::Platform;
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -40,30 +41,15 @@ impl MemberIdSearch {
     pub async fn retrieve_member_id_from_steam(
         &self,
         steam_id: &str,
-    ) -> Option<Result<Membership, ApiCallError>> {
+    ) -> Option<Result<Membership, Error>> {
         let url = format!(
             "https://www.bungie.net/Platform/User/GetMembershipFromHardLinkedCredential/12/{steam_id}/",
             steam_id = utf8_percent_encode(&steam_id, NON_ALPHANUMERIC),
         );
 
-        let resp = match self.client.call_api(url).await {
+        let resp = match self.client.call_and_parse::<DestinyResponseSteam>(&url).await {
             Ok(e) => e,
-            Err(e) => {
-                return Some(Err(ApiCallError {
-                    message: get_request_error_message(e),
-                    _error_type: ApiCallErrorType::Request,
-                }))
-            }
-        };
-
-        let resp = match resp.json::<DestinyResponseSteam>().await {
-            Ok(e) => e,
-            Err(e) => {
-                return Some(Err(ApiCallError {
-                    message: get_request_error_message(e),
-                    _error_type: ApiCallErrorType::Parse,
-                }))
-            }
+            Err(e) => return Some(Err(e)),
         };
 
         let m = Membership {
@@ -78,7 +64,7 @@ impl MemberIdSearch {
         &self,
         id: &str,
         platform: Platform,
-    ) -> Option<Result<Membership, ApiCallError>> {
+    ) -> Option<Result<Membership, Error>> {
         if platform == Platform::Steam {
             return self.retrieve_member_id_from_steam(&id).await;
         }
@@ -95,24 +81,9 @@ impl MemberIdSearch {
         //custom header
         //TODO: handle parsing error
 
-        let resp = match self.client.call_api(url).await {
+        let resp = match self.client.call_and_parse::<DestinySearchResponse>(&url).await {
             Ok(e) => e,
-            Err(e) => {
-                return Some(Err(ApiCallError {
-                    message: get_request_error_message(e),
-                    _error_type: ApiCallErrorType::Request,
-                }))
-            }
-        };
-
-        let resp = match resp.json::<DestinySearchResponse>().await {
-            Ok(e) => e,
-            Err(e) => {
-                return Some(Err(ApiCallError {
-                    message: get_request_error_message(e),
-                    _error_type: ApiCallErrorType::Parse,
-                }))
-            }
+            Err(e) => return Some(Err(e)),
         };
 
         let results: Vec<DestinyResponseMember> = resp.response;
@@ -129,10 +100,6 @@ impl MemberIdSearch {
     }
 }
 
-fn get_request_error_message(error: reqwest::Error) -> String {
-    format!("{}", error)
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 struct DestinySearchResponse {
     #[serde(rename = "Response")]
@@ -142,6 +109,12 @@ struct DestinySearchResponse {
     status:DestinyResponseStatus,
 }
 
+impl HasDestinyResponseStatus for DestinySearchResponse {
+    fn get_status(&self) -> &DestinyResponseStatus {
+        &self.status
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 struct DestinyResponseSteam {
     #[serde(rename = "Response")]
@@ -149,6 +122,12 @@ struct DestinyResponseSteam {
 
     #[serde(flatten)]
     status:DestinyResponseStatus,
+}
+
+impl HasDestinyResponseStatus for DestinyResponseSteam {
+    fn get_status(&self) -> &DestinyResponseStatus {
+        &self.status
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

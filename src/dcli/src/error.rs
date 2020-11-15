@@ -29,7 +29,7 @@ impl Display for Error {
 }
 
 impl From<serde_json::Error> for Error {
-    fn from(err: serde_json::Error) -> Error {
+    fn from(_err: serde_json::Error) -> Error {
         Error::ApiParse //TODO:: impliment this for all error types
     }
 }

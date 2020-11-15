@@ -96,7 +96,7 @@ async fn main() -> Result<(), ExitFailure> {
         Some(e) => match e {
             Ok(e) => e,
             Err(e) => {
-                println!("{}", e.message);
+                println!("{}", e);
                 //TODO: can we just return here?
                 std::process::exit(1);
             }

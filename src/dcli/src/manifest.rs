@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::apiclient::DestinyResponseStatus;
+use crate::apiclient::{DestinyResponseStatus, HasDestinyResponseStatus};
 
 const BASE_URL: &str = "https://www.bungie.net";
 
@@ -14,6 +14,12 @@ pub struct ManifestResponse {
 
     #[serde(flatten)]
     pub status: DestinyResponseStatus,
+}
+
+impl HasDestinyResponseStatus for ManifestResponse {
+    fn get_status(&self) -> &DestinyResponseStatus {
+        &self.status
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

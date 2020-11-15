@@ -26,6 +26,15 @@ use serde_derive::{Deserialize, Serialize};
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
 
+pub fn check_destiny_response_status(status:&DestinyResponseStatus) -> Result<(), Error> {
+
+    if status.error_code != 1 {
+        return Err(Error::ApiStatus);
+    }
+
+    Ok(())
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DestinyResponseStatus {
     #[serde(rename = "ErrorCode")]
@@ -41,6 +50,10 @@ pub struct DestinyResponseStatus {
     message: String,
 }
 
+pub trait HasDestinyResponseStatus {
+    fn get_status(&self) -> &DestinyResponseStatus;
+}
+
 pub struct ApiClient {
     pub print_url: bool,
 }
@@ -50,7 +63,7 @@ impl ApiClient {
         ApiClient { print_url }
     }
 
-    pub async fn call_api(&self, url: &str) -> Result<reqwest::Response, Error> {
+    pub async fn call(&self, url: &str) -> Result<reqwest::Response, Error> {
         let url = Url::parse(&url).unwrap();
 
         if self.print_url {
@@ -66,5 +79,15 @@ impl ApiClient {
             .await?; //this either returns a reqwest::Response for an Error which is returned
 
         Ok(response)
+    }
+
+    //TODO: add trait for having status property
+    pub async fn call_and_parse<T: serde::de::DeserializeOwned + HasDestinyResponseStatus>(&self, url: &str) -> Result<T, Error> {
+
+        let r = self.call(url).await?.json::<T>().await?;
+
+        check_destiny_response_status(r.get_status())?;
+
+        Ok(r)
     }
 }

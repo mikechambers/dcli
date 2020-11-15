@@ -42,6 +42,7 @@ fn _load_manifest_info(_manifest_info_path: &PathBuf) -> Option<ManifestInfo> {
     Some(m)
 }
 
+//TODO: move to its own file
 #[derive(Serialize, Deserialize, Debug)]
 struct ManifestInfo {
     version: String,
@@ -75,11 +76,7 @@ async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> 
     let client: ApiClient = ApiClient::new(print_url);
     let url = "https://www.bungie.net/Platform/Destiny2/Manifest/";
 
-    //custom header
-    //TODO: handle parsing errorcontent
-    let resp = client.call_api(url).await?;
-
-    let response = resp.json::<ManifestResponse>().await?;
+    let response = client.call_and_parse::<ManifestResponse>(url).await?;
 
     let m_info: ManifestInfo = ManifestInfo::from_manifest(&response.manifest);
 
