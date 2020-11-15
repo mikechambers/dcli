@@ -22,7 +22,6 @@
 
 use reqwest::Url;
 use serde_derive::{Deserialize, Serialize};
-use serde::{Deserialize, Deserializer};
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
 
