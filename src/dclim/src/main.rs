@@ -23,6 +23,8 @@
 use exitfailure::ExitFailure;
 use structopt::StructOpt;
 use dcli::apiclient::{ApiClient, ApiCallError, ApiCallErrorType, DestinyResponseStatus};
+use dcli::manifest::Manifest;
+
 
 use std::path::PathBuf;
 use std::env::current_dir;
@@ -39,27 +41,30 @@ fn load_manifest_info(manifest_info_path:&PathBuf) -> Option<ManifestInfo> {
     Some(m)
 }
 
-//TODO: we can collapse this into a single object to reuse
-//TODO: move into own file
-#[derive(Serialize, Deserialize, Debug)]
-struct Manifest {
-    #[serde(rename = "Response")]
-    response: ManifestInfo,
-
-    #[serde(flatten)]
-    status:DestinyResponseStatus,
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 struct ManifestInfo {
     version:String,
 
-    //#[serde(rename=(deserialize="mobileWorldContentPaths", serialize="url"), deserialize_with = "deserialize_mobile_world_content_Paths")]
-    #[serde(rename(serialize = "url", deserialize = "mobileWorldContentPaths"), deserialize_with = "deserialize_mobile_world_content_Paths")]
     url:String,
 }
 
 impl ManifestInfo {
+
+    fn from_manifest(manifest:&Manifest) -> ManifestInfo {
+        ManifestInfo {
+            version:String::from(&manifest.version),
+            url:String::from(&manifest.mobile_world_content_paths.en),
+        }
+    }
+
+    fn from_json(json:&str) -> ManifestInfo {
+
+        //TODO: handle error?
+        let m:ManifestInfo = serde_json::from_str(json).unwrap();
+
+        m
+    }
+
     fn to_json(&self) -> String {
 
         //todo: do wes need to catch errors here? Would this ever fail?
@@ -67,17 +72,6 @@ impl ManifestInfo {
     }
 }
 
-fn deserialize_mobile_world_content_Paths<'de, D>(deserializer: D) -> Result<String, D::Error> where D: serde::de::Deserializer<'de>
-{
-    #[derive(Deserialize)]
-    #[serde (rename="mobileWorldContentPaths")]
-    struct MobileWorldContentPaths {
-        en: String,
-    }
-
-    //TODO: move to URL base to constant
-    MobileWorldContentPaths::deserialize(deserializer).map(|mobileWorldContentPaths| format!("https://www.bungie.net{}",mobileWorldContentPaths.en))
-}
 
 async fn retrieve_manifest_info(print_url:bool) -> Result<ManifestInfo, ApiCallError> {
 
@@ -96,8 +90,8 @@ async fn retrieve_manifest_info(print_url:bool) -> Result<ManifestInfo, ApiCallE
         }
     };
 
-    let m_info = match resp.json::<Manifest>().await {
-        Ok(e) => e.response,
+    let manifest = match resp.json::<Manifest>().await {
+        Ok(e) => e,
         Err(e) => {
             return Err(ApiCallError {
                 message: format!("{}", e),
@@ -105,6 +99,8 @@ async fn retrieve_manifest_info(print_url:bool) -> Result<ManifestInfo, ApiCallE
             })
         }
     };
+
+    let m_info:ManifestInfo = ManifestInfo::from_manifest(&manifest);
 
     Ok(m_info)
 }
@@ -205,7 +201,8 @@ async fn main() -> Result<(), ExitFailure> {
         },
     };
 
-    println!("{}", remote_manifest_info.to_json());
+    let m = ManifestInfo::from_json(&remote_manifest_info.to_json());
+    println!("{:?}", m);
 
     /*
     if !force {
