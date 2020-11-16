@@ -35,6 +35,7 @@ pub enum Error {
     ApiStatus,
     ApiParse,
     IoError,
+    ZipError,
     Unknown,
 }
 
@@ -45,6 +46,7 @@ impl Display for Error {
             Error::ApiStatus => write!(f, "Destiny 2 API call returned an error."),
             Error::ApiParse => write!(f, "Error parsing results from Destiny 2 API call."),
             Error::IoError => write!(f, "Error working with file system."),
+            Error::ZipError => write!(f, "Error decompressing manifest."),
             Error::Unknown => write!(f, "An unknown error occured."),
         }
     }
@@ -68,6 +70,14 @@ impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Error {
         match err {
             _ => Error::IoError,
+        } //TODO:: impliment this for all error types
+    }
+}
+
+impl From<zip::result::ZipError> for Error {
+    fn from(err: zip::result::ZipError) -> Error {
+        match err {
+            _ => Error::ZipError,
         } //TODO:: impliment this for all error types
     }
 }

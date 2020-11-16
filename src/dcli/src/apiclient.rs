@@ -90,4 +90,24 @@ impl ApiClient {
 
         Ok(r)
     }
+/*
+    pub async fn download(&self, url: &str) -> Result<reqwest::Response, Error> {
+        let url = Url::parse(&url).unwrap();
+
+        if self.print_url {
+            println!("{}", url);
+        }
+
+        let client = reqwest::Client::new();
+
+        let response = client
+            .get(url)
+            .header("X-API-Key", DESTINY_API_KEY)
+            .send()
+            .await?
+            .bytes(); //this either returns a reqwest::Response for an Error which is returned
+
+        Ok(response)
+    }
+    */
 }

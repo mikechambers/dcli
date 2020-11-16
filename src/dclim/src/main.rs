@@ -22,26 +22,17 @@
 
 mod manifest_info;
 
-use manifest_info::ManifestInfo;
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
 use dcli::manifest::ManifestResponse;
 use exitfailure::ExitFailure;
+use manifest_info::ManifestInfo;
 use structopt::StructOpt;
 
 use std::fs;
 
 use std::env::current_dir;
 use std::path::PathBuf;
-
-fn _load_manifest_info(_manifest_info_path: &PathBuf) -> Option<ManifestInfo> {
-    let m = ManifestInfo {
-        url: String::from(""),
-        version: String::from(""),
-    };
-
-    Some(m)
-}
 
 async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> {
     let client: ApiClient = ApiClient::new(print_url);
@@ -52,23 +43,6 @@ async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> 
     let m_info: ManifestInfo = ManifestInfo::from_manifest(&response.manifest);
 
     Ok(m_info)
-}
-
-#[derive(StructOpt)]
-/// Command line tool for retrieving and managing the Destiny 2 manifest database.
-///
-///
-struct Opt {
-    #[structopt(short = "d", long = "dir", required = true, parse(from_os_str))]
-    manifest_dir: PathBuf,
-
-    ///Print out the url used for the API calls
-    #[structopt(short = "u", long = "url")]
-    url: bool,
-
-    ///Force a download of manifest regardless of whether it has been updated
-    #[structopt(short = "f", long = "force")]
-    force: bool,
 }
 
 fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
@@ -93,6 +67,7 @@ fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
 
 fn save_manifest_info(manifest_info: &ManifestInfo, path: &PathBuf) -> Result<(), Error> {
     let json = manifest_info.to_json()?;
+
     //opens a file for writing. creates if it doesn't exist, otherwise
     //overwrites it
     fs::write(path, &json)?;
@@ -108,6 +83,51 @@ fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
     let m = ManifestInfo::from_json(&json)?;
 
     Ok(m)
+}
+
+//should this move to ApiClient?
+async fn download_manifest(url: &str, path: &PathBuf, print_url:bool) -> Result<(), Error> {
+    let client: ApiClient = ApiClient::new(print_url);
+
+    let mut response = client.call(url).await?;
+
+    use tokio::prelude::*;
+    let mut out: Vec<u8> = Vec::new();
+
+    while let Some(chunk) = response.chunk().await? {
+        out.write_all(&chunk).await?;
+    }
+
+    let reader = std::io::Cursor::new(out);
+    let mut zip = zip::ZipArchive::new(reader)?;
+
+    let mut manifest = zip.by_index(0)?;
+
+    let mut outfile = fs::File::create(&path)?;
+    std::io::copy(&mut manifest, &mut outfile)?;
+
+    Ok(())
+}
+
+#[derive(StructOpt)]
+/// Command line tool for retrieving and managing the Destiny 2 manifest database.
+///
+///
+struct Opt {
+    #[structopt(short = "d", long = "dir", required = true, parse(from_os_str))]
+    manifest_dir: PathBuf,
+
+    ///Output additional information
+    #[structopt(short = "v", long = "verbose")]
+    verbose: bool,
+
+    ///Force a download of manifest regardless of whether it has been updated. Overrides --check.
+    #[structopt(short = "f", long = "force")]
+    force: bool,
+
+    ///Check whether a new manifest version is available, but do not download. If overridden by --force.
+    #[structopt(short = "c", long = "check")]
+    check: bool,
 }
 
 #[tokio::main]
@@ -126,60 +146,85 @@ async fn main() -> Result<(), ExitFailure> {
     let m_path = m_dir.join("manifest.sqlite3");
     let m_info_path = m_dir.join("manifest_info.json");
 
-    println!("{:?}", m_path);
-    println!("{:?}", m_info_path);
-
-    let mut force = opt.force;
-    if !force && (!m_path.exists() || !m_info_path.exists()) {
-        force = true;
-    }
-
-    //TODO:TEMP UNTIL MANIFEST SAVING IS IN
-    force = false;
-
-    println!("Force : {}", force);
-
-    //TODO: unwrap this
-    let remote_manifest_info = match retrieve_manifest_info(opt.url).await {
+    let remote_manifest_info = match retrieve_manifest_info(opt.verbose).await {
         Ok(e) => e,
         Err(e) => {
-            println!("{:?}", e);
+            println!("Could not retrieve manifest info from Bungie : {}", e);
             std::process::exit(0);
         }
     };
 
-    if !force {
-        //maybe make this an Option
+    if opt.verbose {
+        println!("Remote Manifest version : {}", remote_manifest_info.version);
+        println!("Remote Manifest url     : {}", remote_manifest_info.url);
+    }
+
+    let mut manifest_needs_updating = !m_path.exists() || !m_info_path.exists();
+
+    if !manifest_needs_updating {
         if let Ok(e) = load_manifest_info(&m_info_path) {
             let local_manifest_info: ManifestInfo = e;
-            println!("{:?}", local_manifest_info);
+
+            if opt.verbose {
+                println!("Local Manifest version  : {}", local_manifest_info.version);
+                println!("Local Manifest url      : {}", local_manifest_info.url);
+            }
+
+            manifest_needs_updating = local_manifest_info.url != remote_manifest_info.url;
         } else {
-            force = true;
-        };
+            //couldnt load local manifest, so we will try and update
+            manifest_needs_updating = true;
+
+            if opt.verbose {
+                println!("Could not load local manifest info. Forcing download.");
+            }
+        }
     }
 
-    //let m = ManifestInfo::from_json(&remote_manifest_info.to_json());
-    //println!("{:?}", &m);
-    /*
-        match save_manifest_info(&m_info, &m_info_path) {
+    if manifest_needs_updating {
+        println!("Updated manifest available : {}", &remote_manifest_info.version);
+    }
+
+    if opt.check {
+        if !manifest_needs_updating {
+            println!("No new manifest avaliable.");
+        }
+
+        if !opt.force {
+            std::process::exit(0);
+        }
+    }
+
+    if opt.force || manifest_needs_updating {
+        println!("Downloading manifest. This may take a bit of time.");
+        match download_manifest(&remote_manifest_info.url, &m_path, opt.verbose).await {
             Ok(e) => e,
-            Err(e) => println!("Could not save manifest info"),
+            Err(e) => {
+                println!("Could not download and save manifest : {}", e);
+                std::process::exit(0);
+            }
         };
-    */
 
-    /*
-    if !force {
-        //maybe make this an Option
-        let local_manifest_info:ManifestInfo = load_manifest_info(&m_info_path).unwrap();
+        if opt.verbose {
+            println!("Download and save complete.");
+            println!("Saving manifest info.");
+        }
+
+        match save_manifest_info(&remote_manifest_info, &m_info_path) {
+            Ok(e) => e,
+            Err(e) => {
+                println!("Could not write manifest info : {}", e);
+                std::process::exit(0);
+            }
+        }
+        if opt.verbose {
+            println!("Manifest info saved.");
+        }
+
+        println!("{}", m_path.display());
+    } else {
+        println!("No new manifest available");
     }
-
-    if(force || local_manifest_info.url != remote_manifest_info.url) {
-        //download_manifest(m_path);
-        //write_manifest_info(m_info_path, remote_manifest_info);
-    }
-    */
-
-    println!("{:?}", m_dir.exists());
 
     Ok(())
 }
