@@ -114,7 +114,8 @@ async fn download_manifest(url: &str, path: &PathBuf, print_url:bool) -> Result<
 ///
 ///
 struct Opt {
-    #[structopt(short = "d", long = "dir", required = true, parse(from_os_str))]
+    ///Directory where the manifest and associated files will be stored.
+    #[structopt(short = "d", long = "dir", parse(from_os_str))]
     manifest_dir: PathBuf,
 
     ///Output additional information

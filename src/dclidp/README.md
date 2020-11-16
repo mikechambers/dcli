@@ -1,5 +1,7 @@
 # dclidp
 
+This utility has been superseded by [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
+
 Python 3 based Command line utility for managing and syncing the remote Destiny 2 API manifest database. The utility can be used to:
 
 * Download latest version of the manifest sqlite database file
