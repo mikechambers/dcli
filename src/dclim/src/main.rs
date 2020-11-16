@@ -20,9 +20,12 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+mod manifest_info;
+
+use manifest_info::ManifestInfo;
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
-use dcli::manifest::{Manifest, ManifestResponse};
+use dcli::manifest::ManifestResponse;
 use exitfailure::ExitFailure;
 use structopt::StructOpt;
 
@@ -31,8 +34,6 @@ use std::fs;
 use std::env::current_dir;
 use std::path::PathBuf;
 
-use serde_derive::{Deserialize, Serialize};
-
 fn _load_manifest_info(_manifest_info_path: &PathBuf) -> Option<ManifestInfo> {
     let m = ManifestInfo {
         url: String::from(""),
@@ -40,36 +41,6 @@ fn _load_manifest_info(_manifest_info_path: &PathBuf) -> Option<ManifestInfo> {
     };
 
     Some(m)
-}
-
-//TODO: move to its own file
-#[derive(Serialize, Deserialize, Debug)]
-struct ManifestInfo {
-    version: String,
-
-    url: String,
-}
-
-impl ManifestInfo {
-    fn from_manifest(manifest: &Manifest) -> ManifestInfo {
-        ManifestInfo {
-            version: String::from(&manifest.version),
-            url: String::from(&manifest.mobile_world_content_paths.en),
-        }
-    }
-
-    fn from_json(json: &str) -> Result<ManifestInfo, Error> {
-        let m: ManifestInfo = serde_json::from_str(json)?;
-
-        Ok(m)
-    }
-
-    fn to_json(&self) -> Result<String, Error> {
-        //todo: do wes need to catch errors here? Would this ever fail?
-        let out = serde_json::to_string(self)?;
-
-        Ok(out)
-    }
 }
 
 async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> {

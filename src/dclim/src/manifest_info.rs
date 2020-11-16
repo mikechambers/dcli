@@ -20,7 +20,35 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod apiclient;
-pub mod error;
-pub mod manifest;
-pub mod platform;
+use serde_derive::{Serialize, Deserialize};
+use dcli::error::Error;
+use dcli::manifest::Manifest;
+
+//TODO: move to its own file
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ManifestInfo {
+    pub version: String,
+    pub url: String,
+}
+
+impl ManifestInfo {
+    pub fn from_manifest(manifest: &Manifest) -> ManifestInfo {
+        ManifestInfo {
+            version: String::from(&manifest.version),
+            url: String::from(&manifest.mobile_world_content_paths.en),
+        }
+    }
+
+    pub fn from_json(json: &str) -> Result<ManifestInfo, Error> {
+        let m: ManifestInfo = serde_json::from_str(json)?;
+
+        Ok(m)
+    }
+
+    pub fn to_json(&self) -> Result<String, Error> {
+        //todo: do wes need to catch errors here? Would this ever fail?
+        let out = serde_json::to_string(self)?;
+
+        Ok(out)
+    }
+}
