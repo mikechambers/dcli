@@ -29,6 +29,8 @@ use exitfailure::ExitFailure;
 use manifest_info::ManifestInfo;
 use structopt::StructOpt;
 
+use tokio::prelude::*;
+
 use std::fs;
 
 use std::env::current_dir;
@@ -76,9 +78,7 @@ fn save_manifest_info(manifest_info: &ManifestInfo, path: &PathBuf) -> Result<()
 }
 
 fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
-    //TODO: check if file exists? We shouldnt need to
 
-    //TODO: make sure this error type is handled by error
     let json = fs::read_to_string(path)?;
     let m = ManifestInfo::from_json(&json)?;
 
@@ -90,8 +90,6 @@ async fn download_manifest(url: &str, path: &PathBuf, print_url:bool) -> Result<
     let client: ApiClient = ApiClient::new(print_url);
 
     let mut response = client.call(url).await?;
-
-    use tokio::prelude::*;
     let mut out: Vec<u8> = Vec::new();
 
     while let Some(chunk) = response.chunk().await? {
