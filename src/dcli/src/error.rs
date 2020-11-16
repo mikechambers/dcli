@@ -59,25 +59,19 @@ impl From<serde_json::Error> for Error {
 }
 
 impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Error {
-        match err {
-            _ => Error::ApiRequest,
-        } //TODO:: impliment this for all error types
+    fn from(_err: reqwest::Error) -> Error {
+        Error::ApiRequest //TODO:: impliment this for all error types
     }
 }
 
 impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
-        match err {
-            _ => Error::IoError,
-        } //TODO:: impliment this for all error types
+    fn from(_err: std::io::Error) -> Error {
+        Error::IoError //TODO:: impliment this for all error types
     }
 }
 
 impl From<zip::result::ZipError> for Error {
-    fn from(err: zip::result::ZipError) -> Error {
-        match err {
-            _ => Error::ZipError,
-        } //TODO:: impliment this for all error types
+    fn from(_err: zip::result::ZipError) -> Error {
+        Error::ZipError //TODO:: impliment this for all error types
     }
 }
