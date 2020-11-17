@@ -55,6 +55,7 @@ impl MemberIdSearch {
         let m = Membership {
             id: resp.response.membership_id,
             platform: Platform::from_id(resp.response.membership_type),
+            display_name:None,
         };
 
         Some(Ok(m))
@@ -69,31 +70,28 @@ impl MemberIdSearch {
             return self.retrieve_member_id_from_steam(&id).await;
         }
 
-        //TODO: add input
-        //TODO: urlencode input
-        //TODO:: need to branch for steam
         let url = format!(
             "https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/{platform_id}/{id}/",
             platform_id = platform.to_id(),
             id = utf8_percent_encode(&id, NON_ALPHANUMERIC),
         );
 
-        //custom header
-        //TODO: handle parsing error
-
         let resp = match self.client.call_and_parse::<DestinySearchResponse>(&url).await {
             Ok(e) => e,
             Err(e) => return Some(Err(e)),
         };
 
-        let results: Vec<DestinyResponseMember> = resp.response;
+        let mut results: Vec<DestinyResponseMember> = resp.response;
         if results.is_empty() {
             return None;
         }
 
+        let r_member:&DestinyResponseMember = &results[0];
+
         let m = Membership {
-            id: String::from(results[0].membership_id.as_str()),
-            platform: Platform::from_id(results[0].membership_type),
+            id: String::from(r_member.membership_id.as_str()),
+            platform: Platform::from_id(r_member.membership_type),
+            display_name:results[0].display_name.take(), //this is probably not the right way to do this
         };
 
         Some(Ok(m))
@@ -137,9 +135,13 @@ struct DestinyResponseMember {
 
     #[serde(rename = "membershipId")]
     membership_id: String,
+
+    #[serde(rename="displayName")]
+    display_name:Option<String>,
 }
 
 pub struct Membership {
     pub platform: Platform,
     pub id: String,
+    pub display_name: Option<String>,
 }
