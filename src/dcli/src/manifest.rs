@@ -27,8 +27,6 @@ use crate::apiclient::{DestinyResponseStatus, HasDestinyResponseStatus};
 
 const BASE_URL: &str = "https://www.bungie.net";
 
-//TODO: we can collapse this into a single object to reuse
-//TODO: move into own file
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestResponse {
     #[serde(rename = "Response")]
@@ -62,7 +60,6 @@ fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
-    //TODO: move to URL base to constant
     String::deserialize(deserializer).map(|a| {
         let mut s = String::from(BASE_URL);
         s.push_str(&a);

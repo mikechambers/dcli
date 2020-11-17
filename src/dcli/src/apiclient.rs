@@ -81,7 +81,6 @@ impl ApiClient {
         Ok(response)
     }
 
-    //TODO: add trait for having status property
     pub async fn call_and_parse<T: serde::de::DeserializeOwned + HasDestinyResponseStatus>(&self, url: &str) -> Result<T, Error> {
 
         let r = self.call(url).await?.json::<T>().await?;
@@ -90,24 +89,4 @@ impl ApiClient {
 
         Ok(r)
     }
-/*
-    pub async fn download(&self, url: &str) -> Result<reqwest::Response, Error> {
-        let url = Url::parse(&url).unwrap();
-
-        if self.print_url {
-            println!("{}", url);
-        }
-
-        let client = reqwest::Client::new();
-
-        let response = client
-            .get(url)
-            .header("X-API-Key", DESTINY_API_KEY)
-            .send()
-            .await?
-            .bytes(); //this either returns a reqwest::Response for an Error which is returned
-
-        Ok(response)
-    }
-    */
 }
