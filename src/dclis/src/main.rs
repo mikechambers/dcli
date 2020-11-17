@@ -27,7 +27,6 @@ use dcli::utils::{print_error, print_standard};
 use memberidsearch::MemberIdSearch;
 
 use exitfailure::ExitFailure;
-
 use structopt::StructOpt;
 
 fn is_valid_steam_id(steam_id: &str) -> bool {
