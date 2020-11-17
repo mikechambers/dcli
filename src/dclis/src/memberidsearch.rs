@@ -1,18 +1,18 @@
 /*
 * Copyright 2020 Mike Chambers
 * https://github.com/mikechambers/dcli
-* 
-* Permission is hereby granted, free of charge, to any person obtaining a copy of 
-* this software and associated documentation files (the "Software"), to deal in 
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy of
+* this software and associated documentation files (the "Software"), to deal in
 * the Software without restriction, including without limitation the rights to
 * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-* of the Software, and to permit persons to whom the Software is furnished to do 
+* of the Software, and to permit persons to whom the Software is furnished to do
 * so, subject to the following conditions:
-* 
-* The above copyright notice and this permission notice shall be included in all 
+*
+* The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -47,7 +47,11 @@ impl MemberIdSearch {
             steam_id = utf8_percent_encode(&steam_id, NON_ALPHANUMERIC),
         );
 
-        let resp = match self.client.call_and_parse::<DestinyResponseSteam>(&url).await {
+        let resp = match self
+            .client
+            .call_and_parse::<DestinyResponseSteam>(&url)
+            .await
+        {
             Ok(e) => e,
             Err(e) => return Some(Err(e)),
         };
@@ -55,7 +59,7 @@ impl MemberIdSearch {
         let m = Membership {
             id: resp.response.membership_id,
             platform: Platform::from_id(resp.response.membership_type),
-            display_name:None,
+            display_name: None,
         };
 
         Some(Ok(m))
@@ -76,7 +80,11 @@ impl MemberIdSearch {
             id = utf8_percent_encode(&id, NON_ALPHANUMERIC),
         );
 
-        let resp = match self.client.call_and_parse::<DestinySearchResponse>(&url).await {
+        let resp = match self
+            .client
+            .call_and_parse::<DestinySearchResponse>(&url)
+            .await
+        {
             Ok(e) => e,
             Err(e) => return Some(Err(e)),
         };
@@ -86,12 +94,12 @@ impl MemberIdSearch {
             return None;
         }
 
-        let r_member:&DestinyResponseMember = &results[0];
+        let r_member: &DestinyResponseMember = &results[0];
 
         let m = Membership {
             id: String::from(r_member.membership_id.as_str()),
             platform: Platform::from_id(r_member.membership_type),
-            display_name:results[0].display_name.take(), //this is probably not the right way to do this
+            display_name: results[0].display_name.take(), //this is probably not the right way to do this
         };
 
         Some(Ok(m))
@@ -104,7 +112,7 @@ struct DestinySearchResponse {
     response: Vec<DestinyResponseMember>,
 
     #[serde(flatten)]
-    status:DestinyResponseStatus,
+    status: DestinyResponseStatus,
 }
 
 impl HasDestinyResponseStatus for DestinySearchResponse {
@@ -119,7 +127,7 @@ struct DestinyResponseSteam {
     response: DestinyResponseMember,
 
     #[serde(flatten)]
-    status:DestinyResponseStatus,
+    status: DestinyResponseStatus,
 }
 
 impl HasDestinyResponseStatus for DestinyResponseSteam {
@@ -136,8 +144,8 @@ struct DestinyResponseMember {
     #[serde(rename = "membershipId")]
     membership_id: String,
 
-    #[serde(rename="displayName")]
-    display_name:Option<String>,
+    #[serde(rename = "displayName")]
+    display_name: Option<String>,
 }
 
 pub struct Membership {
