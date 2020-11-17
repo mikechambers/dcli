@@ -137,7 +137,7 @@ struct Opt {
     #[structopt(short = "c", long = "check")]
     check: bool,
 
-    ///Only output the path to the downloaded manifest (ignore errors or other output)
+    ///Only output the path to the downloaded manifest. Errors are suppresed.
     #[structopt(
         short = "t",
         long = "terse",
