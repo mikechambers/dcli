@@ -24,7 +24,6 @@ use dcli::error::Error;
 use dcli::manifest::Manifest;
 use serde_derive::{Deserialize, Serialize};
 
-//TODO: move to its own file
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestInfo {
     pub version: String,
