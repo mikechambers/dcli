@@ -35,6 +35,7 @@ pub enum Error {
     ApiStatus,
     ApiParse,
     IoError,
+    IoErrorDirIsFile,
     ZipError,
     Unknown,
 }
@@ -47,6 +48,7 @@ impl Display for Error {
             Error::ApiParse => write!(f, "Error parsing results from Destiny 2 API call."),
             Error::IoError => write!(f, "Error working with file system."),
             Error::ZipError => write!(f, "Error decompressing manifest."),
+            Error::IoErrorDirIsFile => write!(f, "Expected directory but found file."),
             Error::Unknown => write!(f, "An unknown error occured."),
         }
     }

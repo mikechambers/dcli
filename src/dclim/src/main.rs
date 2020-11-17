@@ -25,7 +25,7 @@ mod manifest_info;
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
 use dcli::manifest::ManifestResponse;
-use dcli::utils::{print_standard, print_error};
+use dcli::utils::{print_error, print_standard};
 use exitfailure::ExitFailure;
 use manifest_info::ManifestInfo;
 use structopt::StructOpt;
@@ -49,13 +49,11 @@ async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> 
 }
 
 fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
-
     let c_dir = current_dir()?;
     let m_dir = c_dir.join(dir.as_path());
 
     if m_dir.is_file() {
-        println!("Error creating directory. File exists.");
-        std::process::exit(0);
+        return Err(Error::IoErrorDirIsFile);
     }
 
     if !m_dir.exists() {
@@ -79,7 +77,6 @@ fn save_manifest_info(manifest_info: &ManifestInfo, path: &PathBuf) -> Result<()
 }
 
 fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
-
     let json = fs::read_to_string(path)?;
     let m = ManifestInfo::from_json(&json)?;
 
@@ -87,7 +84,7 @@ fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
 }
 
 //should this move to ApiClient?
-async fn download_manifest(url: &str, path: &PathBuf, print_url:bool) -> Result<(), Error> {
+async fn download_manifest(url: &str, path: &PathBuf, print_url: bool) -> Result<(), Error> {
     let client: ApiClient = ApiClient::new(print_url);
 
     //Download the manifest
@@ -133,7 +130,7 @@ struct Opt {
     verbose: bool,
 
     ///Force a download of manifest regardless of whether it has been updated.
-    #[structopt(short = "f", long = "force", conflicts_with="check")]
+    #[structopt(short = "f", long = "force", conflicts_with = "check")]
     force: bool,
 
     ///Check whether a new manifest version is available, but do not download.
@@ -141,7 +138,12 @@ struct Opt {
     check: bool,
 
     ///Only output the path to the downloaded manifest (ignore errors or other output)
-    #[structopt(short = "t", long="terse", conflicts_with="verbose", conflicts_with="check")]
+    #[structopt(
+        short = "t",
+        long = "terse",
+        conflicts_with = "verbose",
+        conflicts_with = "check"
+    )]
     terse: bool,
 }
 
@@ -152,8 +154,8 @@ async fn main() -> Result<(), ExitFailure> {
     let m_dir = match get_manifest_dir(&opt.manifest_dir) {
         Ok(e) => e,
         Err(e) => {
-            print_error(format!("{}", e), !opt.terse);
-            print_error(format!("{:?}", opt.manifest_dir), !opt.terse);
+            print_error(&format!("{}", e), !opt.terse);
+            print_error(&format!("{}", opt.manifest_dir.display()), !opt.terse);
             std::process::exit(1);
         }
     };
@@ -164,15 +166,22 @@ async fn main() -> Result<(), ExitFailure> {
     let remote_manifest_info = match retrieve_manifest_info(opt.verbose).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(format!("Could not retrieve manifest info from Bungie : {}", e), !opt.terse);
+            print_error(
+                &format!("Could not retrieve manifest info from Bungie : {}", e),
+                !opt.terse,
+            );
             std::process::exit(1);
         }
     };
 
-
-    print_standard(format!("Remote Manifest version : {}", remote_manifest_info.version), opt.verbose && !opt.terse);
-    print_standard(format!("Remote Manifest url     : {}", remote_manifest_info.url), opt.verbose && !opt.terse);
-
+    print_standard(
+        &format!("Remote Manifest version : {}", remote_manifest_info.version),
+        opt.verbose && !opt.terse,
+    );
+    print_standard(
+        &format!("Remote Manifest url     : {}", remote_manifest_info.url),
+        opt.verbose && !opt.terse,
+    );
 
     let mut manifest_needs_updating = !m_path.exists() || !m_info_path.exists();
 
@@ -180,60 +189,79 @@ async fn main() -> Result<(), ExitFailure> {
         if let Ok(e) = load_manifest_info(&m_info_path) {
             let local_manifest_info: ManifestInfo = e;
 
-            print_standard(format!("Local Manifest version  : {}", local_manifest_info.version), opt.verbose && !opt.terse);
-            print_standard(format!("Local Manifest url      : {}", local_manifest_info.url), opt.verbose && !opt.terse);
+            print_standard(
+                &format!("Local Manifest version  : {}", local_manifest_info.version),
+                opt.verbose && !opt.terse,
+            );
+            print_standard(
+                &format!("Local Manifest url      : {}", local_manifest_info.url),
+                opt.verbose && !opt.terse,
+            );
 
             manifest_needs_updating = local_manifest_info.url != remote_manifest_info.url;
         } else {
             //couldnt load local manifest, so we will try and update
             manifest_needs_updating = true;
 
-            print_standard(format!("Could not load local manifest info. Forcing download."), opt.verbose && !opt.terse);
+            print_standard(
+                "Could not load local manifest info. Forcing download.",
+                opt.verbose && !opt.terse,
+            );
         }
     }
 
     if manifest_needs_updating {
-        print_standard(format!("Updated manifest available : {}", &remote_manifest_info.version), !opt.terse);
+        print_standard(
+            &format!(
+                "Updated manifest available : {}",
+                &remote_manifest_info.version
+            ),
+            !opt.terse,
+        );
     }
 
-    //cant be set with terse
     if opt.check {
         if !manifest_needs_updating {
-            print_standard(format!("No new manifest avaliable."), !opt.terse);
+            print_standard("No new manifest avaliable.", !opt.terse);
         }
         std::process::exit(0);
     }
 
     if opt.force || manifest_needs_updating {
-        print_standard(format!("Downloading manifest. This may take a bit of time."), !opt.terse);
+        print_standard(
+            "Downloading manifest. This may take a bit of time.",
+            !opt.terse,
+        );
         match download_manifest(&remote_manifest_info.url, &m_path, opt.verbose).await {
             Ok(e) => e,
             Err(e) => {
-                print_error(format!("Could not download and save manifest : {}", e), !opt.terse);
+                print_error(
+                    &format!("Could not download and save manifest : {}", e),
+                    !opt.terse,
+                );
                 std::process::exit(0);
             }
         };
 
-
-        print_standard(format!("Download and save complete."), opt.verbose && !opt.terse);
-        print_standard(format!("Saving manifest info."), opt.verbose && !opt.terse);
-
+        print_standard("Download and save complete.", opt.verbose && !opt.terse);
+        print_standard("Saving manifest info.", opt.verbose && !opt.terse);
 
         match save_manifest_info(&remote_manifest_info, &m_info_path) {
             Ok(e) => e,
             Err(e) => {
-                print_error(format!("Could not write manifest info : {}", e), !opt.terse);
+                print_error(
+                    &format!("Could not write manifest info : {}", e),
+                    !opt.terse,
+                );
                 std::process::exit(1);
             }
         }
-        print_standard(format!("Manifest info saved."), !opt.terse);
-
-        
+        print_standard("Manifest info saved.", !opt.terse);
     } else {
-        print_standard(format!("No new manifest available"), !opt.terse);
+        print_standard("No new manifest available", !opt.terse);
     }
 
-    println!("{}", m_path.display());
+    print_standard(&format!("{}", m_path.display()), true);
 
     Ok(())
 }
