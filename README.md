@@ -8,6 +8,7 @@ The apps require an API key from Bungie for working with the API. More info at: 
 
 * [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) - Command line interface for retrieving primary platform and membership ids for Destiny 2 players.
 * [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) Command line utility for managing and syncing the remote Destiny 2 API manifest database.
+* [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) Command line tool for retrieving character information for specified member id.
 * [dclidp](https://github.com/mikechambers/dcli/tree/main/src/dclidp) - Command line utility for managing and syncing the remote Destiny 2 API manifest database (Python 3 implimentation).
 
 ## License
