@@ -25,6 +25,7 @@ mod manifest_info;
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
 use dcli::manifest::ManifestResponse;
+use dcli::utils::{print_standard, print_error};
 use exitfailure::ExitFailure;
 use manifest_info::ManifestInfo;
 use structopt::StructOpt;
@@ -48,8 +49,8 @@ async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> 
 }
 
 fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
-    //TODO: clean up these unwraps
-    let c_dir = current_dir().unwrap();
+
+    let c_dir = current_dir()?;
     let m_dir = c_dir.join(dir.as_path());
 
     if m_dir.is_file() {
@@ -61,7 +62,7 @@ fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
         let _m = std::fs::create_dir_all(&m_dir)?;
     }
 
-    //TODO: do we need to do this step?
+    //do we really need this step?
     let m_dir = std::fs::canonicalize(&m_dir.as_path())?;
 
     Ok(m_dir)
@@ -89,19 +90,30 @@ fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
 async fn download_manifest(url: &str, path: &PathBuf, print_url:bool) -> Result<(), Error> {
     let client: ApiClient = ApiClient::new(print_url);
 
+    //Download the manifest
     let mut response = client.call(url).await?;
+
+    //create a Vector to store the bytes for the download
     let mut out: Vec<u8> = Vec::new();
 
+    //read of the bytes into the vector
     while let Some(chunk) = response.chunk().await? {
         out.write_all(&chunk).await?;
     }
 
-    let reader = std::io::Cursor::new(out);
-    let mut zip = zip::ZipArchive::new(reader)?;
+    //create a cursor so we can move through the bytes
+    let cursor = std::io::Cursor::new(out);
 
+    //create a new zip archive from the bytes (since the download is compressed)
+    let mut zip = zip::ZipArchive::new(cursor)?;
+
+    //get a reference to the first file in the zip (there should only be one)
     let mut manifest = zip.by_index(0)?;
 
+    //reference to file we are going to write the ucompressed manifest to
     let mut outfile = fs::File::create(&path)?;
+
+    //save the uncompressed / unzipped manifest to the file system
     std::io::copy(&mut manifest, &mut outfile)?;
 
     Ok(())
@@ -120,13 +132,17 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    ///Force a download of manifest regardless of whether it has been updated. Overrides --check.
-    #[structopt(short = "f", long = "force")]
+    ///Force a download of manifest regardless of whether it has been updated.
+    #[structopt(short = "f", long = "force", conflicts_with="check")]
     force: bool,
 
-    ///Check whether a new manifest version is available, but do not download. If overridden by --force.
+    ///Check whether a new manifest version is available, but do not download.
     #[structopt(short = "c", long = "check")]
     check: bool,
+
+    ///Only output the path to the downloaded manifest (ignore errors or other output)
+    #[structopt(short = "t", long="terse", conflicts_with="verbose", conflicts_with="check")]
+    terse: bool,
 }
 
 #[tokio::main]
@@ -136,9 +152,9 @@ async fn main() -> Result<(), ExitFailure> {
     let m_dir = match get_manifest_dir(&opt.manifest_dir) {
         Ok(e) => e,
         Err(e) => {
-            println!("{}", e);
-            println!("{:?}", opt.manifest_dir);
-            std::process::exit(0);
+            print_error(format!("{}", e), !opt.terse);
+            print_error(format!("{:?}", opt.manifest_dir), !opt.terse);
+            std::process::exit(1);
         }
     };
 
@@ -148,15 +164,15 @@ async fn main() -> Result<(), ExitFailure> {
     let remote_manifest_info = match retrieve_manifest_info(opt.verbose).await {
         Ok(e) => e,
         Err(e) => {
-            println!("Could not retrieve manifest info from Bungie : {}", e);
-            std::process::exit(0);
+            print_error(format!("Could not retrieve manifest info from Bungie : {}", e), !opt.terse);
+            std::process::exit(1);
         }
     };
 
-    if opt.verbose {
-        println!("Remote Manifest version : {}", remote_manifest_info.version);
-        println!("Remote Manifest url     : {}", remote_manifest_info.url);
-    }
+
+    print_standard(format!("Remote Manifest version : {}", remote_manifest_info.version), opt.verbose && !opt.terse);
+    print_standard(format!("Remote Manifest url     : {}", remote_manifest_info.url), opt.verbose && !opt.terse);
+
 
     let mut manifest_needs_updating = !m_path.exists() || !m_info_path.exists();
 
@@ -164,66 +180,60 @@ async fn main() -> Result<(), ExitFailure> {
         if let Ok(e) = load_manifest_info(&m_info_path) {
             let local_manifest_info: ManifestInfo = e;
 
-            if opt.verbose {
-                println!("Local Manifest version  : {}", local_manifest_info.version);
-                println!("Local Manifest url      : {}", local_manifest_info.url);
-            }
+            print_standard(format!("Local Manifest version  : {}", local_manifest_info.version), opt.verbose && !opt.terse);
+            print_standard(format!("Local Manifest url      : {}", local_manifest_info.url), opt.verbose && !opt.terse);
 
             manifest_needs_updating = local_manifest_info.url != remote_manifest_info.url;
         } else {
             //couldnt load local manifest, so we will try and update
             manifest_needs_updating = true;
 
-            if opt.verbose {
-                println!("Could not load local manifest info. Forcing download.");
-            }
+            print_standard(format!("Could not load local manifest info. Forcing download."), opt.verbose && !opt.terse);
         }
     }
 
     if manifest_needs_updating {
-        println!("Updated manifest available : {}", &remote_manifest_info.version);
+        print_standard(format!("Updated manifest available : {}", &remote_manifest_info.version), !opt.terse);
     }
 
+    //cant be set with terse
     if opt.check {
         if !manifest_needs_updating {
-            println!("No new manifest avaliable.");
+            print_standard(format!("No new manifest avaliable."), !opt.terse);
         }
-
-        if !opt.force {
-            std::process::exit(0);
-        }
+        std::process::exit(0);
     }
 
     if opt.force || manifest_needs_updating {
-        println!("Downloading manifest. This may take a bit of time.");
+        print_standard(format!("Downloading manifest. This may take a bit of time."), !opt.terse);
         match download_manifest(&remote_manifest_info.url, &m_path, opt.verbose).await {
             Ok(e) => e,
             Err(e) => {
-                println!("Could not download and save manifest : {}", e);
+                print_error(format!("Could not download and save manifest : {}", e), !opt.terse);
                 std::process::exit(0);
             }
         };
 
-        if opt.verbose {
-            println!("Download and save complete.");
-            println!("Saving manifest info.");
-        }
+
+        print_standard(format!("Download and save complete."), opt.verbose && !opt.terse);
+        print_standard(format!("Saving manifest info."), opt.verbose && !opt.terse);
+
 
         match save_manifest_info(&remote_manifest_info, &m_info_path) {
             Ok(e) => e,
             Err(e) => {
-                println!("Could not write manifest info : {}", e);
-                std::process::exit(0);
+                print_error(format!("Could not write manifest info : {}", e), !opt.terse);
+                std::process::exit(1);
             }
         }
-        if opt.verbose {
-            println!("Manifest info saved.");
-        }
+        print_standard(format!("Manifest info saved."), !opt.terse);
 
-        println!("{}", m_path.display());
+        
     } else {
-        println!("No new manifest available");
+        print_standard(format!("No new manifest available"), !opt.terse);
     }
+
+    println!("{}", m_path.display());
 
     Ok(())
 }
