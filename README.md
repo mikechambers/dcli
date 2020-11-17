@@ -13,4 +13,4 @@ The apps require an API key from Bungie for working with the API. More info at: 
 
 ## License
 
-All utilities released under and [MIT License](LICENSE.md).
+All utilities released under a [MIT License](LICENSE.md).
