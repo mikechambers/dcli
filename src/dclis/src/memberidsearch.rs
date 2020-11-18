@@ -20,7 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use dcli::apiclient::{ApiClient, DestinyResponseStatus, HasDestinyResponseStatus};
+use dcli::apiclient::ApiClient;
+use dcli::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
 use dcli::error::Error;
 use dcli::platform::Platform;
 

@@ -20,39 +20,11 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use crate::response::drs::{check_destiny_response_status, HasDestinyResponseStatus};
 use crate::error::Error;
 use reqwest::Url;
-use serde_derive::{Deserialize, Serialize};
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
-
-pub fn check_destiny_response_status(status:&DestinyResponseStatus) -> Result<(), Error> {
-
-    if status.error_code != 1 {
-        return Err(Error::ApiStatus);
-    }
-
-    Ok(())
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct DestinyResponseStatus {
-    #[serde(rename = "ErrorCode")]
-    error_code: u32,
-
-    #[serde(rename = "ThrottleSeconds")]
-    throttle_seconds: u32,
-
-    #[serde(rename = "ErrorStatus")]
-    error_status: String,
-
-    #[serde(rename = "Message")]
-    message: String,
-}
-
-pub trait HasDestinyResponseStatus {
-    fn get_status(&self) -> &DestinyResponseStatus;
-}
 
 pub struct ApiClient {
     pub print_url: bool,

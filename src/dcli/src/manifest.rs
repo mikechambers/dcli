@@ -23,7 +23,7 @@
 use serde::Deserialize;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::apiclient::{DestinyResponseStatus, HasDestinyResponseStatus};
+use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
 
 const BASE_URL: &str = "https://www.bungie.net";
 

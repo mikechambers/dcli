@@ -25,3 +25,6 @@ pub mod error;
 pub mod manifest;
 pub mod platform;
 pub mod utils;
+pub mod character;
+pub mod emblem;
+pub mod response;

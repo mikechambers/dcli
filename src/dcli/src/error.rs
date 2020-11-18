@@ -31,49 +31,68 @@ use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug)]
 pub enum Error {
-    ApiRequest,
-    ApiStatus,
-    ApiParse,
-    IoError,
-    IoErrorDirIsFile,
-    ZipError,
-    Unknown,
+    ApiRequest {description:String },
+    ApiStatus {description:String },
+
+    //when parameters are malformed in wrong format (i.e. expecting id, getting a name)
+    ParameterParseFailure,
+
+    //when id & platform are not correct combination
+    InvalidParameters,
+
+    //Api key not set correctly
+    ApiKeyMissingFromRequest,
+
+    ApiNotAvailableException,
+
+    PrivacyException,
+
+    ApiParse {description:String },
+    IoError {description:String },
+    IoErrorDirIsFile {description:String },
+    ZipError {description:String },
+    Unknown {description:String },
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
-            Error::ApiRequest => write!(f, "Error calling Destiny 2 API."),
-            Error::ApiStatus => write!(f, "Destiny 2 API call returned an error."),
-            Error::ApiParse => write!(f, "Error parsing results from Destiny 2 API call."),
-            Error::IoError => write!(f, "Error working with file system."),
-            Error::ZipError => write!(f, "Error decompressing manifest."),
-            Error::IoErrorDirIsFile => write!(f, "Expected directory but found file."),
-            Error::Unknown => write!(f, "An unknown error occured."),
+            Error::ApiRequest {description} => write!(f, "Error calling Destiny 2 API. {}", description),
+            Error::ApiStatus {description} => write!(f, "Destiny 2 API call returned an error. {}", description),
+            Error::ApiParse {description} => write!(f, "Error parsing results from Destiny 2 API call. {}", description),
+            Error::IoError {description} => write!(f, "Error working with file system. {}", description),
+            Error::ZipError {description} => write!(f, "Error decompressing manifest. {}", description),
+            Error::IoErrorDirIsFile {description} => write!(f, "Expected directory but found file. {}", description),
+            Error::Unknown {description} => write!(f, "An unknown error occured. {}", description),
+            Error::ParameterParseFailure => write!(f, "Could not parse Parameters. (code 7)"),
+            Error::InvalidParameters => write!(f, "Invalid input parameters. (code 18)"),
+            Error::ApiKeyMissingFromRequest => write!(f, "Missing API Key. Set DESTINY_API_KEY environment variable before compiling."),
+            Error::ApiNotAvailableException => write!(f, "The Destiny API is currently not available. (code 5)"),
+            Error::PrivacyException => write!(f, "Privacy settings for Bungie account are too restrictive. (code 5)"),
         }
     }
 }
 
 impl From<serde_json::Error> for Error {
-    fn from(_err: serde_json::Error) -> Error {
-        Error::ApiParse //TODO:: impliment this for all error types
+    fn from(err: serde_json::Error) -> Error {
+        Error::ApiParse{description:format!("serde_json::Error : {:?}", err)} //TODO:: impliment this for all error types
     }
 }
 
 impl From<reqwest::Error> for Error {
-    fn from(_err: reqwest::Error) -> Error {
-        Error::ApiRequest //TODO:: impliment this for all error types
+    fn from(err: reqwest::Error) -> Error {
+        Error::ApiRequest{description:format!("reqwest::Error : {:?}", err)}
     }
 }
 
 impl From<std::io::Error> for Error {
-    fn from(_err: std::io::Error) -> Error {
-        Error::IoError //TODO:: impliment this for all error types
+    fn from(err: std::io::Error) -> Error {
+        Error::IoError{description:format!("std::io::Error : {:?}", err)}
     }
 }
 
 impl From<zip::result::ZipError> for Error {
-    fn from(_err: zip::result::ZipError) -> Error {
-        Error::ZipError //TODO:: impliment this for all error types
+    fn from(err: zip::result::ZipError) -> Error {
+        Error::ZipError{description:format!("zip::result::ZipError : {:?}", err)}
     }
 }
