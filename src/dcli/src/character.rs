@@ -43,7 +43,7 @@ pub struct Character {
 }
 
 //2020-10-05T18:49:25Z
-const FORMAT: &'static str = "%Y-%m-%dT%H:%M:%SZ";
+const FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
 //str_to_datetime
 pub fn str_to_datetime<'de, D>(
     deserializer: D,
@@ -157,7 +157,7 @@ impl CharacterClass {
 }
 fn check_width(s:&str, f: &mut fmt::Formatter) -> fmt::Result {
     if let Some(width) = f.width() {
-        write!(f, "{:width$}", format!("{}", s), width = width)
+        write!(f, "{:width$}", s.to_string(), width = width)
     } else {
         write!(f, "{}", s)
     }

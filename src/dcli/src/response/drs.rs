@@ -4,7 +4,7 @@ use crate::error::Error;
 
 pub fn check_destiny_response_status(status:&DestinyResponseStatus) -> Result<(), Error> {
 
-    let out = match status.error_code {
+    match status.error_code {
         1       => Ok(()),
         5       => Err(Error::ApiNotAvailableException),
         7       => Err(Error::ParameterParseFailure),
@@ -12,9 +12,7 @@ pub fn check_destiny_response_status(status:&DestinyResponseStatus) -> Result<()
         1665    => Err(Error::PrivacyException),
         2102    => Err(Error::ApiKeyMissingFromRequest),
         _       => Err(Error::ApiStatus{description:format!("Response Status Error : {}({}) : {}", status.error_status, status.error_code, status.message)}),
-    };
-
-    out
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

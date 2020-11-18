@@ -53,7 +53,9 @@ fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
     let m_dir = c_dir.join(dir.as_path());
 
     if m_dir.is_file() {
-        return Err(Error::IoErrorDirIsFile);
+        return Err(Error::IoErrorDirIsFile {
+            description: String::from("Manifest directory path is a file"),
+        });
     }
 
     if !m_dir.exists() {

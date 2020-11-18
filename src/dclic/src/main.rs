@@ -48,7 +48,11 @@ async fn retrieve_characters(
 
     let response = match profile.response {
         Some(e) => e,
-        None => return Err(Error::ApiRequest{description:String::from("No response data from API Call.")}),
+        None => {
+            return Err(Error::ApiRequest {
+                description: String::from("No response data from API Call."),
+            })
+        }
     };
 
     let mut characters: Vec<Character> = Vec::new();
@@ -77,9 +81,9 @@ struct Opt {
     ///
     /// Destiny 2 API member id. This is not the user name, but the member id
     /// retrieved from the Destiny API.
-    id: String,
+    member_id: String,
 
-    ///terse output in the form of membership_id:platform . Errors are suppresed.
+    ///terse output in the form of class_name:character_id . Errors are suppresed.
     #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
     terse: bool,
 
@@ -87,41 +91,43 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    ///Print out additional information for the API call
+    ///Display information on Hunter character
     #[structopt(long = "hunter")]
     hunter: bool,
 
-    ///Print out additional information for the API call
+    ///Display information on Warlock character
     #[structopt(long = "warlock")]
     warlock: bool,
 
-    ///Print out additional information for the API call
+    ///Display information on Titan character
     #[structopt(long = "titan")]
     titan: bool,
 
-    ///Print out additional information for the API call
+    ///Display information of last active character
     #[structopt(long = "last-active")]
     last_active: bool,
 }
 
-fn c_status_error(e:&Error) -> Option<String> {
-    let out = match e {
-        Error::ParameterParseFailure => Some(String::from("Invalid parameters. Check that --member-id is correct.")),
-        Error::InvalidParameters => Some(String::from("Invalid parameters. Check that --member-id and --platform are correct.")),
+fn c_status_error(e: &Error) -> Option<String> {
+    match e {
+        Error::ParameterParseFailure => Some(
+            "Invalid parameters. Check that --member-id is correct.".to_string(),
+        ),
+        Error::InvalidParameters => Some(
+            "Invalid parameters. Check that --member-id and --platform are correct.".to_string(),
+        ),
         _ => None,
-    };
-
-    out
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), ExitFailure> {
     let opt = Opt::from_args();
 
-    let all = !(opt.hunter || opt.titan || opt.warlock);
+    let all = !(opt.hunter || opt.titan || opt.warlock || opt.last_active);
 
     let characters: Vec<Character> =
-        match retrieve_characters(opt.id, opt.platform, opt.verbose).await {
+        match retrieve_characters(opt.member_id, opt.platform, opt.verbose).await {
             Ok(e) => e,
             Err(e) => {
                 match c_status_error(&e) {
