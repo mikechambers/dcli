@@ -7,7 +7,7 @@ use dcli::utils::{print_error, print_standard};
 use dcli::manifestinterface::{ManifestInterface, FindResult};
 
 #[derive(StructOpt)]
-/// Command line tool for searching the Destiny 2 manifest
+/// Command line tool for searching the Destiny 2 manifest by hash ids.
 ///
 /// Command line tool for retrieving character information for specified member id
 /// Retrieves character information for the specified member id.
@@ -24,7 +24,7 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     _verbose: bool,
 
-    ///Print out additional information for the API call
+    ///The hash id from the Destiny 2 API for the item to be searched for. Example : 326060471
     #[structopt(long = "hash", required = true)]
     hash: u32,
 }
