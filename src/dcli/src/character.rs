@@ -1,53 +1,76 @@
-use serde_derive::{Deserialize, Serialize};
-use serde_repr::{Serialize_repr, Deserialize_repr};
-use std::fmt;
-use std::str::FromStr;
-use std::fmt::Display;
+/*
+* Copyright 2020 Mike Chambers
+* https://github.com/mikechambers/dcli
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy of
+* this software and associated documentation files (the "Software"), to deal in
+* the Software without restriction, including without limitation the rights to
+* use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+* of the Software, and to permit persons to whom the Software is furnished to do
+* so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+* FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+* COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+* IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+* CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::Deserialize;
 use serde::Deserializer;
-use chrono::{DateTime, Utc, NaiveDateTime};
+use serde_derive::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
+use std::fmt;
+use std::fmt::Display;
+use std::str::FromStr;
 
 use crate::emblem::Emblem;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Character {
-
     #[serde(rename = "characterId")]
-    pub id:String,
+    pub id: String,
 
-    #[serde(rename = "dateLastPlayed", skip_serializing, deserialize_with="str_to_datetime")]
-    pub date_last_played:DateTime<Utc>, //TODO: parse 2020-10-05T18:49:25Z
+    #[serde(
+        rename = "dateLastPlayed",
+        skip_serializing,
+        deserialize_with = "str_to_datetime"
+    )]
+    pub date_last_played: DateTime<Utc>, //TODO: parse 2020-10-05T18:49:25Z
 
     #[serde(rename = "minutesPlayedTotal", deserialize_with = "str_to_int")]
-    pub minutes_played_total:u32,
+    pub minutes_played_total: u32,
 
     #[serde(rename = "raceType")]
-    pub race:CharacterRace,
+    pub race: CharacterRace,
 
     #[serde(rename = "classType")]
-    pub class_type:CharacterClass,
+    pub class_type: CharacterClass,
 
     #[serde(rename = "genderType")]
-    pub gender:CharacterGender,
-    
+    pub gender: CharacterGender,
+
     #[serde(rename = "emblemHash")]
-    pub emblem_hash:u32, //TODO: check int type
+    pub emblem_hash: u32, //TODO: check int type
 
     #[serde(rename = "baseCharacterLevel")]
-    pub base_character_level:u32,
+    pub base_character_level: u32,
 
     #[serde(skip)]
-    pub emblem:Emblem,
+    pub emblem: Option<Emblem>,
 
-    pub stats:CharacterStats,
+    pub stats: CharacterStats,
 }
 
 //2020-10-05T18:49:25Z
 const FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
 //str_to_datetime
-pub fn str_to_datetime<'de, D>(
-    deserializer: D,
-) -> Result<DateTime<Utc>, D::Error>
+pub fn str_to_datetime<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -55,7 +78,12 @@ where
 
     let n = match NaiveDateTime::parse_from_str(&s, FORMAT) {
         Ok(e) => e,
-        Err(e) => return Err(serde::de::Error::custom(&format!("Could not parse date-time : {}", e))),
+        Err(e) => {
+            return Err(serde::de::Error::custom(&format!(
+                "Could not parse date-time : {}",
+                e
+            )))
+        }
     };
 
     let dt = DateTime::<Utc>::from_utc(n, Utc);
@@ -65,9 +93,10 @@ where
 
 //todo: move this to more central area
 fn str_to_int<'de, T, D>(deserializer: D) -> Result<T, D::Error>
-where T: FromStr,
-T::Err: Display,
-D: serde::de::Deserializer<'de>
+where
+    T: FromStr,
+    T::Err: Display,
+    D: serde::de::Deserializer<'de>,
 {
     let s = String::deserialize(deserializer)?;
     T::from_str(&s).map_err(serde::de::Error::custom)
@@ -75,27 +104,26 @@ D: serde::de::Deserializer<'de>
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CharacterStats {
-
     #[serde(rename = "1935470627")]
-    pub power:u32,
+    pub power: u32,
 
     #[serde(rename = "2996146975")]
-    pub mobility:u32,
+    pub mobility: u32,
 
     #[serde(rename = "392767087")]
-    pub resilience:u32,
+    pub resilience: u32,
 
     #[serde(rename = "1943323491")]
-    pub recovery:u32,
+    pub recovery: u32,
 
     #[serde(rename = "1735777505")]
-    pub discipline:u32,
+    pub discipline: u32,
 
     #[serde(rename = "144602215")]
-    pub intellect:u32,
+    pub intellect: u32,
 
     #[serde(rename = "4244567218")]
-    pub strength:u32,
+    pub strength: u32,
 }
 
 /****************CharacterGender *******************/
@@ -131,7 +159,6 @@ impl fmt::Display for CharacterGender {
     }
 }
 
-
 /****************CharacterClass *******************/
 #[derive(PartialEq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
 #[repr(u32)]
@@ -155,7 +182,7 @@ impl CharacterClass {
         }
     }
 }
-fn check_width(s:&str, f: &mut fmt::Formatter) -> fmt::Result {
+fn check_width(s: &str, f: &mut fmt::Formatter) -> fmt::Result {
     if let Some(width) = f.width() {
         write!(f, "{:width$}", s.to_string(), width = width)
     } else {
@@ -164,7 +191,6 @@ fn check_width(s:&str, f: &mut fmt::Formatter) -> fmt::Result {
 }
 impl fmt::Display for CharacterClass {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-
         let out = match self {
             CharacterClass::Titan => "Titan",
             CharacterClass::Hunter => "Hunter",

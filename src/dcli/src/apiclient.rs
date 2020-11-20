@@ -20,8 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::response::drs::{check_destiny_response_status, HasDestinyResponseStatus};
 use crate::error::Error;
+use crate::response::drs::{check_destiny_response_status, HasDestinyResponseStatus};
 use reqwest::Url;
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
@@ -53,8 +53,10 @@ impl ApiClient {
         Ok(response)
     }
 
-    pub async fn call_and_parse<T: serde::de::DeserializeOwned + HasDestinyResponseStatus>(&self, url: &str) -> Result<T, Error> {
-
+    pub async fn call_and_parse<T: serde::de::DeserializeOwned + HasDestinyResponseStatus>(
+        &self,
+        url: &str,
+    ) -> Result<T, Error> {
         let r = self.call(url).await?.json::<T>().await?;
 
         check_destiny_response_status(r.get_status())?;

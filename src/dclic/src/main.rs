@@ -23,14 +23,14 @@
 use exitfailure::ExitFailure;
 use structopt::StructOpt;
 
-use dcli::apiclient::ApiClient;
+use dcli::apiinterface::ApiInterface;
 use dcli::character::{Character, CharacterClass};
 use dcli::error::Error;
 use dcli::platform::Platform;
-use dcli::response::gpr::GetProfileResponse;
 use dcli::utils::{print_error, print_standard};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
+//todo: could move this to apiclient
 async fn retrieve_characters(
     member_id: String,
     platform: Platform,
@@ -42,25 +42,9 @@ async fn retrieve_characters(
             member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
         );
 
-    let client = ApiClient::new(verbose);
+    let interface = ApiInterface::new(verbose);
 
-    let profile: GetProfileResponse = client.call_and_parse::<GetProfileResponse>(&url).await?;
-
-    let response = match profile.response {
-        Some(e) => e,
-        None => {
-            return Err(Error::ApiRequest {
-                description: String::from("No response data from API Call."),
-            })
-        }
-    };
-
-    let mut characters: Vec<Character> = Vec::new();
-    for c in response.characters.data.values() {
-        characters.push(c.clone());
-    }
-
-    Ok(characters)
+    interface.retrieve_characters(member_id, platform)?
 }
 
 #[derive(StructOpt)]
@@ -139,6 +123,8 @@ async fn main() -> Result<(), ExitFailure> {
         };
 
     if !characters.is_empty() {
+
+        //TODO: move this to seperate API?
         let mut most_recent: &Character = &characters[0];
 
         for c in characters.iter() {

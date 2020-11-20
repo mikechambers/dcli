@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub fn print_standard(out:&str, print:bool) {
+pub fn print_standard(out: &str, print: bool) {
     if !print {
         return;
     }
@@ -28,7 +28,7 @@ pub fn print_standard(out:&str, print:bool) {
     println!("{}", out);
 }
 
-pub fn print_error(out:&str, print:bool) {
+pub fn print_error(out: &str, print: bool) {
     if !print {
         return;
     }

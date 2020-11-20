@@ -1,18 +1,18 @@
 /*
 * Copyright 2020 Mike Chambers
 * https://github.com/mikechambers/dcli
-* 
-* Permission is hereby granted, free of charge, to any person obtaining a copy of 
-* this software and associated documentation files (the "Software"), to deal in 
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy of
+* this software and associated documentation files (the "Software"), to deal in
 * the Software without restriction, including without limitation the rights to
 * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-* of the Software, and to permit persons to whom the Software is furnished to do 
+* of the Software, and to permit persons to whom the Software is furnished to do
 * so, subject to the following conditions:
-* 
-* The above copyright notice and this permission notice shall be included in all 
+*
+* The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
@@ -31,8 +31,8 @@ use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug)]
 pub enum Error {
-    ApiRequest {description:String },
-    ApiStatus {description:String },
+    ApiRequest { description: String },
+    ApiStatus { description: String },
 
     //when parameters are malformed in wrong format (i.e. expecting id, getting a name)
     ParameterParseFailure,
@@ -46,53 +46,101 @@ pub enum Error {
     ApiNotAvailableException,
 
     PrivacyException,
+    Database { description: String },
 
-    ApiParse {description:String },
-    IoError {description:String },
-    IoErrorDirIsFile {description:String },
-    ZipError {description:String },
-    Unknown {description:String },
+    ApiParse { description: String },
+    IoError { description: String },
+    IoErrorDirIsFile { description: String },
+    IoFileDoesNotExist { description: String },
+    ZipError { description: String },
+    Unknown { description: String },
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
-            Error::ApiRequest {description} => write!(f, "Error calling Destiny 2 API. {}", description),
-            Error::ApiStatus {description} => write!(f, "Destiny 2 API call returned an error. {}", description),
-            Error::ApiParse {description} => write!(f, "Error parsing results from Destiny 2 API call. {}", description),
-            Error::IoError {description} => write!(f, "Error working with file system. {}", description),
-            Error::ZipError {description} => write!(f, "Error decompressing manifest. {}", description),
-            Error::IoErrorDirIsFile {description} => write!(f, "Expected directory but found file. {}", description),
-            Error::Unknown {description} => write!(f, "An unknown error occured. {}", description),
+            Error::ApiRequest { description } => {
+                write!(f, "Error calling Destiny 2 API. {}", description)
+            }
+            Error::ApiStatus { description } => {
+                write!(f, "Destiny 2 API call returned an error. {}", description)
+            }
+            Error::ApiParse { description } => write!(
+                f,
+                "Error parsing results from Destiny 2 API call. {}",
+                description
+            ),
+            Error::IoError { description } => {
+                write!(f, "Error working with file system. {}", description)
+            }
+            Error::ZipError { description } => {
+                write!(f, "Error decompressing manifest. {}", description)
+            }
+            Error::IoErrorDirIsFile { description } => {
+                write!(f, "Expected directory but found file. {}", description)
+            }
+            Error::Unknown { description } => {
+                write!(f, "An unknown error occured. {}", description)
+            }
             Error::ParameterParseFailure => write!(f, "Could not parse Parameters. (code 7)"),
             Error::InvalidParameters => write!(f, "Invalid input parameters. (code 18)"),
-            Error::ApiKeyMissingFromRequest => write!(f, "Missing API Key. Set DESTINY_API_KEY environment variable before compiling."),
-            Error::ApiNotAvailableException => write!(f, "The Destiny API is currently not available. (code 5)"),
-            Error::PrivacyException => write!(f, "Privacy settings for Bungie account are too restrictive. (code 5)"),
+            Error::ApiKeyMissingFromRequest => write!(
+                f,
+                "Missing API Key. Set DESTINY_API_KEY environment variable before compiling."
+            ),
+            Error::ApiNotAvailableException => {
+                write!(f, "The Destiny API is currently not available. (code 5)")
+            }
+            Error::PrivacyException => write!(
+                f,
+                "Privacy settings for Bungie account are too restrictive. (code 5)"
+            ),
+            Error::IoFileDoesNotExist { description } => {
+                write!(f, "Expected File does not exist: {}", description)
+            }
+            Error::Database { description } => {
+                write!(f, "Error working with SQLite database : {}", description)
+            }
         }
     }
 }
 
 impl From<serde_json::Error> for Error {
     fn from(err: serde_json::Error) -> Error {
-        Error::ApiParse{description:format!("serde_json::Error : {:?}", err)} //TODO:: impliment this for all error types
+        Error::ApiParse {
+            description: format!("serde_json::Error : {:#}", err),
+        } //TODO:: impliment this for all error types
     }
 }
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Error {
-        Error::ApiRequest{description:format!("reqwest::Error : {:?}", err)}
+        Error::ApiRequest {
+            description: format!("reqwest::Error : {:#}", err),
+        }
     }
 }
 
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Error {
-        Error::IoError{description:format!("std::io::Error : {:?}", err)}
+        Error::IoError {
+            description: format!("std::io::Error : {:#}", err),
+        }
     }
 }
 
 impl From<zip::result::ZipError> for Error {
     fn from(err: zip::result::ZipError) -> Error {
-        Error::ZipError{description:format!("zip::result::ZipError : {:?}", err)}
+        Error::ZipError {
+            description: format!("zip::result::ZipError : {:#}", err),
+        }
+    }
+}
+
+impl From<sqlx::Error> for Error {
+    fn from(err: sqlx::Error) -> Error {
+        Error::Database {
+            description: format!("sqlx::Error : {:#}", err),
+        }
     }
 }
