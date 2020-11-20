@@ -35,7 +35,7 @@ dclis --id 76561197984551459 --platform steam --compact
 ```
 Note, platform ids, can be found [here](https://bungie-net.github.io/multi/schema_BungieMembershipType.html#schema_BungieMembershipType).
 
-## Compilation
+## Compiling
 
 This utility is written and compiled in [Rust](https://www.rust-lang.org/).
 

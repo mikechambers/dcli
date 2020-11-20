@@ -39,7 +39,7 @@ Retrieve information for *Luna's Howl* by its API hash id.
 dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 3260604718
 ```
 
-## Compilation
+## Compiling
 
 This utility is written and compiled in [Rust](https://www.rust-lang.org/).
 

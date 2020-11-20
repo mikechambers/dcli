@@ -41,7 +41,7 @@ Check status of remote manifest, but do not download. Print out additional infor
 dclim --dir ~/manifest/ --check --verbose
 ```
 
-## Compilation
+## Compiling
 
 This utility is written and compiled in [Rust](https://www.rust-lang.org/).
 

@@ -12,7 +12,7 @@ Command line tool for retrieving character information for specified member id
 
 
 
-## Compilation
+## Compiling
 
 This utility is written and compiled in [Rust](https://www.rust-lang.org/).
 
