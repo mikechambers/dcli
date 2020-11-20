@@ -20,12 +20,10 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use serde::Deserialize;
 use serde_derive::{Deserialize, Serialize};
 
 use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
-
-const BASE_URL: &str = "https://www.bungie.net";
+use crate::deserialization::prepend_base_url;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestResponse {
@@ -56,13 +54,3 @@ pub struct MobileWorldContentPaths {
     pub en: String,
 }
 
-fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error>
-where
-    D: serde::de::Deserializer<'de>,
-{
-    String::deserialize(deserializer).map(|a| {
-        let mut s = String::from(BASE_URL);
-        s.push_str(&a);
-        s
-    })
-}

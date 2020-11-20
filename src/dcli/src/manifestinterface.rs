@@ -25,7 +25,8 @@ use sqlx::Connection;
 use sqlx::SqliteConnection;
 use std::path::PathBuf;
 
-use std::convert::TryFrom;
+use serde_derive::{Deserialize, Serialize};
+use crate::deserialization::prepend_base_url;
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -115,11 +116,11 @@ impl ManifestInterface {
     /// Searches entire manifest for id, and returns associated data for it.
     /// returns an error if more that one result found.
     //TODO: should we return a vector in case there are multiple results?
-    pub async fn find(&mut self, hash: u32) -> Result<Vec<String>, Error> {
+    pub async fn find(&mut self, hash: u32) -> Result<Vec<FindResult>, Error> {
         let id = convert_hash_to_id(hash);
 
         let tables: Vec<String> = self.get_tables_with_id_column().await?;
-        let mut out: Vec<String> = Vec::new();
+        let mut out: Vec<FindResult> = Vec::new();
 
         for table in tables.iter() {
             //for some reason sqlx doesnt let you bind table names
@@ -134,7 +135,11 @@ impl ManifestInterface {
                 // map the row into a user-defined domain type
                 let json: &str = row.try_get("json")?;
 
-                out.push(json.to_string());
+                let mut v: FindResult = serde_json::from_str(json)?;
+                println!("{:?}", v);
+                v.raw_json = json.to_string();
+                out.push(v);
+
             }
         }
 
@@ -185,66 +190,24 @@ impl ManifestInterface {
         */
 }
 
-struct ManifestRow {
-    name: String,
-    id: i64,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct FindResult {
+
+    #[serde(skip)]
+    pub raw_json:String,
+
+    #[serde(rename = "displayProperties")]
+    pub display_properties:DisplayProperties,
 }
 
-const _MANIFEST_TABLES: &'static [&'static str] = &[
-    "DestinyEnemyRaceDefinition",
-    "DestinyPlaceDefinition",
-    "DestinyActivityDefinition",
-    "DestinyActivityTypeDefinition",
-    "DestinyClassDefinition",
-    "DestinyGenderDefinition",
-    "DestinyInventoryBucketDefinition",
-    "DestinyRaceDefinition",
-    "DestinyTalentGridDefinition",
-    "DestinyUnlockDefinition",
-    "DestinyMaterialRequirementSetDefinition",
-    "DestinySandboxPerkDefinition",
-    "DestinyStatGroupDefinition",
-    "DestinyFactionDefinition",
-    "DestinyVendorGroupDefinition",
-    "DestinyRewardSourceDefinition",
-    "DestinyItemCategoryDefinition",
-    "DestinyDamageTypeDefinition",
-    "DestinyActivityModeDefinition",
-    "DestinyMedalTierDefinition",
-    "DestinyAchievementDefinition",
-    "DestinyActivityGraphDefinition",
-    "DestinyBondDefinition",
-    "DestinyCollectibleDefinition",
-    "DestinyDestinationDefinition",
-    "DestinyEquipmentSlotDefinition",
-    "DestinyStatDefinition",
-    "DestinyInventoryItemDefinition",
-    "DestinyItemTierTypeDefinition",
-    "DestinyLocationDefinition",
-    "DestinyLoreDefinition",
-    "DestinyMetricDefinition",
-    "DestinyObjectiveDefinition",
-    "DestinyPlugSetDefinition",
-    "DestinyPowerCapDefinition",
-    "DestinyPresentationNodeDefinition",
-    "DestinyProgressionDefinition",
-    "DestinyProgressionLevelRequirementDefinition",
-    "DestinyRecordDefinition",
-    "DestinySackRewardItemListDefinition",
-    "DestinySandboxPatternDefinition",
-    "DestinySeasonDefinition",
-    "DestinySeasonPassDefinition",
-    "DestinySocketCategoryDefinition",
-    "DestinySocketTypeDefinition",
-    "DestinyTraitDefinition",
-    "DestinyTraitCategoryDefinition",
-    "DestinyVendorDefinition",
-    "DestinyMilestoneDefinition",
-    "DestinyActivityModifierDefinition",
-    "DestinyReportReasonCategoryDefinition",
-    "DestinyArtifactDefinition",
-    "DestinyBreakerTypeDefinition",
-    "DestinyChecklistDefinition",
-    "DestinyEnergyTypeDefinition",
-    "DestinyHistoricalStatsDefinition",
-];
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DisplayProperties {
+    pub description:String,
+    pub name:String,
+
+    #[serde(deserialize_with = "prepend_base_url")]
+    pub icon:String,
+
+    #[serde(rename = "hasIcon")]
+    pub has_icon:bool
+}

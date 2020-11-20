@@ -20,14 +20,18 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod apiclient;
-pub mod apiinterface;
-pub mod character;
-pub mod emblem;
-pub mod error;
-pub mod manifest;
-pub mod manifestinterface;
-pub mod platform;
-pub mod response;
-pub mod utils;
-pub mod deserialization;
+use serde::Deserialize;
+
+//TODO:: might not be best place. maybe in a consts mod?
+pub const BASE_URL: &str = "https://www.bungie.net";
+
+pub fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+{
+    String::deserialize(deserializer).map(|a| {
+        let mut s = String::from(BASE_URL);
+        s.push_str(&a);
+        s
+    })
+}
