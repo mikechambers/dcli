@@ -28,9 +28,8 @@ OPTIONS:
 
     -m, --manifest-path <manifest-path>    
             Local path the Destiny 2 manifest database file
-```
 
-Valid platforms are xbox, playstation, steam and stadia.
+```
 
 ### Example
 
@@ -38,6 +37,42 @@ Retrieve information for *Luna's Howl* by its API hash id.
 ```
 dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 3260604718
 ```
+
+which returns:
+
+```
+Name : Luna's Howl
+Description : "Guardians never die. But we don't forget those who do." —Lord Shaxx
+```
+
+You can get additional information by passing the `--verbose` flag:
+
+```
+dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 3260604718 --verbose
+```
+
+which outputs:
+
+```
+Name : Luna's Howl
+Description : "Guardians never die. But we don't forget those who do." —Lord Shaxx
+Has Icon : true
+Icon Path : https://www.bungie.net/common/destiny2_content/icons/ca86c130898a90ed19a0a317df8ab389.jpg
+```
+
+You can retrieve the complete json from the manifest by specifying the `--json` flag.
+
+```
+dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 3260604718 --json
+```
+
+which outputs:
+
+```
+{"displayProperties":{"description":"\"Guardians never die. But we don't forget those who do.\" —Lord Shaxx","name":"Luna's Howl","icon":"/common/destiny2_content/icons/ca86c130898a90ed19a0a317df8ab389.jpg","hasIcon":true},"scope":0,"sourceString":"Source: Reach a Glory rank of \"Fabled\" in the Crucible.","sourceHash":2537301256,"itemHash":153979396,"acquisitionInfo":{"acquireMaterialRequirementHash":130662630,"runOnlyAcquisitionRewardSite":false},"stateInfo":{"requirements":{"entitlementUnavailableMessage":""}},"presentationNodeType":2,"traitIds":[],"traitHashes":[],"parentNodeHashes":[1956740204],"hash":3260604718,"index":4967,"redacted":false,"blacklisted":false}
+```
+
+JSON output and format will vary depending on the item / information retrieved. 
 
 ## Compiling
 
