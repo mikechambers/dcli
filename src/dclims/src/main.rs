@@ -53,7 +53,7 @@ async fn main() -> Result<(), ExitFailure> {
     };
 
     if results.is_empty() {
-        print_standard(&format!("No items found."), !opt.terse);
+        print_standard("No items found.", !opt.terse);
         std::process::exit(0);
     }
 
@@ -69,9 +69,9 @@ async fn main() -> Result<(), ExitFailure> {
         print_standard(&format!("Has Icon : {}",r.display_properties.has_icon), opt.verbose && !opt.terse && !opt.json);
         print_standard(&format!("Icon Path : {}",r.display_properties.icon), opt.verbose && !opt.terse && !opt.json);
 
-        print_standard(&format!("{}",r.raw_json), opt.json);
+        print_standard(&r.raw_json, opt.json);
 
-        print_standard(&format!("{}",r.display_properties.name), opt.terse);
+        print_standard(&r.display_properties.name, opt.terse);
     }
 
     Ok(())
