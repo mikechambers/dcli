@@ -9,14 +9,15 @@ use dcli::manifestinterface::{ManifestInterface, FindResult};
 #[derive(StructOpt)]
 /// Command line tool for searching the Destiny 2 manifest by hash ids.
 ///
-/// Command line tool for retrieving character information for specified member id
-/// Retrieves character information for the specified member id.
+/// Command line tool for searching the Destiny 2 manifest by hash ids.
+/// Takes a hash / id from the Destiny 2 API, and returns data from the
+/// item from the manifest.
 struct Opt {
     ///Local path the Destiny 2 manifest database file.
     #[structopt(short = "m", long = "manifest-path", parse(from_os_str))]
     manifest_path: PathBuf,
 
-    ///terse output in the form of class_name:character_id . Errors are suppresed.
+    ///terse output in the form of name:description . Errors are suppresed.
     #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
     terse: bool,
 
@@ -36,7 +37,7 @@ struct Opt {
 async fn search_manifest_by_hash(hash: u32, manifest_path: PathBuf) -> Result<Vec<FindResult>, Error> {
     let mut manifest = ManifestInterface::new(manifest_path, false).await?;
     let out = manifest.find(hash).await?;
-
+    utility
     Ok(out)
 }
 
@@ -57,12 +58,6 @@ async fn main() -> Result<(), ExitFailure> {
         std::process::exit(0);
     }
 
-    //default prints name
-    //verbose prints name and additional information
-    //--json outputs json
-    //do we need --terse
-    //name:descrpiption:hasicon:iconpath
-
     for r in results.iter() {
         print_standard(&format!("Name : {}",r.display_properties.name), !opt.terse && !opt.json);
         print_standard(&format!("Description : {}",r.display_properties.description), !opt.terse && !opt.json);
@@ -71,7 +66,7 @@ async fn main() -> Result<(), ExitFailure> {
 
         print_standard(&r.raw_json, opt.json);
 
-        print_standard(&r.display_properties.name, opt.terse);
+        print_standard(&format!("{}:{}", &r.display_properties.name, &r.display_properties.description), opt.terse);
     }
 
     Ok(())

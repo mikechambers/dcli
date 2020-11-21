@@ -30,4 +30,4 @@ pub mod manifestinterface;
 pub mod platform;
 pub mod response;
 pub mod utils;
-pub mod deserialization;
+pub mod apiutils;

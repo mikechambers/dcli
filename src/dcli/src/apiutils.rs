@@ -23,14 +23,14 @@
 use serde::Deserialize;
 
 //TODO:: might not be best place. maybe in a consts mod?
-pub const BASE_URL: &str = "https://www.bungie.net";
+pub const RESOURCE_BASE_URL: &str = "https://www.bungie.net";
 
 pub fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
     String::deserialize(deserializer).map(|a| {
-        let mut s = String::from(BASE_URL);
+        let mut s = String::from(RESOURCE_BASE_URL);
         s.push_str(&a);
         s
     })

@@ -28,7 +28,6 @@ use dcli::character::{Character, CharacterClass};
 use dcli::error::Error;
 use dcli::platform::Platform;
 use dcli::utils::{print_error, print_standard};
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 //todo: could move this to apiclient
 async fn retrieve_characters(
@@ -36,22 +35,23 @@ async fn retrieve_characters(
     platform: Platform,
     verbose: bool,
 ) -> Result<Vec<Character>, Error> {
-    let url =
-        format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=200",
-            platform_id = platform.to_id(),
-            member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
-        );
 
     let interface = ApiInterface::new(verbose);
 
-    interface.retrieve_characters(member_id, platform)?
+    let characters = interface.retrieve_characters(member_id, platform).await?;
+
+    Ok(characters)
 }
 
 #[derive(StructOpt)]
 /// Command line tool for retrieving character information for specified member id.
 ///
 /// Command line tool for retrieving character information for specified member id
-/// Retrieves character information for the specified member id.
+/// Retrieves character information for all characters, as well as most recently
+/// played character.
+/// 
+/// By default information on all characters will be displayed, although there
+/// are flags to filter which information is output.
 struct Opt {
     /// Platform for specified id
     ///

@@ -42,10 +42,11 @@ fn is_valid_steam_id(steam_id: &str) -> bool {
 #[derive(StructOpt)]
 /// Command line tool for retrieving primary Destiny 2 member ids.
 ///
-/// Retrieves the primary Destiny 2 membershipId and platform for specified username or
-/// steam 64 id and platform. That may a membershipId on a platform different
-/// that the one specified, depending on the cross save status of the account. It
-/// will return the primary membershipId that all data will be associate with.
+/// Retrieves the primary Destiny 2 membershipId and platform for specified 
+/// username or steam 64 id and platform. That may a membershipId on a platform 
+/// different that the one specified, depending on the cross save status of the 
+/// account. It will return the primary membershipId that all data will be 
+/// associate with.d
 struct Opt {
     /// Platform for specified id
     ///
@@ -58,7 +59,7 @@ struct Opt {
     /// User name or steam 64 id
     ///
     /// User name (for Xbox, Playstation or Stadia) or steam 64 id :
-    /// 00000000000000000 (17 digit ID)
+    /// 00000000000000000 (17 digit ID) for steam.
     id: String,
 
     ///terse output in the form of membership_id:platform . Errors are suppresed.
