@@ -41,12 +41,19 @@ struct Opt {
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
-    #[structopt(short = "m", long = "member-id", required = true)]
+    
     /// Destiny 2 API member id
     ///
     /// Destiny 2 API member id. This is not the user name, but the member id
     /// retrieved from the Destiny API.
+    /// #[structopt(short = "m", long = "member-id", required = true)]
     member_id: String,
+
+    /// Destiny 2 API character id
+    ///
+    /// Destiny 2 API character id for the chracter to retrieve status on.
+    /// #[structopt(short = "m", long = "member-id", required = true)]
+    character_id: String,    
 
     ///terse output in the form of class_name:character_id . Errors are suppresed.
     #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
@@ -55,24 +62,7 @@ struct Opt {
     ///Print out additional information for the API call
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
-
-    ///Display information on Hunter character
-    #[structopt(long = "hunter")]
-    hunter: bool,
-
-    ///Display information on Warlock character
-    #[structopt(long = "warlock")]
-    warlock: bool,
-
-    ///Display information on Titan character
-    #[structopt(long = "titan")]
-    titan: bool,
-
-    ///Display information of last active character
-    #[structopt(long = "last-active")]
-    last_active: bool,
 }
-
 
 #[tokio::main]
 async fn main() -> Result<(), ExitFailure> {
