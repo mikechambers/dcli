@@ -127,7 +127,7 @@ struct Opt {
     #[structopt(short = "m", long = "manifest-dir", parse(from_os_str))]
     manifest_dir: PathBuf,
 
-    ///Output additional information
+    ///Output additional information.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 

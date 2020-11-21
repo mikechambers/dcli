@@ -37,7 +37,7 @@ struct Opt {
 async fn search_manifest_by_hash(hash: u32, manifest_path: PathBuf) -> Result<Vec<FindResult>, Error> {
     let mut manifest = ManifestInterface::new(manifest_path, false).await?;
     let out = manifest.find(hash).await?;
-
+    utility
     Ok(out)
 }
 
@@ -57,12 +57,6 @@ async fn main() -> Result<(), ExitFailure> {
         print_standard("No items found.", !opt.terse);
         std::process::exit(0);
     }
-
-    //default prints name
-    //verbose prints name and additional information
-    //--json outputs json
-    //do we need --terse
-    //name:descrpiption:hasicon:iconpath
 
     for r in results.iter() {
         print_standard(&format!("Name : {}",r.display_properties.name), !opt.terse && !opt.json);
