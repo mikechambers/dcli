@@ -21,12 +21,15 @@
 */
 
 use crate::error::Error;
-use sqlx::Connection;
-use sqlx::SqliteConnection;
+
+use sqlx::{Connection, ConnectOptions, SqliteConnection};
+use sqlx::sqlite::{SqliteJournalMode, SqliteConnectOptions};
+use std::str::FromStr;
+
 use std::path::PathBuf;
 
 use serde_derive::{Deserialize, Serialize};
-use crate::deserialization::prepend_base_url;
+use crate::apiutils::prepend_base_url;
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -58,12 +61,21 @@ impl ManifestInterface {
         let connection_string: String = if cache {
             "sqlite:file::memory:".to_string()
         } else {
-            format!("{}?mode=ro", path)
+            format!("{}", path)
         };
 
-        let mut db = SqliteConnection::connect(&connection_string).await?;
+        //note, we cant use WAL journal mode, which is default
+        //as it can causes errors when opening a DB in readonly mode
+        //We use memory which should provide better performance
+        //since we never write to the DB
+        let mut db = SqliteConnectOptions::from_str(&connection_string)?
+        .journal_mode(SqliteJournalMode::Memory)
+        .read_only(true)
+        .connect()
+        .await?;
 
         if cache {
+
             match sqlx::query("ATTACH DATABASE '?' as 'tmpDb'")
                 .bind(path)
                 .execute(&mut db)
