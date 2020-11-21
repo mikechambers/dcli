@@ -8,7 +8,7 @@ The utility expects that the downloaded manifest will not be moved from the dire
 
 The utility uses the download url for the manifest to check for a new version. While it displays the version number, that is not used to detect whether a new version is avaliable.
 
-The manifest is is a [Sqlite 3](https://www.sqlite.org/index.html) database.
+The manifest is a [Sqlite 3](https://www.sqlite.org/index.html) database.
 
 ## USAGE
 ```
