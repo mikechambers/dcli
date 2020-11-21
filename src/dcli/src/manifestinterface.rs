@@ -58,7 +58,9 @@ impl ManifestInterface {
         }
 
         let path: String = format!("{}", manifest_path.display());
+        let mut read_only = true;
         let connection_string: String = if cache {
+            read_only = false;
             "sqlite:file::memory:".to_string()
         } else {
             format!("{}", path)
@@ -66,16 +68,15 @@ impl ManifestInterface {
 
         //note, we cant use WAL journal mode, which is default
         //as it can causes errors when opening a DB in readonly mode
-        //We use memory which should provide better performance
+        //We use Memory which should provide better performance
         //since we never write to the DB
         let mut db = SqliteConnectOptions::from_str(&connection_string)?
         .journal_mode(SqliteJournalMode::Memory)
-        .read_only(true)
+        .read_only(read_only)
         .connect()
         .await?;
 
         if cache {
-
             match sqlx::query("ATTACH DATABASE '?' as 'tmpDb'")
                 .bind(path)
                 .execute(&mut db)
