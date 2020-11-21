@@ -136,7 +136,6 @@ impl ManifestInterface {
                 let json: &str = row.try_get("json")?;
 
                 let mut v: FindResult = serde_json::from_str(json)?;
-                println!("{:?}", v);
                 v.raw_json = json.to_string();
                 out.push(v);
 

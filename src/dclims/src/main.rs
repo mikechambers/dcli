@@ -20,9 +20,13 @@ struct Opt {
     #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
     terse: bool,
 
+    ///Output raw json data from manifest.
+    #[structopt(short = "j", long = "json", conflicts_with = "verbose", conflicts_with="terse")]
+    json: bool,
+
     ///Print out additional information for the API call
     #[structopt(short = "v", long = "verbose")]
-    _verbose: bool,
+    verbose: bool,
 
     ///The hash id from the Destiny 2 API for the item to be searched for. Example : 326060471
     #[structopt(long = "hash", required = true)]
@@ -56,13 +60,18 @@ async fn main() -> Result<(), ExitFailure> {
     //default prints name
     //verbose prints name and additional information
     //--json outputs json
-    //do we need --terse?
+    //do we need --terse
+    //name:descrpiption:hasicon:iconpath
 
     for r in results.iter() {
-        print_standard(&format!("Name : {}",r.display_properties.name), true);
-        print_standard(&format!("Description : {}",r.display_properties.description), true);
-        print_standard(&format!("Has Icon : {}",r.display_properties.has_icon), true);
-        print_standard(&format!("Icon Path : {}",r.display_properties.icon), true);
+        print_standard(&format!("Name : {}",r.display_properties.name), !opt.terse && !opt.json);
+        print_standard(&format!("Description : {}",r.display_properties.description), !opt.terse && !opt.json);
+        print_standard(&format!("Has Icon : {}",r.display_properties.has_icon), opt.verbose && !opt.terse && !opt.json);
+        print_standard(&format!("Icon Path : {}",r.display_properties.icon), opt.verbose && !opt.terse && !opt.json);
+
+        print_standard(&format!("{}",r.raw_json), opt.json);
+
+        print_standard(&format!("{}",r.display_properties.name), opt.terse);
     }
 
     Ok(())
