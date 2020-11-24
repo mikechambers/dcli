@@ -20,15 +20,20 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::character::Character;
+use crate::character::CharacterData;
 use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
+use crate::mode::Mode;
+
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
+use crate::apiutils::str_to_datetime;
+
+use chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetProfileResponse {
     #[serde(rename = "Response")]
-    pub response: Option<CharactersField>, //should this be an option?
+    pub response: Option<ProfileResponse>, //should this be an option?
 
     #[serde(flatten)]
     pub status: DestinyResponseStatus,
@@ -41,11 +46,63 @@ impl HasDestinyResponseStatus for GetProfileResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct CharactersField {
-    pub characters: CharacterDataField,
+pub struct ProfileResponse {
+    pub characters: Option<CharacterDataFieldData>,
+
+    #[serde(rename = "characterActivities")]
+    pub character_activities: Option<CharacterActivitiesFieldData>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct CharacterDataField {
-    pub data: HashMap<String, Character>,
+pub struct CharacterActivitiesDataField {
+    pub data: HashMap<String, CharacterActivitiesData>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CharacterDataFieldData {
+    pub data: HashMap<String, CharacterData>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CharacterActivitiesFieldData {
+    pub data: HashMap<String, CharacterActivitiesData>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CharacterActivitiesData {
+
+    #[serde(
+        rename = "dateActivityStarted",
+        skip_serializing,
+        deserialize_with = "str_to_datetime"
+    )]
+    pub date_activity_started: DateTime<Utc>,
+
+    #[serde(rename = "currentActivityHash")]
+    pub current_activity_hash:u32, 
+
+    #[serde(rename = "currentActivityModeHash")]
+    pub current_activity_mode_hash:u32, //these both point to the same data (0 if not active)
+
+    #[serde(rename = "currentActivityModeType")] //todo: could default this to none / 0
+    pub current_activity_mode_type:Option<Mode>,// (0 if not active)
+
+    #[serde(rename = "currentPlaylistActivityHash")]
+    pub current_playlist_activity_hash: Option<u32>, //how is this different than currentActivityHash?
+}
+
+/*
+                    "currentActivityHash": 1813752023, //destination (will be 0 if not active)
+                    "currentActivityModeHash": 3497767639, //activity (will be 0 if not active)
+                    "currentActivityModeType": 6, //activity (patrol)
+                    "currentActivityModeHashes": [
+                        3497767639, //activty
+                        1164760493 //pve
+                    ],
+                    "currentActivityModeTypes": [
+                        6, //patrol
+                        7 //AllPVE
+                    ],
+                    "currentPlaylistActivityHash": 1813752023, //destination
+                    "lastCompletedStoryHash": 0
+*/

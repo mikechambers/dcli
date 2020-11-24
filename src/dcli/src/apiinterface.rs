@@ -21,19 +21,23 @@
 */
 
 use crate::apiclient::ApiClient;
-use crate::character::Character;
+use crate::character::CharacterData;
 use crate::error::Error;
 use crate::platform::Platform;
-use crate::response::gpr::GetProfileResponse;
+use crate::response::gpr::{GetProfileResponse, CharacterActivitiesData};
+use crate::manifestinterface::ManifestInterface;
+
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 pub struct ApiInterface {
+    manifest:Option<ManifestInterface>,
     client: ApiClient,
 }
 
 impl ApiInterface {
-    pub fn new(print_url: bool) -> ApiInterface {
+    pub fn new(print_url: bool, manifest:Option<ManifestInterface>) -> ApiInterface {
         ApiInterface {
+            manifest:manifest,
             client: ApiClient::new(print_url),
         }
 
@@ -41,12 +45,61 @@ impl ApiInterface {
         //some methods may require it and will throw errors if its not set
     }
 
+    
+    /// Retrieves characters for specified member_id and platform
+    pub async fn retrieve_current_activities(
+        &self,
+        member_id: String,
+        platform: Platform,
+    ) -> Result<Option<CharacterActivitiesData>, Error> {
+        let url =
+            format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=204",
+                platform_id = platform.to_id(),
+                member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
+            );
+
+        let profile: GetProfileResponse = self
+            .client
+            .call_and_parse::<GetProfileResponse>(&url)
+            .await?;
+
+        let response = match profile.response {
+            Some(e) => e,
+            None => {
+                return Err(Error::ApiRequest {
+                    description: String::from("No response data from API Call."),
+                })
+            }
+        };
+
+        //TODO: check status response
+
+        let character_activities = match response.character_activities {
+            Some(e) => e,
+            None => {
+                return Ok(None);
+            }
+        };
+
+        let mut current_activity:Option<CharacterActivitiesData> = None;
+        for c in character_activities.data.values() {
+
+            if c.current_activity_mode_type.is_some() {
+                current_activity = Some(c.clone());
+                break;
+            }
+
+        }
+
+        Ok(current_activity)
+    }
+
     /// Retrieves characters for specified member_id and platform
     pub async fn retrieve_characters(
         &self,
         member_id: String,
         platform: Platform,
-    ) -> Result<Vec<Character>, Error> {
+    ) -> Result<Vec<CharacterData>, Error> {
         let url =
             format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=200",
                 platform_id = platform.to_id(),
@@ -67,8 +120,16 @@ impl ApiInterface {
             }
         };
 
-        let mut characters: Vec<Character> = Vec::new();
-        for c in response.characters.data.values() {
+        let mut characters: Vec<CharacterData> = Vec::new();
+
+        let r_characters = match response.characters{
+            Some(e) => e,
+            None => {
+                return Ok(characters);
+            },
+        };
+
+        for c in r_characters.data.values() {
             characters.push(c.clone());
         }
 

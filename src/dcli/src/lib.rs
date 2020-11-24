@@ -31,3 +31,5 @@ pub mod platform;
 pub mod response;
 pub mod utils;
 pub mod apiutils;
+pub mod mode;
+pub mod activity;

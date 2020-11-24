@@ -68,5 +68,40 @@ struct Opt {
 async fn main() -> Result<(), ExitFailure> {
     let opt = Opt::from_args();
 
+    //"/Platform/Destiny2/1/Profile/4611686018429783292/?components=200,202,204,1000";
+    //components 204
+    //currentActivityModeTypes : will be avaliable if player is online
+
     Ok(())
 }
+
+/*
+
+    "Response": {
+        "characterActivities": {
+            "data": {
+                "2305843009264966984": {
+
+
+                    "currentActivityHash": 1813752023, //destination (will be 0 if not active)
+                    "currentActivityModeHash": 3497767639, //activity (will be 0 if not active)
+                    "currentActivityModeType": 6, //activity (patrol)
+                    "currentActivityModeHashes": [
+                        3497767639, //activty
+                        1164760493 //pve
+                    ],
+                    "currentActivityModeTypes": [
+                        6, //patrol
+                        7 //AllPVE
+                    ],
+                    "currentPlaylistActivityHash": 1813752023, //destination
+                    "lastCompletedStoryHash": 0
+
+                    //look for presence of currentActivityModeTypes
+
+                    //can also see if anyone is in playlist with them.
+
+        //output (make fireteam optional)
+        //Playing patrol on Europa with mesh, foo and Bar.
+
+*/

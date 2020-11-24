@@ -21,6 +21,8 @@
 */
 
 use serde::Deserialize;
+use chrono::{DateTime, NaiveDateTime, Utc};
+use serde::Deserializer;
 
 //TODO:: might not be best place. maybe in a consts mod?
 pub const RESOURCE_BASE_URL: &str = "https://www.bungie.net";
@@ -34,4 +36,28 @@ where
         s.push_str(&a);
         s
     })
+}
+
+//2020-10-05T18:49:25Z
+const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
+//str_to_datetime
+pub fn str_to_datetime<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+
+    let n = match NaiveDateTime::parse_from_str(&s, API_DATE_TIME_FORMAT) {
+        Ok(e) => e,
+        Err(e) => {
+            return Err(serde::de::Error::custom(&format!(
+                "Could not parse date-time : {}",
+                e
+            )))
+        }
+    };
+
+    let dt = DateTime::<Utc>::from_utc(n, Utc);
+
+    Ok(dt)
 }

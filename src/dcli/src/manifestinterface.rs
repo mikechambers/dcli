@@ -30,6 +30,7 @@ use std::path::PathBuf;
 
 use serde_derive::{Deserialize, Serialize};
 use crate::apiutils::prepend_base_url;
+//use crate::activity::Activity;
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -192,6 +193,12 @@ impl ManifestInterface {
         }
         Ok(tables)
     }
+
+    /*
+    pub async get_activity(&mut self, id:u32) -> Result<Activity, Error> {
+        //DestinyActivityDefinition
+    }
+    */
 
     /*
     let row: (i64,String) = match sqlx::query_as("select * from DestinyInventoryItemDefinition")
