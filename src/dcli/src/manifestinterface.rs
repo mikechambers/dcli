@@ -31,8 +31,7 @@ use std::str::FromStr;
 use std::path::PathBuf;
 
 use serde_derive::{Deserialize, Serialize};
-use crate::manifest::displayproperties::DisplayPropertiesData;
-use crate::manifest::definitions::{ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData};
+use crate::manifest::definitions::{DisplayPropertiesData, ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData};
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -62,11 +61,11 @@ impl ManifestInterface {
 
         let path: String = format!("{}", manifest_path.display());
         let mut read_only = true;
-        let connection_string: String = if cache {
+        let connection_string: &str = if cache {
             read_only = false;
-            "sqlite:file::memory:".to_string()
+            "sqlite:file::memory:"
         } else {
-            format!("{}", path)
+            &path
         };
 
         //note, we cant use WAL journal mode, which is default
