@@ -22,3 +22,5 @@
 
 pub mod drs;
 pub mod gpr;
+pub mod character;
+pub mod manifest;

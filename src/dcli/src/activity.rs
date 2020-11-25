@@ -1,17 +1,35 @@
 use crate::mode::Mode;
+use crate::manifest::activitydefinition::DestinyActivityDefinitionData;
 
+#[derive(Debug, Clone)]
 pub struct Activity {
-    _id:u32,
-    _name:String,
+    pub id:u32,
+    pub name:String,
 
     //icon
-    _icon_path:String,
+    pub icon_path:String,
 
     //pgcrImage
-    _image_path:String,
-    _description:String,
-    _mode:Mode,
+    pub image_path:String,
+    pub description:String,
+
+    pub mode:Mode,
 }
 
-//could hjave juts activity, and bundle with mode, and starttime
+impl Activity {
+    pub fn from_activity_definition_data(data:DestinyActivityDefinitionData) -> Activity {
+        Activity {
+            id:data.id,
+            name:data.display_properties.name,
+        
+            //icon
+            icon_path:data.display_properties.icon_path,
+        
+            //pgcrImage
+            image_path:data.pgcr_image,
+            description:data.display_properties.description,
+            mode:data.direct_activity_mode_type,
+        }
+    }
+}
 

@@ -54,6 +54,8 @@ pub enum Error {
     IoFileDoesNotExist { description: String },
     ZipError { description: String },
     Unknown { description: String },
+    ManifestNotSet,
+    ManifestItemNotFound  { description: String },
 }
 
 impl Display for Error {
@@ -84,6 +86,7 @@ impl Display for Error {
             }
             Error::ParameterParseFailure => write!(f, "Could not parse Parameters. (code 7)"),
             Error::InvalidParameters => write!(f, "Invalid input parameters. (code 18)"),
+            Error::ManifestNotSet => write!(f, "Manifest was not set in Manifest Interface."),
             Error::ApiKeyMissingFromRequest => write!(
                 f,
                 "Missing API Key. Set DESTINY_API_KEY environment variable before compiling."
@@ -97,10 +100,13 @@ impl Display for Error {
             ),
             Error::IoFileDoesNotExist { description } => {
                 write!(f, "Expected File does not exist: {}", description)
-            }
+            },
             Error::Database { description } => {
                 write!(f, "Error working with SQLite database : {}", description)
-            }
+            },
+            Error::ManifestItemNotFound { description } => {
+                write!(f, "Manifest Item not found : {}", description)
+            },
         }
     }
 }

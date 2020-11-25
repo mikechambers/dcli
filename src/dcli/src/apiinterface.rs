@@ -21,11 +21,12 @@
 */
 
 use crate::apiclient::ApiClient;
-use crate::character::CharacterData;
+use crate::response::character::CharacterData;
 use crate::error::Error;
 use crate::platform::Platform;
 use crate::response::gpr::{GetProfileResponse, CharacterActivitiesData};
 use crate::manifestinterface::ManifestInterface;
+use crate::activity::Activity;
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
@@ -47,11 +48,19 @@ impl ApiInterface {
 
     
     /// Retrieves characters for specified member_id and platform
-    pub async fn retrieve_current_activities(
-        &self,
+    pub async fn retrieve_current_activity(
+        &mut self,
         member_id: String,
         platform: Platform,
-    ) -> Result<Option<CharacterActivitiesData>, Error> {
+    ) -> Result<Option<Activity>, Error> {
+
+        let manifest = match &mut self.manifest {
+            Some(e) => e,
+            None => {
+                return Err(Error::ManifestNotSet);
+            },
+        };
+
         let url =
             format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=204",
                 platform_id = platform.to_id(),
@@ -88,10 +97,17 @@ impl ApiInterface {
                 current_activity = Some(c.clone());
                 break;
             }
-
         }
 
-        Ok(current_activity)
+        if current_activity.is_none() {
+            return Ok(None);
+        }
+
+        let current_activity = current_activity.unwrap();
+
+        let activity = manifest.get_activity(current_activity.current_activity_hash).await?;
+
+        Ok(Some(activity.clone()))
     }
 
     /// Retrieves characters for specified member_id and platform

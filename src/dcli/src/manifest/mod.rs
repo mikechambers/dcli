@@ -20,37 +20,5 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use serde_derive::{Deserialize, Serialize};
-
-use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
-use crate::apiutils::prepend_base_url;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ManifestResponse {
-    #[serde(rename = "Response")]
-    pub manifest: Manifest,
-
-    #[serde(flatten)]
-    pub status: DestinyResponseStatus,
-}
-
-impl HasDestinyResponseStatus for ManifestResponse {
-    fn get_status(&self) -> &DestinyResponseStatus {
-        &self.status
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Manifest {
-    pub version: String,
-
-    #[serde(rename = "mobileWorldContentPaths")]
-    pub mobile_world_content_paths: MobileWorldContentPaths,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MobileWorldContentPaths {
-    #[serde(deserialize_with = "prepend_base_url")]
-    pub en: String,
-}
-
+pub mod activitydefinition;
+pub mod displayproperties;

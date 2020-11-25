@@ -24,13 +24,16 @@ use crate::error::Error;
 
 use sqlx::{Connection, ConnectOptions, SqliteConnection};
 use sqlx::sqlite::{SqliteJournalMode, SqliteConnectOptions};
+use sqlx::Row;
 use std::str::FromStr;
 
 use std::path::PathBuf;
 
 use serde_derive::{Deserialize, Serialize};
-use crate::apiutils::prepend_base_url;
-//use crate::activity::Activity;
+use crate::activity::Activity;
+use crate::manifest::displayproperties::DisplayPropertiesData;
+use crate::manifest::activitydefinition::DestinyActivityDefinitionData;
+
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -194,6 +197,24 @@ impl ManifestInterface {
         Ok(tables)
     }
 
+    pub async fn get_activity(&mut self, id:u32) -> Result<Activity, Error> {
+        let id = convert_hash_to_id(id);
+
+        let row = sqlx::query("SELECT json FROM DestinyActivityDefinition WHERE id=?")
+            .bind(id)
+            .fetch_one(&mut self.manifest_db).await?;
+
+        //ManifestItemNotFound { description: String }
+
+        let json:&str = row.try_get("json")?;
+
+        let data:DestinyActivityDefinitionData = serde_json::from_str(json)?;
+
+        let activity:Activity = Activity::from_activity_definition_data(data);
+
+        Ok(activity)
+    }
+
     /*
     pub async get_activity(&mut self, id:u32) -> Result<Activity, Error> {
         //DestinyActivityDefinition
@@ -216,17 +237,5 @@ pub struct FindResult {
     pub raw_json:String,
 
     #[serde(rename = "displayProperties")]
-    pub display_properties:DisplayProperties,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct DisplayProperties {
-    pub description:String,
-    pub name:String,
-
-    #[serde(deserialize_with = "prepend_base_url")]
-    pub icon:String,
-
-    #[serde(rename = "hasIcon")]
-    pub has_icon:bool
+    pub display_properties:DisplayPropertiesData,
 }

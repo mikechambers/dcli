@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::character::CharacterData;
+use crate::response::character::CharacterData;
 use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
 use crate::mode::Mode;
 

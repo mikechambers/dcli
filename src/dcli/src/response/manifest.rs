@@ -20,15 +20,37 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod apiclient;
-pub mod apiinterface;
-pub mod emblem;
-pub mod error;
-pub mod manifestinterface;
-pub mod platform;
-pub mod response;
-pub mod manifest;
-pub mod utils;
-pub mod apiutils;
-pub mod mode;
-pub mod activity;
+use serde_derive::{Deserialize, Serialize};
+
+use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
+use crate::apiutils::prepend_base_url;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ManifestResponse {
+    #[serde(rename = "Response")]
+    pub manifest: ManifestData,
+
+    #[serde(flatten)]
+    pub status: DestinyResponseStatus,
+}
+
+impl HasDestinyResponseStatus for ManifestResponse {
+    fn get_status(&self) -> &DestinyResponseStatus {
+        &self.status
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ManifestData {
+    pub version: String,
+
+    #[serde(rename = "mobileWorldContentPaths")]
+    pub mobile_world_content_paths: MobileWorldContentPathsData,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MobileWorldContentPathsData {
+    #[serde(deserialize_with = "prepend_base_url")]
+    pub en: String,
+}
+
