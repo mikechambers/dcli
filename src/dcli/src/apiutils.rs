@@ -38,6 +38,25 @@ where
     })
 }
 
+pub fn prepend_base_url_option<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+{
+    Option::<String>::deserialize(deserializer)
+    .map(|o: Option<String>| {
+        let out = match o {
+            Some(e) => {
+                let mut s = String::from(RESOURCE_BASE_URL);
+                s.push_str(&e);
+                Some(s)
+            },
+            None => None,
+        };
+
+        out
+    })
+}
+
 //2020-10-05T18:49:25Z
 const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
 //str_to_datetime

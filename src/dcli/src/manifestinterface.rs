@@ -31,7 +31,7 @@ use std::str::FromStr;
 use std::path::PathBuf;
 
 use serde_derive::{Deserialize, Serialize};
-use crate::manifest::definitions::{DisplayPropertiesData, ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData};
+use crate::manifest::definitions::{DisplayPropertiesData, ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData, ActivityTypeDefinitionData};
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -222,8 +222,19 @@ impl ManifestInterface {
 
         let id = convert_hash_to_id(id);
 
-        let query = &format!("SELECT json FROM DestinyPlaceDefinitionData WHERE id={}", id);
+        let query = &format!("SELECT json FROM DestinyPlaceDefinition WHERE id={}", id);
         let data:PlaceDefinitionData = self.get_definition(query).await?;
+
+        Ok(data)
+    }
+    
+
+    pub async fn get_activity_type_definition(&mut self, id:u32) -> Result<ActivityTypeDefinitionData, Error> {
+
+        let id = convert_hash_to_id(id);
+
+        let query = &format!("SELECT json FROM DestinyActivityTypeDefinition WHERE id={}", id);
+        let data:ActivityTypeDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
     }
@@ -234,6 +245,8 @@ impl ManifestInterface {
             .fetch_one(&mut self.manifest_db).await?;
 
         //TODO: check what happens if this returns nothing
+        //will throw an error if no results returned
+        //{ description: "sqlx::Error : no rows returned by a query that expected to return at least one row" }
 
         let json:&str = row.try_get("json")?;
 

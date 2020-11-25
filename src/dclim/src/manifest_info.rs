@@ -21,7 +21,7 @@
 */
 
 use dcli::error::Error;
-use dcli::manifest::Manifest;
+use dcli::response::manifest::ManifestData;
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -31,7 +31,7 @@ pub struct ManifestInfo {
 }
 
 impl ManifestInfo {
-    pub fn from_manifest(manifest: &Manifest) -> ManifestInfo {
+    pub fn from_manifest(manifest: &ManifestData) -> ManifestInfo {
         ManifestInfo {
             version: String::from(&manifest.version),
             url: String::from(&manifest.mobile_world_content_paths.en),

@@ -24,7 +24,7 @@ mod manifest_info;
 
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
-use dcli::manifest::ManifestResponse;
+use dcli::response::manifest::ManifestResponse;
 use dcli::utils::{print_error, print_standard};
 use exitfailure::ExitFailure;
 use manifest_info::ManifestInfo;

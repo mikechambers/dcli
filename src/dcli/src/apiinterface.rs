@@ -75,6 +75,7 @@ impl ApiInterface {
         let character_activities = match response.character_activities {
             Some(e) => e,
             None => {
+                println!("Returning A");
                 return Ok(None);
             }
         };
@@ -88,7 +89,7 @@ impl ApiInterface {
 
             //if there is a value here, it means this character is currently in
             //an activity
-            if c.current_activity_mode_type.is_some() {
+            if c.current_activity_mode_hash != 0 {
                 current_activity = Some(c.clone());
                 break;
             }
@@ -96,6 +97,7 @@ impl ApiInterface {
 
         if current_activity.is_none() {
             //no chars in an activity, so we return None
+            println!("Returning B");
             return Ok(None);
         }
 

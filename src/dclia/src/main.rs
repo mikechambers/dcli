@@ -29,7 +29,9 @@ use dcli::manifestinterface::ManifestInterface;
 use dcli::platform::Platform;
 use dcli::utils::{print_error, print_standard};
 
-use dcli::manifest::definitions::{ActivityDefinitionData, PlaceDefinitionData};
+use dcli::manifest::definitions::{
+    ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData,
+};
 use dcli::response::gpr::CharacterActivitiesData;
 
 use std::path::PathBuf;
@@ -132,12 +134,66 @@ async fn main() -> Result<(), ExitFailure> {
         }
     };
 
+    let destination_data_m: DestinationDefinitionData = match manifest
+        .get_destination_definition(activity_data_m.destination_hash)
+        .await
+    {
+        Ok(e) => e,
+        Err(e) => {
+            print_error(
+                &format!("Error Retrieving Data from Manifest : {:?}", e),
+                !opt.terse,
+            );
+            std::process::exit(0);
+        }
+    };
+
+    //lets find out the mode / activity type name
+    let activity_type_name: String = match activity_data_a.current_activity_mode_type {
+
+        //if its set in the API data, we use that
+        Some(e) => format!("{}", e),
+        None => {
+
+            //otherwise, we go into the manifest to find it
+            match manifest
+                .get_activity_type_definition(activity_data_m.activity_type_hash)
+                .await
+            {
+                Ok(e) => e.display_properties.name,
+                Err(e) => {
+                    //Todo: this either means an error, unknown activity, or they are in orbit
+                    "Unknown".to_string()
+                }
+            }
+        }
+    };
+
     println!(
-        "Playing {mode} on {place} ({description})",
+        "Playing {mode} on {place0}{place1} ({description})",
         //if we get to this point, mode should never be none, so it should be safe to unwrap
-        mode = activity_data_a.current_activity_mode_type.unwrap(),
-        place = place_data_m.display_properties.name,
+        mode = activity_type_name,
+        place0 = activity_data_m.display_properties.name,
+        place1 = place_data_m.display_properties.name,
         description = activity_data_m.display_properties.description,
+    );
+
+    println!("{: <15}: {: <10}", "Mode", activity_type_name);
+    println!(
+        "{: <15}: {: <10}",
+        "Activity", activity_data_m.display_properties.name
+    );
+    println!(
+        "{: <15}: {: <10}",
+        "Place", place_data_m.display_properties.name
+    );
+    println!(
+        "{: <15}: {: <10}",
+        "Description", activity_data_m.display_properties.description
+    );
+    println!(
+        "{: <15}: {: <10}",
+        "Destination", destination_data_m.display_properties.name
     );
 
     //Playing Strike on The Insight Terminus (Break into the ancient Vex installation.)
