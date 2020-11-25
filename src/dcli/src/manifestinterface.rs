@@ -33,6 +33,8 @@ use std::path::PathBuf;
 use serde_derive::{Deserialize, Serialize};
 use crate::manifest::displayproperties::DisplayPropertiesData;
 use crate::manifest::activitydefinition::DestinyActivityDefinitionData;
+use crate::manifest::destinationdefinition::DestinyDestinationDefinitionData;
+use crate::manifest::placedefinition::DestinyPlaceDefinitionData;
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -191,6 +193,7 @@ impl ManifestInterface {
 
         let id = convert_hash_to_id(id);
 
+        /*
         let row = sqlx::query("SELECT json FROM DestinyActivityDefinition WHERE id=?")
             .bind(id)
             .fetch_one(&mut self.manifest_db).await?;
@@ -200,23 +203,48 @@ impl ManifestInterface {
         let json:&str = row.try_get("json")?;
 
         let data:DestinyActivityDefinitionData = serde_json::from_str(json)?;
+*/
+
+        let query = &format!("SELECT json FROM DestinyActivityDefinition WHERE id={}", id);
+        let data:DestinyActivityDefinitionData = self.get_definition(query).await?;
+
+        Ok(data)
+    }
+    
+    pub async fn get_destination_definition(&mut self, id:u32) -> Result<DestinyDestinationDefinitionData, Error> {
+
+        let id = convert_hash_to_id(id);
+
+        let query = &format!("SELECT json FROM DestinyDestinationDefinition WHERE id={}", id);
+        let data:DestinyDestinationDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
     }
 
-    /*
-    pub async get_activity(&mut self, id:u32) -> Result<Activity, Error> {
-        //DestinyActivityDefinition
-    }
-    */
+    pub async fn get_place_definition(&mut self, id:u32) -> Result<DestinyPlaceDefinitionData, Error> {
 
-    /*
-    let row: (i64,String) = match sqlx::query_as("select * from DestinyInventoryItemDefinition")
-        .fetch_one(&mut db).await {
-            Ok(e) => e,
-            Err(e) => panic!("{}", e),
-        };
-        */
+        let id = convert_hash_to_id(id);
+
+        let query = &format!("SELECT json FROM DestinyPlaceDefinitionData WHERE id={}", id);
+        let data:DestinyPlaceDefinitionData = self.get_definition(query).await?;
+
+        Ok(data)
+    }
+
+    async fn get_definition<T:serde::de::DeserializeOwned>(&mut self, query:&str) -> Result<T, Error> {
+
+        let row = sqlx::query(query)
+            .fetch_one(&mut self.manifest_db).await?;
+
+        //TODO: check what happens if this returns nothing
+
+        let json:&str = row.try_get("json")?;
+
+        let data:T = serde_json::from_str(json)?;
+
+        Ok(data)
+    }
+
 }
 
 #[derive(Serialize, Deserialize, Debug)]

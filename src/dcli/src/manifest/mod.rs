@@ -22,3 +22,5 @@
 
 pub mod activitydefinition;
 pub mod displayproperties;
+pub mod destinationdefinition;
+pub mod placedefinition;
