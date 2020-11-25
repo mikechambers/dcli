@@ -20,7 +20,5 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod activitydefinition;
 pub mod displayproperties;
-pub mod destinationdefinition;
-pub mod placedefinition;
+pub mod definitions;

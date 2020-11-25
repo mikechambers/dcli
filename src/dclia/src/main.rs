@@ -29,8 +29,7 @@ use dcli::manifestinterface::ManifestInterface;
 use dcli::platform::Platform;
 use dcli::utils::{print_error, print_standard};
 
-use dcli::manifest::activitydefinition::DestinyActivityDefinitionData;
-use dcli::manifest::placedefinition::DestinyPlaceDefinitionData;
+use dcli::manifest::definitions::{ActivityDefinitionData, PlaceDefinitionData};
 use dcli::response::gpr::CharacterActivitiesData;
 
 use std::path::PathBuf;
@@ -105,7 +104,7 @@ async fn main() -> Result<(), ExitFailure> {
         }
     };
 
-    let activity_data_m: DestinyActivityDefinitionData = match manifest
+    let activity_data_m: ActivityDefinitionData = match manifest
         .get_activity_definition(activity_data_a.current_activity_hash)
         .await
     {
@@ -119,7 +118,7 @@ async fn main() -> Result<(), ExitFailure> {
         }
     };
 
-    let place_data_m: DestinyPlaceDefinitionData = match manifest
+    let place_data_m: PlaceDefinitionData = match manifest
         .get_place_definition(activity_data_m.place_hash)
         .await
     {

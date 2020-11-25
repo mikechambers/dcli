@@ -3,7 +3,7 @@ use crate::apiutils::prepend_base_url;
 use crate::manifest::displayproperties::DisplayPropertiesData;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct DestinyActivityDefinitionData {
+pub struct ActivityDefinitionData {
 
     #[serde(rename = "hash")]
     pub id:u32,
@@ -19,4 +19,29 @@ pub struct DestinyActivityDefinitionData {
 
     #[serde(rename = "placeHash")]
     pub place_hash:u32,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DestinationDefinitionData {
+
+    #[serde(rename = "hash")]
+    pub id:u32,
+
+    #[serde(rename = "displayProperties")]
+    pub display_properties:DisplayPropertiesData,
+
+    #[serde(rename = "placeHash")]
+    pub place_hash:u32,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PlaceDefinitionData {
+
+    #[serde(rename = "hash")]
+    pub id:u32,
+
+    #[serde(rename = "displayProperties")]
+    pub display_properties:DisplayPropertiesData,
 }

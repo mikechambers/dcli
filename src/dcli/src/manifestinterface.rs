@@ -32,9 +32,7 @@ use std::path::PathBuf;
 
 use serde_derive::{Deserialize, Serialize};
 use crate::manifest::displayproperties::DisplayPropertiesData;
-use crate::manifest::activitydefinition::DestinyActivityDefinitionData;
-use crate::manifest::destinationdefinition::DestinyDestinationDefinitionData;
-use crate::manifest::placedefinition::DestinyPlaceDefinitionData;
+use crate::manifest::definitions::{ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData};
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -189,7 +187,7 @@ impl ManifestInterface {
         Ok(tables)
     }
 
-    pub async fn get_activity_definition(&mut self, id:u32) -> Result<DestinyActivityDefinitionData, Error> {
+    pub async fn get_activity_definition(&mut self, id:u32) -> Result<ActivityDefinitionData, Error> {
 
         let id = convert_hash_to_id(id);
 
@@ -206,27 +204,27 @@ impl ManifestInterface {
 */
 
         let query = &format!("SELECT json FROM DestinyActivityDefinition WHERE id={}", id);
-        let data:DestinyActivityDefinitionData = self.get_definition(query).await?;
+        let data:ActivityDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
     }
     
-    pub async fn get_destination_definition(&mut self, id:u32) -> Result<DestinyDestinationDefinitionData, Error> {
+    pub async fn get_destination_definition(&mut self, id:u32) -> Result<DestinationDefinitionData, Error> {
 
         let id = convert_hash_to_id(id);
 
         let query = &format!("SELECT json FROM DestinyDestinationDefinition WHERE id={}", id);
-        let data:DestinyDestinationDefinitionData = self.get_definition(query).await?;
+        let data:DestinationDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
     }
 
-    pub async fn get_place_definition(&mut self, id:u32) -> Result<DestinyPlaceDefinitionData, Error> {
+    pub async fn get_place_definition(&mut self, id:u32) -> Result<PlaceDefinitionData, Error> {
 
         let id = convert_hash_to_id(id);
 
         let query = &format!("SELECT json FROM DestinyPlaceDefinitionData WHERE id={}", id);
-        let data:DestinyPlaceDefinitionData = self.get_definition(query).await?;
+        let data:PlaceDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
     }
