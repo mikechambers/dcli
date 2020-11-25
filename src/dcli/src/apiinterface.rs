@@ -25,20 +25,16 @@ use crate::response::character::CharacterData;
 use crate::error::Error;
 use crate::platform::Platform;
 use crate::response::gpr::{GetProfileResponse, CharacterActivitiesData};
-use crate::manifestinterface::ManifestInterface;
-use crate::activity::Activity;
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 pub struct ApiInterface {
-    manifest:Option<ManifestInterface>,
     client: ApiClient,
 }
 
 impl ApiInterface {
-    pub fn new(print_url: bool, manifest:Option<ManifestInterface>) -> ApiInterface {
+    pub fn new(print_url: bool) -> ApiInterface {
         ApiInterface {
-            manifest:manifest,
             client: ApiClient::new(print_url),
         }
 
@@ -52,14 +48,7 @@ impl ApiInterface {
         &mut self,
         member_id: String,
         platform: Platform,
-    ) -> Result<Option<Activity>, Error> {
-
-        let manifest = match &mut self.manifest {
-            Some(e) => e,
-            None => {
-                return Err(Error::ManifestNotSet);
-            },
-        };
+    ) -> Result<Option<CharacterActivitiesData>, Error> {
 
         let url =
             format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=204",
@@ -72,17 +61,17 @@ impl ApiInterface {
             .call_and_parse::<GetProfileResponse>(&url)
             .await?;
 
-        let response = match profile.response {
-            Some(e) => e,
-            None => {
-                return Err(Error::ApiRequest {
-                    description: String::from("No response data from API Call."),
-                })
+        //note: can you ok_or_else if error comp is expensive, since its call
+        //everytime with ok_or, but lazily with ok_or_else
+        //Note: this should never be None when this API is called
+        let response = profile.response.ok_or(
+            Error::ApiRequest {
+                description: String::from("No response data from API Call."),
             }
-        };
+        )?;
 
-        //TODO: check status response
-
+        //see if any activities were returned
+        //this should never be none when this API is called
         let character_activities = match response.character_activities {
             Some(e) => e,
             None => {
@@ -90,9 +79,15 @@ impl ApiInterface {
             }
         };
 
+        //store whether use is in an activity
         let mut current_activity:Option<CharacterActivitiesData> = None;
+
+        //note, we could grab the char id from the key, and pass it out
+        //or even get the char data from the getprofile call
         for c in character_activities.data.values() {
 
+            //if there is a value here, it means this character is currently in
+            //an activity
             if c.current_activity_mode_type.is_some() {
                 current_activity = Some(c.clone());
                 break;
@@ -100,14 +95,12 @@ impl ApiInterface {
         }
 
         if current_activity.is_none() {
+            //no chars in an activity, so we return None
             return Ok(None);
         }
 
-        let current_activity = current_activity.unwrap();
-
-        let activity = manifest.get_activity(current_activity.current_activity_hash).await?;
-
-        Ok(Some(activity.clone()))
+        //return the raw data for the current activity
+        Ok(current_activity)
     }
 
     /// Retrieves characters for specified member_id and platform

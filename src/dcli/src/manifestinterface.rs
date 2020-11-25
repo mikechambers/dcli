@@ -25,15 +25,14 @@ use crate::error::Error;
 use sqlx::{Connection, ConnectOptions, SqliteConnection};
 use sqlx::sqlite::{SqliteJournalMode, SqliteConnectOptions};
 use sqlx::Row;
+use futures::TryStreamExt;
 use std::str::FromStr;
 
 use std::path::PathBuf;
 
 use serde_derive::{Deserialize, Serialize};
-use crate::activity::Activity;
 use crate::manifest::displayproperties::DisplayPropertiesData;
 use crate::manifest::activitydefinition::DestinyActivityDefinitionData;
-
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -145,9 +144,6 @@ impl ManifestInterface {
 
             let mut rows = sqlx::query(&q).bind(id).fetch(&mut self.manifest_db);
 
-            use futures::TryStreamExt;
-            use sqlx::Row;
-
             while let Some(row) = rows.try_next().await? {
                 // map the row into a user-defined domain type
                 let json: &str = row.try_get("json")?;
@@ -169,9 +165,6 @@ impl ManifestInterface {
         let mut rows = sqlx::query("SELECT m.name as name, p.name as id FROM sqlite_master AS m JOIN pragma_table_info(m.name) AS p WHERE p.name = 'id'")
             .fetch(&mut self.manifest_db);
 
-        use futures::TryStreamExt;
-        use sqlx::Row;
-
         while let Some(row) = rows.try_next().await? {
             let name: &str = row.try_get("name")?;
             tables.push(name.to_string());
@@ -184,9 +177,6 @@ impl ManifestInterface {
 
         let mut rows = sqlx::query("SELECT name FROM sqlite_master WHERE type='table'")
             .fetch(&mut self.manifest_db);
-
-        use futures::TryStreamExt;
-        use sqlx::Row;
         
         while let Some(row) = rows.try_next().await? {
             
@@ -197,22 +187,21 @@ impl ManifestInterface {
         Ok(tables)
     }
 
-    pub async fn get_activity(&mut self, id:u32) -> Result<Activity, Error> {
+    pub async fn get_activity_definition(&mut self, id:u32) -> Result<DestinyActivityDefinitionData, Error> {
+
         let id = convert_hash_to_id(id);
 
         let row = sqlx::query("SELECT json FROM DestinyActivityDefinition WHERE id=?")
             .bind(id)
             .fetch_one(&mut self.manifest_db).await?;
 
-        //ManifestItemNotFound { description: String }
+        //TODO: check what happens if this returns nothing
 
         let json:&str = row.try_get("json")?;
 
         let data:DestinyActivityDefinitionData = serde_json::from_str(json)?;
 
-        let activity:Activity = Activity::from_activity_definition_data(data);
-
-        Ok(activity)
+        Ok(data)
     }
 
     /*

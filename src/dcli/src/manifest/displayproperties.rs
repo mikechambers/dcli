@@ -6,7 +6,7 @@ pub struct DisplayPropertiesData {
     pub description:String,
     pub name:String,
 
-    #[serde(deserialize_with = "prepend_base_url")]
+    #[serde(rename="icon", deserialize_with = "prepend_base_url")]
     pub icon_path:String,
 
     #[serde(rename = "hasIcon")]

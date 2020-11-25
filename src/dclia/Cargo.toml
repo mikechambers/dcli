@@ -10,3 +10,5 @@ edition = "2018"
 structopt = "0.3"
 tokio = { version="0.2.21", features=["full"] }
 exitfailure = "0.5.1"
+
+dcli = { path = "../dcli/"}
