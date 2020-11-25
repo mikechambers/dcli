@@ -148,6 +148,7 @@ async fn main() -> Result<(), ExitFailure> {
         }
     };
 
+    println!("{:?}", activity_data_a.current_activity_mode_type);
     //lets find out the mode / activity type name
     let activity_type_name: String = match activity_data_a.current_activity_mode_type {
 
@@ -161,7 +162,7 @@ async fn main() -> Result<(), ExitFailure> {
                 .await
             {
                 Ok(e) => e.display_properties.name,
-                Err(e) => {
+                Err(_e) => {
                     //Todo: this either means an error, unknown activity, or they are in orbit
                     "Unknown".to_string()
                 }
