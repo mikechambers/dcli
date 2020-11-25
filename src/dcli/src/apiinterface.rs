@@ -75,7 +75,6 @@ impl ApiInterface {
         let character_activities = match response.character_activities {
             Some(e) => e,
             None => {
-                println!("Returning A");
                 return Ok(None);
             }
         };
@@ -97,7 +96,6 @@ impl ApiInterface {
 
         if current_activity.is_none() {
             //no chars in an activity, so we return None
-            println!("Returning B");
             return Ok(None);
         }
 

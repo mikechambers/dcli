@@ -36,6 +36,8 @@ use dcli::response::gpr::CharacterActivitiesData;
 
 use std::path::PathBuf;
 
+const ORBIT_PLACE_HASH: u32 = 2961497387;
+
 #[derive(StructOpt)]
 /// Command line tool for retrieving current Destiny 2 activity for player..
 ///
@@ -119,6 +121,11 @@ async fn main() -> Result<(), ExitFailure> {
             std::process::exit(0);
         }
     };
+
+    if activity_data_m.place_hash == ORBIT_PLACE_HASH {
+        print_standard("Currently sitting in Orbit", true);
+        return Ok(());
+    }
 
     let place_data_m: PlaceDefinitionData = match manifest
         .get_place_definition(activity_data_m.place_hash)
