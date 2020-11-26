@@ -40,10 +40,10 @@ use std::path::PathBuf;
 const ORBIT_PLACE_HASH: u32 = 2961497387;
 
 #[derive(StructOpt)]
-/// Command line tool for retrieving current Destiny 2 activity for player..
+/// Command line tool for retrieving current Destiny 2 activity for player.
 ///
-/// Command line tool for retrieving character information for specified member id
-/// Retrieves character information for the specified member id.
+/// Command line tool for retrieving current Destiny 2 activity for player,
+/// including activity, location, and map for PVP modes (Crucible and Gambit).
 struct Opt {
     /// Platform for specified id
     ///
@@ -59,15 +59,15 @@ struct Opt {
     #[structopt(short = "m", long = "member-id", required = true)]
     member_id: String,
 
-    ///terse output in the form of class_name:character_id . Errors are suppresed.
+    ///Terse output. Errors are suppresed.
     #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
     terse: bool,
 
-    ///Print out additional information for the API call
+    ///Print out additional information
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    ///Local path the Destiny 2 manifest database file.
+    ///Local path for the Destiny 2 manifest database file.
     #[structopt(long = "manifest-path", parse(from_os_str))]
     manifest_path: PathBuf,
 }
