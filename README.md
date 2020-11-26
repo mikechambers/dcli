@@ -7,6 +7,7 @@ dcli is a collection of utilities that provide a command line interface (CLI) fo
 * [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) Command line utility for managing and syncing the remote Destiny 2 API manifest database.
 * [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) Command line tool for retrieving character information for specified member id.
 * [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) Command line tool for searching the Destiny 2 manifest by hash ids (from API calls).
+* [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) Command line interface for retrieving information on player's current activity within Destiny 2.
 * [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) Library used across all of the dcli apps.
 
 ## Compiling
