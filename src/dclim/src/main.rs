@@ -26,9 +26,9 @@ use dcli::apiclient::ApiClient;
 use dcli::error::Error;
 use dcli::response::manifest::ManifestResponse;
 use dcli::utils::{print_error, print_standard};
-use exitfailure::ExitFailure;
 use manifest_info::ManifestInfo;
 use structopt::StructOpt;
+use dcli::utils::EXIT_FAILURE;
 
 use tokio::prelude::*;
 
@@ -150,7 +150,7 @@ struct Opt {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), ExitFailure> {
+async fn main(){
     let opt = Opt::from_args();
 
     let m_dir = match get_manifest_dir(&opt.manifest_dir) {
@@ -158,7 +158,7 @@ async fn main() -> Result<(), ExitFailure> {
         Err(e) => {
             print_error(&format!("{}", e), !opt.terse);
             print_error(&format!("{}", opt.manifest_dir.display()), !opt.terse);
-            std::process::exit(1);
+            std::process::exit(EXIT_FAILURE);
         }
     };
 
@@ -172,7 +172,7 @@ async fn main() -> Result<(), ExitFailure> {
                 &format!("Could not retrieve manifest info from Bungie : {}", e),
                 !opt.terse,
             );
-            std::process::exit(1);
+            std::process::exit(EXIT_FAILURE);
         }
     };
 
@@ -226,7 +226,7 @@ async fn main() -> Result<(), ExitFailure> {
         if !manifest_needs_updating {
             print_standard("No new manifest avaliable.", !opt.terse);
         }
-        std::process::exit(0);
+        return;
     }
 
     if opt.force || manifest_needs_updating {
@@ -241,7 +241,7 @@ async fn main() -> Result<(), ExitFailure> {
                     &format!("Could not download and save manifest : {}", e),
                     !opt.terse,
                 );
-                std::process::exit(0);
+                std::process::exit(EXIT_FAILURE);
             }
         };
 
@@ -255,7 +255,7 @@ async fn main() -> Result<(), ExitFailure> {
                     &format!("Could not write manifest info : {}", e),
                     !opt.terse,
                 );
-                std::process::exit(1);
+                std::process::exit(EXIT_FAILURE);
             }
         }
         print_standard("Manifest info saved.", !opt.terse);
@@ -265,5 +265,4 @@ async fn main() -> Result<(), ExitFailure> {
 
     print_standard(&format!("{}", m_path.display()), true);
 
-    Ok(())
 }
