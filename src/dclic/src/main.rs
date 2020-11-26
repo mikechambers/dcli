@@ -20,21 +20,21 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use exitfailure::ExitFailure;
 use structopt::StructOpt;
 
 use dcli::apiinterface::ApiInterface;
-use dcli::character::{Character, CharacterClass};
+use dcli::response::character::{CharacterData, CharacterClass};
 use dcli::error::Error;
 use dcli::platform::Platform;
 use dcli::utils::{print_error, print_standard};
+use dcli::utils::EXIT_FAILURE;
 
 //todo: could move this to apiclient
 async fn retrieve_characters(
     member_id: String,
     platform: Platform,
     verbose: bool,
-) -> Result<Vec<Character>, Error> {
+) -> Result<Vec<CharacterData>, Error> {
 
     let interface = ApiInterface::new(verbose);
 
@@ -105,12 +105,12 @@ fn c_status_error(e: &Error) -> Option<String> {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), ExitFailure> {
+async fn main() {
     let opt = Opt::from_args();
 
     let all = !(opt.hunter || opt.titan || opt.warlock || opt.last_active);
 
-    let characters: Vec<Character> =
+    let characters: Vec<CharacterData> =
         match retrieve_characters(opt.member_id, opt.platform, opt.verbose).await {
             Ok(e) => e,
             Err(e) => {
@@ -118,14 +118,14 @@ async fn main() -> Result<(), ExitFailure> {
                     Some(e) => print_error(&e, !opt.terse),
                     None => print_error(&format!("{}", e,), !opt.terse),
                 }
-                std::process::exit(1);
+                std::process::exit(EXIT_FAILURE);
             }
         };
 
     if !characters.is_empty() {
 
         //TODO: move this to seperate API?
-        let mut most_recent: &Character = &characters[0];
+        let mut most_recent: &CharacterData = &characters[0];
 
         for c in characters.iter() {
             if c.date_last_played > most_recent.date_last_played {
@@ -163,6 +163,4 @@ async fn main() -> Result<(), ExitFailure> {
             opt.terse && (opt.last_active || all),
         );
     }
-
-    Ok(())
 }
