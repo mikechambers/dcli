@@ -23,10 +23,9 @@
 mod memberidsearch;
 
 use dcli::platform::Platform;
-use dcli::utils::{print_error, print_standard};
+use dcli::utils::{print_error, print_standard, EXIT_FAILURE};
 use memberidsearch::MemberIdSearch;
 
-use exitfailure::ExitFailure;
 use structopt::StructOpt;
 
 fn is_valid_steam_id(steam_id: &str) -> bool {
@@ -72,17 +71,17 @@ struct Opt {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), ExitFailure> {
+async fn main() {
     let opt = Opt::from_args();
 
     if opt.id.chars().count() == 0 {
         print_error("Invalid id.", !opt.terse);
-        std::process::exit(1);
+        return;
     }
 
     if opt.platform == Platform::Steam && !is_valid_steam_id(&opt.id) {
         print_error("Invalid steam 64 id.", !opt.terse);
-        std::process::exit(1);
+        return;
     }
 
     print_standard(
@@ -105,7 +104,7 @@ async fn main() -> Result<(), ExitFailure> {
             Ok(e) => e,
             Err(e) => {
                 print_error(&format!("Error calling API : {}", e), !opt.terse);
-                std::process::exit(1);
+                std::process::exit(EXIT_FAILURE);
             }
         },
         None => {
@@ -113,7 +112,7 @@ async fn main() -> Result<(), ExitFailure> {
                 &format!("Member not found : '{}' on {}", opt.id, opt.platform),
                 !opt.terse,
             );
-            std::process::exit(0);
+            return;
         }
     };
 
@@ -131,7 +130,7 @@ async fn main() -> Result<(), ExitFailure> {
                 ),
                 !opt.terse,
             );
-            std::process::exit(0);
+            return;
         }
     }
 
@@ -156,6 +155,4 @@ async fn main() -> Result<(), ExitFailure> {
         ),
         !opt.terse,
     );
-
-    Ok(())
 }
