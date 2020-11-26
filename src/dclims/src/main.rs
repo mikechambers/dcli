@@ -37,7 +37,7 @@ struct Opt {
 async fn search_manifest_by_hash(hash: u32, manifest_path: PathBuf) -> Result<Vec<FindResult>, Error> {
     let mut manifest = ManifestInterface::new(manifest_path, false).await?;
     let out = manifest.find(hash).await?;
-    utility
+
     Ok(out)
 }
 
@@ -62,7 +62,7 @@ async fn main() -> Result<(), ExitFailure> {
         print_standard(&format!("Name : {}",r.display_properties.name), !opt.terse && !opt.json);
         print_standard(&format!("Description : {}",r.display_properties.description), !opt.terse && !opt.json);
         print_standard(&format!("Has Icon : {}",r.display_properties.has_icon), opt.verbose && !opt.terse && !opt.json);
-        print_standard(&format!("Icon Path : {}",r.display_properties.icon), opt.verbose && !opt.terse && !opt.json);
+        print_standard(&format!("Icon Path : {}",r.display_properties.icon_path), opt.verbose && !opt.terse && !opt.json);
 
         print_standard(&r.raw_json, opt.json);
 
