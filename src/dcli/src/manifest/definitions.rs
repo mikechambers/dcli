@@ -3,7 +3,7 @@ use crate::apiutils::{prepend_base_url_option};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DisplayPropertiesData {
-    pub description:String,
+    pub description:Option<String>,
     pub name:String,
 
     //https://stackoverflow.com/a/44303505/10232

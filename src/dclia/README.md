@@ -11,6 +11,29 @@ Valid platforms are xbox, playstation, steam and stadia.
 
 ### Example
 
+```
+dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox
+```
+
+outputs:
+
+```
+Playing Deep Stone Crypt Raid on Castalia Macula, Europa
+```
+
+```
+dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox --terse
+```
+
+outputs:
+
+```
+Mode:Strike
+Activity:The Inverted Spire
+Place:Nessus
+Destination:Arcadian Valley
+Description:End the Red Legion expedition that's ripped open the planet's surface.
+```
 
 
 ## Compiling

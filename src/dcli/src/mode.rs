@@ -83,6 +83,62 @@ pub enum Mode {
     TrialsOfOsiris = 84,
 }
 
+impl Mode {
+    pub fn is_gambit(&self) -> bool {
+        *self == Mode::Gambit || *self == Mode::GambitPrime
+    }
+
+    pub fn is_nightfall(&self) -> bool {
+        *self == Mode::Nightfall ||
+        *self == Mode::HeroicNightfall ||
+        *self == Mode::ScoredNightfall ||
+        *self == Mode::ScoredHeroicNightfall
+
+    }
+
+    pub fn is_crucible(&self) -> bool {
+        *self == Mode::AllPvP || 
+        *self == Mode::Control || 
+        *self == Mode::Clash ||
+        *self == Mode::CrimsonDoubles ||
+        *self == Mode::IronBanner ||
+        *self == Mode::AllMayhem ||
+        *self == Mode::Supremacy ||
+        *self == Mode::Survival ||
+        *self == Mode::Countdown ||
+        *self == Mode::TrialsOfTheNine ||
+        *self == Mode::TrialsCountdown ||
+        *self == Mode::TrialsSurvival ||
+        *self == Mode::IronBannerControl ||
+        *self == Mode::IronBannerClash ||
+        *self == Mode::IronBannerSupremacy ||
+        *self == Mode::Rumble ||
+        *self == Mode::AllDoubles ||
+        *self == Mode::Doubles ||
+        *self == Mode::PrivateMatchesClash ||
+        *self == Mode::PrivateMatchesControl ||
+        *self == Mode::PrivateMatchesSupremacy ||
+        *self == Mode::PrivateMatchesCountdown ||
+        *self == Mode::PrivateMatchesSurvival ||
+        *self == Mode::PrivateMatchesMayhem ||
+        *self == Mode::PrivateMatchesRumble ||
+        *self == Mode::Showdown ||
+        *self == Mode::Lockdown ||
+        *self == Mode::Scorched ||
+        *self == Mode::ScorchedTeam ||
+        *self == Mode::Breakthrough ||
+        *self == Mode::Salvage ||
+        *self == Mode::IronBannerSalvage ||
+        *self == Mode::PvPCompetitive ||
+        *self == Mode::PvPQuickplay ||
+        *self == Mode::ClashQuickplay ||
+        *self == Mode::ClashCompetitive ||
+        *self == Mode::ControlQuickplay ||
+        *self == Mode::ControlCompetitive ||
+        *self == Mode::TrialsOfOsiris
+    }
+}
+
 impl fmt::Display for Mode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
@@ -90,79 +146,79 @@ impl fmt::Display for Mode {
             Mode::Story => "Story",
             Mode::Strike => "Strike",
             Mode::Raid => "Raid",
-            Mode::AllPvP => "AllPvP",
+            Mode::AllPvP => "All PvP",
             Mode::Patrol => "Patrol",
-            Mode::AllPvE => "AllPvE",
+            Mode::AllPvE => "All PvE",
             Mode::Reserved9 => "Reserved9",
             Mode::Control => "Control",
             Mode::Reserved11 => "Reserved11",
             Mode::Clash => "Clash",
             Mode::Reserved13 => "Reserved13",
-            Mode::CrimsonDoubles => "CrimsonDoubles",
+            Mode::CrimsonDoubles => "Crimson Doubles",
             Mode::Nightfall => "Nightfall",
-            Mode::HeroicNightfall => "HeroicNightfall",
-            Mode::AllStrikes => "AllStrikes",
-            Mode::IronBanner => "IronBanner",
+            Mode::HeroicNightfall => "Heroic Nightfall",
+            Mode::AllStrikes => "All Strikes",
+            Mode::IronBanner => "Iron Banner",
             Mode::Reserved20 => "Reserved20",
             Mode::Reserved21 => "Reserved21",
             Mode::Reserved22 => "Reserved22",
             Mode::Reserved24 => "Reserved24",
-            Mode::AllMayhem => "AllMayhem",
+            Mode::AllMayhem => "All Mayhem",
             Mode::Reserved26 => "Reserved26",
             Mode::Reserved27 => "Reserved27",
             Mode::Reserved28 => "Reserved28",
             Mode::Reserved29 => "Reserved29",
             Mode::Reserved30 => "Reserved30",
             Mode::Supremacy => "Supremacy",
-            Mode::PrivateMatchesAll => "PrivateMatchesAll",
+            Mode::PrivateMatchesAll => "Private Matches All",
             Mode::Survival => "Survival",
             Mode::Countdown => "Countdown",
-            Mode::TrialsOfTheNine => "TrialsOfTheNine",
+            Mode::TrialsOfTheNine => "Trials Of The Nine",
             Mode::Social => "Social",
-            Mode::TrialsCountdown => "TrialsCountdown",
-            Mode::TrialsSurvival => "TrialsSurvival",
-            Mode::IronBannerControl => "IronBannerControl",
-            Mode::IronBannerClash => "IronBannerClash",
-            Mode::IronBannerSupremacy => "IronBannerSupremacy",
-            Mode::ScoredNightfall => "ScoredNightfall",
-            Mode::ScoredHeroicNightfall => "ScoredHeroicNightfall",
+            Mode::TrialsCountdown => "Trials Countdown",
+            Mode::TrialsSurvival => "Trials Survival",
+            Mode::IronBannerControl => "Iron Banner Control",
+            Mode::IronBannerClash => "Iron Banner Clash",
+            Mode::IronBannerSupremacy => "Iron Banner Supremacy",
+            Mode::ScoredNightfall => "Scored Nightfall",
+            Mode::ScoredHeroicNightfall => "Scored Heroic Nightfall",
             Mode::Rumble => "Rumble",
-            Mode::AllDoubles => "AllDoubles",
+            Mode::AllDoubles => "All Doubles",
             Mode::Doubles => "Doubles",
-            Mode::PrivateMatchesClash => "PrivateMatchesClash",
-            Mode::PrivateMatchesControl => "PrivateMatchesControl",
-            Mode::PrivateMatchesSupremacy => "PrivateMatchesSupremacy",
-            Mode::PrivateMatchesCountdown => "PrivateMatchesCountdown",
-            Mode::PrivateMatchesSurvival => "PrivateMatchesSurvival",
-            Mode::PrivateMatchesMayhem => "PrivateMatchesMayhem",
-            Mode::PrivateMatchesRumble => "PrivateMatchesRumble",
-            Mode::HeroicAdventure => "HeroicAdventure",
+            Mode::PrivateMatchesClash => "Private Matches Clash",
+            Mode::PrivateMatchesControl => "Private Matches Control",
+            Mode::PrivateMatchesSupremacy => "Private Matches Supremacy",
+            Mode::PrivateMatchesCountdown => "Private Matches Countdown",
+            Mode::PrivateMatchesSurvival => "Private Matches Survival",
+            Mode::PrivateMatchesMayhem => "Private Matches Mayhem",
+            Mode::PrivateMatchesRumble => "Private Matches Rumble",
+            Mode::HeroicAdventure => "Heroic Adventure",
             Mode::Showdown => "Showdown",
             Mode::Lockdown => "Lockdown",
             Mode::Scorched => "Scorched",
-            Mode::ScorchedTeam => "ScorchedTeam",
+            Mode::ScorchedTeam => "Scorched Team",
             Mode::Gambit => "Gambit",
-            Mode::AllPvECompetitive => "AllPvECompetitive",
+            Mode::AllPvECompetitive => "All PvE Competitive",
             Mode::Breakthrough => "Breakthrough",
-            Mode::BlackArmoryRun => "BlackArmoryRun",
+            Mode::BlackArmoryRun => "Black Armory Run",
             Mode::Salvage => "Salvage",
-            Mode::IronBannerSalvage => "IronBannerSalvage",
-            Mode::PvPCompetitive => "PvPCompetitive",
-            Mode::PvPQuickplay => "PvPQuickplay",
-            Mode::ClashQuickplay => "ClashQuickplay",
-            Mode::ClashCompetitive => "ClashCompetitive",
-            Mode::ControlQuickplay => "ControlQuickplay",
-            Mode::ControlCompetitive => "ControlCompetitive",
-            Mode::GambitPrime => "GambitPrime",
+            Mode::IronBannerSalvage => "Iron BannerS alvage",
+            Mode::PvPCompetitive => "PvP Competitive",
+            Mode::PvPQuickplay => "PvP Quickplay",
+            Mode::ClashQuickplay => "Clash Quickplay",
+            Mode::ClashCompetitive => "Clash Competitive",
+            Mode::ControlQuickplay => "Control Quickplay",
+            Mode::ControlCompetitive => "Control Competitive",
+            Mode::GambitPrime => "Gambit Prime",
             Mode::Reckoning => "Reckoning",
             Mode::Menagerie => "Menagerie",
-            Mode::VexOffensive => "VexOffensive",
-            Mode::NightmareHunt => "NightmareHunt",
+            Mode::VexOffensive => "Vex Offensive",
+            Mode::NightmareHunt => "Nightmare Hunt",
             Mode::Elimination => "Elimination",
             Mode::Momentum => "Momentum",
             Mode::Dungeon => "Dungeon",
             Mode::Sundial => "Sundial",
-            Mode::TrialsOfOsiris => "TrialsOfOsiris",
+            Mode::TrialsOfOsiris => "Trials Of Osiris",
         };
 
         write!(f, "{}", out)

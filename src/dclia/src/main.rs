@@ -26,6 +26,7 @@ use structopt::StructOpt;
 use dcli::apiinterface::ApiInterface;
 //use dcli::error::Error;
 use dcli::manifestinterface::ManifestInterface;
+use dcli::mode::Mode;
 use dcli::platform::Platform;
 use dcli::utils::{print_error, print_standard};
 
@@ -89,6 +90,7 @@ async fn main() -> Result<(), ExitFailure> {
                 !opt.terse,
             );
             std::process::exit(1);
+            //Err(failure::err_msg("root cause failure"));
         }
     };
 
@@ -155,14 +157,16 @@ async fn main() -> Result<(), ExitFailure> {
         }
     };
 
-    println!("{:?}", activity_data_a.current_activity_mode_type);
+    let mut mode = Mode::None;
+
     //lets find out the mode / activity type name
     let activity_type_name: String = match activity_data_a.current_activity_mode_type {
-
         //if its set in the API data, we use that
-        Some(e) => format!("{}", e),
+        Some(e) => {
+            mode = e;
+            format!("{}", e)
+        }
         None => {
-
             //otherwise, we go into the manifest to find it
             match manifest
                 .get_activity_type_definition(activity_data_m.activity_type_hash)
@@ -170,6 +174,7 @@ async fn main() -> Result<(), ExitFailure> {
             {
                 Ok(e) => e.display_properties.name,
                 Err(_e) => {
+                    println!("{:?}", _e);
                     //Todo: this either means an error, unknown activity, or they are in orbit
                     "Unknown".to_string()
                 }
@@ -177,69 +182,56 @@ async fn main() -> Result<(), ExitFailure> {
         }
     };
 
-    println!(
-        "Playing {mode} on {place0}{place1} ({description})",
-        //if we get to this point, mode should never be none, so it should be safe to unwrap
-        mode = activity_type_name,
-        place0 = activity_data_m.display_properties.name,
-        place1 = place_data_m.display_properties.name,
-        description = activity_data_m.display_properties.description,
-    );
+    let description = activity_data_m
+        .display_properties
+        .description
+        .unwrap_or("".to_string());
+    let activity_name = activity_data_m.display_properties.name;
+    let place_name = place_data_m.display_properties.name;
+    let destination_name = destination_data_m.display_properties.name;
 
-    println!("{: <15}: {: <10}", "Mode", activity_type_name);
-    println!(
-        "{: <15}: {: <10}",
-        "Activity", activity_data_m.display_properties.name
-    );
-    println!(
-        "{: <15}: {: <10}",
-        "Place", place_data_m.display_properties.name
-    );
-    println!(
-        "{: <15}: {: <10}",
-        "Description", activity_data_m.display_properties.description
-    );
-    println!(
-        "{: <15}: {: <10}",
-        "Destination", destination_data_m.display_properties.name
-    );
+    let out = if mode == Mode::Patrol {
+        format!("Exploring on {}", place_name)
+    } else if mode.is_gambit() {
+        format!(
+            "Playing {} on {} ({})",
+            activity_type_name, activity_name, description
+        )
+    } else if mode.is_crucible() {
+        format!(
+            "Playing {} on {} ({})",
+            activity_type_name, activity_name, description
+        )
+    } else if mode == Mode::Strike {
+        format!(
+            "Running {} {} on {}",
+            activity_name, activity_type_name, place_name
+        )
+    } else if mode == Mode::Social {
+        format!("Hanging out in {} on {}", activity_name, place_name)
+    } else if mode == Mode::Story {
+        format!("Playing {} story on {}", activity_name, place_name)
+    } else if mode.is_nightfall() {
+        format!(
+            "Playing {} {} on {}",
+            description, activity_name, place_name
+        )
+    } else {
+        format!(
+            "Playing {} {} on {}",
+            activity_name, activity_type_name, place_name
+        )
+    };
 
-    //Playing Strike on The Insight Terminus (Break into the ancient Vex installation.)
+    print_standard(&out, !opt.terse);
 
-    //need to get destinationHash (DestinyDestinationDefinition) (Arcadian Valley) and placeHash (DestinyPlaceDefinition) hashes (Nessus)
-
-    //todo: just return raw data from manifest, dont try to make it clean object
+    print_standard(
+        &format!(
+            "Mode:{}\nActivity:{}\nPlace:{}\nDestination:{}\nDescription:{}",
+            activity_type_name, activity_name, place_name, destination_name, description
+        ),
+        opt.terse,
+    );
 
     Ok(())
 }
-
-/*
-
-    "Response": {
-        "characterActivities": {
-            "data": {
-                "2305843009264966984": {
-
-
-                    "currentActivityHash": 1813752023, //destination (will be 0 if not active)
-                    "currentActivityModeHash": 3497767639, //activity (will be 0 if not active)
-                    "currentActivityModeType": 6, //activity (patrol)
-                    "currentActivityModeHashes": [
-                        3497767639, //activty
-                        1164760493 //pve
-                    ],
-                    "currentActivityModeTypes": [
-                        6, //patrol
-                        7 //AllPVE
-                    ],
-                    "currentPlaylistActivityHash": 1813752023, //destination
-                    "lastCompletedStoryHash": 0
-
-                    //look for presence of currentActivityModeTypes
-
-                    //can also see if anyone is in playlist with them.
-
-        //output (make fireteam optional)
-        //Playing patrol on Europa with mesh, foo and Bar.
-
-*/
