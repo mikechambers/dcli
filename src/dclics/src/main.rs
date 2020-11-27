@@ -25,8 +25,9 @@ use structopt::StructOpt;
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
 use dcli::mode::CrucibleMode;
+use dcli::timeperiod::TimePeriod;
 use dcli::platform::Platform;
-use dcli::response::stats::PvpStatsData;
+use dcli::response::stats::{PvpStatsData, DailyPvPStatsValuesData};
 
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_standard};
@@ -45,6 +46,14 @@ struct Opt {
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
+    /// Time range to pull stats from. Valid values include day, reset, week,
+    /// month, alltime (default)
+    ///
+    /// Time range to pull stats from. Valid values include  day (last day), 
+    /// reset (since reset), week (last week), month (last month), alltime (default)
+    #[structopt(long = "period")]
+    period: Option<TimePeriod>,
+
     /// Destiny 2 API member id
     ///
     /// Destiny 2 API member id. This is not the user name, but the member id
@@ -52,7 +61,7 @@ struct Opt {
     #[structopt(short = "m", long = "member-id", required = true)]
     member_id: String,
 
-    ///  Crucible mode to return stats for.
+    /// Crucible mode to return stats for.
     ///
     /// Crucible mode to return stats for. Valid values are all (default), 
     /// control, clash, mayhem, ironbanner, private, trialsofnine, rumble, 
@@ -61,9 +70,11 @@ struct Opt {
     mode: Option<CrucibleMode>,
 
     /// Destiny 2 API character id. If not specified, data for all characters will be returned.
+    /// Required when period is set to day, reset, week or month
     ///
     /// Destiny 2 API character id. If not specified, data for all characters will be returned.
-    #[structopt(short = "c", long = "character-id")]
+    /// Required when period is set to day, reset, week or month
+    #[structopt(short = "c", long = "character-id", required_ifs=&[("period","day"),("period","reset"),("period","week"),("period","month"),])]
     character_id: Option<String>,
 
     ///Terse output. Errors are suppresed.
@@ -91,6 +102,28 @@ async fn retrieve_all_time_stats (
     Ok(data)
 }
 
+async fn retrieve_aggregate_crucible_stats (
+    member_id: String,
+    character_id: String,
+    platform: Platform,
+    mode: CrucibleMode,
+    period:TimePeriod,
+    verbose: bool,
+) -> Result<Vec<DailyPvPStatsValuesData>, Error> {
+    let client: ApiInterface = ApiInterface::new(verbose);
+
+    let start_date = period.get_date_time();
+
+    let data: Vec<DailyPvPStatsValuesData> = client
+        .retrieve_aggregate_crucible_stats(member_id, character_id, platform, mode, start_date)
+        .await?;
+        
+    Ok(data)
+}
+
+
+
+
 #[tokio::main]
 async fn main() {
 
@@ -98,20 +131,44 @@ async fn main() {
 
     let character_id:String = opt.character_id.unwrap_or("0".to_string());
     let mode:CrucibleMode = opt.mode.unwrap_or(CrucibleMode::AllPvP);
+    let period:TimePeriod = opt.period.unwrap_or(TimePeriod::Alltime);
 
-    let data: PvpStatsData = match retrieve_all_time_stats(
-        opt.member_id,
-        character_id,
-        opt.platform,
-        mode,
-        opt.verbose
-    ).await {
-        Ok(_e) => _e,
-        Err(e) => {
-            print_standard(&format!("Error : {:#?}", e), true);
-            std::process::exit(EXIT_FAILURE);
+    match period {
+        TimePeriod::Alltime => {
+            let data: PvpStatsData = match retrieve_all_time_stats(
+                opt.member_id,
+                character_id,
+                opt.platform,
+                mode,
+                opt.verbose
+            ).await {
+                Ok(_e) => _e,
+                Err(e) => {
+                    print_standard(&format!("Error : {:#?}", e), true);
+                    std::process::exit(EXIT_FAILURE);
+                },
+            };
+    
+            println!("{:#?}", data);
+        },
+        _ => {
+            let data: Vec<DailyPvPStatsValuesData> = match retrieve_aggregate_crucible_stats(
+                opt.member_id,
+                character_id,
+                opt.platform,
+                mode,
+                TimePeriod::Reset,
+                opt.verbose
+            ).await {
+                Ok(_e) => _e,
+                Err(e) => {
+                    print_standard(&format!("Error : {:#?}", e), true);
+                    std::process::exit(EXIT_FAILURE);
+                },
+            };
+    
+            println!("{:#?}", data);
         },
     };
 
-    println!("{:#?}", data);
 }

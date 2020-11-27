@@ -27,6 +27,9 @@ use serde::Deserializer;
 //TODO:: might not be best place. maybe in a consts mod?
 pub const RESOURCE_BASE_URL: &str = "https://www.bungie.net";
 
+//2020-10-05T18:49:25Z
+pub const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
+
 pub fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
     D: serde::de::Deserializer<'de>,
@@ -57,8 +60,7 @@ where
     })
 }
 
-//2020-10-05T18:49:25Z
-const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
+
 //str_to_datetime
 pub fn str_to_datetime<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
 where

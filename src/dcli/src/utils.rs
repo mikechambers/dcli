@@ -20,8 +20,35 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use chrono::{DateTime, Utc, Duration, Datelike};
+use chrono::prelude::*;
+
 pub const EXIT_SUCCESS: i32 = 0;
 pub const EXIT_FAILURE: i32 = 1;
+
+
+pub fn get_last_reset() -> DateTime<Utc> {
+
+    let now: DateTime<Utc> = Utc::now();
+    let n_date = Utc::now().date();
+    let dt = Utc.ymd(n_date.year(), n_date.month(), n_date.day()).and_hms(18, 0, 0);
+
+    let current_day = now.weekday().number_from_monday();
+    let target_dt = if current_day == 2 {
+        if dt > now {
+            dt
+        } else {
+            dt - Duration::days(7)
+        }
+    }
+    else if current_day > 2 {
+        dt - Duration::days((current_day - 2) as i64)
+    } else {
+        dt - Duration::days(6)
+    };
+
+    target_dt
+}
 
 pub fn print_standard(out: &str, print: bool) {
     if !print {

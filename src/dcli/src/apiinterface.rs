@@ -26,7 +26,8 @@ use crate::error::Error;
 use crate::platform::Platform;
 use crate::mode::CrucibleMode;
 use crate::response::gpr::{GetProfileResponse, CharacterActivitiesData};
-use crate::response::stats::{AllTimePvPStatsResponse, PvpStatsData};
+use crate::response::stats::{AllTimePvPStatsResponse, PvpStatsData, DailyPvPStatsResponse, DailyPvPStatsValuesData};
+use chrono::{DateTime, NaiveDateTime, Utc};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
@@ -183,6 +184,41 @@ impl ApiInterface {
                 description: String::from("No all_pvp data from API Call."),
             }
         )?.all_time;
+
+        Ok(data)
+    }
+
+    pub async fn retrieve_aggregate_crucible_stats(&self, member_id:String, character_id:String, platform:Platform, mode:CrucibleMode, start_time:DateTime<Utc>) -> Result<Vec<DailyPvPStatsValuesData>, Error> {
+
+        let day_start = start_time.to_rfc3339();
+        let day_end = Utc::now().to_rfc3339();
+
+        //
+        let url =
+        format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=1&groups=1,2,3&daystart={day_start}&dayend={day_end}",
+            platform_id = platform.to_id(),
+            member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
+            character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
+            mode_id = mode.to_id(),
+            day_start = utf8_percent_encode(&day_start, NON_ALPHANUMERIC),
+            day_end = utf8_percent_encode(&day_end, NON_ALPHANUMERIC),
+        );
+
+        let response: DailyPvPStatsResponse = self
+        .client
+        .call_and_parse::<DailyPvPStatsResponse>(&url)
+        .await?;
+
+
+        let data:Vec<DailyPvPStatsValuesData> = response.response.ok_or(
+            Error::ApiRequest {
+                description: String::from("No response data from API Call."),
+            }
+        )?.data.ok_or(
+            Error::ApiRequest {
+                description: String::from("No all_pvp data from API Call."),
+            }
+        )?.daily;
 
         Ok(data)
     }
