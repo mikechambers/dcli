@@ -27,7 +27,7 @@ use crate::platform::Platform;
 use crate::mode::CrucibleMode;
 use crate::response::gpr::{GetProfileResponse, CharacterActivitiesData};
 use crate::response::stats::{AllTimePvPStatsResponse, PvpStatsData, DailyPvPStatsResponse, DailyPvPStatsValuesData};
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
