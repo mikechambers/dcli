@@ -27,24 +27,37 @@ pub const EXIT_SUCCESS: i32 = 0;
 pub const EXIT_FAILURE: i32 = 1;
 
 
+/// Get the DateTime for the last reset time (18:00 UTC on the previous Tuesday)
 pub fn get_last_reset() -> DateTime<Utc> {
 
+    //There has to be a better way to figure this out
+
     let now: DateTime<Utc> = Utc::now();
-    let n_date = Utc::now().date();
+    //use this to test specific dates / times
+    //let now : DateTime<Utc> = Utc.ymd(2020, 11, 24).and_hms(18, 0, 1);
+
+    let n_date = now.date();
+
     let dt = Utc.ymd(n_date.year(), n_date.month(), n_date.day()).and_hms(18, 0, 0);
 
-    let current_day = now.weekday().number_from_monday();
-    let target_dt = if current_day == 2 {
-        if dt > now {
+    let w_day = n_date.weekday();
+
+    //see if we are on reset day (Tue)
+    let target_dt = if w_day == Weekday::Tue {
+
+        if now > dt {
+            //after reset, so use today's reset time
             dt
         } else {
+
+            //before reset, go back to previous tuesday, reset
             dt - Duration::days(7)
         }
-    }
-    else if current_day > 2 {
-        dt - Duration::days((current_day - 2) as i64)
     } else {
-        dt - Duration::days(6)
+
+        //figure out how many days we are away from the previous tuesday
+        let c:i64 = ((w_day.num_days_from_sunday() + 4) % 7 + 1) as i64;
+        dt - Duration::days(c)
     };
 
     target_dt
