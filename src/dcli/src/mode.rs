@@ -1,4 +1,5 @@
 use std::fmt;
+use std::str::FromStr;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[derive(PartialEq, Clone, Copy, Debug, Serialize_repr, Deserialize_repr)]
@@ -222,5 +223,53 @@ impl fmt::Display for Mode {
         };
 
         write!(f, "{}", out)
+    }
+}
+
+
+#[derive(PartialEq, Clone, Copy)]
+pub enum CrucibleMode {
+    AllPvP = 5,
+    Control = 10,
+    Clash = 12,
+    AllMayhem = 25,
+    IronBanner = 19,
+    PrivateMatchesAll = 32,
+    TrialsOfTheNine = 39,
+    Rumble = 48,
+    PvPCompetitive = 69,
+    PvPQuickplay = 70,
+    TrialsOfOsiris = 84,
+}
+
+impl CrucibleMode {
+    pub fn to_id(&self) -> u32 {
+        *self as u32
+    }
+}
+
+impl FromStr for CrucibleMode {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        //wrap in String so we can convert to lower case
+        let s = String::from(s).to_lowercase();
+
+        //get a slice to get a &str for the match
+        match &s[..] {
+            "all" => Ok(CrucibleMode::AllPvP),
+            "control" => Ok(CrucibleMode::Control),
+            "clash" => Ok(CrucibleMode::Clash),
+            "mayhem" => Ok(CrucibleMode::AllMayhem),
+            "ironbanner" => Ok(CrucibleMode::IronBanner),
+            "private" => Ok(CrucibleMode::PrivateMatchesAll),
+            "trialsofnine" => Ok(CrucibleMode::TrialsOfTheNine),
+            "rumble" => Ok(CrucibleMode::Rumble),
+            "comp" => Ok(CrucibleMode::PvPCompetitive),
+            "quickplay" => Ok(CrucibleMode::PvPQuickplay),
+            "trialsofosiris" => Ok(CrucibleMode::TrialsOfOsiris),
+  
+            _ => Err("Unknown Crucible Mode type"),
+        }
     }
 }

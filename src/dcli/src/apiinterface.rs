@@ -24,7 +24,9 @@ use crate::apiclient::ApiClient;
 use crate::response::character::CharacterData;
 use crate::error::Error;
 use crate::platform::Platform;
+use crate::mode::CrucibleMode;
 use crate::response::gpr::{GetProfileResponse, CharacterActivitiesData};
+use crate::response::stats::{AllTimePvPStatsResponse, PvpStatsData};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
@@ -144,4 +146,45 @@ impl ApiInterface {
 
         Ok(characters)
     }
+
+/*
+  static const int daily = 1;
+  static const int allTime = 2;
+  */
+
+    /*
+    async fn retrieve_daily_crucible_stats(member_id:u32, character_id:u32, platform:Platform, mode:CrucibleMode, start_date:DateTime) {
+        //"/Platform/Destiny2/1/Account/$memberId/Character/$characterId/Stats/?modes=$modesString$dateRangeString&periodType=$periodTypeId&groups=1,2,3";
+    }
+    */
+
+    pub async fn retrieve_alltime_crucible_stats(&self, member_id:String, character_id:String, platform:Platform, mode:CrucibleMode) -> Result<PvpStatsData, Error> {
+        //"/Platform/Destiny2/1/Account/$memberId/Character/$characterId/Stats/?modes=$modesString$dateRangeString&periodType=$periodTypeId&groups=1,2,3";
+        let url =
+        format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=2&groups=1,2,3",
+            platform_id = platform.to_id(),
+            member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
+            character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
+            mode_id = mode.to_id(),
+        );
+
+        let response: AllTimePvPStatsResponse = self
+        .client
+        .call_and_parse::<AllTimePvPStatsResponse>(&url)
+        .await?;
+
+
+        let data:PvpStatsData = response.response.ok_or(
+            Error::ApiRequest {
+                description: String::from("No response data from API Call."),
+            }
+        )?.data.ok_or(
+            Error::ApiRequest {
+                description: String::from("No all_pvp data from API Call."),
+            }
+        )?.all_time;
+
+        Ok(data)
+    }
+
 }
