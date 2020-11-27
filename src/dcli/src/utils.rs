@@ -26,12 +26,11 @@ use chrono::prelude::*;
 pub const EXIT_SUCCESS: i32 = 0;
 pub const EXIT_FAILURE: i32 = 1;
 
-pub const WEEK_IN_SECONDS: i64 = 60 * 60 * 24 * 7;
-
+pub const WEEK_IN_SECONDS: i64 = 604800;
 
 pub fn get_last_reset() -> DateTime<Utc> {
-    //get a hardcoded past reset date / time
-    let past_reset : DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(18, 0, 0);
+    //get a hardcoded past reset date / time (17:00 UTC every tuesday)
+    let past_reset : DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);
     let now: DateTime<Utc> = Utc::now();
 
     //get total seconds between now and the past reset
