@@ -47,18 +47,19 @@ impl ops::Add<CrucibleStats> for CrucibleStats {
 
     fn add(self, _cs: CrucibleStats) -> CrucibleStats {
         
+        //note, all of this stuff for single game kills is actually not necessary
+        //since right now, its only returned when we get all time stats, not daily
+        //so we dont really every need to aggregate stats.
+        //but we will keep it here for completeness sake and in case the API is
+        //ever updated
         let best_single_game_kills:Option<f32>;
-
-        if _cs.best_single_game_kills.is_none() && self.best_single_game_kills.is_none() {
-            best_single_game_kills = None;
-        } else if _cs.best_single_game_kills.is_none() || self.best_single_game_kills.is_none() {
+        if _cs.best_single_game_kills.is_none() || self.best_single_game_kills.is_none() {
             if _cs.best_single_game_kills.is_none() {
                 best_single_game_kills = self.best_single_game_kills;
             } else {
                 best_single_game_kills = _cs.best_single_game_kills;
             }
         } else {
-
             let a = _cs.best_single_game_kills.unwrap();
             let b = self.best_single_game_kills.unwrap();
             let c = if a > b {a} else {b};
