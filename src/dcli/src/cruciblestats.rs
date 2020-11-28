@@ -27,6 +27,7 @@ use crate::utils::{calculate_efficiency, calculate_kills_deaths_assists, calcula
 pub struct CrucibleStats {
     pub activities_entered:f32,
     pub activities_won:f32,
+    pub activities_lost:f32,
     pub assists:f32,
     pub kills:f32,
     pub average_kill_distance:f32,
@@ -34,6 +35,7 @@ pub struct CrucibleStats {
     pub seconds_played:f32,
     pub deaths:f32,
     pub average_lifespan:f32,
+    pub total_lifespan:f32, //This is an estimate
     pub best_single_game_kills:Option<f32>,
     pub opponents_defeated:f32,
     pub efficiency:f32,
@@ -71,17 +73,26 @@ impl ops::Add<CrucibleStats> for CrucibleStats {
         let assists = self.assists + _cs.assists;
         let deaths = self.deaths + _cs.deaths;
 
-        //todo : add total activities?
+        let total_lifespan = self.total_lifespan + _cs.total_lifespan;
+
+        //this doesnt completely work, since there are times where a lifespan
+        //does not end in death (i.e. end of game)
+        //so when aggregating values, this is an estimate
+        let average_lifespan = total_lifespan / deaths;
+
+        //todo : add activities_lost
         CrucibleStats {
             activities_entered : self.activities_entered + _cs.activities_entered,
             activities_won : self.activities_won + _cs.activities_won,
+            activities_lost : self.activities_lost + _cs.activities_lost,
             assists : assists,
             kills : kills,
             average_kill_distance : total_kill_distance / kills,
             total_kill_distance : total_kill_distance,
             seconds_played : self.seconds_played + _cs.seconds_played,
             deaths : deaths,
-            average_lifespan : self.average_lifespan + _cs.average_lifespan, //TODO: think about this in agg
+            average_lifespan : average_lifespan, //TODO: think about this in agg
+            total_lifespan : total_lifespan, //TODO: think about this in agg
             opponents_defeated : self.opponents_defeated + _cs.opponents_defeated,
             efficiency : calculate_efficiency(kills, deaths, assists),
             kills_deaths_ratio : calculate_kills_deaths_ratio(kills, deaths),

@@ -108,6 +108,7 @@ impl PvpStatsData {
         CrucibleStats {
             activities_entered : self.activities_entered.basic.value,
             activities_won : self.activities_won.basic.value,
+            activities_lost : self.activities_entered.basic.value - self.activities_won.basic.value,
             assists : self.assists.basic.value,
             kills : self.kills.basic.value,
             average_kill_distance : self.average_kill_distance.basic.value,
@@ -115,6 +116,7 @@ impl PvpStatsData {
             seconds_played : self.seconds_played.basic.value,
             deaths : self.deaths.basic.value,
             average_lifespan : self.average_lifespan.basic.value,
+            total_lifespan: self.average_lifespan.basic.value * self.deaths.basic.value, //estimate
             opponents_defeated : self.opponents_defeated.basic.value,
             efficiency : self.efficiency.basic.value,
             kills_deaths_ratio : self.kills_deaths_ratio.basic.value,
