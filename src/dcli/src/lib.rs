@@ -32,3 +32,4 @@ pub mod utils;
 pub mod apiutils;
 pub mod mode;
 pub mod timeperiod;
+pub mod cruciblestats;

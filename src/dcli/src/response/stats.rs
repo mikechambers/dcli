@@ -23,7 +23,7 @@
 use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
 use serde_derive::{Deserialize, Serialize};
 use crate::apiutils::str_to_datetime;
-
+use crate::cruciblestats::CrucibleStats;
 use chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -69,6 +69,9 @@ pub struct PvpStatsData {
     #[serde(rename = "averageKillDistance")]
     pub average_kill_distance:PvpAllTimeStatItemData,
 
+    #[serde(rename = "totalKillDistance")]
+    pub total_kill_distance:PvpAllTimeStatItemData,
+
     #[serde(rename = "secondsPlayed")]
     pub seconds_played:PvpAllTimeStatItemData,
 
@@ -94,6 +97,34 @@ pub struct PvpStatsData {
     pub suicides:PvpAllTimeStatItemData,
 }
 
+impl PvpStatsData {
+    pub fn get_crucible_stats(&self) -> CrucibleStats {
+
+        let best_single_game_kills:Option<f32> = match self.best_single_game_kills.as_ref() {
+            Some(ref e) => Some(e.basic.value),
+            None => None,
+        };
+
+        CrucibleStats {
+            activities_entered : self.activities_entered.basic.value,
+            activities_won : self.activities_won.basic.value,
+            assists : self.assists.basic.value,
+            kills : self.kills.basic.value,
+            average_kill_distance : self.average_kill_distance.basic.value,
+            total_kill_distance : self.total_kill_distance.basic.value,
+            seconds_played : self.seconds_played.basic.value,
+            deaths : self.deaths.basic.value,
+            average_lifespan : self.average_lifespan.basic.value,
+            opponents_defeated : self.opponents_defeated.basic.value,
+            efficiency : self.efficiency.basic.value,
+            kills_deaths_ratio : self.kills_deaths_ratio.basic.value,
+            kills_deaths_assists : self.kills_deaths_assists.basic.value,
+            suicides : self.suicides.basic.value,
+            best_single_game_kills : best_single_game_kills,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PvpAllTimeStatItemData {
     #[serde(rename = "statId")]
@@ -109,9 +140,6 @@ pub struct BasicFloatData {
     #[serde(rename = "displayValue")]
     pub display_value:String,
 }
-
-
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DailyPvPStatsResponse {
@@ -151,13 +179,3 @@ pub struct DailyPvPStatsValuesData {
 
     pub values:PvpStatsData,
 }
-
-
-/*
-    "Response": {
-        "allPvP": {
-            "daily": [
-                {
-                    "period": "2020-11-24T00:00:00Z",
-                    "values": {
-                        */
