@@ -295,3 +295,23 @@ impl FromStr for CrucibleMode {
         }
     }
 }
+
+impl fmt::Display for CrucibleMode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let out = match self {
+            CrucibleMode::AllPvP => "all Crucible modes",
+            CrucibleMode::Control => "Control",
+            CrucibleMode::Clash => "Clash",
+            CrucibleMode::AllMayhem => "Mayhem",
+            CrucibleMode::IronBanner => "Iron Banner",
+            CrucibleMode::PrivateMatchesAll => "Private Matches",
+            CrucibleMode::TrialsOfTheNine => "Trials of the Nine",
+            CrucibleMode::Rumble => "Rumble",
+            CrucibleMode::PvPCompetitive => "Competitive",
+            CrucibleMode::PvPQuickplay => "Quickplay",
+            CrucibleMode::TrialsOfOsiris => "Trials of Osiris",
+        };
+
+        write!(f, "{}", out)
+    }
+}

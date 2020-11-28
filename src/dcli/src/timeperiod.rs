@@ -23,6 +23,7 @@
 use chrono::{DateTime, Utc, Duration};
 use crate::utils::get_last_reset;
 use std::str::FromStr;
+use std::fmt;
 
 #[derive(PartialEq)]
 pub enum TimePeriod {
@@ -65,5 +66,19 @@ impl FromStr for TimePeriod {
             "alltime" => Ok(TimePeriod::Alltime),
             _ => Err("Unknown TimePeriod type"),
         }
+    }
+}
+
+impl fmt::Display for TimePeriod {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let out = match self {
+            TimePeriod::Day => "for last day",
+            TimePeriod::Reset => "since reset",
+            TimePeriod::Week => "for the last week",
+            TimePeriod::Month => "for the last month",
+            TimePeriod::Alltime => "for all time",
+        };
+
+        write!(f, "{}", out)
     }
 }

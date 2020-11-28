@@ -86,20 +86,61 @@ struct Opt {
     verbose: bool,
 }
 
+#[derive(Default, Debug)]
+struct PStats {
+    pub activities_entered:f32,
+    pub activities_won:f32,
+    pub assists:f32,
+    pub kills:f32,
+    pub average_kill_distance:f32,
+    pub seconds_played:f32,
+    pub deaths:f32,
+    pub average_lifespan:f32,
+    pub best_single_game_kills:Option<f32>,
+    pub opponents_defeated:f32,
+    pub efficiency:f32,
+    pub kills_deaths_ratio:f32,
+    pub kills_deaths_assists:f32,
+    pub suicides:f32,
+}
+
 async fn retrieve_all_time_stats (
     member_id: String,
     character_id: String,
     platform: Platform,
     mode: CrucibleMode,
     verbose: bool,
-) -> Result<PvpStatsData, Error> {
+) -> Result<PStats, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let data: PvpStatsData = client
         .retrieve_alltime_crucible_stats(member_id, character_id, platform, mode)
         .await?;
 
-    Ok(data)
+        let best_single_game_kills:Option<f32> = match data.best_single_game_kills {
+            Some(e) => Some(e.basic.value),
+            None => None,
+        };
+
+        let p_stats:PStats = PStats {
+
+            activities_entered : data.activities_entered.basic.value,
+            activities_won : data.activities_won.basic.value,
+            assists : data.assists.basic.value,
+            kills : data.kills.basic.value,
+            average_kill_distance : data.average_kill_distance.basic.value,
+            seconds_played : data.seconds_played.basic.value,
+            deaths : data.deaths.basic.value,
+            average_lifespan : data.average_lifespan.basic.value,
+            opponents_defeated : data.opponents_defeated.basic.value,
+            efficiency : data.efficiency.basic.value,
+            kills_deaths_ratio : data.kills_deaths_ratio.basic.value,
+            kills_deaths_assists : data.kills_deaths_assists.basic.value,
+            suicides : data.suicides.basic.value,
+            best_single_game_kills : best_single_game_kills,
+        };
+
+    Ok(p_stats)
 }
 
 async fn retrieve_aggregate_crucible_stats (
@@ -109,7 +150,7 @@ async fn retrieve_aggregate_crucible_stats (
     mode: CrucibleMode,
     period:TimePeriod,
     verbose: bool,
-) -> Result<Vec<DailyPvPStatsValuesData>, Error> {
+) -> Result<PStats, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let start_date = period.get_date_time();
@@ -117,8 +158,27 @@ async fn retrieve_aggregate_crucible_stats (
     let data: Vec<DailyPvPStatsValuesData> = client
         .retrieve_aggregate_crucible_stats(member_id, character_id, platform, mode, start_date)
         .await?;
+
+    let mut p_stats:PStats = PStats::default();
+
+    for d in data.iter() {
+        p_stats.activities_entered += d.values.activities_entered.basic.value;
+        p_stats.activities_won += d.values.activities_won.basic.value;
+        p_stats.assists += d.values.assists.basic.value;
+        p_stats.kills += d.values.kills.basic.value;
+        p_stats.average_kill_distance += d.values.average_kill_distance.basic.value;
+        p_stats.seconds_played += d.values.seconds_played.basic.value;
+        p_stats.deaths += d.values.deaths.basic.value;
+        p_stats.average_lifespan += d.values.average_lifespan.basic.value;
+        p_stats.opponents_defeated += d.values.opponents_defeated.basic.value;
+        p_stats.efficiency += d.values.efficiency.basic.value;
+        p_stats.kills_deaths_ratio += d.values.kills_deaths_ratio.basic.value;
+        p_stats.kills_deaths_assists += d.values.kills_deaths_assists.basic.value;
+        p_stats.suicides += d.values.suicides.basic.value;
+    }
+
         
-    Ok(data)
+    Ok(p_stats)
 }
 
 
@@ -133,26 +193,24 @@ async fn main() {
     let mode:CrucibleMode = opt.mode.unwrap_or(CrucibleMode::AllPvP);
     let period:TimePeriod = opt.period.unwrap_or(TimePeriod::Alltime);
 
-    match period {
+    let data = match period {
         TimePeriod::Alltime => {
-            let data: PvpStatsData = match retrieve_all_time_stats(
+            match retrieve_all_time_stats(
                 opt.member_id,
                 character_id,
                 opt.platform,
                 mode,
                 opt.verbose
             ).await {
-                Ok(_e) => _e,
+                Ok(e) => e,
                 Err(e) => {
                     print_standard(&format!("Error : {:#?}", e), true);
                     std::process::exit(EXIT_FAILURE);
                 },
-            };
-    
-            println!("{:#?}", data);
+            }
         },
         _ => {
-            let data: Vec<DailyPvPStatsValuesData> = match retrieve_aggregate_crucible_stats(
+            match retrieve_aggregate_crucible_stats(
                 opt.member_id,
                 character_id,
                 opt.platform,
@@ -160,15 +218,16 @@ async fn main() {
                 TimePeriod::Reset,
                 opt.verbose
             ).await {
-                Ok(_e) => _e,
+                Ok(e) => e,
                 Err(e) => {
                     print_standard(&format!("Error : {:#?}", e), true);
                     std::process::exit(EXIT_FAILURE);
                 },
-            };
+            }
     
-            println!("{:#?}", data);
         },
     };
+    println!("Displaying stats for {:#} {:#}.", mode, period);
+    println!("{:#?}", data);
 
 }
