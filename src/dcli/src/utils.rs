@@ -56,32 +56,15 @@ pub fn print_error(out: &str, print: bool) {
 }
 
 pub fn calculate_efficiency(kills:f32, deaths:f32, assists:f32) -> f32 {
-    let mut out = kills + assists;
-
-    if deaths > 0.0 {
-        out = out / deaths;
-    }
-
-    out
+    let t = kills + assists;
+    if deaths > 0.0 { t / deaths } else { t }
 }
 
 pub fn calculate_kills_deaths_ratio(kills:f32, deaths:f32) -> f32 {
-    let mut out = kills;
-
-    if out > 0.0 {
-        out = out / deaths;
-    }
-
-    out
+    if deaths > 0.0 { kills / deaths } else { kills } 
 }
 
 pub fn calculate_kills_deaths_assists(kills:f32, deaths:f32, assists:f32) -> f32 {
-
-    let mut out = kills + (assists / 2.0);
-
-    if deaths > 0.0 {
-        out = out / deaths;
-    }
-
-    out
+    let t = kills + (assists / 2.0);
+    if deaths > 0.0 { t / deaths } else { t }
 }
