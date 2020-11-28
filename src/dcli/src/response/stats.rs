@@ -94,6 +94,9 @@ pub struct PvpStatsData {
     #[serde(rename = "killsDeathsAssists")]
     pub kills_deaths_assists:PvpAllTimeStatItemData,
 
+    #[serde(rename = "precisionKills")]
+    pub precision_kills:PvpAllTimeStatItemData,
+
     pub suicides:PvpAllTimeStatItemData,
 }
 
@@ -122,6 +125,7 @@ impl PvpStatsData {
             kills_deaths_ratio : self.kills_deaths_ratio.basic.value,
             kills_deaths_assists : self.kills_deaths_assists.basic.value,
             suicides : self.suicides.basic.value,
+            precision_kills: self.precision_kills.basic.value,
             best_single_game_kills : best_single_game_kills,
         }
     }

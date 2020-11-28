@@ -42,6 +42,7 @@ pub struct CrucibleStats {
     pub kills_deaths_ratio:f32,
     pub kills_deaths_assists:f32,
     pub suicides:f32,
+    pub precision_kills:f32,
 }
 
 impl ops::Add<CrucibleStats> for CrucibleStats {
@@ -99,6 +100,7 @@ impl ops::Add<CrucibleStats> for CrucibleStats {
             kills_deaths_assists : calculate_kills_deaths_assists(kills, deaths, assists),
             suicides : self.suicides + _cs.suicides,
             best_single_game_kills: best_single_game_kills,
+            precision_kills: self.precision_kills + _cs.precision_kills,
         }
     }
 }
