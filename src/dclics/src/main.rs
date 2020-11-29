@@ -195,15 +195,15 @@ struct Opt {
     ///
     /// Valid values include day (last day), reset (since reset), week 
     /// (last week), month (last month), alltime (default).
-    #[structopt(long = "period")]
-    period: Option<TimePeriod>,
+    #[structopt(long = "period", default_value="alltime")]
+    period: TimePeriod,
 
     /// Crucible mode to return stats for
     ///
     /// Valid values are all (default), control, clash, mayhem, ironbanner, 
     /// private, trialsofnine, rumble, comp, quickplay and trialsofosiris.
-    #[structopt(long = "mode")]
-    mode: Option<CrucibleMode>,
+    #[structopt(long = "mode", default_value="all")]
+    mode: CrucibleMode,
 
     /// Format for command output
     ///
@@ -211,8 +211,8 @@ struct Opt {
     /// 
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "o", long = "output")]
-    output: Option<Output>,
+    #[structopt(short = "o", long = "output", default_value="default")]
+    output: Output,
 
     /// Destiny 2 API character id
     ///
@@ -293,17 +293,13 @@ async fn main() {
     //use unwrap_or_else as it is lazily evaluated
     let character_id: String = opt.character_id.unwrap_or_else(|| "0".to_string());
 
-    let mode: CrucibleMode = opt.mode.unwrap_or(CrucibleMode::AllPvP);
-    let period: TimePeriod = opt.period.unwrap_or(TimePeriod::Alltime);
-    let output: Output = opt.output.unwrap_or(Output::Default);
-
-    let data = match period {
+    let data = match opt.period {
         TimePeriod::Alltime => {
             match retrieve_all_time_stats(
                 &opt.member_id,
                 &character_id,
                 opt.platform,
-                mode,
+                opt.mode,
                 opt.verbose,
             )
             .await
@@ -326,7 +322,7 @@ async fn main() {
                 &opt.member_id,
                 &character_id,
                 opt.platform,
-                mode,
+                opt.mode,
                 TimePeriod::Reset,
                 opt.verbose,
             )
@@ -347,12 +343,12 @@ async fn main() {
         }
     };
 
-    match output {
+    match opt.output {
         Output::Default => {
             if !opt.verbose {
                 clear_scr();
             }
-            print_default(data, mode, period);
+            print_default(data, opt.mode, opt.period);
         }
         Output::Tsv => {
             print_tsv(
@@ -360,8 +356,8 @@ async fn main() {
                 &opt.member_id,
                 &character_id,
                 opt.platform,
-                mode,
-                period,
+                opt.mode,
+                opt.period,
             );
         }
     }
