@@ -33,6 +33,8 @@ use dcli::cruciblestats::CrucibleStats;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_standard};
 
+use chrono::Duration;
+
 #[derive(StructOpt)]
 /// Command line tool for retrieving current Destiny 2 activity for player.
 ///
@@ -179,14 +181,21 @@ async fn main() {
     };
 
 
+    //TODO: test ironbanner or a mode where there will be 0 results
+    //TODO: add conversdational output
+    //TODO: with suggestions on things to work on (looking at KD, avg life time, suicides, kill distance, precision kills)
+
     //clear the screen
-    print!("{}[2J", 27 as char);
+    clear_scr();
 
     let p = precision;
     let title: String = format!("Displaying stats for {:#} {:#}", mode, period);
     println!("{}", title);
     println!("{}", repeat_str("=", title.chars().count()));
 
+    //let total_played = Duration::from_secs_f32(data.seconds_played);
+    //println!("Played for {}", total_played;
+    println!("Time played is {} seconds", data.seconds_played);
     println!(
         "{wins} wins and {losses} losses for a {win_percentage}% win rate",
         wins = data.activities_won,
@@ -195,18 +204,23 @@ async fn main() {
     );
 
     println!("{}", "");
+    println!("{}", "");
 
-    let mut col_w = 10;
+    let col_w = 10;
+    let s = repeat_str(" ", col_w);
     println!(
-        "{:<0col_w$}{:<0col_w$}{:<0col_w$}",
+        "{s}{:<0col_w$}{:<0col_w$}{:<0col_w$}",
         "K/D",
         "KD/A",
         "Efficiency",
-        col_w = col_w
+        col_w = col_w,
+        s=s,
     );
-    println!("{}", repeat_str("-", col_w * 3));
+    println!("{}{}", s, repeat_str("-", col_w * 3));
+
     println!(
-        "{kd:<0col_w$}{kda:<0col_w$}{e:<0col_w$}",
+        "{s}{kd:<0col_w$}{kda:<0col_w$}{e:<0col_w$}",
+        s=s,
         kd = p(data.kills_deaths_ratio, 2),
         kda = p(data.kills_deaths_assists, 2),
         e = p(data.efficiency, 2),
@@ -214,8 +228,10 @@ async fn main() {
     );
 
     println!("{}", "");
-
-    col_w = 15;
+    println!("{}", "");
+    
+    //{:<0col_w$}
+    //col_w = 15;
     println!(
         "{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}",
         "",
@@ -237,6 +253,8 @@ async fn main() {
         s = p(data.suicides / data.activities_entered, 2),
         col_w = col_w,
     );
+
+    //
     println!(
         "{t:>0col_w$}{k:<0col_w$}{o:<0col_w$}{a:<0col_w$}{d:<0col_w$}{s:<0col_w$}",
         t = "TOTAL  ",
@@ -248,20 +266,40 @@ async fn main() {
         col_w = col_w,
     );
 
-    //TODO : add precision
+    println!("{}", "");
 
     println!("{}", "");
 
-    println!("{:<25} : {}", "TIME PLAYED", p(data.seconds_played, 0));
-    println!("{:<25} : {}", "AVERAGE LIFE SPAN", p(data.average_lifespan, 2));
-    println!("{:<25} : {}", "AVERAGE KILL DISTANCE", p(data.average_kill_distance, 2));
-
+    println!("You have had an average life span of {lifespan} with an average kill distance of {kill_distance} meters. {precision_percent}% of your kills are precision kills.",
+        lifespan = p(data.average_lifespan, 2),
+        kill_distance = p(data.average_kill_distance, 2),
+        precision_percent = p((data.precision_kills / data.kills) * 100.0, 2),
+    );
+    println!("{}", "");
 }
 
-fn precision(val: f32, precision: usize) -> String {
-    format!("{:.prec$}", val, prec = precision)
+
+pub fn precision(val: f32, precision: usize) -> String {
+    format!("{:.p$}", val, p = precision)
 }
 
-fn repeat_str(s: &str, count: usize) -> String {
+pub fn repeat_str(s: &str, count: usize) -> String {
     std::iter::repeat(s).take(count).collect::<String>()
 }
+
+pub fn clear_scr() {
+    print!("{}[2J", 27 as char);
+}
+
+/*
+pub fn human_duration(seconds:f32) -> String {
+
+    use chrono::{TimeZone, Local, Datelike, Timelike};
+    
+    let dt = Local.ymd(0, 1, 1).and_hms(0, 0, 0) + Duration::seconds(seconds);
+    println!("{} Years, {} Months, {} Days, {} Hours, {} Minutes, {} Seconds",
+    dt.year(), dt.month(), dt.day(), dt.hour(), dt.minute(), dt.second());
+
+}
+*/
+

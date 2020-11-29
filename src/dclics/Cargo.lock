@@ -307,6 +307,7 @@ dependencies = [
 name = "dclics"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "dcli",
  "structopt",
  "tokio",
