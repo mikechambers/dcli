@@ -316,7 +316,7 @@ async fn main() {
                     }
                 },
                 Err(e) => {
-                    print_error(&format!("Error Retrieving All Time Data : {:#?}", e));
+                    print_error("Error Retrieving All Time Data", e);
                     std::process::exit(EXIT_FAILURE);
                 }
             }
@@ -340,7 +340,7 @@ async fn main() {
                     }
                 },
                 Err(e) => {
-                    print_error(&format!("Error Retrieving Daily Data : {:#?}", e));
+                    print_error("Error Retrieving Daily Data", e);
                     std::process::exit(EXIT_FAILURE);
                 }
             }

@@ -84,7 +84,7 @@ impl Display for Error {
             Error::Unknown { description } => {
                 write!(f, "An unknown error occured. {}", description)
             }
-            Error::ParameterParseFailure => write!(f, "Could not parse Parameters. (code 7)"),
+            Error::ParameterParseFailure => write!(f, "Could not parse Parameters. Make sure your inputs were correct and try again. (code 7)"),
             Error::InvalidParameters => write!(f, "Invalid input parameters. (code 18)"),
             Error::ManifestNotSet => write!(f, "Manifest was not set in Manifest Interface."),
             Error::ApiKeyMissingFromRequest => write!(
@@ -114,7 +114,7 @@ impl Display for Error {
 impl From<serde_json::Error> for Error {
     fn from(err: serde_json::Error) -> Error {
         Error::ApiParse {
-            description: format!("serde_json::Error : {:#}", err),
+            description: format!("serde_json::Error : {:#?}", err),
         } //TODO:: impliment this for all error types
     }
 }
@@ -122,7 +122,7 @@ impl From<serde_json::Error> for Error {
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Error {
         Error::ApiRequest {
-            description: format!("reqwest::Error : {:#}", err),
+            description: format!("reqwest::Error : {:#?}", err),
         }
     }
 }
@@ -130,7 +130,7 @@ impl From<reqwest::Error> for Error {
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Error {
         Error::IoError {
-            description: format!("std::io::Error : {:#}", err),
+            description: format!("std::io::Error : {:#?}", err),
         }
     }
 }
@@ -138,7 +138,7 @@ impl From<std::io::Error> for Error {
 impl From<zip::result::ZipError> for Error {
     fn from(err: zip::result::ZipError) -> Error {
         Error::ZipError {
-            description: format!("zip::result::ZipError : {:#}", err),
+            description: format!("zip::result::ZipError : {:#?}", err),
         }
     }
 }
@@ -146,7 +146,7 @@ impl From<zip::result::ZipError> for Error {
 impl From<sqlx::Error> for Error {
     fn from(err: sqlx::Error) -> Error {
         Error::Database {
-            description: format!("sqlx::Error : {:#}", err),
+            description: format!("sqlx::Error : {:#?}", err),
         }
     }
 }

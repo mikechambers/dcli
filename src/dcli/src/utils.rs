@@ -21,6 +21,8 @@
 */
 
 use chrono::{DateTime, Utc, Duration, TimeZone, Datelike, Timelike};
+use crate::error::Error;
+
 //use chrono::prelude::*;
 
 pub const EXIT_SUCCESS: i32 = 0;
@@ -42,10 +44,12 @@ pub fn get_last_reset() -> DateTime<Utc> {
     now - Duration::seconds((now - past_reset).num_seconds() % WEEK_IN_SECONDS)
 }
 
-pub fn print_error(out: &str) {
-    eprintln!("{}", out);
+pub fn print_error(msg: &str, error:Error) {
+    eprintln!("{}", msg);
+    eprintln!("{}", error);
     eprintln!();
-    eprintln!("If you think you have hit a bug, please log it at https://github.com/mikechambers/dcli/issues");
+    eprintln!("If you think you have hit a bug, please log it at:");
+    eprintln!("https://github.com/mikechambers/dcli/issues");
 }
 
 pub fn calculate_efficiency(kills:f32, deaths:f32, assists:f32) -> f32 {
