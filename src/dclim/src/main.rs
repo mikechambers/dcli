@@ -190,14 +190,10 @@ async fn main() {
     };
 
     let col_w = 30;
-    print_verbose(
-        &format!("{:<0col_w$}{}", "Remote Manifest version", remote_manifest_info.version, col_w=col_w),
-        opt.verbose,
-    );
-    print_verbose(
-        &format!("{:<0col_w$}{}", "Remote Manifest url", remote_manifest_info.url, col_w=col_w),
-        opt.verbose,
-    );
+    if opt.output == Output::Default {
+        println!("{:<0col_w$}{}", "Remote Manifest version", remote_manifest_info.version, col_w=col_w);
+        println!("{:<0col_w$}{}", "Remote Manifest url", remote_manifest_info.url, col_w=col_w);
+    }
 
     let mut manifest_needs_updating = !m_path.exists() || !m_info_path.exists();
 
@@ -205,14 +201,10 @@ async fn main() {
         if let Ok(e) = load_manifest_info(&m_info_path) {
             let local_manifest_info: ManifestInfo = e;
 
-            print_verbose(
-                &format!("{:<0col_w$}{}", "Local Manifest version", local_manifest_info.version, col_w=col_w),
-                opt.verbose,
-            );
-            print_verbose(
-                &format!("{:<0col_w$}{}", "Local Manifest url", local_manifest_info.url, col_w=col_w),
-                opt.verbose,
-            );
+            if opt.output == Output::Default {
+                println!("{:<0col_w$}{}", "Local Manifest version", local_manifest_info.version, col_w=col_w);
+                println!("{:<0col_w$}{}", "Local Manifest url", local_manifest_info.url, col_w=col_w);
+            }
 
             manifest_needs_updating = local_manifest_info.url != remote_manifest_info.url;
         } else {
