@@ -28,21 +28,53 @@ use dcli::mode::CrucibleMode;
 use dcli::platform::Platform;
 use dcli::response::stats::{DailyPvPStatsValuesData, PvpStatsData};
 use dcli::timeperiod::TimePeriod;
+use dcli::output::Output;
 
 use dcli::cruciblestats::CrucibleStats;
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{print_error, print_standard, human_duration, clear_scr, repeat_str, format_f32};
+use dcli::utils::{clear_scr, 
+    format_f32, human_duration, print_error, 
+    print_standard, repeat_str,
+    build_tsv};
 
-fn print_complete(data:CrucibleStats, mode:CrucibleMode, period:TimePeriod) {
+fn print_tsv(data:CrucibleStats) {
 
-    //clear the screen
+    let mut name_values:Vec<(&str, String)> = Vec::new();
+
+    name_values.push(("activities_entered", format!("{}", data.activities_entered)));
+    name_values.push(("activities_won", format!("{}", data.activities_won)));
+    name_values.push(("activities_lost", format!("{}", data.activities_lost)));
+    name_values.push(("assists", format!("{}", data.assists)));
+    name_values.push(("kills", format!("{}", data.kills)));
+    name_values.push(("average_kill_distance", format!("{}", data.average_kill_distance)));
+    name_values.push(("total_kill_distance", format!("{}", data.total_kill_distance)));
+    name_values.push(("seconds_played", format!("{}", data.seconds_played)));
+    name_values.push(("deaths", format!("{}", data.deaths)));
+    name_values.push(("average_lifespan", format!("{}", data.average_lifespan)));
+    name_values.push(("total_lifespan", format!("{}", data.total_lifespan)));
+    name_values.push(("opponents_defeated", format!("{}", data.opponents_defeated)));
+    name_values.push(("efficiency", format!("{}", data.efficiency)));
+    name_values.push(("kills_deaths_ratio", format!("{}", data.kills_deaths_ratio)));
+    name_values.push(("kills_deaths_assists", format!("{}", data.kills_deaths_assists)));
+    name_values.push(("suicides", format!("{}", data.suicides)));
+    name_values.push(("precision_kills", format!("{}", data.precision_kills)));
+
+    let best_single_game_kills = match data.best_single_game_kills {
+        Some(e) => e,
+        None => -1.0,
+    };
+
+    name_values.push(("best_single_game_kills", format!("{}", best_single_game_kills)));
+
+    print!("{}", build_tsv(name_values));
+}
+
+fn print_complete(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
     let p = format_f32;
     let title: String = format!("Displaying Destiny 2 stats for {:#} {:#}", mode, period);
     println!("{}", title);
     println!("{}", repeat_str("=", title.chars().count()));
 
-    //let total_played = Duration::from_secs_f32(data.seconds_played);
-    //println!("Played for {}", total_played;
     println!("Time played is {}", human_duration(data.seconds_played));
     println!(
         "{wins} wins and {losses} losses for a {win_percentage}% win rate",
@@ -144,6 +176,14 @@ struct Opt {
     #[structopt(long = "mode")]
     mode: Option<CrucibleMode>,
 
+    /// Format for command output. Valid values are default (Default) and tsv
+    ///
+    /// Format for command output. Valid values are default (Default) and tsv.
+    /// tsv will output in a tab (\t) seperated format of name / value pairs with lines
+    /// ending in a new line character (\n)
+    #[structopt(short="o", long = "output")]
+    output: Option<Output>,
+
     /// Destiny 2 API character id. If not specified, data for all characters will be returned.
     /// Required when period is set to day, reset, week or month
     ///
@@ -151,10 +191,6 @@ struct Opt {
     /// Required when period is set to day, reset, week or month
     #[structopt(short = "c", long = "character-id", required_ifs=&[("period","day"),("period","reset"),("period","week"),("period","month"),])]
     character_id: Option<String>,
-
-    ///Terse output. Errors are suppresed.
-    #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
-    _terse: bool,
 
     ///Print out additional information
     #[structopt(short = "v", long = "verbose")]
@@ -172,12 +208,13 @@ async fn retrieve_all_time_stats(
 
     let data: PvpStatsData = match client
         .retrieve_alltime_crucible_stats(member_id, character_id, platform, mode)
-        .await? {
-            Some(e) => e,
-            None => {
-                return Ok(None);
-            },
-        };
+        .await?
+    {
+        Some(e) => e,
+        None => {
+            return Ok(None);
+        }
+    };
 
     let p_stats: CrucibleStats = data.get_crucible_stats();
 
@@ -201,12 +238,13 @@ async fn retrieve_aggregate_crucible_stats(
 
     let data: Vec<DailyPvPStatsValuesData> = match client
         .retrieve_aggregate_crucible_stats(member_id, character_id, platform, mode, start_date)
-        .await? {
-                Some(e) => e,
-                None => {
-                    return Ok(None);
-                },
-        };
+        .await?
+    {
+        Some(e) => e,
+        None => {
+            return Ok(None);
+        }
+    };
 
     let mut p_stats: CrucibleStats = CrucibleStats::default();
 
@@ -225,6 +263,7 @@ async fn main() {
     let character_id: String = opt.character_id.unwrap_or("0".to_string());
     let mode: CrucibleMode = opt.mode.unwrap_or(CrucibleMode::AllPvP);
     let period: TimePeriod = opt.period.unwrap_or(TimePeriod::Alltime);
+    let output: Output = opt.output.unwrap_or(Output::Default);
 
     let data = match period {
         TimePeriod::Alltime => {
@@ -242,7 +281,7 @@ async fn main() {
                     None => {
                         print_standard("No results found.", true);
                         return;
-                    }, 
+                    }
                 },
                 Err(e) => {
                     print_error(&format!("Error : {:#?}", e), true);
@@ -266,7 +305,7 @@ async fn main() {
                     None => {
                         print_standard("No results found.", true);
                         return;
-                    }, 
+                    }
                 },
                 Err(e) => {
                     print_error(&format!("Error : {:#?}", e), true);
@@ -276,15 +315,16 @@ async fn main() {
         }
     };
 
-
-    //TODO: if verbose dont clear screen
-    //TODO: test ironbanner or a mode where there will be 0 results
     //TODO: add conversational output
     //TODO: with suggestions on things to work on (looking at KD, avg life time, suicides, kill distance, precision kills)
 
-    if !opt.verbose {
-        clear_scr();
-    }
-
-    print_complete(data, mode, period);
+    match output {
+        Output::Default => {
+            if !opt.verbose { clear_scr(); }
+            print_complete(data, mode, period);
+        },
+        Output::Tsv => {
+            print_tsv(data);
+        }
+    }    
 }

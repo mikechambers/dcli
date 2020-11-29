@@ -20,17 +20,25 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod apiclient;
-pub mod apiinterface;
-pub mod emblem;
-pub mod error;
-pub mod manifestinterface;
-pub mod platform;
-pub mod response;
-pub mod manifest;
-pub mod utils;
-pub mod apiutils;
-pub mod mode;
-pub mod timeperiod;
-pub mod cruciblestats;
-pub mod output;
+use std::str::FromStr;
+
+pub enum Output {
+    Tsv,
+    Default,
+}
+
+impl FromStr for Output {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        //wrap in String so we can convert to lower case
+        let s = String::from(s).to_lowercase();
+
+        //get a slice to get a &str for the match
+        match &s[..] {
+            "tsv" => Ok(Output::Tsv),
+            "default" => Ok(Output::Default),
+            _ => Err("Unknown Output type"),
+        }
+    }
+}

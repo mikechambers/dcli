@@ -21,12 +21,15 @@
 */
 
 use chrono::{DateTime, Utc, Duration, TimeZone, Datelike, Timelike};
-use chrono::prelude::*;
+//use chrono::prelude::*;
 
 pub const EXIT_SUCCESS: i32 = 0;
 pub const EXIT_FAILURE: i32 = 1;
 
 pub const WEEK_IN_SECONDS: i64 = 604800;
+
+pub const TSV_EOL:&str = "\n";
+pub const TSV_DELIM:&str = "\t";
 
 pub fn get_last_reset() -> DateTime<Utc> {
     //get a hardcoded past reset date / time (17:00 UTC every tuesday)
@@ -111,4 +114,8 @@ pub fn build_time_str(t:i32, label:&str) -> String {
     }
 
     out
+}
+
+pub fn build_tsv(name_values:Vec<(&str, String)>) -> String {
+    name_values.iter().map(|x| format!("{}{}{}{}", x.0, TSV_DELIM, x.1, TSV_EOL) ).collect()
 }
