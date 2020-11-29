@@ -86,20 +86,20 @@ impl ops::Add<CrucibleStats> for CrucibleStats {
             activities_entered : self.activities_entered + _cs.activities_entered,
             activities_won : self.activities_won + _cs.activities_won,
             activities_lost : self.activities_lost + _cs.activities_lost,
-            assists : assists,
-            kills : kills,
+            assists,
+            kills,
             average_kill_distance : total_kill_distance / kills,
-            total_kill_distance : total_kill_distance,
+            total_kill_distance,
             seconds_played : self.seconds_played + _cs.seconds_played,
-            deaths : deaths,
-            average_lifespan : average_lifespan, //TODO: think about this in agg
-            total_lifespan : total_lifespan, //TODO: think about this in agg
+            deaths,
+            average_lifespan,
+            total_lifespan,
             opponents_defeated : self.opponents_defeated + _cs.opponents_defeated,
             efficiency : calculate_efficiency(kills, deaths, assists),
             kills_deaths_ratio : calculate_kills_deaths_ratio(kills, deaths),
             kills_deaths_assists : calculate_kills_deaths_assists(kills, deaths, assists),
             suicides : self.suicides + _cs.suicides,
-            best_single_game_kills: best_single_game_kills,
+            best_single_game_kills,
             precision_kills: self.precision_kills + _cs.precision_kills,
         }
     }

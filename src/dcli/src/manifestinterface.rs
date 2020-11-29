@@ -38,7 +38,7 @@ pub fn convert_hash_to_id(hash: u32) -> i64 {
     let mut id: i64 = hash as i64;
 
     if (id & (1 << (32 - 1))) != 0 {
-        id = id - (1 << 32);
+        id -= 1 << 32;
     }
 
     id

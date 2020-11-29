@@ -109,7 +109,7 @@ pub fn build_time_str(t:i32, label:&str) -> String {
         out.push_str(&format!("{} {}", t, label));
 
         if t > 1 {
-            out.push_str(&format!("{}", "s"));
+            out.push_str("s");
         }
     }
 

@@ -47,16 +47,14 @@ where
 {
     Option::<String>::deserialize(deserializer)
     .map(|o: Option<String>| {
-        let out = match o {
+        match o {
             Some(e) => {
                 let mut s = String::from(RESOURCE_BASE_URL);
                 s.push_str(&e);
                 Some(s)
             },
             None => None,
-        };
-
-        out
+        }
     })
 }
 
