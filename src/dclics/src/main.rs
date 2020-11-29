@@ -33,7 +33,7 @@ use dcli::timeperiod::TimePeriod;
 use dcli::cruciblestats::CrucibleStats;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{
-    build_tsv, clear_scr, format_f32, human_duration, print_error, print_standard, repeat_str,
+    build_tsv, clear_scr, format_f32, human_duration, print_error, repeat_str,
 };
 
 
@@ -155,7 +155,6 @@ fn print_complete(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
     );
 
     println!();
-
     println!();
 
     println!("You have had an average life span of {lifespan} with an average kill distance of {kill_distance} meters. {precision_percent}% of your kills were precision kills.",
@@ -312,12 +311,12 @@ async fn main() {
                 Ok(e) => match e {
                     Some(e) => e,
                     None => {
-                        print_standard("No results found.", true);
+                        println!("No results found.");
                         return;
                     }
                 },
                 Err(e) => {
-                    print_error(&format!("Error : {:#?}", e), true);
+                    print_error(&format!("Error Retrieving All Time Data : {:#?}", e));
                     std::process::exit(EXIT_FAILURE);
                 }
             }
@@ -336,12 +335,12 @@ async fn main() {
                 Ok(e) => match e {
                     Some(e) => e,
                     None => {
-                        print_standard("No results found.", true);
+                        println!("No results found.");
                         return;
                     }
                 },
                 Err(e) => {
-                    print_error(&format!("Error : {:#?}", e), true);
+                    print_error(&format!("Error Retrieving Daily Data : {:#?}", e));
                     std::process::exit(EXIT_FAILURE);
                 }
             }

@@ -42,20 +42,10 @@ pub fn get_last_reset() -> DateTime<Utc> {
     now - Duration::seconds((now - past_reset).num_seconds() % WEEK_IN_SECONDS)
 }
 
-pub fn print_standard(out: &str, print: bool) {
-    if !print {
-        return;
-    }
-
-    println!("{}", out);
-}
-
-pub fn print_error(out: &str, print: bool) {
-    if !print {
-        return;
-    }
-
+pub fn print_error(out: &str) {
     eprintln!("{}", out);
+    eprintln!();
+    eprintln!("If you think you have hit a bug, please log it at https://github.com/mikechambers/dcli/issues");
 }
 
 pub fn calculate_efficiency(kills:f32, deaths:f32, assists:f32) -> f32 {
