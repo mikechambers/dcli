@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use chrono::{DateTime, Utc, Duration};
+use chrono::{DateTime, Utc, Duration, TimeZone, Datelike, Timelike};
 use chrono::prelude::*;
 
 pub const EXIT_SUCCESS: i32 = 0;
@@ -67,4 +67,48 @@ pub fn calculate_kills_deaths_ratio(kills:f32, deaths:f32) -> f32 {
 pub fn calculate_kills_deaths_assists(kills:f32, deaths:f32, assists:f32) -> f32 {
     let t = kills + (assists / 2.0);
     if deaths > 0.0 { t / deaths } else { t }
+}
+
+
+pub fn format_f32(val: f32, precision: usize) -> String {
+    format!("{:.p$}", val, p = precision)
+}
+
+pub fn repeat_str(s: &str, count: usize) -> String {
+    std::iter::repeat(s).take(count).collect::<String>()
+}
+
+pub fn clear_scr() {
+    print!("{}[2J", 27 as char);
+}
+
+//this could use some more work and polish. Add "and" before the last item.
+pub fn human_duration(seconds:f32) -> String {
+
+    let s = seconds as i64;
+
+    let dt = Utc.ymd(0, 1, 1).and_hms(0, 0, 0) + Duration::seconds(s);
+
+    let y = build_time_str(dt.year(), "year");
+    let mon = build_time_str(dt.month() as i32 - 1, "month");
+    let d = build_time_str(dt.day() as i32 - 1, "day");
+    let h = build_time_str(dt.hour() as i32, "hour");
+    let min = build_time_str(dt.minute() as i32, "minute");
+    let s = build_time_str(dt.second() as i32, "second");
+
+    (&format!("{y} {mon} {d} {h} {min} {s}", y=y, mon=mon, d=d, h=h, min=min, s=s)).trim().to_string()
+}
+
+pub fn build_time_str(t:i32, label:&str) -> String {
+    let mut out:String = "".to_string();
+    if t > 0 {
+
+        out.push_str(&format!("{} {}", t, label));
+
+        if t > 1 {
+            out.push_str(&format!("{}", "s"));
+        }
+    }
+
+    out
 }
