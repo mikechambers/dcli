@@ -1,6 +1,6 @@
 # dclim
 
-Command line utility for managing and syncing the remote Destiny 2 API manifest database.
+Command line tool for managing and syncing the remote Destiny 2 API manifest database.
 
 The utility will check whether a more current version of the Destiny 2 API manifest database is avaliable (comparing it to the last version which has been downloaded). If a new version is found, it will download the database, uncompress it, and save it to the directory specified when calling the utility. It will also save a file containting metadata about the current version, which is used for future checks for updates.
 
