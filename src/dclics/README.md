@@ -125,7 +125,7 @@ dclics --member-id 4611686018429783292 --platform xbox --mode trialsofosiris --c
 #### Show life time stats for comp, outputing to a tab seperated format
 
 ```
---member-id 4611686018429783292 --platform xbox --mode comp --period alltime --output tsv
+dclics --member-id 4611686018429783292 --platform xbox --mode comp --period alltime --output tsv
 ```
 
 outputs:
