@@ -1,53 +1,56 @@
 # dclic
 
-Command line tool for retrieving character information for specified member id
+Command line tool for retrieving Destiny 2 character information for specified member id.
+
+Returns the class and charater id for each character, as well as which character was most recently played.
 
 
 ## USAGE
 ```
 USAGE:
-    dclic [FLAGS] --member-id <member-id> --platform <platform>
+    dclic [FLAGS] [OPTIONS] --member-id <member-id> --platform <platform>
 
 FLAGS:
-    -h, --help           
+    -h, --help       
             Prints help information
 
-        --hunter         
-            Display information on Hunter character
-
-        --last-active    
-            Display information of last active character
-
-    -t, --terse          
-            terse output in the form of class_name:character_id . Errors are suppresed
-
-        --titan          
-            Display information on Titan character
-
-    -V, --version        
+    -V, --version    
             Prints version information
 
-    -v, --verbose        
-            Print out additional information for the API call
-
-        --warlock        
-            Display information on Warlock character
-
+    -v, --verbose    
+            Print out additional information
+            
+            Output is printed to stderr.
 
 OPTIONS:
     -m, --member-id <member-id>    
             Destiny 2 API member id
             
-            Destiny 2 API member id. This is not the user name, but the member id retrieved from the Destiny API.
+            This is not the user name, but the member id retrieved from the Destiny API.
+    -o, --output <output>          
+            Format for command output
+            
+            Valid values are default (Default) and tsv.
+            
+            tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
+            (\n). [default: default]
     -p, --platform <platform>      
             Platform for specified id
             
-            Platform for specified member id. Valid values are: xbox, playstation, stadia or steam
+            Valid values are: xbox, playstation, stadia or steam.
 ```
+
+Valid platform values are:
+* xbox
+* playstation
+* steam
+* stadia
+
+member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).
 
 ### Examples
 
-Retrieve all character information:
+#### Retrieve character information
 
 ```
 dclic --member-id 4611686018429783292 --platform xbox
@@ -56,22 +59,25 @@ dclic --member-id 4611686018429783292 --platform xbox
 outputs:
 
 ```
-Titan      : 2305843009264966984
-Warlock    : 2305843009264966986
-Hunter     : 2305843009264966985
-Hunter     : 2305843009264966985 (Last Active)
+CLASS       ID                      STATUS      
+------------------------------------------------
+Titan       2305843009264966984                 
+Hunter      2305843009264966985     LAST ACTIVE 
+Warlock     2305843009264966986                
 ```
 
-Retrieve information on last active character:
+#### Retrieve all character information with tab seperated output
 
 ```
-dclic --member-id 4611686018429783292 --platform xbox --last-active
+dclic --member-id 4611686018429783292 --platform xbox --output tsv
 ```
 
 outputs:
 
 ```
-Hunter     : 2305843009264966985 (Last Active)
+Warlock 2305843009264966986
+Titan   2305843009264966984
+Hunter  2305843009264966985     LAST ACTIVE
 ```
 
 

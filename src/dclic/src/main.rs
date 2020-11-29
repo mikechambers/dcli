@@ -23,11 +23,12 @@
 use structopt::StructOpt;
 
 use dcli::apiinterface::ApiInterface;
-use dcli::response::character::{CharacterData, CharacterClass};
 use dcli::error::Error;
 use dcli::platform::Platform;
-use dcli::utils::{print_error, print_standard};
+use dcli::response::character::{CharacterData};
 use dcli::utils::EXIT_FAILURE;
+use dcli::utils::{print_error, repeat_str, TSV_DELIM, TSV_EOL};
+use dcli::output::Output;
 
 //todo: could move this to apiclient
 async fn retrieve_characters(
@@ -35,7 +36,6 @@ async fn retrieve_characters(
     platform: Platform,
     verbose: bool,
 ) -> Result<Vec<CharacterData>, Error> {
-
     let interface = ApiInterface::new(verbose);
 
     let characters = interface.retrieve_characters(member_id, platform).await?;
@@ -46,121 +46,137 @@ async fn retrieve_characters(
 #[derive(StructOpt)]
 /// Command line tool for retrieving character information for specified member id.
 ///
-/// Command line tool for retrieving character information for specified member id
 /// Retrieves character information for all characters, as well as most recently
 /// played character.
-/// 
+///
 /// By default information on all characters will be displayed, although there
 /// are flags to filter which information is output.
+/// 
+/// Created by Mike Chambers.
+/// https://www.mikechambers.com
+/// 
+/// Released under an MIT License.
+/// More info at: https://github.com/mikechambers/dcli
 struct Opt {
+    /// Destiny 2 API member id
+    ///
+    /// This is not the user name, but the member id
+    /// retrieved from the Destiny API.
+    #[structopt(short = "m", long = "member-id", required = true)]
+    member_id: String,
+
     /// Platform for specified id
     ///
-    /// Platform for specified member id. Valid values are:
-    /// xbox, playstation, stadia or steam
+    /// Valid values are: xbox, playstation, stadia or steam.
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
-    #[structopt(short = "m", long = "member-id", required = true)]
-    /// Destiny 2 API member id
-    ///
-    /// Destiny 2 API member id. This is not the user name, but the member id
-    /// retrieved from the Destiny API.
-    member_id: String,
-
-    ///terse output in the form of class_name:character_id . Errors are suppresed.
-    #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
-    terse: bool,
-
-    ///Print out additional information for the API call
+    ///Print out additional information
+    /// 
+    ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    ///Display information on Hunter character
-    #[structopt(long = "hunter")]
-    hunter: bool,
+    /// Format for command output
+    ///
+    /// Valid values are default (Default) and tsv.
+    /// 
+    /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
+    /// ending in a new line character (\n).
+    #[structopt(short = "o", long = "output", default_value="default")]
+    output: Output,
 
-    ///Display information on Warlock character
-    #[structopt(long = "warlock")]
-    warlock: bool,
-
-    ///Display information on Titan character
-    #[structopt(long = "titan")]
-    titan: bool,
-
-    ///Display information of last active character
-    #[structopt(long = "last-active")]
-    last_active: bool,
-}
-
-fn c_status_error(e: &Error) -> Option<String> {
-    match e {
-        Error::ParameterParseFailure => Some(
-            "Invalid parameters. Check that --member-id is correct.".to_string(),
-        ),
-        Error::InvalidParameters => Some(
-            "Invalid parameters. Check that --member-id and --platform are correct.".to_string(),
-        ),
-        _ => None,
-    }
 }
 
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
 
-    let all = !(opt.hunter || opt.titan || opt.warlock || opt.last_active);
-
-    let characters: Vec<CharacterData> =
+    let chars: Vec<CharacterData> =
         match retrieve_characters(opt.member_id, opt.platform, opt.verbose).await {
             Ok(e) => e,
             Err(e) => {
-                match c_status_error(&e) {
-                    Some(e) => print_error(&e, !opt.terse),
-                    None => print_error(&format!("{}", e,), !opt.terse),
-                }
+                print_error("Error retrieving characters from API.", e);
                 std::process::exit(EXIT_FAILURE);
             }
         };
 
-    if !characters.is_empty() {
+    let char_data = get_char_info(&chars);
 
-        //TODO: move this to seperate API?
-        let mut most_recent: &CharacterData = &characters[0];
+    match opt.output {
+        Output::Default => {
+            print_default(char_data);
+        },
+        Output::Tsv => {
+            print_tsv(char_data);
+        },
+    }
+}
 
-        for c in characters.iter() {
-            if c.date_last_played > most_recent.date_last_played {
-                most_recent = c;
-            }
+fn print_default(char_data: Vec<(CharacterData, String)>) {
+    let col_w = 12;
+    let col_id = 24;
+    println!(
+        "{:<0col_w$}{:<0col_id$}{:<0col_w$}",
+        "CLASS",
+        "ID",
+        "STATUS",
+        col_w = col_w,
+        col_id = col_id,
+    );
 
-            if (opt.hunter && c.class_type == CharacterClass::Hunter)
-                || (opt.titan && c.class_type == CharacterClass::Titan)
-                || (opt.warlock && c.class_type == CharacterClass::Warlock)
-                || all
-            {
-                //regular
-                print_standard(
-                    &format!("{: <10} : {: <10}", c.class_type, c.id),
-                    !opt.terse,
-                );
+    println!("{}", repeat_str("-", col_w * 2 + col_id));
 
-                //terse
-                print_standard(&format!("{}:{}", c.class_type, c.id), opt.terse);
-            }
-        }
-
-        //regular
-        print_standard(
-            &format!(
-                "{: <10} : {: <10} (Last Active)",
-                most_recent.class_type, most_recent.id
-            ),
-            !opt.terse && (opt.last_active || all),
+    for p in char_data.iter() {
+        println!(
+            "{:<0col_w$}{:<0col_id$}{:<0col_w$}",
+            p.0.class_type,
+            p.0.id,
+            p.1,
+            col_w = col_w,
+            col_id = col_id,
         );
+    }
+}
 
-        //terse
-        print_standard(
-            &format!("Last Active:{}:{}", most_recent.class_type, most_recent.id),
-            opt.terse && (opt.last_active || all),
+fn get_char_info(characters: &Vec<CharacterData>) -> Vec<(CharacterData, String)> {
+    let mut out: Vec<(CharacterData, String)> = Vec::new();
+
+    if characters.is_empty() {
+        return out;
+    }
+
+    let mut most_recent: &CharacterData = &characters[0];
+
+    for c in characters.iter() {
+        if c.date_last_played > most_recent.date_last_played {
+            most_recent = c;
+        }
+    }
+
+    for c in characters.iter() {
+        let status = if most_recent == c {
+            "LAST ACTIVE".to_string()
+        } else {
+            "".to_string()
+        };
+
+        //note, this would be better as a reference, but need to figure out
+        //how to do it
+        out.push((c.clone(), status));
+    }
+    out
+}
+
+fn print_tsv(char_data: Vec<(CharacterData, String)>) {
+    for p in char_data.iter() {
+        print!(
+            "{c}{delim}{i}{delim}{s}{eol}",
+            c = p.0.class_type,
+            i = p.0.id,
+            s = p.1,
+            delim = TSV_DELIM,
+            eol = TSV_EOL
         );
     }
 }

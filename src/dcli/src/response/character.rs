@@ -31,7 +31,7 @@ use crate::apiutils::str_to_datetime;
 
 use crate::emblem::Emblem;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct CharacterData {
     #[serde(rename = "characterId")]
     pub id: String,
@@ -78,7 +78,7 @@ where
     T::from_str(&s).map_err(serde::de::Error::custom)
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Eq, Serialize, Deserialize, Debug, Clone)]
 pub struct CharacterStatsData {
     #[serde(rename = "1935470627")]
     pub power: u32,
@@ -103,7 +103,7 @@ pub struct CharacterStatsData {
 }
 
 /****************CharacterGender *******************/
-#[derive(PartialEq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
 #[repr(u32)]
 pub enum CharacterGender {
     Masculine = 0,
@@ -136,7 +136,7 @@ impl fmt::Display for CharacterGender {
 }
 
 /****************CharacterClass *******************/
-#[derive(PartialEq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
 #[repr(u32)]
 pub enum CharacterClass {
     Titan = 0,
@@ -179,7 +179,7 @@ impl fmt::Display for CharacterClass {
 
 /*************************** CharacterRace *************************/
 
-#[derive(PartialEq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
 #[repr(u32)]
 pub enum CharacterRace {
     Human = 0,
