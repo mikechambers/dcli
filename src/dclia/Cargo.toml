@@ -2,7 +2,12 @@
 name = "dclia"
 version = "0.1.0"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
+description = "Command line tool for retrieving information on current activity for specified player character."
+homepage = "https://www.mikechambers.com"
+repository = "https://github.com/mikechambers/dcli"
 edition = "2018"
+license = "MIT"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

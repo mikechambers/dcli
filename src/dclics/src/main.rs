@@ -94,7 +94,7 @@ fn print_tsv(
     print!("{}", build_tsv(name_values));
 }
 
-fn print_complete(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
+fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
     let p = format_f32;
     let title: String = format!("Destiny 2 stats for {:#} {:#}", mode, period);
     println!("{}", title);
@@ -352,7 +352,7 @@ async fn main() {
             if !opt.verbose {
                 clear_scr();
             }
-            print_complete(data, mode, period);
+            print_default(data, mode, period);
         }
         Output::Tsv => {
             print_tsv(

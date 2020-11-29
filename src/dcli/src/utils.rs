@@ -44,6 +44,14 @@ pub fn get_last_reset() -> DateTime<Utc> {
     now - Duration::seconds((now - past_reset).num_seconds() % WEEK_IN_SECONDS)
 }
 
+pub fn print_verbose(msg: &str, verbose:bool) {
+    if !verbose {
+        return;
+    }
+
+    eprintln!("{}", msg);
+}
+
 pub fn print_error(msg: &str, error:Error) {
     eprintln!("{}", msg);
     eprintln!("{}", error);

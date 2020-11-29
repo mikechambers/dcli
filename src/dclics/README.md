@@ -84,6 +84,8 @@ Valid time period values are:
 * month (last month)
 * alltime (default)
 
+member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).
+
 ### Examples
 
 #### Print all stats for last week

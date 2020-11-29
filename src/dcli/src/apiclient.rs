@@ -22,6 +22,7 @@
 
 use crate::error::Error;
 use crate::response::drs::{check_destiny_response_status, HasDestinyResponseStatus};
+use crate::utils::print_verbose;
 use reqwest::Url;
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
@@ -38,9 +39,7 @@ impl ApiClient {
     pub async fn call(&self, url: &str) -> Result<reqwest::Response, Error> {
         let url = Url::parse(&url).unwrap();
 
-        if self.print_url {
-            eprintln!("{}", url);
-        }
+        print_verbose(&format!("{}", url), self.print_url);
 
         let client = reqwest::Client::new();
 

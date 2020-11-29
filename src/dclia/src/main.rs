@@ -27,8 +27,9 @@ use dcli::apiinterface::ApiInterface;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::mode::Mode;
 use dcli::platform::Platform;
-use dcli::utils::{print_error, print_standard};
+use dcli::utils::{print_error, print_verbose, build_tsv};
 use dcli::utils::EXIT_FAILURE;
+use dcli::output::Output;
 
 use dcli::manifest::definitions::{
     ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData,
@@ -40,36 +41,44 @@ use std::path::PathBuf;
 const ORBIT_PLACE_HASH: u32 = 2961497387;
 
 #[derive(StructOpt)]
-/// Command line tool for retrieving current Destiny 2 activity for player.
-///
-/// Command line tool for retrieving current Destiny 2 activity for player,
-/// including activity, location, and map for PVP modes (Crucible and Gambit).
+/// Command line tool for retrieving current Destiny 2 activity status for player.
+/// 
+/// Created by Mike Chambers.
+/// https://www.mikechambers.com
+/// 
+/// Released under an MIT License.
+/// More info at: https://github.com/mikechambers/dcli
 struct Opt {
     /// Platform for specified id
     ///
-    /// Platform for specified member id. Valid values are:
-    /// xbox, playstation, stadia or steam
+    /// Valid values are: xbox, playstation, stadia or steam.
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
     /// Destiny 2 API member id
     ///
-    /// Destiny 2 API member id. This is not the user name, but the member id
-    /// retrieved from the Destiny API.
+    /// This is not the user name, but the member id retrieved from the Destiny API.
     #[structopt(short = "m", long = "member-id", required = true)]
     member_id: String,
 
-    ///Terse output. Errors are suppresed.
-    #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
-    terse: bool,
-
     ///Print out additional information
+    /// 
+    ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
     ///Local path for the Destiny 2 manifest database file.
     #[structopt(long = "manifest-path", parse(from_os_str))]
     manifest_path: PathBuf,
+
+    /// Format for command output
+    ///
+    /// Valid values are default (Default) and tsv.
+    /// 
+    /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
+    /// ending in a new line character (\n).
+    #[structopt(short = "o", long = "output", default_value="default")]
+    output: Output,
 }
 
 #[tokio::main]
@@ -77,86 +86,87 @@ async fn main() {
     let opt = Opt::from_args();
 
     //TODO: why does this have to be mutable
-    let mut client = ApiInterface::new(opt.verbose);
+    let client = ApiInterface::new(opt.verbose);
 
-    print_standard("Calling API to retrieve current activity.", opt.verbose);
     let activities_data: Option<CharacterActivitiesData> = match client
         .retrieve_current_activity(opt.member_id, opt.platform)
         .await
     {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                &format!("Error retrieving data from API : {:?}", e),
-                !opt.terse,
-            );
+            print_error("Error retrieving data from API", e);
             std::process::exit(EXIT_FAILURE);
-            //Err(failure::err_msg("root cause failure"));
         }
     };
 
     let activity_data_a = match activities_data {
         Some(e) => e,
         None => {
-            print_standard("Not currently in an activity.", true);
+            match opt.output {
+                Output::Default => {
+                    println!("Not currently in an activity.");
+                },
+                Output::Tsv => {
+                    print_tsv_no_activity();
+                },
+            };
             return;
         }
     };
 
-    print_standard("Initializing Manifest.", opt.verbose);
     let mut manifest = match ManifestInterface::new(opt.manifest_path, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(&format!("Manifest Error : {:?}", e), !opt.terse);
+            print_error("Manifest Error", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
 
-    print_standard(&format!("Getting activity definition data from manifest : {}", activity_data_a.current_activity_hash), opt.verbose);
+    print_verbose(&format!("Getting activity definition data from manifest : {}", activity_data_a.current_activity_hash), opt.verbose);
     let activity_data_m: ActivityDefinitionData = match manifest
         .get_activity_definition(activity_data_a.current_activity_hash)
         .await
     {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                &format!("Error Retrieving Data from Manifest : {:?}", e),
-                !opt.terse,
-            );
+            print_error("Error Retrieving Data from Manifest", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
 
     if activity_data_m.place_hash == ORBIT_PLACE_HASH {
-        print_standard("Currently sitting in Orbit", true);
+        match opt.output {
+            Output::Default => {
+                println!("Currently sitting in Orbit");
+            },
+            Output::Tsv => {
+                print_tsv_orbit();
+            },
+        };
+
+        return;
     }
 
-    print_standard(&format!("Getting place definition data from manifest : {}", activity_data_m.place_hash), opt.verbose);
+    print_verbose(&format!("Getting place definition data from manifest : {}", activity_data_m.place_hash), opt.verbose);
     let place_data_m: PlaceDefinitionData = match manifest
         .get_place_definition(activity_data_m.place_hash)
         .await
     {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                &format!("Error Retrieving Data from Manifest : {:?}", e),
-                !opt.terse,
-            );
+            print_error("Error Retrieving Data from Manifest", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
 
-    print_standard(&format!("Getting destination definition data from manifest : {}", activity_data_m.destination_hash), opt.verbose);
+    print_verbose(&format!("Getting destination definition data from manifest : {}", activity_data_m.destination_hash), opt.verbose);
     let destination_data_m: DestinationDefinitionData = match manifest
         .get_destination_definition(activity_data_m.destination_hash)
         .await
     {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                &format!("Error Retrieving Data from Manifest : {:?}", e),
-                !opt.terse,
-            );
+            print_error("Error Retrieving Data from Manifest", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -164,7 +174,7 @@ async fn main() {
     let mut mode = Mode::None;
 
     //lets find out the mode / activity type name
-    print_standard("Determining activity mode", opt.verbose);
+    print_verbose("Determining activity mode", opt.verbose);
     let activity_type_name: String = match activity_data_a.current_activity_mode_type {
         //if its set in the API data, we use that
         Some(e) => {
@@ -172,7 +182,7 @@ async fn main() {
             format!("{}", e)
         }
         None => {
-            print_standard(&format!("Activity mode not returned from API. Checking Manifest : {}", activity_data_m.activity_type_hash), opt.verbose);
+            print_verbose(&format!("Activity mode not returned from API. Checking Manifest : {}", activity_data_m.activity_type_hash), opt.verbose);
             //otherwise, we go into the manifest to find it
             match manifest
                 .get_activity_type_definition(activity_data_m.activity_type_hash)
@@ -180,8 +190,7 @@ async fn main() {
             {
                 Ok(e) => e.display_properties.name,
                 Err(e) => {
-                    print_standard(&format!("Activity Mode not found in Manifest : {:?}", e), opt.verbose);
-                    //println!("{:?}", _e);
+                    print_verbose(&format!("Activity Mode not found in Manifest : {:?}", e), opt.verbose);
                     //Todo: this either means an error, unknown activity, or they are in orbit
                     "Unknown".to_string()
                 }
@@ -196,6 +205,40 @@ async fn main() {
     let activity_name = activity_data_m.display_properties.name;
     let place_name = place_data_m.display_properties.name;
     let destination_name = destination_data_m.display_properties.name;
+
+    match opt.output {
+        Output::Default => {
+            print_default(mode, &activity_type_name, &activity_name, &place_name, &destination_name, &description);
+        },
+        Output::Tsv => {
+            print_tsv(&activity_type_name, &activity_name, &place_name, &destination_name, &description);
+        },
+    };
+}
+
+fn print_tsv_orbit() {
+    print_tsv("", "", "Orbit", "", "");
+}
+
+fn print_tsv_no_activity() {
+    print_tsv("", "", "", "", "");
+}
+
+fn print_tsv(activity_type_name:&str, activity_name:&str, place_name:&str, destination_name:&str, description:&str) {
+    //activity_type_name, activity_name, place_name, destination_name, description
+
+    let mut name_values: Vec<(&str, String)> = Vec::new();
+
+    name_values.push(("activity_type_name", activity_type_name.to_string()));
+    name_values.push(("activity_name", activity_name.to_string()));
+    name_values.push(("place_name", place_name.to_string()));
+    name_values.push(("destination_name", destination_name.to_string()));
+    name_values.push(("description", description.to_string()));
+
+    print!("{}", build_tsv(name_values));
+}
+
+fn print_default(mode:Mode, activity_type_name:&str, activity_name:&str, place_name:&str, _destination_name:&str, description:&str) {
 
     let out = if mode == Mode::Patrol {
         format!("Exploring on {}", place_name)
@@ -230,13 +273,5 @@ async fn main() {
         )
     };
 
-    print_standard(&out, !opt.terse);
-
-    print_standard(
-        &format!(
-            "Mode:{}\nActivity:{}\nPlace:{}\nDestination:{}\nDescription:{}",
-            activity_type_name, activity_name, place_name, destination_name, description
-        ),
-        opt.terse,
-    );
+    println!("{}", out);
 }

@@ -48,7 +48,7 @@ impl ApiInterface {
     
     /// Retrieves characters for specified member_id and platform
     pub async fn retrieve_current_activity(
-        &mut self,
+        &self,
         member_id: String,
         platform: Platform,
     ) -> Result<Option<CharacterActivitiesData>, Error> {
