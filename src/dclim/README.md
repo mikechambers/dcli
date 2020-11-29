@@ -26,7 +26,7 @@ OPTIONS:
     -d, --dir <manifest-dir>    Directory where the manifest and associated files will be stored.
 ```
 
-### Example
+### Examples
 
 Check for an updated manifest and store and new version in *~/manifest/*:
 ```

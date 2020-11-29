@@ -39,7 +39,7 @@ impl ApiClient {
         let url = Url::parse(&url).unwrap();
 
         if self.print_url {
-            println!("{}", url);
+            eprintln!("{}", url);
         }
 
         let client = reqwest::Client::new();

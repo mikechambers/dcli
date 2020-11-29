@@ -38,7 +38,7 @@ OPTIONS:
 
 Valid platforms are xbox, playstation, steam and stadia.
 
-### Example
+### Examples
 
 Retrieve membership id for a player on xbox and print the url for the API call:
 ```

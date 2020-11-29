@@ -42,7 +42,7 @@ OPTIONS:
 
 Valid platforms are xbox, playstation, steam and stadia.
 
-### Example
+### Examples
 
 Check for current activity. Note, member-id can be retrieved from [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).
 

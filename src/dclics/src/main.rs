@@ -36,6 +36,7 @@ use dcli::utils::{
     build_tsv, clear_scr, format_f32, human_duration, print_error, print_standard, repeat_str,
 };
 
+
 fn print_tsv(
     data: CrucibleStats,
     member_id: &str,
@@ -95,7 +96,7 @@ fn print_tsv(
 
 fn print_complete(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
     let p = format_f32;
-    let title: String = format!("Displaying Destiny 2 stats for {:#} {:#}", mode, period);
+    let title: String = format!("Destiny 2 stats for {:#} {:#}", mode, period);
     println!("{}", title);
     println!("{}", repeat_str("=", title.chars().count()));
 
@@ -166,57 +167,66 @@ fn print_complete(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
 }
 
 #[derive(StructOpt)]
-/// Command line tool for retrieving current Destiny 2 activity for player.
+/// Command line tool for retrieving current Destiny 2 Crucible activity stats.
 ///
-///
+/// Enables control of which stats are retrieved via game mode, time period and
+/// character.
+/// 
+/// Created by Mike Chambers.
+/// https://www.mikechambers.com
+/// 
+/// Released under an MIT License.
+/// More info at: https://github.com/mikechambers/dcli
+#[structopt(verbatim_doc_comment)]
 struct Opt {
-    /// Platform for specified id
-    ///
-    /// Platform for specified member id. Valid values are:
-    /// xbox, playstation, stadia or steam
-    #[structopt(short = "p", long = "platform", required = true)]
-    platform: Platform,
-
-    /// Time range to pull stats from. Valid values include day, reset, week,
-    /// month, alltime (default)
-    ///
-    /// Time range to pull stats from. Valid values include  day (last day),
-    /// reset (since reset), week (last week), month (last month), alltime (default)
-    #[structopt(long = "period")]
-    period: Option<TimePeriod>,
-
     /// Destiny 2 API member id
     ///
-    /// Destiny 2 API member id. This is not the user name, but the member id
+    /// This is not the user name, but the member id
     /// retrieved from the Destiny API.
     #[structopt(short = "m", long = "member-id", required = true)]
     member_id: String,
 
-    /// Crucible mode to return stats for.
+    /// Platform for specified id
     ///
-    /// Crucible mode to return stats for. Valid values are all (default),
-    /// control, clash, mayhem, ironbanner, private, trialsofnine, rumble,
-    /// comp, quickplay and trialsofosiris
+    /// Valid values are: xbox, playstation, stadia or steam.
+    #[structopt(short = "p", long = "platform", required = true)]
+    platform: Platform,
+
+    /// Time range to pull stats from
+    ///
+    /// Valid values include day (last day), reset (since reset), week 
+    /// (last week), month (last month), alltime (default).
+    #[structopt(long = "period")]
+    period: Option<TimePeriod>,
+
+    /// Crucible mode to return stats for
+    ///
+    /// Valid values are all (default), control, clash, mayhem, ironbanner, 
+    /// private, trialsofnine, rumble, comp, quickplay and trialsofosiris.
     #[structopt(long = "mode")]
     mode: Option<CrucibleMode>,
 
-    /// Format for command output. Valid values are default (Default) and tsv
+    /// Format for command output
     ///
-    /// Format for command output. Valid values are default (Default) and tsv.
-    /// tsv will output in a tab (\t) seperated format of name / value pairs with lines
-    /// ending in a new line character (\n)
+    /// Valid values are default (Default) and tsv.
+    /// 
+    /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
+    /// ending in a new line character (\n).
     #[structopt(short = "o", long = "output")]
     output: Option<Output>,
 
-    /// Destiny 2 API character id. If not specified, data for all characters will be returned.
-    /// Required when period is set to day, reset, week or month
+    /// Destiny 2 API character id
     ///
-    /// Destiny 2 API character id. If not specified, data for all characters will be returned.
-    /// Required when period is set to day, reset, week or month
-    #[structopt(short = "c", long = "character-id", required_ifs=&[("period","day"),("period","reset"),("period","week"),("period","month"),])]
+    /// Destiny 2 API character id. If not specified, data for all characters 
+    /// will be returned.
+    /// Required when period is set to day, reset, week or month.
+    #[structopt(short = "c", long = "character-id", required_ifs=&[("period","day"),
+        ("period","reset"),("period","week"),("period","month"),])]
     character_id: Option<String>,
 
     ///Print out additional information
+    /// 
+    ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 }
@@ -244,9 +254,6 @@ async fn retrieve_all_time_stats(
 
     Ok(Some(p_stats))
 }
-
-//move PStats to the a getter on the data instance
-//allow Pstats to add
 
 async fn retrieve_aggregate_crucible_stats(
     member_id: &str,
@@ -285,8 +292,8 @@ async fn main() {
     let opt = Opt::from_args();
 
     //use unwrap_or_else as it is lazily evaluated
-    let character_id: String = opt.character_id.unwrap_or_else(||"0".to_string());
-    
+    let character_id: String = opt.character_id.unwrap_or_else(|| "0".to_string());
+
     let mode: CrucibleMode = opt.mode.unwrap_or(CrucibleMode::AllPvP);
     let period: TimePeriod = opt.period.unwrap_or(TimePeriod::Alltime);
     let output: Output = opt.output.unwrap_or(Output::Default);
@@ -340,9 +347,6 @@ async fn main() {
             }
         }
     };
-
-    //TODO: add conversational output
-    //TODO: with suggestions on things to work on (looking at KD, avg life time, suicides, kill distance, precision kills)
 
     match output {
         Output::Default => {

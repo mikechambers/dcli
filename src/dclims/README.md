@@ -31,7 +31,7 @@ OPTIONS:
 
 ```
 
-### Example
+### Examples
 
 Retrieve information for *Luna's Howl* by its API hash id.
 ```

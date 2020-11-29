@@ -45,7 +45,7 @@ OPTIONS:
             Platform for specified member id. Valid values are: xbox, playstation, stadia or steam
 ```
 
-### Example
+### Examples
 
 Retrieve all character information:
 
