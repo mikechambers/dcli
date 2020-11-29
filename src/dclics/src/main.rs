@@ -36,10 +36,8 @@ use dcli::utils::{print_error, print_standard, human_duration, clear_scr, repeat
 fn print_complete(data:CrucibleStats, mode:CrucibleMode, period:TimePeriod) {
 
     //clear the screen
-    clear_scr();
-
     let p = format_f32;
-    let title: String = format!("Displaying stats for {:#} {:#}", mode, period);
+    let title: String = format!("Displaying Destiny 2 stats for {:#} {:#}", mode, period);
     println!("{}", title);
     println!("{}", repeat_str("=", title.chars().count()));
 
@@ -169,16 +167,21 @@ async fn retrieve_all_time_stats(
     platform: Platform,
     mode: CrucibleMode,
     verbose: bool,
-) -> Result<CrucibleStats, Error> {
+) -> Result<Option<CrucibleStats>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
-    let data: PvpStatsData = client
+    let data: PvpStatsData = match client
         .retrieve_alltime_crucible_stats(member_id, character_id, platform, mode)
-        .await?;
+        .await? {
+            Some(e) => e,
+            None => {
+                return Ok(None);
+            },
+        };
 
     let p_stats: CrucibleStats = data.get_crucible_stats();
 
-    Ok(p_stats)
+    Ok(Some(p_stats))
 }
 
 //move PStats to the a getter on the data instance
@@ -191,14 +194,19 @@ async fn retrieve_aggregate_crucible_stats(
     mode: CrucibleMode,
     period: TimePeriod,
     verbose: bool,
-) -> Result<CrucibleStats, Error> {
+) -> Result<Option<CrucibleStats>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let start_date = period.get_date_time();
 
-    let data: Vec<DailyPvPStatsValuesData> = client
+    let data: Vec<DailyPvPStatsValuesData> = match client
         .retrieve_aggregate_crucible_stats(member_id, character_id, platform, mode, start_date)
-        .await?;
+        .await? {
+                Some(e) => e,
+                None => {
+                    return Ok(None);
+                },
+        };
 
     let mut p_stats: CrucibleStats = CrucibleStats::default();
 
@@ -207,7 +215,7 @@ async fn retrieve_aggregate_crucible_stats(
         p_stats = cs + p_stats;
     }
 
-    Ok(p_stats)
+    Ok(Some(p_stats))
 }
 
 #[tokio::main]
@@ -229,7 +237,13 @@ async fn main() {
             )
             .await
             {
-                Ok(e) => e,
+                Ok(e) => match e {
+                    Some(e) => e,
+                    None => {
+                        print_standard("No results found.", true);
+                        return;
+                    }, 
+                },
                 Err(e) => {
                     print_error(&format!("Error : {:#?}", e), true);
                     std::process::exit(EXIT_FAILURE);
@@ -247,7 +261,13 @@ async fn main() {
             )
             .await
             {
-                Ok(e) => e,
+                Ok(e) => match e {
+                    Some(e) => e,
+                    None => {
+                        print_standard("No results found.", true);
+                        return;
+                    }, 
+                },
                 Err(e) => {
                     print_error(&format!("Error : {:#?}", e), true);
                     std::process::exit(EXIT_FAILURE);
@@ -257,8 +277,14 @@ async fn main() {
     };
 
 
+    //TODO: if verbose dont clear screen
     //TODO: test ironbanner or a mode where there will be 0 results
-    //TODO: add conversdational output
+    //TODO: add conversational output
     //TODO: with suggestions on things to work on (looking at KD, avg life time, suicides, kill distance, precision kills)
+
+    if !opt.verbose {
+        clear_scr();
+    }
+
     print_complete(data, mode, period);
 }

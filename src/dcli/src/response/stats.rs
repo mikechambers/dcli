@@ -44,14 +44,20 @@ impl HasDestinyResponseStatus for AllTimePvPStatsResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AllPvPStatsData {
-    #[serde(alias = "allPvP", alias = "ironBanner")]
+    #[serde(alias = "allPvP", 
+    alias = "ironBanner", alias = "control", 
+    alias="clash", alias="allMayhem",
+    alias="privateMatches", alias="trialsofthenine",
+    alias="rumble", alias="pvpCompetitive",
+    alias="pvpQuickplay", alias="trials_of_osiris"
+)]
     pub data:Option<AllTimePvPStatsData>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AllTimePvPStatsData {
     #[serde(rename = "allTime")]
-    pub all_time:PvpStatsData
+    pub all_time:Option<PvpStatsData>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -165,13 +171,21 @@ impl HasDestinyResponseStatus for DailyPvPStatsResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DailyPvPStatsData {
-    #[serde(alias = "allPvP", alias = "ironBanner")]
+        #[serde(alias = "allPvP", 
+            alias = "ironBanner", alias = "control", 
+            alias="clash", alias="allMayhem",
+            alias="privateMatches", alias="trialsofthenine",
+            alias="rumble", alias="pvpCompetitive",
+            alias="pvpQuickplay", alias="trials_of_osiris"
+
+        )]
     pub data:Option<DailyPvPStatsDailyData>,
+    //todo: this might not need to be an option
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DailyPvPStatsDailyData {
-    pub daily:Vec<DailyPvPStatsValuesData>
+    pub daily:Option<Vec<DailyPvPStatsValuesData>>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
