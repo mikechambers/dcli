@@ -65,15 +65,15 @@ fn print_complete(data:CrucibleStats, mode:CrucibleMode, period:TimePeriod) {
         "KD/A",
         "EFFICIENCY",
         "KILLS",
-        "DEFEATS",
         "ASSISTS",
+        "DEFEATS",
         "DEATHS",
         "SUICIDES",
         col_w = col_w
     );
     println!("{}", repeat_str("-", col_w * 9));
     println!(
-        "{t:>0col_w$}{sp:<0col_w$}{sp:<0col_w$}{sp:<0col_w$}{k:<0col_w$}{o:<0col_w$}{a:<0col_w$}{d:<0col_w$}{s:<0col_w$}",
+        "{t:>0col_w$}{sp:<0col_w$}{sp:<0col_w$}{sp:<0col_w$}{k:<0col_w$}{a:<0col_w$}{o:<0col_w$}{d:<0col_w$}{s:<0col_w$}",
         t = "PER GAME  ",
         sp = "",
         k = p(data.kills / data.activities_entered, 2),
@@ -86,7 +86,7 @@ fn print_complete(data:CrucibleStats, mode:CrucibleMode, period:TimePeriod) {
 
     //
     println!(
-        "{t:>0col_w$}{kd:<0col_w$}{kda:<0col_w$}{e:<0col_w$}{k:<0col_w$}{o:<0col_w$}{a:<0col_w$}{d:<0col_w$}{s:<0col_w$}",
+        "{t:>0col_w$}{kd:<0col_w$}{kda:<0col_w$}{e:<0col_w$}{k:<0col_w$}{a:<0col_w$}{o:<0col_w$}{d:<0col_w$}{s:<0col_w$}",
         t = "TOTAL  ",
         kd = p(data.kills_deaths_ratio, 2),
         kda = p(data.kills_deaths_assists, 2),
