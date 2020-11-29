@@ -48,12 +48,12 @@ OPTIONS:
 
 ### Examples
 
-#### Check for an updated manifest and store and new version in *~/manifest/*:
+#### Check for an updated manifest and store any new version in *~/manifest/*:
 ```
 dclim --manifest-dir ~/manifest/
 ```
 
-#### Download remote manifest and store in *~/manifest/* directory regardless of whether it is updated.
+#### Download remote manifest and store in *~/manifest/* directory regardless of whether remote is updated.
 ```
 dclim --manifest-dir ~/manifest/ --force
 ```
