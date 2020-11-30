@@ -10,6 +10,7 @@ This is an early alpha release, and there will probably be a lot of changes / re
 * [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) Command line tool for retrieving character information for specified member id.
 * [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) Command line tool for searching the Destiny 2 manifest by hash ids (from API calls).
 * [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) Command line toll for retrieving information on player's current activity within Destiny 2.
+* [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) Command line tool for retrieving Destiny 2 Crucible activity stats.
 * [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) Library used across all of the dcli apps.
 
 ## Compiling

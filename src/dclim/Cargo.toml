@@ -6,7 +6,6 @@ edition = "2018"
 description = "Command line tool for managing and syncing the remote Destiny 2 API manifest database."
 homepage = "https://www.mikechambers.com"
 repository = "https://github.com/mikechambers/dcli"
-edition = "2018"
 license = "MIT"
 readme = "README.md"
 

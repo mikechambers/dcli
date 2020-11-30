@@ -1,6 +1,6 @@
 # dclics
 
-Command line tool for retrieving current Destiny 2 Crucible activity stats.
+Command line tool for retrieving Destiny 2 Crucible activity stats.
 
 Enables control of which stats are retrieved via:
 

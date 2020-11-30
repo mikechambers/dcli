@@ -6,7 +6,6 @@ edition = "2018"
 description = "Command line tool for retrieving Destiny 2 character information for specified member id."
 homepage = "https://www.mikechambers.com"
 repository = "https://github.com/mikechambers/dcli"
-edition = "2018"
 license = "MIT"
 readme = "README.md"
 
