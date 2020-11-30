@@ -1,0 +1,8 @@
+language: rust
+rust:
+  - stable
+script:
+  - cargo build --verbose --release --workspace --manifest-path src/Cargo.toml
+matrix:
+  allow_failures:
+    - rust: nightly
