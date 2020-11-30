@@ -1,8 +1,0 @@
-[workspace]
-members = ["dclia", "dclic", "dclics", "dclim", "dclims", "dclis"]
-
-#https://github.com/johnthagen/min-sized-rust
-[profile.release]
-opt-level = 'z'
-lto = true
-codegen-units = 1
