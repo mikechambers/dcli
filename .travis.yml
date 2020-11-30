@@ -7,6 +7,8 @@ rust:
 script:
   - cargo build --verbose --release --workspace --manifest-path src/Cargo.toml
 
+
+
 matrix:
   # Performance tweak
   fast_finish: true
@@ -23,3 +25,14 @@ matrix:
       
     # Windows
     #- env: TARGET=x86_64-pc-windows-gnu
+
+deploy:
+  - provider: releases
+    skip_cleanup: true
+    on:
+      tags: true
+      #condition: "$TRAVIS_RUST_VERSION = stable"
+      #branch: master
+    file: target/release/dclias
+    api_token:
+      secure: "gK6QdMCOthNj0uPnpy32sdH4nMHkr6rTGeBqnn/Q64iy5A+HcSAv4FQ//Dh8HS2m8FVpBIv7naMKu5VdNM2Mb0y3orbq7kmfDSNxeSIrrsyhhLidrKsEo662OtndIjIaWTVFPBMTwPkDBD7gzQ1Bzn5TR/d5XAJpmko1Kq6XEDfllIG+twNpkuv47rR/lqZIIQ3J9FeGHbp/MBK6SF0H3+is2qqZbmivlVLc2Xn7Kd0nCPojGEUv5B5NLKrQhLb3F5JnJqzjTHMZUR0gZN+1oqN7wu80ipyhgHVAS+/5sH/0LLavIA0dHxlf4sv+j402kF8PwppCqIEDjVD5XA+hU8fPB7TI/xBjb4f893heNJHBc6zU7y1fzSofNom8OM6VYVcBGWe7wGzKN9s/lnprLD0XkiTjSGEf+Ib+FFpQJGfKKnFzFig8nQ0COAlyX0ln8LhZXghLenBp2EdSAUhN9C7MtzOMQ/ghgxJUvwpObaFjDcxdCEubyzpulkCSzT/aucMfk6ELgG3wuwlFBsEOc/9tbkbyZxsUm87d9NmKPduP/WVdCdrW2JRNpdTWOu5LCTceaHc7FQjQbrkme5fvObi0QMeEbIlpUVU+PITJ8+axzAR4o7XkT0RVN8w8+uEar5Qh9XYCW6p8CIChVOORyQtyJyLlksatY/EPThtdIik="
