@@ -1,8 +1,8 @@
-language: rust
-rust:
-  - stable
-script:
-  - cargo build --verbose --release --workspace --manifest-path src/Cargo.toml
-matrix:
-  allow_failures:
-    - rust: nightly
+[workspace]
+members = ["dclia", "dclic", "dclics", "dclim", "dclims", "dclis"]
+
+#https://github.com/johnthagen/min-sized-rust
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
