@@ -24,37 +24,49 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 use dcli::error::Error;
-use dcli::utils::{print_error, print_standard, EXIT_FAILURE};
+use dcli::utils::{print_error, EXIT_FAILURE, TSV_EOL, TSV_DELIM};
 use dcli::manifestinterface::{ManifestInterface, FindResult};
+use dcli::output::Output;
 
 #[derive(StructOpt)]
 /// Command line tool for searching the Destiny 2 manifest by hash ids.
 ///
-/// Command line tool for searching the Destiny 2 manifest by hash ids.
 /// Takes a hash / id from the Destiny 2 API, and returns data from the
-/// item from the manifest.
+/// item from the manifest. May return more than one result.
+/// 
+/// Created by Mike Chambers.
+/// https://www.mikechambers.com
+/// 
+/// Released under an MIT License.
+/// More info at: https://github.com/mikechambers/dcli
 struct Opt {
-    ///Local path the Destiny 2 manifest database file.
+    ///Local path for Destiny 2 manifest database file.
     #[structopt(short = "m", long = "manifest-path", parse(from_os_str))]
     manifest_path: PathBuf,
 
-    ///terse output in the form of name:description . Errors are suppresed.
-    #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
-    terse: bool,
+    //Output raw json data from manifest.
+    //#[structopt(short = "j", long = "json", conflicts_with = "verbose", conflicts_with="terse")]
+    //json: bool,
 
-    ///Output raw json data from manifest.
-    #[structopt(short = "j", long = "json", conflicts_with = "verbose", conflicts_with="terse")]
-    json: bool,
-
-    ///Print out additional information for the API call
-    #[structopt(short = "v", long = "verbose")]
-    verbose: bool,
+    //Print out additional information for the API call
+    //#[structopt(short = "v", long = "verbose")]
+    //verbose: bool,
 
     ///The hash id from the Destiny 2 API for the item to be searched for. Example : 326060471
     #[structopt(long = "hash", required = true)]
     hash: u32,
+
+    /// Format for command output
+    ///
+    /// Valid values are default (Default) and tsv.
+    ///
+    /// tsv outputs in a tab (\t) seperated format of columns with lines
+    /// ending in a new line character (\n).
+    #[structopt(short = "o", long = "output", default_value = "default")]
+    output: Output,
 }
 
+//TODO: can we make has and path reference?
 async fn search_manifest_by_hash(hash: u32, manifest_path: PathBuf) -> Result<Vec<FindResult>, Error> {
     let mut manifest = ManifestInterface::new(manifest_path, false).await?;
     let out = manifest.find(hash).await?;
@@ -69,28 +81,66 @@ async fn main() {
     let results:Vec<FindResult> = match search_manifest_by_hash(opt.hash, opt.manifest_path).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(&format!("Could not search manifest : {:#}", e), !opt.terse);
+            print_error("Error searching manifest.", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
 
+    match opt.output {
+        Output::Default => {
+            print_default(results);
+        },
+        Output::Tsv => {
+            print_tsv(results);
+        },
+    };
+    
+}
+
+fn print_default(results:Vec<FindResult>) {
     if results.is_empty() {
-        print_standard("No items found.", !opt.terse);
+        println!("No items found.");
         return;
     }
 
+    let col_w = 15;
+
+    println!("Found {} item{}", results.len(), if results.len() > 1 {"s"} else {""});
+    println!("-----------------------------");
     for r in results.iter() {
 
         let default : String = "".to_string();
         let description = r.display_properties.description.as_ref().unwrap_or(&default);
+        let icon_path = r.display_properties.icon_path.as_ref().unwrap_or(&default);
 
-        print_standard(&format!("Name : {}",r.display_properties.name), !opt.terse && !opt.json);
-        print_standard(&format!("Description : {}", description), !opt.terse && !opt.json);
-        print_standard(&format!("Has Icon : {}",r.display_properties.has_icon), opt.verbose && !opt.terse && !opt.json);
-        print_standard(&format!("Icon Path : {}",r.display_properties.icon_path.as_ref().unwrap_or(&default)), opt.verbose && !opt.terse && !opt.json);
+        println!("{:<0col_w$}{}", "Name", r.display_properties.name, col_w=col_w);
+        println!("{:<0col_w$}{}", "Description", description, col_w=col_w);
+        println!("{:<0col_w$}{}", "Has Icon", r.display_properties.has_icon, col_w=col_w);
+        println!("{:<0col_w$}{}", "Icon Path", icon_path, col_w=col_w);
+        println!();
+    }
+}
 
-        print_standard(&r.raw_json, opt.json);
+fn print_tsv(results:Vec<FindResult>) {
+    if results.is_empty() {
+        println!();
+        return;
+    }
 
-        print_standard(&format!("{}:{}", &r.display_properties.name, description), opt.terse);
+    for (i,r) in results.iter().enumerate() {
+
+        let default : String = "".to_string();
+        let description = r.display_properties.description.as_ref().unwrap_or(&default);
+        let icon_path = r.display_properties.icon_path.as_ref().unwrap_or(&default);
+
+        print!("{i}{delim}{n}{delim}{d}{delim}{hi}{delim}{ip}{eol}",
+            i = i,
+            n = r.display_properties.name,
+            d = description,
+            hi = r.display_properties.has_icon,
+            ip = icon_path,
+            delim = TSV_DELIM,
+            eol = TSV_EOL,
+        );
     }
 }
