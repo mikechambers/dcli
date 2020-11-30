@@ -29,6 +29,7 @@ matrix:
 deploy:
   - provider: releases
     skip_cleanup: true
+    edge: true
     on:
       tags: true
       #condition: "$TRAVIS_RUST_VERSION = stable"
