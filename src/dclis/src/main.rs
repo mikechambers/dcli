@@ -23,8 +23,10 @@
 mod memberidsearch;
 
 use dcli::platform::Platform;
-use dcli::utils::{print_error, print_standard, EXIT_FAILURE};
+use dcli::utils::{print_error, print_verbose, TSV_EOL, TSV_DELIM, EXIT_FAILURE};
 use memberidsearch::MemberIdSearch;
+use dcli::output::Output;
+use memberidsearch::Membership;
 
 use structopt::StructOpt;
 
@@ -42,58 +44,64 @@ fn is_valid_steam_id(steam_id: &str) -> bool {
 /// Command line tool for retrieving primary Destiny 2 member ids.
 ///
 /// Retrieves the primary Destiny 2 membershipId and platform for specified 
-/// username or steam 64 id and platform. That may a membershipId on a platform 
+/// username or steam 64 id and platform. That may be a membershipId on a platform 
 /// different that the one specified, depending on the cross save status of the 
 /// account. It will return the primary membershipId that all data will be 
-/// associate with.d
+/// associate with.
+/// 
+/// Created by Mike Chambers.
+/// https://www.mikechambers.com
+/// 
+/// Released under an MIT License.
+/// More info at: https://github.com/mikechambers/dcli
 struct Opt {
     /// Platform for specified id
     ///
-    /// Platform for specified id. Valid values are:
-    /// xbox, playstation, stadia or steam
+    /// Valid values are: xbox, playstation, stadia or steam
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
     #[structopt(short = "i", long = "id", required = true)]
     /// User name or steam 64 id
     ///
-    /// User name (for Xbox, Playstation or Stadia) or steam 64 id :
+    /// User name (for Xbox, Playstation or Stadia) or steam 64 id for Steam / pc :
     /// 00000000000000000 (17 digit ID) for steam.
     id: String,
 
-    ///terse output in the form of membership_id:platform . Errors are suppresed.
-    #[structopt(short = "t", long = "terse", conflicts_with = "verbose")]
-    terse: bool,
 
     ///Print out additional information for the API call
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
+
+    /// Format for command output
+    ///
+    /// Valid values are default (Default) and tsv.
+    ///
+    /// tsv outputs in a tab (\t) seperated format of columns with lines
+    /// ending in a new line character (\n).
+    #[structopt(short = "o", long = "output", default_value = "default")]
+    output: Output,
 }
 
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
 
-    if opt.id.chars().count() == 0 {
-        print_error("Invalid id.", !opt.terse);
-        return;
-    }
-
     if opt.platform == Platform::Steam && !is_valid_steam_id(&opt.id) {
-        print_error("Invalid steam 64 id.", !opt.terse);
+        println!("Invalid steam 64 id. Must be a 17 digit Steam 64 ID.");
         return;
     }
 
-    print_standard(
+    print_verbose(
         &format!(
             "Searching for '{id}' on {platform}",
             id = opt.id,
             platform = opt.platform,
         ),
-        opt.verbose && !opt.terse,
+        opt.verbose,
     );
 
-    let member_search = MemberIdSearch::new(opt.verbose && !opt.terse);
+    let member_search = MemberIdSearch::new(opt.verbose);
 
     let membership = member_search
         .retrieve_member_id(&opt.id, opt.platform)
@@ -103,56 +111,72 @@ async fn main() {
         Some(e) => match e {
             Ok(e) => e,
             Err(e) => {
-                print_error(&format!("Error calling API : {}", e), !opt.terse);
+                print_error("Error retrieving ID from API.", e);
                 std::process::exit(EXIT_FAILURE);
             }
         },
         None => {
-            print_standard(
-                &format!("Member not found : '{}' on {}", opt.id, opt.platform),
-                !opt.terse,
-            );
+            println!("Member not found");
             return;
         }
     };
 
     if opt.platform != Platform::Steam {
-        let display_name = match membership.display_name {
-            Some(e) => e,
-            None => String::from(""),
+        match membership.display_name {
+            Some(ref e) => {
+                if e != &opt.id {
+                    println!("Member not found");
+                    return;
+                }
+            },
+            None => {
+                println!("Member not found");
+                return;
+            },
         };
-
-        if display_name != opt.id {
-            print_standard(
-                &format!(
-                    "Member not found : Searched for '{}' : Found '{}'",
-                    opt.id, display_name
-                ),
-                !opt.terse,
-            );
-            return;
-        }
     }
 
-    print_standard(
-        &format!(
-            "{membership_id}:{platform_id}",
-            membership_id = membership.id,
-            platform_id = membership.platform
-        ),
-        opt.terse,
-    );
-
+    let mut name = None;
     if membership.platform != Platform::Steam {
-        print_standard(&format!("Display Name  : {}", opt.id), !opt.terse);
+        name = Some(&opt.id);
     }
 
-    print_standard(
-        &format!(
-            "Membership Id : {membership_id}\nPlatform      : {platform}",
-            membership_id = membership.id,
-            platform = membership.platform
-        ),
-        !opt.terse,
+    match opt.output {
+        Output::Default => {
+            print_default(&membership, name);
+        },
+        Output::Tsv => {
+            print_tsv(&membership, name);
+        },
+    }
+    
+}
+
+
+fn print_tsv(member:&Membership, name:Option<&String>) {
+
+    let default = &"".to_string();
+    let n = name.unwrap_or_else(||default);
+
+    print!("{d}{delim}{i}{delim}{p}{delim}{pi}{eol}",
+    d=n,
+    i=member.id,
+    p=member.platform,
+    pi=member.platform.to_id(),
+    delim=TSV_DELIM,
+    eol=TSV_EOL,
     );
+}
+
+
+fn print_default(member:&Membership, name:Option<&String>) {
+
+    let default = &"".to_string();
+    let n = name.unwrap_or_else(||default);
+
+    let col_w = 15;
+    println!("{:<0col_w$}{}", "Display Name", n, col_w=col_w);
+    println!("{:<0col_w$}{}", "id", member.id, col_w=col_w);
+    println!("{:<0col_w$}{}", "Platform", member.platform, col_w=col_w);
+    println!("{:<0col_w$}{}", "Platform Id", member.platform.to_id(), col_w=col_w);
 }
