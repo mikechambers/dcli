@@ -3,6 +3,19 @@ rust:
   - stable
 script:
   - cargo build --verbose --release --workspace --manifest-path src/Cargo.toml
+
 matrix:
-  allow_failures:
-    - rust: nightly
+  # TODO These are all the build jobs. Adjust as necessary. Comment out what you
+  # don't need
+  include:
+    # Linux
+    - env: TARGET=x86_64-unknown-linux-musl
+
+    # OSX
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
+    - env: TARGET=aarch64-apple-darwin
+      os: osx
+      
+    # Windows
+    - env: TARGET=x86_64-pc-windows-gnu
