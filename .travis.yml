@@ -1,21 +1,25 @@
 language: rust
+sudo: false
+cache: cargo
+
 rust:
   - stable
 script:
   - cargo build --verbose --release --workspace --manifest-path src/Cargo.toml
 
 matrix:
-  # TODO These are all the build jobs. Adjust as necessary. Comment out what you
-  # don't need
+  # Performance tweak
+  fast_finish: true
+
   include:
     # Linux
-    - env: TARGET=x86_64-unknown-linux-musl
+    #- env: TARGET=x86_64-unknown-linux-musl
 
     # OSX
     - env: TARGET=x86_64-apple-darwin
       os: osx
-    - env: TARGET=aarch64-apple-darwin
-      os: osx
+    #- env: TARGET=aarch64-apple-darwin
+    #  os: osx
       
     # Windows
-    - env: TARGET=x86_64-pc-windows-gnu
+    #- env: TARGET=x86_64-pc-windows-gnu
