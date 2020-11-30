@@ -8,7 +8,7 @@ This is an early alpha release, and there will probably be a lot of changes / re
 * [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) Tool for retrieving primary platform and membership ids for Destiny 2 players.
 * [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) Tool for managing and syncing the remote Destiny 2 API manifest database.
 * [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) Tool for retrieving character information for specified member id.
-* [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims)Tool for searching the Destiny 2 manifest by hash ids (from API calls).
+* [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) Tool for searching the Destiny 2 manifest by hash ids (from API calls).
 * [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) Tool for retrieving information on player's current activity within Destiny 2.
 * [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) Tool for retrieving Destiny 2 Crucible activity stats.
 * [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) Library used across all of the dcli apps.
