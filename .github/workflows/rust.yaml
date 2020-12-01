@@ -16,7 +16,7 @@ jobs:
       - name: Build and Test
         uses: stevenleadbeater/rust-musl-builder@master
         with:
-          cmd: rustup update && cargo build --manifest-path=src/Cargo.toml --release --target ${{ steps.settings.outputs.TARGET_NAME }}
+          args: cargo build --manifest-path=src/Cargo.toml --release --target ${{ steps.settings.outputs.TARGET_NAME }}
 
   build-linux-x86_64:
     runs-on: ubuntu-latest
@@ -76,10 +76,10 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.settings.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.settings.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/ && ls -l src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia.exe
+        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/ && ls -l src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia.exe src/target/${TARGET_NAME}/release/dclic.exe src/target/${TARGET_NAME}/release/dclics.exe src/target/${TARGET_NAME}/release/dclim.exe src/target/${TARGET_NAME}/release/dclims.exe src/target/${TARGET_NAME}/release/dclis.exe
         shell: bash
       - name: Zip
-        run: Compress-Archive -Path src\target\${{ steps.settings.outputs.TARGET_NAME }}\release\dclia.exe -DestinationPath dcli_${{ steps.settings.outputs.TARGET_NAME }}_${{ steps.settings.outputs.SOURCE_TAG }}.zip -CompressionLevel Optimal
+        run: Compress-Archive -Path src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclia.exe src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclic.exe src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclics.exe src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclim.exe src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclims.exe src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclis.exe -DestinationPath dcli_${{ steps.settings.outputs.TARGET_NAME }}_${{ steps.settings.outputs.SOURCE_TAG }}.zip -CompressionLevel Optimal
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
