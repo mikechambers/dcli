@@ -4,43 +4,16 @@ on: [push]
 
 jobs:
 
-  build-mac-x86:
-    runs-on: macos-10.15
-
+  build-linux-musl:
+    runs-on: ubuntu-latest
     steps:
-
-      #set some environement variables that we can use through the rest of our
-      #action
-      - name: Branch name
-        id: branch_name
+      - name: Step Settings
+        id: settings
         run: |
-          echo ::set-output name=SOURCE_TAG::${GITHUB_REF/refs\/tags\//}
-          echo ::set-output name=TARGET_NAME::x86_64-apple-darwin
-
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+            echo ::set-output name=SOURCE_TAG::${GITHUB_REF/refs\/tags\//}
+            echo ::set-output name=TARGET_NAME::x86_64-unknown-linux-musl
+      - uses: actions/checkout@master
+      - name: Build and Test
+        uses: zhxiaogg/cargo-static-build@master
         with:
-          toolchain: stable
-          target: ${{ steps.branch_name.outputs.TARGET_NAME }}
-          override: true
-      - uses: actions-rs/cargo@v1
-        env:
-          DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
-        with:
-          use-cross: true
-          command: build
-          args: --manifest-path=src/Cargo.toml --release --target ${{ steps.branch_name.outputs.TARGET_NAME }}
-      - name: Build
-        env:
-          SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
-          TARGET_NAME: ${{ steps.branch_name.outputs.TARGET_NAME }}
-        run: echo ${SOURCE_TAG} && ls -l src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip src/target/${TARGET_NAME}/release/dclia
-        
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            dcli_${{ steps.branch_name.outputs.TARGET_NAME }}_${{ steps.branch_name.outputs.SOURCE_TAG }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          cmd: cargo build --manifest-path=src/Cargo.toml --release --target ${{ steps.settings.outputs.TARGET_NAME }}
