@@ -4,50 +4,6 @@ on: [push]
 
 jobs:
 
-  build-windows-gnu:
-    runs-on: ubuntu-latest
-
-    steps:
-
-      #set some environement variables that we can use through the rest of our
-      #action
-      - name: Branch name
-        id: branch_name
-        run: |
-          echo ::set-output name=SOURCE_NAME::${GITHUB_REF#refs/*/}
-          echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
-          echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
-          echo ::set-output name=TARGET_NAME::x86_64-pc-windows-gnu
-
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ steps.branch_name.outputs.TARGET_NAME }}
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: --manifest-path=src/Cargo.toml --release --target ${{ steps.branch_name.outputs.TARGET_NAME }}
-      - name: Build
-        env:
-          SOURCE_NAME: ${{ steps.branch_name.outputs.SOURCE_NAME }}
-          SOURCE_BRANCH: ${{ steps.branch_name.outputs.SOURCE_BRANCH }}
-          SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
-          TARGET_NAME: ${{ steps.branch_name.outputs.TARGET_NAME }}
-        run: strip src/target/${TARGET_NAME}/release/dclia && zip -j src/target/${TARGET_NAME}/release/dcli_${TARGET_NAME}_$SOURCE_TAG.zip src/target/${TARGET_NAME}/release/dclia && ls -l src/target/${TARGET_NAME}/release/ && ls -l src/target/${TARGET_NAME}/release/
-        
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            src/target/${{ steps.branch_name.outputs.TARGET_NAME }}/release/ghatest_${{ steps.branch_name.outputs.TARGET_NAME }}_${{ steps.branch_name.outputs.SOURCE_TAG }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
   build-mac-x86:
     runs-on: macos-10.15
 
@@ -70,6 +26,8 @@ jobs:
           target: ${{ steps.branch_name.outputs.TARGET_NAME }}
           override: true
       - uses: actions-rs/cargo@v1
+        env:
+          DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
         with:
           use-cross: true
           command: build
