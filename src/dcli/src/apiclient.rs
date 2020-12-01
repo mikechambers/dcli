@@ -48,7 +48,11 @@ impl ApiClient {
             .header("X-API-Key", DESTINY_API_KEY)
             .send()
             .await {
-                Ok(e) => e,
+                Ok(e) => {
+                    println!("ApiClient.call response {:#?}", e);
+                    println!("ApiClient.call response {:#?}", e.text().await?);
+                    return Err(Error::ParameterParseFailure);
+                },
                 Err(e) => {
                     println!("ApiClient.call Error {:#?}", e);
                     return Err(Error::from(e));
