@@ -38,7 +38,7 @@ jobs:
           SOURCE_BRANCH: ${{ steps.branch_name.outputs.SOURCE_BRANCH }}
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.branch_name.outputs.TARGET_NAME }}
-        run: strip src/target/${TARGET_NAME}/release/dclia && zip -j src/target/${TARGET_NAME}/release/dcli_${TARGET_NAME}_$SOURCE_TAG.zip src/target/${TARGET_NAME}/release/dclia && ls -l src/target/${TARGET_NAME}/release/ && ls -l src/target/${TARGET_NAME}/release/ && ls -l src/target/${TARGET_NAME}/release/
+        run: ls -l src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia && zip -j src/target/${TARGET_NAME}/release/dcli_${TARGET_NAME}_$SOURCE_TAG.zip src/target/${TARGET_NAME}/release/dclia
         
       - name: Release
         uses: softprops/action-gh-release@v1
