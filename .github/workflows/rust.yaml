@@ -16,7 +16,7 @@ jobs:
       - name: Build and Test
         uses: stevenleadbeater/rust-musl-builder@master
         with:
-          cmd: cargo build --manifest-path=src/Cargo.toml --release --target ${{ steps.settings.outputs.TARGET_NAME }}
+          cmd: rustup update && cargo build --manifest-path=src/Cargo.toml --release --target ${{ steps.settings.outputs.TARGET_NAME }}
 
   build-linux-x86_64:
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.settings.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.settings.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l target/${TARGET_NAME}/release/ && strip target/${TARGET_NAME}/release/dclia.exe
+        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l target/ && ls -l target/${TARGET_NAME}/release/ && strip target/${TARGET_NAME}/release/dclia.exe
         shell: bash
       - name: Zip
         run: Compress-Archive -Path target\${{ steps.settings.outputs.TARGET_NAME }}\release\dclia.exe -DestinationPath dcli_${{ steps.settings.outputs.TARGET_NAME }}_${{ steps.settings.outputs.SOURCE_TAG }}.zip -CompressionLevel Optimal
