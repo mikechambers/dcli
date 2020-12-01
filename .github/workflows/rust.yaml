@@ -6,6 +6,7 @@ jobs:
 
   build-linux-musl:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
       - name: Step Settings
         id: settings
@@ -21,7 +22,7 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.settings.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.settings.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis && zip -j README.md LICENSE.md src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis
+        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/${TARGET_NAME}/ && strip src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis && zip -j README.md LICENSE.md src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis
         
       - name: Release
         uses: softprops/action-gh-release@v1
