@@ -45,7 +45,7 @@ jobs:
           command: build
           args: --manifest-path=src/Cargo.toml
 
-build-windows-msvc:
+  build-windows-msvc:
     runs-on: windows-latest
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
