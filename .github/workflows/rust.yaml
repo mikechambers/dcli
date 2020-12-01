@@ -91,6 +91,7 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.settings.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.settings.outputs.TARGET_NAME }}
+          RUSTFLAGS: '-C target-feature=+crt-static'
         run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/ && ls -l src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia.exe src/target/${TARGET_NAME}/release/dclic.exe src/target/${TARGET_NAME}/release/dclics.exe src/target/${TARGET_NAME}/release/dclim.exe src/target/${TARGET_NAME}/release/dclims.exe src/target/${TARGET_NAME}/release/dclis.exe
         shell: bash
       - name: Zip
