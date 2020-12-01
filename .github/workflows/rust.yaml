@@ -22,7 +22,7 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.settings.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.settings.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/${TARGET_NAME}/ && chmod 777 src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis && zip -j README.md LICENSE.md src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis
+        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip dclia
         
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -135,7 +135,7 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.settings.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.settings.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis && zip -j README.md LICENSE.md src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis
+        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip README.md LICENSE.md src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis
         
       - name: Release
         uses: softprops/action-gh-release@v1
