@@ -16,7 +16,7 @@ jobs:
       - name: Build and Test
         uses: stevenleadbeater/rust-musl-builder@master
         with:
-          args: /bin/bash -c "pwd && ls -l && rustup update && cargo build --manifest-path=src/Cargo.toml --release --target=x86_64-unknown-linux-musl"
+          args: /bin/bash -c "export DESTINY_API_KEY=${{ secrets.DESTINY_API_KEY }} && rustup update && cargo build --manifest-path=src/Cargo.toml --release --target=x86_64-unknown-linux-musl"
 
   build-linux-x86_64:
     runs-on: ubuntu-latest
