@@ -22,7 +22,7 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.settings.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.settings.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/${TARGET_NAME}/ && strip src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis && zip -j README.md LICENSE.md src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis
+        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/${TARGET_NAME}/ && chmod 777 src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis && zip -j README.md LICENSE.md src/target/${TARGET_NAME}/release/dclia src/target/${TARGET_NAME}/release/dclic src/target/${TARGET_NAME}/release/dclics src/target/${TARGET_NAME}/release/dclim src/target/${TARGET_NAME}/release/dclims src/target/${TARGET_NAME}/release/dclis
         
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -92,7 +92,7 @@ jobs:
           SOURCE_TAG: ${{ steps.settings.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.settings.outputs.TARGET_NAME }}
           RUSTFLAGS: '-C target-feature=+crt-static'
-        run: echo SOURCE_TAG ${SOURCE_TAG} && ls -l src/target/ && ls -l src/target/${TARGET_NAME}/release/ && strip src/target/${TARGET_NAME}/release/dclia.exe src/target/${TARGET_NAME}/release/dclic.exe src/target/${TARGET_NAME}/release/dclics.exe src/target/${TARGET_NAME}/release/dclim.exe src/target/${TARGET_NAME}/release/dclims.exe src/target/${TARGET_NAME}/release/dclis.exe
+        run: echo SOURCE_TAG ${SOURCE_TAG} &&
         shell: bash
       - name: Zip
         run: Compress-Archive -Path README.md, LICENSE.md, src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclia.exe, src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclic.exe, src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclics.exe, src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclim.exe, src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclims.exe, src/target/${{ steps.settings.outputs.TARGET_NAME }}/release/dclis.exe -DestinationPath dcli_${{ steps.settings.outputs.TARGET_NAME }}_${{ steps.settings.outputs.SOURCE_TAG }}.zip -CompressionLevel Optimal
