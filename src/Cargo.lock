@@ -313,62 +313,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dclic"
-version = "0.1.0"
-dependencies = [
- "dcli",
- "structopt",
- "tokio",
-]
-
-[[package]]
-name = "dclics"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "dcli",
- "structopt",
- "tokio",
-]
-
-[[package]]
-name = "dclim"
-version = "0.1.0"
-dependencies = [
- "dcli",
- "reqwest",
- "serde",
- "serde_derive",
- "serde_json",
- "structopt",
- "tokio",
- "zip",
-]
-
-[[package]]
-name = "dclims"
-version = "0.1.0"
-dependencies = [
- "dcli",
- "structopt",
- "tokio",
-]
-
-[[package]]
-name = "dclis"
-version = "0.1.0"
-dependencies = [
- "dcli",
- "percent-encoding",
- "reqwest",
- "serde",
- "serde_derive",
- "serde_json",
- "structopt",
- "tokio",
-]
-
-[[package]]
 name = "digest"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
