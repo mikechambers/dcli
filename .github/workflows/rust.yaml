@@ -18,6 +18,7 @@ jobs:
           echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
           echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
           echo ::set-output name=TARGET_NAME::x86_64-unknown-linux-musl
+          && musl-gcc
 
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
