@@ -21,7 +21,7 @@ jobs:
 
       - uses: actions/checkout@v2
       - name: Build static
-        uses:  stevenleadbeater/rust-musl-builder@master
+        uses: juankaram/rust-musl-action@master
         with:
           args: /bin/bash -c "cargo build --manifest-path=src/Cargo.toml --release --target=${{ steps.branch_name.outputs.TARGET_NAME }}
       - name: Build
