@@ -22,10 +22,10 @@
 
 mod memberidsearch;
 
-use dcli::platform::Platform;
-use dcli::utils::{print_error, print_verbose, TSV_EOL, TSV_DELIM, EXIT_FAILURE};
-use memberidsearch::MemberIdSearch;
 use dcli::output::Output;
+use dcli::platform::Platform;
+use dcli::utils::{print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL};
+use memberidsearch::MemberIdSearch;
 use memberidsearch::Membership;
 
 use structopt::StructOpt;
@@ -43,15 +43,15 @@ fn is_valid_steam_id(steam_id: &str) -> bool {
 #[derive(StructOpt)]
 /// Command line tool for retrieving primary Destiny 2 member ids.
 ///
-/// Retrieves the primary Destiny 2 membershipId and platform for specified 
-/// username or steam 64 id and platform. That may be a membershipId on a platform 
-/// different that the one specified, depending on the cross save status of the 
-/// account. It will return the primary membershipId that all data will be 
+/// Retrieves the primary Destiny 2 membershipId and platform for specified
+/// username or steam 64 id and platform. That may be a membershipId on a platform
+/// different that the one specified, depending on the cross save status of the
+/// account. It will return the primary membershipId that all data will be
 /// associate with.
-/// 
+///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
-/// 
+///
 /// Released under an MIT License.
 /// More info at: https://github.com/mikechambers/dcli
 struct Opt {
@@ -67,7 +67,6 @@ struct Opt {
     /// User name (for Xbox, Playstation or Stadia) or steam 64 id for Steam / pc :
     /// 00000000000000000 (17 digit ID) for steam.
     id: String,
-
 
     ///Print out additional information for the API call
     #[structopt(short = "v", long = "verbose")]
@@ -128,11 +127,11 @@ async fn main() {
                     println!("Member not found");
                     return;
                 }
-            },
+            }
             None => {
                 println!("Member not found");
                 return;
-            },
+            }
         };
     }
 
@@ -144,39 +143,40 @@ async fn main() {
     match opt.output {
         Output::Default => {
             print_default(&membership, name);
-        },
+        }
         Output::Tsv => {
             print_tsv(&membership, name);
-        },
+        }
     }
-    
 }
 
-
-fn print_tsv(member:&Membership, name:Option<&String>) {
-
+fn print_tsv(member: &Membership, name: Option<&String>) {
     let default = &"".to_string();
-    let n = name.unwrap_or_else(||default);
+    let n = name.unwrap_or_else(|| default);
 
-    print!("{d}{delim}{i}{delim}{p}{delim}{pi}{eol}",
-    d=n,
-    i=member.id,
-    p=member.platform,
-    pi=member.platform.to_id(),
-    delim=TSV_DELIM,
-    eol=TSV_EOL,
+    print!(
+        "{d}{delim}{i}{delim}{p}{delim}{pi}{eol}",
+        d = n,
+        i = member.id,
+        p = member.platform,
+        pi = member.platform.to_id(),
+        delim = TSV_DELIM,
+        eol = TSV_EOL,
     );
 }
 
-
-fn print_default(member:&Membership, name:Option<&String>) {
-
+fn print_default(member: &Membership, name: Option<&String>) {
     let default = &"".to_string();
-    let n = name.unwrap_or_else(||default);
+    let n = name.unwrap_or_else(|| default);
 
     let col_w = 15;
-    println!("{:<0col_w$}{}", "Display Name", n, col_w=col_w);
-    println!("{:<0col_w$}{}", "id", member.id, col_w=col_w);
-    println!("{:<0col_w$}{}", "Platform", member.platform, col_w=col_w);
-    println!("{:<0col_w$}{}", "Platform Id", member.platform.to_id(), col_w=col_w);
+    println!("{:<0col_w$}{}", "Display Name", n, col_w = col_w);
+    println!("{:<0col_w$}{}", "id", member.id, col_w = col_w);
+    println!("{:<0col_w$}{}", "Platform", member.platform, col_w = col_w);
+    println!(
+        "{:<0col_w$}{}",
+        "Platform Id",
+        member.platform.to_id(),
+        col_w = col_w
+    );
 }

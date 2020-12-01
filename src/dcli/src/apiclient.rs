@@ -43,11 +43,17 @@ impl ApiClient {
 
         let client = reqwest::Client::new();
 
-        let response = client
+        let response = match client
             .get(url)
             .header("X-API-Key", DESTINY_API_KEY)
             .send()
-            .await?; //this either returns a reqwest::Response for an Error which is returned
+            .await {
+                Ok(e) => e,
+                Err(e) => {
+                    println!("ApiClient.call Error {:#?}", e);
+                    return Err(Error::from(e));
+                }
+            }; //this either returns a reqwest::Response for an Error which is returned
 
         Ok(response)
     }
@@ -56,7 +62,21 @@ impl ApiClient {
         &self,
         url: &str,
     ) -> Result<T, Error> {
-        let r = self.call(url).await?.json::<T>().await?;
+        let r1 = match self.call(url).await {
+                Ok(e) => e,
+                Err(e) => {
+                    println!("ApiClient.call_and_parse JSON Parse Error {:#?}", e);
+                    return Err(Error::from(e));
+                },
+        };
+        
+       let r =  match r1.json::<T>().await {
+            Ok(e) => e,
+            Err(e) => {
+                println!("ApiClient.call_and_parse JSON Parse Error {:#?}", e);
+                return Err(Error::from(e));
+            },
+        };
 
         check_destiny_response_status(r.get_status())?;
 
