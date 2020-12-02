@@ -33,33 +33,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-linux-x86_64:
-    runs-on: ubuntu-latest
-
-    steps:
-      #set some environement variables that we can use through the rest of our
-      #action
-      - name: Setup Config
-        id: config
-        run: |
-          echo ::set-output name=SOURCE_TAG::${GITHUB_REF/refs\/tags\//}
-          echo ::set-output name=TARGET_NAME::x86_64-unknown-linux-gnu
-
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ steps.config.outputs.TARGET_NAME }}
-          override: true
-      - name: Build
-        uses: actions-rs/cargo@v1
-        env:
-          DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
-        with:
-          use-cross: true
-          command: build
-          args: --manifest-path=src/Cargo.toml
-
   build-windows-msvc:
     runs-on: windows-latest
     steps:
@@ -96,6 +69,7 @@ jobs:
         run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia.exe . && strip dclia.exe && cp src/target/${TARGET_NAME}/release/dclic.exe . && strip dclic.exe  && cp src/target/${TARGET_NAME}/release/dclics.exe . && strip dclics.exe && cp src/target/${TARGET_NAME}/release/dclims.exe . && strip dclims.exe && cp src/target/${TARGET_NAME}/release/dclim.exe . && strip dclim.exe && cp src/target/${TARGET_NAME}/release/dclis.exe . && strip dclis.exe
         shell: bash
       - name: Package
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         run: Compress-Archive -Path README.md, LICENSE.md, dclia.exe, dclic.exe, dclics.exe, dclim.exe, dclims.exe, dclis.exe -DestinationPath dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip -CompressionLevel Optimal
       - name: Release
         uses: softprops/action-gh-release@v1
