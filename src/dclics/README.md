@@ -137,7 +137,8 @@ member_id       4611686018429783292
 platform        Xbox
 platform_id     1
 character_id    0
-period_dt       2013-12-08 18:37:51.596248 UTC
+period_dt       2013-12-11 23:12:29.889142 UTC
+period_human    for all time
 mode    Competitive
 mode_id 69
 activities_entered      994
@@ -148,8 +149,10 @@ kills   9697
 average_kill_distance   14.373105
 total_kill_distance     139376
 seconds_played  646392
+human_time_played       7 days 11 hours 33 minutes 12 seconds
 deaths  7982
 average_lifespan        80.97106
+human_average_lifespan  1 minute 20 seconds
 total_lifespan  646311
 opponents_defeated      12745
 efficiency      1.5967176
@@ -159,6 +162,8 @@ suicides        70
 precision_kills 1784
 best_single_game_kills  31
 ```
+
+best_single_game_kills data is only available for '--period alltime` and will return -1 for other time periods..
 
 ## Questions, Feature Requests, Feedback
 
@@ -173,10 +178,10 @@ This utility is written and compiled in [Rust](https://www.rust-lang.org/).
 
 When compiling you must have an environment variable named `DESTINY_API_KEY` which contains your [Bungie API key](https://www.bungie.net/en/Application).
 
-To compile, switch to the base directory for the program, and run:
+To compile, switch to the `src/` directory and run:
 
 ```
 cargo build --release
 ```
 
-which will place the build in *target/release*
+which will place the compiled tools in *src/target/release*
