@@ -234,14 +234,14 @@ struct Opt {
 async fn retrieve_all_time_stats(
     member_id: &str,
     character_id: &str,
-    platform: Platform,
-    mode: CrucibleMode,
+    platform: &Platform,
+    mode: &CrucibleMode,
     verbose: bool,
 ) -> Result<Option<CrucibleStats>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let data: PvpStatsData = match client
-        .retrieve_alltime_crucible_stats(&member_id, &character_id, platform, mode)
+        .retrieve_alltime_crucible_stats(&member_id, &character_id, &platform, &mode)
         .await?
     {
         Some(e) => e,
@@ -258,9 +258,9 @@ async fn retrieve_all_time_stats(
 async fn retrieve_aggregate_crucible_stats(
     member_id: &str,
     character_id: &str,
-    platform: Platform,
-    mode: CrucibleMode,
-    period: TimePeriod,
+    platform: &Platform,
+    mode: &CrucibleMode,
+    period: &TimePeriod,
     verbose: bool,
 ) -> Result<Option<CrucibleStats>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
@@ -268,7 +268,7 @@ async fn retrieve_aggregate_crucible_stats(
     let start_date = period.get_date_time();
 
     let data: Vec<DailyPvPStatsValuesData> = match client
-        .retrieve_aggregate_crucible_stats(&member_id, &character_id, platform, mode, start_date)
+        .retrieve_aggregate_crucible_stats(&member_id, &character_id, &platform, &mode, start_date)
         .await?
     {
         Some(e) => e,
@@ -300,8 +300,8 @@ async fn main() {
             match retrieve_all_time_stats(
                 &opt.member_id,
                 &character_id,
-                opt.platform,
-                opt.mode,
+                &opt.platform,
+                &opt.mode,
                 opt.verbose,
             )
             .await
@@ -323,9 +323,9 @@ async fn main() {
             match retrieve_aggregate_crucible_stats(
                 &opt.member_id,
                 &character_id,
-                opt.platform,
-                opt.mode,
-                TimePeriod::Reset,
+                &opt.platform,
+                &opt.mode,
+                &opt.period,
                 opt.verbose,
             )
             .await

@@ -159,7 +159,7 @@ impl ApiInterface {
     }
     */
 
-    pub async fn retrieve_alltime_crucible_stats(&self, member_id:&str, character_id:&str, platform:Platform, mode:CrucibleMode) -> Result<Option<PvpStatsData>, Error> {
+    pub async fn retrieve_alltime_crucible_stats(&self, member_id:&str, character_id:&str, platform:&Platform, mode:&CrucibleMode) -> Result<Option<PvpStatsData>, Error> {
         //"/Platform/Destiny2/1/Account/$memberId/Character/$characterId/Stats/?modes=$modesString$dateRangeString&periodType=$periodTypeId&groups=1,2,3";
         let url =
         format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=2&groups=1,2,3",
@@ -188,7 +188,7 @@ impl ApiInterface {
         Ok(data)
     }
 
-    pub async fn retrieve_aggregate_crucible_stats(&self, member_id:&str, character_id:&str, platform:Platform, mode:CrucibleMode, start_time:DateTime<Utc>) -> Result<Option<Vec<DailyPvPStatsValuesData>>, Error> {
+    pub async fn retrieve_aggregate_crucible_stats(&self, member_id:&str, character_id:&str, platform:&Platform, mode:&CrucibleMode, start_time:DateTime<Utc>) -> Result<Option<Vec<DailyPvPStatsValuesData>>, Error> {
 
         let day_start = start_time.to_rfc3339();
         let day_end = Utc::now().to_rfc3339();
