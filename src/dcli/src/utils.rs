@@ -22,6 +22,9 @@
 
 use chrono::{DateTime, Utc, Duration, TimeZone, Datelike, Timelike};
 use crate::error::Error;
+use std::env;
+use std::path::Path;
+use std::ffi::OsStr;
 
 //use chrono::prelude::*;
 
@@ -32,6 +35,8 @@ pub const WEEK_IN_SECONDS: i64 = 604800;
 
 pub const TSV_EOL:&str = "\n";
 pub const TSV_DELIM:&str = "\t";
+
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 pub fn get_last_reset() -> DateTime<Utc> {
     //get a hardcoded past reset date / time (17:00 UTC every tuesday)
@@ -53,6 +58,16 @@ pub fn print_verbose(msg: &str, verbose:bool) {
 }
 
 pub fn print_error(msg: &str, error:Error) {
+
+    let app_name = env::current_exe().ok()
+    .as_ref()
+    .map(Path::new)
+    .and_then(Path::file_name)
+    .and_then(OsStr::to_str)
+    .map(String::from).unwrap_or_else(|| "".to_string());
+
+    eprintln!("{} : v{}", app_name, VERSION);
+
     eprintln!("{}", msg);
     eprintln!("{}", error);
 
