@@ -73,12 +73,13 @@ Playing Deep Stone Crypt Raid on Castalia Macula, Europa
 #### Check for current activity with tab seperated output:
 
 ```
-dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox --out tsv
+dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox --output tsv
 ```
 
 outputs:
 
 ```
+in_activity     true
 activity_type_name      Strike
 activity_name   The Inverted Spire
 place_name      Nessus

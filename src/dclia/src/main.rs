@@ -217,24 +217,25 @@ async fn main() {
             print_default(mode, &activity_type_name, &activity_name, &place_name, &destination_name, &description);
         },
         Output::Tsv => {
-            print_tsv(&activity_type_name, &activity_name, &place_name, &destination_name, &description);
+            print_tsv(&activity_type_name, &activity_name, &place_name, &destination_name, &description, true);
         },
     };
 }
 
 fn print_tsv_orbit() {
-    print_tsv("", "", "Orbit", "", "");
+    print_tsv("", "", "Orbit", "", "", true);
 }
 
 fn print_tsv_no_activity() {
-    print_tsv("", "", "", "", "");
+    print_tsv("", "", "", "", "", false);
 }
 
-fn print_tsv(activity_type_name:&str, activity_name:&str, place_name:&str, destination_name:&str, description:&str) {
+fn print_tsv(activity_type_name:&str, activity_name:&str, place_name:&str, destination_name:&str, description:&str, in_activity:bool) {
     //activity_type_name, activity_name, place_name, destination_name, description
 
     let mut name_values: Vec<(&str, String)> = Vec::new();
 
+    name_values.push(("in_activity", in_activity.to_string()));
     name_values.push(("activity_type_name", activity_type_name.to_string()));
     name_values.push(("activity_name", activity_name.to_string()));
     name_values.push(("place_name", place_name.to_string()));
