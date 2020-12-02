@@ -102,21 +102,20 @@ async fn main() {
 
     let member_search = MemberIdSearch::new(opt.verbose);
 
-    let membership = member_search
+    let membership = match member_search
         .retrieve_member_id(&opt.id, opt.platform)
-        .await;
-
-    let membership = match membership {
-        Some(e) => match e {
-            Ok(e) => e,
-            Err(e) => {
-                print_error("Error retrieving ID from API.", e);
-                std::process::exit(EXIT_FAILURE);
+        .await
+    {
+        Ok(e) => match e {
+            Some(e) => e,
+            None => {
+                println!("Member not found");
+                return;
             }
         },
-        None => {
-            println!("Member not found");
-            return;
+        Err(e) => {
+            print_error("Error retrieving ID from API.", e);
+            std::process::exit(EXIT_FAILURE);
         }
     };
 
@@ -135,24 +134,20 @@ async fn main() {
         };
     }
 
-    let mut name = None;
-    if membership.platform != Platform::Steam {
-        name = Some(&opt.id);
-    }
 
     match opt.output {
         Output::Default => {
-            print_default(&membership, name);
+            print_default(&membership);
         }
         Output::Tsv => {
-            print_tsv(&membership, name);
+            print_tsv(&membership);
         }
     }
 }
 
-fn print_tsv(member: &Membership, name: Option<&String>) {
+fn print_tsv(member: &Membership) {
     let default = &"".to_string();
-    let n = name.unwrap_or_else(|| default);
+    let n = member.display_name.as_ref().unwrap_or_else(|| default);
 
     print!(
         "{d}{delim}{i}{delim}{p}{delim}{pi}{eol}",
@@ -165,9 +160,9 @@ fn print_tsv(member: &Membership, name: Option<&String>) {
     );
 }
 
-fn print_default(member: &Membership, name: Option<&String>) {
+fn print_default(member: &Membership) {
     let default = &"".to_string();
-    let n = name.unwrap_or_else(|| default);
+    let n = member.display_name.as_ref().unwrap_or_else(|| default);
 
     let col_w = 15;
     println!("{:<0col_w$}{}", "Display Name", n, col_w = col_w);

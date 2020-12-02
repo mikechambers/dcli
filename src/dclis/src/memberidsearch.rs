@@ -42,23 +42,20 @@ impl MemberIdSearch {
     pub async fn retrieve_member_id_from_steam(
         &self,
         steam_id: &str,
-    ) -> Option<Result<Membership, Error>> {
+    ) -> Result<Option<Membership>, Error> {
         let url = format!(
             "https://www.bungie.net/Platform/User/GetMembershipFromHardLinkedCredential/12/{steam_id}/",
             steam_id = utf8_percent_encode(&steam_id, NON_ALPHANUMERIC),
         );
 
-        let resp = match self
+        let member = match self
             .client
             .call_and_parse::<DestinyResponseSteam>(&url)
-            .await {
-                Ok(e) => e,
-                Err(e) => return Some(Err(e)),
-            };
-
-        let member: DestinyResponseMember = match resp.response {
+            .await?
+            .response
+        {
             Some(e) => e,
-            None => return Some(Err(Error::ApiResponseMissing)), //we should never get here as this will be caught earlier
+            None => return Err(Error::ApiResponseMissing), //we should never get here as this will be caught earlier
         };
 
         let m = Membership {
@@ -67,14 +64,14 @@ impl MemberIdSearch {
             display_name: None,
         };
 
-        Some(Ok(m))
+        Ok(Some(m))
     }
 
     pub async fn retrieve_member_id(
         &self,
         id: &str,
         platform: Platform,
-    ) -> Option<Result<Membership, Error>> {
+    ) -> Result<Option<Membership>, Error> {
         if platform == Platform::Steam {
             return self.retrieve_member_id_from_steam(&id).await;
         }
@@ -85,22 +82,18 @@ impl MemberIdSearch {
             id = utf8_percent_encode(&id, NON_ALPHANUMERIC),
         );
 
-        let resp = match self
+        let mut results: Vec<DestinyResponseMember> = match self
             .client
             .call_and_parse::<DestinySearchResponse>(&url)
-            .await
+            .await?
+            .response
         {
-            Ok(e) => e,
-            Err(e) => return Some(Err(e)),
-        };
-
-        let mut results: Vec<DestinyResponseMember> = match resp.response {
             Some(e) => e,
-            None => return Some(Err(Error::ApiResponseMissing)), //we should never get here as this will be caught earlier
+            None => return Err(Error::ApiResponseMissing), //we should never get here as this will be caught earlier
         };
 
         if results.is_empty() {
-            return None;
+            return Ok(None);
         }
 
         let r_member: &DestinyResponseMember = &results[0];
@@ -111,7 +104,7 @@ impl MemberIdSearch {
             display_name: results[0].display_name.take(), //this is probably not the right way to do this
         };
 
-        Some(Ok(m))
+        Ok(Some(m))
     }
 }
 
