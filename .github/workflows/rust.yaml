@@ -135,7 +135,8 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.settings.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.settings.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dclics . && strip dclics && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip README.md LICENSE.md dclia dclic dclics dclims dclim dclis
+          DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
+        run: echo DESTINY_API_KEY ${DESTINY_API_KEY} echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dclics . && strip dclics && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip README.md LICENSE.md dclia dclic dclics dclims dclim dclis
         
       - name: Release
         uses: softprops/action-gh-release@v1
