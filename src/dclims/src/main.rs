@@ -29,6 +29,7 @@ use dcli::manifestinterface::{ManifestInterface, FindResult};
 use dcli::output::Output;
 
 #[derive(StructOpt, Debug)]
+#[structopt(verbatim_doc_comment)]
 /// Command line tool for searching the Destiny 2 manifest by hash ids.
 ///
 /// Takes a hash / id from the Destiny 2 API, and returns data from the
@@ -37,8 +38,13 @@ use dcli::output::Output;
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
 /// 
+/// Get support, request features or just chat on the dcli Discord server:
+/// https://discord.gg/2Y8bV2Mq3p
+/// 
+/// Get the latest version, download the source and log issues at:
+/// https://github.com/mikechambers/dcli
+/// 
 /// Released under an MIT License.
-/// More info at: https://github.com/mikechambers/dcli
 struct Opt {
     ///Local path for Destiny 2 manifest database file.
     #[structopt(short = "m", long = "manifest-path", parse(from_os_str))]

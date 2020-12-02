@@ -41,6 +41,7 @@ fn is_valid_steam_id(steam_id: &str) -> bool {
 }
 
 #[derive(StructOpt, Debug)]
+#[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving primary Destiny 2 member ids.
 ///
 /// Retrieves the primary Destiny 2 membershipId and platform for specified
@@ -48,12 +49,17 @@ fn is_valid_steam_id(steam_id: &str) -> bool {
 /// different that the one specified, depending on the cross save status of the
 /// account. It will return the primary membershipId that all data will be
 /// associate with.
-///
-/// Created by Mike Chambers.
+/// 
+/// Created by Mike Chambers.  
 /// https://www.mikechambers.com
-///
+/// 
+/// Get support, request features or just chat on the dcli Discord server:  
+/// https://discord.gg/2Y8bV2Mq3p
+/// 
+/// Get the latest version, download the source and log issues at:  
+/// https://github.com/mikechambers/dcli
+/// 
 /// Released under an MIT License.
-/// More info at: https://github.com/mikechambers/dcli
 struct Opt {
     /// Platform for specified id
     ///

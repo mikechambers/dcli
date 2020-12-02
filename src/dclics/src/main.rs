@@ -167,6 +167,7 @@ fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
 }
 
 #[derive(StructOpt, Debug)]
+#[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving current Destiny 2 Crucible activity stats.
 ///
 /// Enables control of which stats are retrieved via game mode, time period and
@@ -175,9 +176,13 @@ fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
 /// 
+/// Get support, request features or just chat on the dcli Discord server:
+/// https://discord.gg/2Y8bV2Mq3p
+/// 
+/// Get the latest version, download the source and log issues at:
+/// https://github.com/mikechambers/dcli
+/// 
 /// Released under an MIT License.
-/// More info at: https://github.com/mikechambers/dcli
-#[structopt(verbatim_doc_comment)]
 struct Opt {
     /// Destiny 2 API member id
     ///

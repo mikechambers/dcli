@@ -41,13 +41,19 @@ use std::path::PathBuf;
 const ORBIT_PLACE_HASH: u32 = 2961497387;
 
 #[derive(StructOpt, Debug)]
+#[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving current Destiny 2 activity status for player.
 /// 
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
 /// 
+/// Get support, request features or just chat on the dcli Discord server:
+/// https://discord.gg/2Y8bV2Mq3p
+/// 
+/// Get the latest version, download the source and log issues at:
+/// https://github.com/mikechambers/dcli
+/// 
 /// Released under an MIT License.
-/// More info at: https://github.com/mikechambers/dcli
 struct Opt {
     /// Platform for specified id
     ///

@@ -125,6 +125,7 @@ async fn download_manifest(url: &str, path: &PathBuf, print_url: bool) -> Result
 }
 
 #[derive(StructOpt, Debug)]
+#[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving and managing the Destiny 2 manifest database.
 ///
 /// Manifest will be stored in the specified local directory, along with meta-data
@@ -134,8 +135,13 @@ async fn download_manifest(url: &str, path: &PathBuf, print_url: bool) -> Result
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
 /// 
+/// Get support, request features or just chat on the dcli Discord server:
+/// https://discord.gg/2Y8bV2Mq3p
+/// 
+/// Get the latest version, download the source and log issues at:
+/// https://github.com/mikechambers/dcli
+/// 
 /// Released under an MIT License.
-/// More info at: https://github.com/mikechambers/dcli
 struct Opt {
     ///Directory where the manifest and meta-data will be stored.
     #[structopt(short = "m", long = "manifest-dir", parse(from_os_str))]
