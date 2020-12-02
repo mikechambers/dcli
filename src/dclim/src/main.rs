@@ -44,7 +44,12 @@ async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> 
 
     let response = client.call_and_parse::<ManifestResponse>(url).await?;
 
-    let m_info: ManifestInfo = ManifestInfo::from_manifest(&response.manifest);
+    let manifest = match &response.response {
+        Some(e) => e,
+        None => return Err(Error::ApiResponseMissing), //we should never get here as this will be caught earlier
+    };
+
+    let m_info: ManifestInfo = ManifestInfo::from_manifest(&manifest);
 
     Ok(m_info)
 }

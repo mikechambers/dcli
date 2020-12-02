@@ -28,7 +28,7 @@ use crate::apiutils::prepend_base_url;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestResponse {
     #[serde(rename = "Response")]
-    pub manifest: ManifestData,
+    pub response: Option<ManifestData>,
 
     #[serde(flatten)]
     pub status: DestinyResponseStatus,
