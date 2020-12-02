@@ -4,6 +4,8 @@ dcli is a collection of utilities that provide a command line interface (CLI) fo
 
 This is an early alpha release, and there will probably be a lot of changes / refactoring. If you run into any issues, have any ideas, or just think something can be done better, please post in [issues](https://github.com/mikechambers/dcli/issues).
 
+![Build Status](https://github.com/mikechambers/dcli/workflows/dcli/badge.svg)
+
 ## Utilities
 * [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) Tool for retrieving primary platform and membership ids for Destiny 2 players.
 * [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) Tool for managing and syncing the remote Destiny 2 API manifest database.
