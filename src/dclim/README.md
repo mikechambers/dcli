@@ -90,6 +90,12 @@ version 89360.20.11.18.2249-6
 
 This shows that the local path for the manifest, and indicates that it was just updated.
 
+## Questions, Feature Requests, Feedback
+
+If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
+
+You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
+
 
 ## Compiling
 

@@ -94,9 +94,11 @@ outputs:
 mesh    4611686018429783292     Xbox    1
 ```
 
+## Questions, Feature Requests, Feedback
 
+If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
 
-#### 
+You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
 
 ## Compiling
 

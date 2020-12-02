@@ -79,6 +79,11 @@ Warlock 2305843009264966986
 Titan   2305843009264966984
 Hunter  2305843009264966985     LAST ACTIVE
 ```
+## Questions, Feature Requests, Feedback
+
+If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
+
+You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
 
 
 ## Compiling

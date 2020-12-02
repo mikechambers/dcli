@@ -71,7 +71,11 @@ outputs:
 ```
 0       Luna's Howl     "Guardians never die. But we don't forget those who do." —Lord Shaxx    true    https://www.bungie.net/common/destiny2_content/icons/f59ce6481de388222f6ed740ed829fb1.jpg
 ```
+## Questions, Feature Requests, Feedback
 
+If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
+
+You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
 
 ## Compiling
 

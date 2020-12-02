@@ -86,6 +86,11 @@ destination_name        Arcadian Valley
 description     End the Red Legion expedition that's ripped open the planet's surface.
 ```
 
+## Questions, Feature Requests, Feedback
+
+If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
+
+You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
 
 ## Compiling
 

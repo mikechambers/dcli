@@ -19,6 +19,12 @@ You can download the latest binaries for Windows, Linux and x86_64 Mac from the 
 * [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) Tool for retrieving Destiny 2 Crucible activity stats.
 * [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) Library used across all of the dcli apps.
 
+## Questions, Feature Requests, Feedback
+
+If you have any questions, feature requests, need help, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
+
+You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
+
 ## Compiling
 
 Tools are written and compiled in [Rust](https://www.rust-lang.org/).
