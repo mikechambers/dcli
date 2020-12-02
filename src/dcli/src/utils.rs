@@ -55,9 +55,22 @@ pub fn print_verbose(msg: &str, verbose:bool) {
 pub fn print_error(msg: &str, error:Error) {
     eprintln!("{}", msg);
     eprintln!("{}", error);
+
+    match error {
+        Error::InvalidParameters => {
+            eprintln!("This can occur if --platform is set incorrectly.");
+        },
+        Error::ParameterParseFailure => {
+            eprintln!("This can occur if --member-id or --character-id were entered incorrectly.");
+        },
+        _ => {},
+    }
+
     eprintln!();
-    eprintln!("If you think you have hit a bug, please log it at:");
-    eprintln!("https://github.com/mikechambers/dcli/issues");
+    eprintln!("If you think you have hit a bug and would like to report it (or would just like some help):");
+    eprintln!("    1. Run command with '--verbose' flag.");
+    eprintln!("    2. Copy output, and log a bug at: ");
+    eprintln!("       https://github.com/mikechambers/dcli/issues");
 }
 
 pub fn calculate_efficiency(kills:f32, deaths:f32, assists:f32) -> f32 {

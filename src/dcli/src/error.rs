@@ -29,7 +29,7 @@
 
 use std::fmt::{Display, Formatter, Result};
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Error {
     ApiRequest { description: String },
     ApiStatus { description: String },
@@ -37,18 +37,13 @@ pub enum Error {
 
     //when parameters are malformed in wrong format (i.e. expecting id, getting a name)
     ParameterParseFailure,
-
     //when id & platform are not correct combination
     InvalidParameters,
-
     //Api key not set correctly
     ApiKeyMissingFromRequest,
-
     ApiNotAvailableException,
-
     PrivacyException,
     Database { description: String },
-
     ApiParse { description: String },
     IoError { description: String },
     IoErrorDirIsFile { description: String },
