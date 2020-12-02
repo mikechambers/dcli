@@ -40,7 +40,7 @@ fn is_valid_steam_id(steam_id: &str) -> bool {
     parses && steam_id.chars().count() == 17
 }
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
 /// Command line tool for retrieving primary Destiny 2 member ids.
 ///
 /// Retrieves the primary Destiny 2 membershipId and platform for specified
@@ -85,6 +85,7 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
+    print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     if opt.platform == Platform::Steam && !is_valid_steam_id(&opt.id) {
         println!("Invalid steam 64 id. Must be a 17 digit Steam 64 ID.");

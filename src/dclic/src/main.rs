@@ -27,7 +27,7 @@ use dcli::error::Error;
 use dcli::platform::Platform;
 use dcli::response::character::{CharacterData};
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{print_error, repeat_str, TSV_DELIM, TSV_EOL};
+use dcli::utils::{print_error, print_verbose, repeat_str, TSV_DELIM, TSV_EOL};
 use dcli::output::Output;
 
 //todo: could move this to apiclient
@@ -43,7 +43,7 @@ async fn retrieve_characters(
     Ok(characters)
 }
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
 /// Command line tool for retrieving character information for specified member id.
 ///
 /// Retrieves character information for all characters, as well as most recently
@@ -91,6 +91,7 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
+    print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     let chars: Vec<CharacterData> =
         match retrieve_characters(opt.member_id, opt.platform, opt.verbose).await {

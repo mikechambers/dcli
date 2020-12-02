@@ -119,7 +119,7 @@ async fn download_manifest(url: &str, path: &PathBuf, print_url: bool) -> Result
     Ok(())
 }
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
 /// Command line tool for retrieving and managing the Destiny 2 manifest database.
 ///
 /// Manifest will be stored in the specified local directory, along with meta-data
@@ -163,6 +163,7 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
+    print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     let m_dir = match get_manifest_dir(&opt.manifest_dir) {
         Ok(e) => e,

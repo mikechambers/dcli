@@ -249,7 +249,7 @@ impl fmt::Display for Mode {
 }
 
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum CrucibleMode {
     AllPvP = 5,
     Control = 10,

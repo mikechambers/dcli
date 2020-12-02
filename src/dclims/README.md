@@ -17,6 +17,11 @@ FLAGS:
     -V, --version    
             Prints version information
 
+    -v, --verbose    
+            Print out additional information
+            
+            Output is printed to stderr.
+
 
 OPTIONS:
         --hash <hash>                      

@@ -66,7 +66,9 @@ impl ApiClient {
         };
 
         if self.verbose {
+            println!("---------Begin API response---------");
             println!("{}", &body);
+            println!("---------End API response---------");
         }
         
         //we split the parsing from the request so we can capture the body and

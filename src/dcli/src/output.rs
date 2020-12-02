@@ -22,7 +22,7 @@
 
 use std::str::FromStr;
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum Output {
     Tsv,
     Default,

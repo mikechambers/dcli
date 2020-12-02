@@ -24,7 +24,7 @@ use std::fmt;
 use std::str::FromStr;
 
 ///Destiny 2 Platforms
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum Platform {
     ///Xbox
     Xbox = 1,

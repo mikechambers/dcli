@@ -34,6 +34,7 @@ use dcli::cruciblestats::CrucibleStats;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{
     build_tsv, clear_scr, format_f32, human_duration, print_error, repeat_str,
+    print_verbose,
 };
 
 
@@ -165,7 +166,7 @@ fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
     println!();
 }
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
 /// Command line tool for retrieving current Destiny 2 Crucible activity stats.
 ///
 /// Enables control of which stats are retrieved via game mode, time period and
@@ -289,6 +290,7 @@ async fn retrieve_aggregate_crucible_stats(
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
+    print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     //use unwrap_or_else as it is lazily evaluated
     let character_id: String = opt.character_id.unwrap_or_else(|| "0".to_string());

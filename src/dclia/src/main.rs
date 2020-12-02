@@ -40,7 +40,7 @@ use std::path::PathBuf;
 
 const ORBIT_PLACE_HASH: u32 = 2961497387;
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
 /// Command line tool for retrieving current Destiny 2 activity status for player.
 /// 
 /// Created by Mike Chambers.
@@ -84,8 +84,8 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
+    print_verbose(&format!("{:#?}", opt), opt.verbose);
 
-    //TODO: why does this have to be mutable
     let client = ApiInterface::new(opt.verbose);
 
     let activities_data: Option<CharacterActivitiesData> = match client

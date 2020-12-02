@@ -25,7 +25,7 @@ use crate::utils::get_last_reset;
 use std::str::FromStr;
 use std::fmt;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum TimePeriod {
     Day,
     Reset,

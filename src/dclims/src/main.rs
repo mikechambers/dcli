@@ -24,11 +24,11 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 use dcli::error::Error;
-use dcli::utils::{print_error, EXIT_FAILURE, TSV_EOL, TSV_DELIM};
+use dcli::utils::{print_error, EXIT_FAILURE, TSV_EOL, TSV_DELIM, print_verbose};
 use dcli::manifestinterface::{ManifestInterface, FindResult};
 use dcli::output::Output;
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
 /// Command line tool for searching the Destiny 2 manifest by hash ids.
 ///
 /// Takes a hash / id from the Destiny 2 API, and returns data from the
@@ -64,6 +64,12 @@ struct Opt {
     /// ending in a new line character (\n).
     #[structopt(short = "o", long = "output", default_value = "default")]
     output: Output,
+
+    ///Print out additional information
+    /// 
+    ///Output is printed to stderr.
+    #[structopt(short = "v", long = "verbose")]
+    verbose: bool,
 }
 
 //TODO: can we make has and path reference?
@@ -77,6 +83,7 @@ async fn search_manifest_by_hash(hash: u32, manifest_path: PathBuf) -> Result<Ve
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
+    print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     let results:Vec<FindResult> = match search_manifest_by_hash(opt.hash, opt.manifest_path).await {
         Ok(e) => e,
