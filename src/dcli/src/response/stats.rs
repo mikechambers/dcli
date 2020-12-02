@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
+use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use serde_derive::{Deserialize, Serialize};
 use crate::apiutils::str_to_datetime;
 use crate::cruciblestats::CrucibleStats;
@@ -36,7 +36,7 @@ pub struct AllTimePvPStatsResponse {
     pub status: DestinyResponseStatus,
 }
 
-impl HasDestinyResponseStatus for AllTimePvPStatsResponse {
+impl IsDestinyAPIResponse for AllTimePvPStatsResponse {
     fn get_status(&self) -> &DestinyResponseStatus {
         &self.status
     }
@@ -163,7 +163,7 @@ pub struct DailyPvPStatsResponse {
     pub status: DestinyResponseStatus,
 }
 
-impl HasDestinyResponseStatus for DailyPvPStatsResponse {
+impl IsDestinyAPIResponse for DailyPvPStatsResponse {
     fn get_status(&self) -> &DestinyResponseStatus {
         &self.status
     }

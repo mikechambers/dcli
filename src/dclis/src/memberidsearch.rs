@@ -23,7 +23,7 @@
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
 use dcli::platform::Platform;
-use dcli::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
+use dcli::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use serde_derive::{Deserialize, Serialize};
@@ -58,7 +58,7 @@ impl MemberIdSearch {
 
         let member: DestinyResponseMember = match resp.response {
             Some(e) => e,
-            None => return None, //we should never get here as this will be caught earlier
+            None => return Some(Err(Error::ApiResponseMissing)), //we should never get here as this will be caught earlier
         };
 
         let m = Membership {
@@ -96,7 +96,7 @@ impl MemberIdSearch {
 
         let mut results: Vec<DestinyResponseMember> = match resp.response {
             Some(e) => e,
-            None => return None, //we should never get here as this will be caught earlier
+            None => return Some(Err(Error::ApiResponseMissing)), //we should never get here as this will be caught earlier
         };
 
         if results.is_empty() {
@@ -124,7 +124,7 @@ struct DestinySearchResponse {
     status: DestinyResponseStatus,
 }
 
-impl HasDestinyResponseStatus for DestinySearchResponse {
+impl IsDestinyAPIResponse for DestinySearchResponse {
     fn get_status(&self) -> &DestinyResponseStatus {
         &self.status
     }
@@ -139,7 +139,7 @@ struct DestinyResponseSteam {
     status: DestinyResponseStatus,
 }
 
-impl HasDestinyResponseStatus for DestinyResponseSteam {
+impl IsDestinyAPIResponse for DestinyResponseSteam {
     fn get_status(&self) -> &DestinyResponseStatus {
         &self.status
     }

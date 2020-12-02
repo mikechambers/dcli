@@ -21,7 +21,7 @@
 */
 
 use crate::response::character::CharacterData;
-use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
+use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::mode::Mode;
 
 use serde_derive::{Deserialize, Serialize};
@@ -39,7 +39,7 @@ pub struct GetProfileResponse {
     pub status: DestinyResponseStatus,
 }
 
-impl HasDestinyResponseStatus for GetProfileResponse {
+impl IsDestinyAPIResponse for GetProfileResponse {
     fn get_status(&self) -> &DestinyResponseStatus {
         &self.status
     }

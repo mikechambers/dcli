@@ -55,6 +55,6 @@ pub struct DestinyResponseStatus {
     pub message: String,
 }
 
-pub trait HasDestinyResponseStatus {
+pub trait IsDestinyAPIResponse {
     fn get_status(&self) -> &DestinyResponseStatus;
 }

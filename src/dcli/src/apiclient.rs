@@ -21,12 +21,14 @@
 */
 
 use crate::error::Error;
-use crate::response::drs::{check_destiny_response_status, HasDestinyResponseStatus};
+use crate::response::drs::{check_destiny_response_status, IsDestinyAPIResponse};
 use crate::utils::print_verbose;
 use reqwest::Url;
 
-//const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
-const DESTINY_API_KEY: &str = "";
+const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
+
+//this makes sure that the env variable isnt set, but empty
+static_assertions::const_assert!(DESTINY_API_KEY.len() > 0);
 
 pub struct ApiClient {
     pub verbose: bool,
@@ -53,7 +55,7 @@ impl ApiClient {
         Ok(response)
     }
 
-    pub async fn call_and_parse<T: serde::de::DeserializeOwned + HasDestinyResponseStatus>(
+    pub async fn call_and_parse<T: serde::de::DeserializeOwned + IsDestinyAPIResponse>(
         &self,
         url: &str,
     ) -> Result<T, Error> {

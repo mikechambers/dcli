@@ -33,6 +33,7 @@ use std::fmt::{Display, Formatter, Result};
 pub enum Error {
     ApiRequest { description: String },
     ApiStatus { description: String },
+    ApiResponseMissing,
 
     //when parameters are malformed in wrong format (i.e. expecting id, getting a name)
     ParameterParseFailure,
@@ -63,10 +64,10 @@ impl Display for Error {
         match self {
             Error::ApiRequest { description } => {
                 write!(f, "Error calling Destiny 2 API. {}", description)
-            }
+            },
             Error::ApiStatus { description } => {
                 write!(f, "Destiny 2 API call returned an error. {}", description)
-            }
+            },
             Error::ApiParse { description } => write!(
                 f,
                 "Error parsing results from Destiny 2 API call. {}",
@@ -74,16 +75,16 @@ impl Display for Error {
             ),
             Error::IoError { description } => {
                 write!(f, "Error working with file system. {}", description)
-            }
+            },
             Error::ZipError { description } => {
                 write!(f, "Error decompressing manifest. {}", description)
-            }
+            },
             Error::IoErrorDirIsFile { description } => {
                 write!(f, "Expected directory but found file. {}", description)
-            }
+            },
             Error::Unknown { description } => {
                 write!(f, "An unknown error occured. {}", description)
-            }
+            },
             Error::ParameterParseFailure => write!(f, "Could not parse Parameters. Make sure your inputs were correct and try again. (code 7)"),
             Error::InvalidParameters => write!(f, "Invalid input parameters. (code 18)"),
             Error::ManifestNotSet => write!(f, "Manifest was not set in Manifest Interface."),
@@ -93,7 +94,7 @@ impl Display for Error {
             ),
             Error::ApiNotAvailableException => {
                 write!(f, "The Destiny API is currently not available. (code 5)")
-            }
+            },
             Error::PrivacyException => write!(
                 f,
                 "Privacy settings for Bungie account are too restrictive. (code 5)"
@@ -107,6 +108,11 @@ impl Display for Error {
             Error::ManifestItemNotFound { description } => {
                 write!(f, "Manifest Item not found : {}", description)
             },
+            Error::ApiResponseMissing => write!(
+                f,
+                "Received response from API but no response property was present."
+            ),
+            
         }
     }
 }

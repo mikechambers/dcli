@@ -300,6 +300,7 @@ dependencies = [
  "serde_json",
  "serde_repr",
  "sqlx",
+ "static_assertions",
  "zip",
 ]
 

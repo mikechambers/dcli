@@ -22,7 +22,7 @@
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
+use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::apiutils::prepend_base_url;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -34,7 +34,7 @@ pub struct ManifestResponse {
     pub status: DestinyResponseStatus,
 }
 
-impl HasDestinyResponseStatus for ManifestResponse {
+impl IsDestinyAPIResponse for ManifestResponse {
     fn get_status(&self) -> &DestinyResponseStatus {
         &self.status
     }
