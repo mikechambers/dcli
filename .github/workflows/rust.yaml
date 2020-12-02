@@ -166,7 +166,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: beta
           target: ${{ steps.config.outputs.TARGET_NAME }}
           override: true
       - name: Build
