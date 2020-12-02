@@ -28,18 +28,18 @@ use reqwest::Url;
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
 
 pub struct ApiClient {
-    pub print_url: bool,
+    pub verbose: bool,
 }
 
 impl ApiClient {
-    pub fn new(print_url: bool) -> ApiClient {
-        ApiClient { print_url }
+    pub fn new(verbose: bool) -> ApiClient {
+        ApiClient { verbose }
     }
 
     pub async fn call(&self, url: &str) -> Result<reqwest::Response, Error> {
         let url = Url::parse(&url).unwrap();
 
-        print_verbose(&format!("{}", url), self.print_url);
+        print_verbose(&format!("{}", url), self.verbose);
 
         let client = reqwest::Client::new();
 
@@ -56,7 +56,19 @@ impl ApiClient {
         &self,
         url: &str,
     ) -> Result<T, Error> {
-        let r = self.call(url).await?.json::<T>().await?;
+
+        let body = match self.call(url).await {
+            Ok(e) => e.text().await?,
+            Err(e) =>  { return Err(Error::from(e)) },
+        };
+
+        if self.verbose {
+            println!("{}", &body);
+        }
+        
+        //we split the parsing from the request so we can capture the body and
+        //print it out if we need to
+        let r = serde_json::from_str::<T>(&body)?;
 
         check_destiny_response_status(r.get_status())?;
 
