@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+#Retrieves crucible stats for past month for all modes, and reads out a summary.
+#
+# Created by Mike Chambers
+# https://www.mikechambers.com
+#
+# Released under an MIT License
+# More info at:
+# https://github.com/mikechambers/dcli/
+#
+# On OS X requires an updated version of bash
+# https://itnext.io/upgrading-bash-on-macos-7138bd1066ba
+
+#capture output of command into a variable / we could also pipe this in
+OUTPUT=$(~/src/dcli/src/target/release/dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period month --output tsv)
+
+#replace tabs with '='. We could probably skip this step, but I couldnt get it working below
+# as bash skills are not up to par
+OUTPUT=${OUTPUT//$'\t'/=}
+
+#create an associative array (requires modern version of bash)
+declare -A data
+
+#read through each line (split by \n)
+while read line
+do
+    #extract the key
+    key=${line%%=*}
+
+    #extract the value
+    value=${line#*=}
+
+    #copy into an associative array
+    data[$key]="$value"
+
+done < <(echo "$OUTPUT")
+
+#now we can access all of the name value pairs from dclics like so:
+# ${data['kills_deaths_ratio']}
+
+#this will work with any of the dcli apps that output name / value pairs (tsv)
+
+#let's use some of them!
+
+DIALOG="Lets look at your crucible stats for ${data['mode']} ${data['period_human']}. Over this period you played for a total of ${data['human_time_played']}. You played ${data['activities_entered']} matches with ${data['activities_won']} wins and ${data['activities_lost']} losses. Your overall K D ratio is ${data['kills_deaths_ratio']} with an efficiency of ${data['efficiency']}"
+
+echo $DIALOG
+
+#check that say command exists
+if command -v say &> /dev/null
+then
+    #say is a command on OS X to read the input
+    say $DIALOG
+fi
+
+
