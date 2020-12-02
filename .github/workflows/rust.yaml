@@ -124,7 +124,7 @@ jobs:
           toolchain: stable
           target: ${{ steps.config.outputs.TARGET_NAME }}
           override: true
-      - name Build
+      - name: Build
         uses: actions-rs/cargo@v1
         env:
           DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
