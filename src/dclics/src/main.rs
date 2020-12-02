@@ -33,10 +33,8 @@ use dcli::timeperiod::TimePeriod;
 use dcli::cruciblestats::CrucibleStats;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{
-    build_tsv, clear_scr, format_f32, human_duration, print_error, repeat_str,
-    print_verbose,
+    build_tsv, clear_scr, format_f32, human_duration, print_error, print_verbose, repeat_str,
 };
-
 
 fn print_tsv(
     data: CrucibleStats,
@@ -53,6 +51,7 @@ fn print_tsv(
     name_values.push(("platform_id", format!("{}", platform.to_id())));
     name_values.push(("character_id", character_id.to_string()));
     name_values.push(("period_dt", format!("{}", period.get_date_time())));
+    name_values.push(("period_human", format!("{}", period)));
     name_values.push(("mode", format!("{}", mode)));
     name_values.push(("mode_id", format!("{}", mode.to_id())));
     name_values.push(("activities_entered", format!("{}", data.activities_entered)));
@@ -69,8 +68,21 @@ fn print_tsv(
         format!("{}", data.total_kill_distance),
     ));
     name_values.push(("seconds_played", format!("{}", data.seconds_played)));
+
+    name_values.push((
+        "human_time_played",
+        format!("{}", human_duration(data.seconds_played)),
+    ));
+
     name_values.push(("deaths", format!("{}", data.deaths)));
     name_values.push(("average_lifespan", format!("{}", data.average_lifespan)));
+
+
+    name_values.push((
+        "human_average_lifespan",
+        format!("{}", human_duration(data.average_lifespan)),
+    ));
+
     name_values.push(("total_lifespan", format!("{}", data.total_lifespan)));
     name_values.push(("opponents_defeated", format!("{}", data.opponents_defeated)));
     name_values.push(("efficiency", format!("{}", data.efficiency)));
@@ -172,16 +184,16 @@ fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
 ///
 /// Enables control of which stats are retrieved via game mode, time period and
 /// character.
-/// 
+///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
-/// 
+///
 /// Get support, request features or just chat on the dcli Discord server:
 /// https://discord.gg/2Y8bV2Mq3p
-/// 
+///
 /// Get the latest version, download the source and log issues at:
 /// https://github.com/mikechambers/dcli
-/// 
+///
 /// Released under an MIT License.
 struct Opt {
     /// Destiny 2 API member id
@@ -199,30 +211,30 @@ struct Opt {
 
     /// Time range to pull stats from
     ///
-    /// Valid values include day (last day), reset (since reset), week 
+    /// Valid values include day (last day), reset (since reset), week
     /// (last week), month (last month), alltime (default).
-    #[structopt(long = "period", default_value="alltime")]
+    #[structopt(long = "period", default_value = "alltime")]
     period: TimePeriod,
 
     /// Crucible mode to return stats for
     ///
-    /// Valid values are all (default), control, clash, mayhem, ironbanner, 
+    /// Valid values are all (default), control, clash, mayhem, ironbanner,
     /// private, trialsofnine, rumble, comp, quickplay and trialsofosiris.
-    #[structopt(long = "mode", default_value="all")]
+    #[structopt(long = "mode", default_value = "all")]
     mode: CrucibleMode,
 
     /// Format for command output
     ///
     /// Valid values are default (Default) and tsv.
-    /// 
+    ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "o", long = "output", default_value="default")]
+    #[structopt(short = "o", long = "output", default_value = "default")]
     output: Output,
 
     /// Destiny 2 API character id
     ///
-    /// Destiny 2 API character id. If not specified, data for all characters 
+    /// Destiny 2 API character id. If not specified, data for all characters
     /// will be returned.
     /// Required when period is set to day, reset, week or month.
     #[structopt(short = "c", long = "character-id", required_ifs=&[("period","day"),
@@ -230,7 +242,7 @@ struct Opt {
     character_id: Option<String>,
 
     ///Print out additional information
-    /// 
+    ///
     ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
