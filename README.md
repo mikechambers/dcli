@@ -6,6 +6,10 @@ This is an early alpha release, and there will probably be a lot of changes / re
 
 ![Build Status](https://github.com/mikechambers/dcli/workflows/dcli/badge.svg)
 
+## Download
+
+You can download the latest binaries for Windows, Linux and x86_64 Mac from the [releases](https://github.com/mikechambers/dcli/releases) page.
+
 ## Utilities
 * [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) Tool for retrieving primary platform and membership ids for Destiny 2 players.
 * [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) Tool for managing and syncing the remote Destiny 2 API manifest database.
