@@ -25,7 +25,8 @@ use crate::response::drs::{check_destiny_response_status, HasDestinyResponseStat
 use crate::utils::print_verbose;
 use reqwest::Url;
 
-const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
+//const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
+const DESTINY_API_KEY: &str = "";
 
 pub struct ApiClient {
     pub verbose: bool,

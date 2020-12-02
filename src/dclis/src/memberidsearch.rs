@@ -51,15 +51,19 @@ impl MemberIdSearch {
         let resp = match self
             .client
             .call_and_parse::<DestinyResponseSteam>(&url)
-            .await
-        {
-            Ok(e) => e,
-            Err(e) => return Some(Err(e)),
+            .await {
+                Ok(e) => e,
+                Err(e) => return Some(Err(e)),
+            };
+
+        let member: DestinyResponseMember = match resp.response {
+            Some(e) => e,
+            None => return None, //we should never get here as this will be caught earlier
         };
 
         let m = Membership {
-            id: resp.response.membership_id,
-            platform: Platform::from_id(resp.response.membership_type),
+            id: member.membership_id,
+            platform: Platform::from_id(member.membership_type),
             display_name: None,
         };
 
@@ -90,7 +94,11 @@ impl MemberIdSearch {
             Err(e) => return Some(Err(e)),
         };
 
-        let mut results: Vec<DestinyResponseMember> = resp.response;
+        let mut results: Vec<DestinyResponseMember> = match resp.response {
+            Some(e) => e,
+            None => return None, //we should never get here as this will be caught earlier
+        };
+
         if results.is_empty() {
             return None;
         }
@@ -110,7 +118,7 @@ impl MemberIdSearch {
 #[derive(Serialize, Deserialize, Debug)]
 struct DestinySearchResponse {
     #[serde(rename = "Response")]
-    response: Vec<DestinyResponseMember>,
+    response: Option<Vec<DestinyResponseMember>>,
 
     #[serde(flatten)]
     status: DestinyResponseStatus,
@@ -125,7 +133,7 @@ impl HasDestinyResponseStatus for DestinySearchResponse {
 #[derive(Serialize, Deserialize, Debug)]
 struct DestinyResponseSteam {
     #[serde(rename = "Response")]
-    response: DestinyResponseMember,
+    response: Option<DestinyResponseMember>,
 
     #[serde(flatten)]
     status: DestinyResponseStatus,
