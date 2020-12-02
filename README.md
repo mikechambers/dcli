@@ -4,11 +4,13 @@ dcli is a collection of utilities that provide a command line interface (CLI) fo
 
 This is an early alpha release, and there will probably be a lot of changes / refactoring. If you run into any issues, have any ideas, or just think something can be done better, please post in [issues](https://github.com/mikechambers/dcli/issues).
 
-![Build Status](https://github.com/mikechambers/dcli/workflows/dcli/badge.svg)
-
 ## Download
 
-You can download the latest binaries for Windows, Linux and x86_64 Mac from the [releases](https://github.com/mikechambers/dcli/releases) page.
+You can download the latest binaries for Windows, Linux and x86_64 Mac from the [releases](https://github.com/mikechambers/dcli-gha/releases/latest) page.
+
+[![](https://img.shields.io/github/v/release/mikechambers/dcli?style=social)](https://github.com/mikechambers/dcli-gha/releases/latest)
+
+*IMPORTANT: Mac binaries are not signed, which can cause some hassle the first time you run them. You can find info on how to run them [here](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac) and [here](https://support.apple.com/en-us/HT202491) (specifically the "How to open an app that hasn’t been notarized or is from an unidentified developer" section)*
 
 ## Utilities
 * [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) Tool for retrieving primary platform and membership ids for Destiny 2 players.
@@ -29,6 +31,8 @@ You can also log bugs and features requests on the [issues page](https://github.
 
 Tools are written and compiled in [Rust](https://www.rust-lang.org/).
 
+![Build Status](https://github.com/mikechambers/dcli/workflows/dcli/badge.svg)
+
 When compiling you must have an environment variable named `DESTINY_API_KEY` which contains your [Bungie API key](https://www.bungie.net/en/Application).
 
 To compile, switch to the base directory for each app, and run:
@@ -39,7 +43,8 @@ cargo build --release
 
 which will place the build in *target/release*
 
-
 ## License
 
 All utilities released under a [MIT License](LICENSE.md).
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE.md)
