@@ -10,7 +10,7 @@ You can download the latest binaries for Windows, Linux and x86_64 Mac from the 
 
 [![](https://img.shields.io/github/v/release/mikechambers/dcli?style=social)](https://github.com/mikechambers/dcli-gha/releases/latest)
 
-*IMPORTANT: Mac binaries are not signed, which can cause some hassle the first time you run them. You can find info on how to run them [here](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac) and [here](https://support.apple.com/en-us/HT202491) (specifically the "How to open an app that hasn’t been notarized or is from an unidentified developer" section)*
+*IMPORTANT: Mac binaries are not signed, which can cause some hassle the first time you run them. You can find info on how to easily run them [here](https://github.com/mikechambers/dcli/wiki/Running-dcli-tools-on-Mac-OS-X).
 
 ## Utilities
 * [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) Tool for retrieving primary platform and membership ids for Destiny 2 players.
