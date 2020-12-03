@@ -14,6 +14,12 @@
 #you can get your member id and platform from dclim
 MEMBER_ID=00000000000000000000
 PLATFORM=xbox
+
+#run dclim --manifest-path ~/tmp/
+#to sync manifest before running this script
+$MANIFEST_PATH="~/tmp/manifest.sqlite3"
+
+
 CHECK_INTERVAL_SECONDS=15
 
 echo "CTRL-C to end program"
@@ -22,7 +28,7 @@ OLD_ACTIVITY=""
 while :
 do
     echo "Checking Status"
-    ACTIVITY=$(dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id $MEMBER_ID --platform $PLATFORM)
+    ACTIVITY=$(dclia --manifest-path $MANIFEST_PATH --member-id $MEMBER_ID --platform $PLATFORM)
     #note should do some error checking here in case command fails (can capture exit code)
 
     #we could have the command above output name / value pairs via --output tsv
@@ -32,6 +38,10 @@ do
         echo $ACTIVITY
         osascript -e "display notification \"${ACTIVITY}\" with title \"Destiny 2 Activity Changed\""
         OLD_ACTIVITY=$ACTIVITY
+
+
+        #TODO: when we find a new activity, lets delay the next check for a bit, in case the server api returns old data
+        # for a short period
     fi
 
     sleep $CHECK_INTERVAL_SECONDS

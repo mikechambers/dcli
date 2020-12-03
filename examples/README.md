@@ -21,10 +21,12 @@ Requires a modern / updated version of bash to run on OS X. More info [here](htt
 
 ### [status_notification]
 
-* [osx_status_notification](osx_status_notification)
-* [windows_status_notification.ps1](osx_status_notification)
+* [status_notification_osx](status_notification_osx)
+* [status_notification_win.ps1](status_notification_win.ps1)
 
 Bash (for Mac OS X) and Windows Powershell scripts script which monitors a player's Destiny 2 status, and sends a notification with info on the new status when it changes.
+
+This is particularly useful on Windows when playing Crucible, as it will display a notification as you load into the map, telling you which map you are loading into.
 
 ### Snippets
 
