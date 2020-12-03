@@ -22,15 +22,15 @@
 
 pub mod apiclient;
 pub mod apiinterface;
+pub mod apiutils;
+pub mod cruciblestats;
 pub mod emblem;
 pub mod error;
+pub mod manifest;
 pub mod manifestinterface;
+pub mod mode;
+pub mod output;
 pub mod platform;
 pub mod response;
-pub mod manifest;
-pub mod utils;
-pub mod apiutils;
-pub mod mode;
 pub mod timeperiod;
-pub mod cruciblestats;
-pub mod output;
+pub mod utils;

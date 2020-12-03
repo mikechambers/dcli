@@ -24,9 +24,9 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 use dcli::error::Error;
-use dcli::utils::{print_error, EXIT_FAILURE, TSV_EOL, TSV_DELIM, print_verbose};
-use dcli::manifestinterface::{ManifestInterface, FindResult};
+use dcli::manifestinterface::{FindResult, ManifestInterface};
 use dcli::output::Output;
+use dcli::utils::{print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL};
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
@@ -34,16 +34,16 @@ use dcli::output::Output;
 ///
 /// Takes a hash / id from the Destiny 2 API, and returns data from the
 /// item from the manifest. May return more than one result.
-/// 
+///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
-/// 
+///
 /// Get support, request features or just chat on the dcli Discord server:
 /// https://discord.gg/2Y8bV2Mq3p
-/// 
+///
 /// Get the latest version, download the source and log issues at:
 /// https://github.com/mikechambers/dcli
-/// 
+///
 /// Released under an MIT License.
 struct Opt {
     ///Local path for Destiny 2 manifest database file.
@@ -57,7 +57,6 @@ struct Opt {
     //Print out additional information for the API call
     //#[structopt(short = "v", long = "verbose")]
     //verbose: bool,
-
     ///The hash id from the Destiny 2 API for the item to be searched for. Example : 326060471
     #[structopt(long = "hash", required = true)]
     hash: u32,
@@ -72,14 +71,17 @@ struct Opt {
     output: Output,
 
     ///Print out additional information
-    /// 
+    ///
     ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 }
 
 //TODO: can we make has and path reference?
-async fn search_manifest_by_hash(hash: u32, manifest_path: PathBuf) -> Result<Vec<FindResult>, Error> {
+async fn search_manifest_by_hash(
+    hash: u32,
+    manifest_path: PathBuf,
+) -> Result<Vec<FindResult>, Error> {
     let mut manifest = ManifestInterface::new(manifest_path, false).await?;
     let out = manifest.find(hash).await?;
 
@@ -91,7 +93,8 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
-    let results:Vec<FindResult> = match search_manifest_by_hash(opt.hash, opt.manifest_path).await {
+    let results: Vec<FindResult> = match search_manifest_by_hash(opt.hash, opt.manifest_path).await
+    {
         Ok(e) => e,
         Err(e) => {
             print_error("Error searching manifest.", e);
@@ -102,15 +105,14 @@ async fn main() {
     match opt.output {
         Output::Default => {
             print_default(results);
-        },
+        }
         Output::Tsv => {
             print_tsv(results);
-        },
+        }
     };
-    
 }
 
-fn print_default(results:Vec<FindResult>) {
+fn print_default(results: Vec<FindResult>) {
     if results.is_empty() {
         println!("No items found.");
         return;
@@ -118,35 +120,56 @@ fn print_default(results:Vec<FindResult>) {
 
     let col_w = 15;
 
-    println!("Found {} item{}", results.len(), if results.len() > 1 {"s"} else {""});
+    println!(
+        "Found {} item{}",
+        results.len(),
+        if results.len() > 1 { "s" } else { "" }
+    );
     println!("-----------------------------");
     for r in results.iter() {
-
-        let default : String = "".to_string();
-        let description = r.display_properties.description.as_ref().unwrap_or(&default);
+        let default: String = "".to_string();
+        let description = r
+            .display_properties
+            .description
+            .as_ref()
+            .unwrap_or(&default);
         let icon_path = r.display_properties.icon_path.as_ref().unwrap_or(&default);
 
-        println!("{:<0col_w$}{}", "Name", r.display_properties.name, col_w=col_w);
-        println!("{:<0col_w$}{}", "Description", description, col_w=col_w);
-        println!("{:<0col_w$}{}", "Has Icon", r.display_properties.has_icon, col_w=col_w);
-        println!("{:<0col_w$}{}", "Icon Path", icon_path, col_w=col_w);
+        println!(
+            "{:<0col_w$}{}",
+            "Name",
+            r.display_properties.name,
+            col_w = col_w
+        );
+        println!("{:<0col_w$}{}", "Description", description, col_w = col_w);
+        println!(
+            "{:<0col_w$}{}",
+            "Has Icon",
+            r.display_properties.has_icon,
+            col_w = col_w
+        );
+        println!("{:<0col_w$}{}", "Icon Path", icon_path, col_w = col_w);
         println!();
     }
 }
 
-fn print_tsv(results:Vec<FindResult>) {
+fn print_tsv(results: Vec<FindResult>) {
     if results.is_empty() {
         println!();
         return;
     }
 
-    for (i,r) in results.iter().enumerate() {
-
-        let default : String = "".to_string();
-        let description = r.display_properties.description.as_ref().unwrap_or(&default);
+    for (i, r) in results.iter().enumerate() {
+        let default: String = "".to_string();
+        let description = r
+            .display_properties
+            .description
+            .as_ref()
+            .unwrap_or(&default);
         let icon_path = r.display_properties.icon_path.as_ref().unwrap_or(&default);
 
-        print!("{i}{delim}{n}{delim}{d}{delim}{hi}{delim}{ip}{eol}",
+        print!(
+            "{i}{delim}{n}{delim}{d}{delim}{hi}{delim}{ip}{eol}",
             i = i,
             n = r.display_properties.name,
             d = description,

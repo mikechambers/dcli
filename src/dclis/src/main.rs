@@ -49,16 +49,16 @@ fn is_valid_steam_id(steam_id: &str) -> bool {
 /// different that the one specified, depending on the cross save status of the
 /// account. It will return the primary membershipId that all data will be
 /// associate with.
-/// 
+///
 /// Created by Mike Chambers.  
 /// https://www.mikechambers.com
-/// 
+///
 /// Get support, request features or just chat on the dcli Discord server:  
 /// https://discord.gg/2Y8bV2Mq3p
-/// 
+///
 /// Get the latest version, download the source and log issues at:  
 /// https://github.com/mikechambers/dcli
-/// 
+///
 /// Released under an MIT License.
 struct Opt {
     /// Platform for specified id
@@ -141,7 +141,6 @@ async fn main() {
         };
     }
 
-
     match opt.output {
         Output::Default => {
             print_default(&membership);
@@ -154,6 +153,8 @@ async fn main() {
 
 fn print_tsv(member: &Membership) {
     let default = &"".to_string();
+
+    //todo: clippy is complaining about this but not 100% sure why
     let n = member.display_name.as_ref().unwrap_or_else(|| default);
 
     print!(
@@ -169,6 +170,7 @@ fn print_tsv(member: &Membership) {
 
 fn print_default(member: &Membership) {
     let default = &"".to_string();
+    //todo: clippy is complaining about this but not 100% sure why
     let n = member.display_name.as_ref().unwrap_or_else(|| default);
 
     let col_w = 15;

@@ -21,12 +21,14 @@
 */
 
 use crate::apiclient::ApiClient;
-use crate::response::character::CharacterData;
 use crate::error::Error;
-use crate::platform::Platform;
 use crate::mode::CrucibleMode;
-use crate::response::gpr::{GetProfileResponse, CharacterActivitiesData};
-use crate::response::stats::{AllTimePvPStatsResponse, PvpStatsData, DailyPvPStatsResponse, DailyPvPStatsValuesData};
+use crate::platform::Platform;
+use crate::response::character::CharacterData;
+use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
+use crate::response::stats::{
+    AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
+};
 use chrono::{DateTime, Utc};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -45,14 +47,12 @@ impl ApiInterface {
         //some methods may require it and will throw errors if its not set
     }
 
-    
     /// Retrieves characters for specified member_id and platform
     pub async fn retrieve_current_activity(
         &self,
         member_id: String,
         platform: Platform,
     ) -> Result<Option<CharacterActivitiesData>, Error> {
-
         let url =
             format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=204",
                 platform_id = platform.to_id(),
@@ -67,11 +67,9 @@ impl ApiInterface {
         //note: can you ok_or_else if error comp is expensive, since its call
         //everytime with ok_or, but lazily with ok_or_else
         //Note: this should never be None when this API is called
-        let response = profile.response.ok_or(
-            Error::ApiRequest {
-                description: String::from("No response data from API Call."),
-            }
-        )?;
+        let response = profile.response.ok_or(Error::ApiRequest {
+            description: String::from("No response data from API Call."),
+        })?;
 
         //see if any activities were returned
         //this should never be none when this API is called
@@ -83,12 +81,11 @@ impl ApiInterface {
         };
 
         //store whether use is in an activity
-        let mut current_activity:Option<CharacterActivitiesData> = None;
+        let mut current_activity: Option<CharacterActivitiesData> = None;
 
         //note, we could grab the char id from the key, and pass it out
         //or even get the char data from the getprofile call
         for c in character_activities.data.values() {
-
             //if there is a value here, it means this character is currently in
             //an activity
             if c.current_activity_mode_hash != 0 {
@@ -134,11 +131,11 @@ impl ApiInterface {
 
         let mut characters: Vec<CharacterData> = Vec::new();
 
-        let r_characters = match response.characters{
+        let r_characters = match response.characters {
             Some(e) => e,
             None => {
                 return Ok(characters);
-            },
+            }
         };
 
         for c in r_characters.data.values() {
@@ -148,10 +145,10 @@ impl ApiInterface {
         Ok(characters)
     }
 
-/*
-  static const int daily = 1;
-  static const int allTime = 2;
-  */
+    /*
+    static const int daily = 1;
+    static const int allTime = 2;
+    */
 
     /*
     async fn retrieve_daily_crucible_stats(member_id:u32, character_id:u32, platform:Platform, mode:CrucibleMode, start_date:DateTime) {
@@ -159,7 +156,13 @@ impl ApiInterface {
     }
     */
 
-    pub async fn retrieve_alltime_crucible_stats(&self, member_id:&str, character_id:&str, platform:&Platform, mode:&CrucibleMode) -> Result<Option<PvpStatsData>, Error> {
+    pub async fn retrieve_alltime_crucible_stats(
+        &self,
+        member_id: &str,
+        character_id: &str,
+        platform: &Platform,
+        mode: &CrucibleMode,
+    ) -> Result<Option<PvpStatsData>, Error> {
         //"/Platform/Destiny2/1/Account/$memberId/Character/$characterId/Stats/?modes=$modesString$dateRangeString&periodType=$periodTypeId&groups=1,2,3";
         let url =
         format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=2&groups=1,2,3",
@@ -170,26 +173,32 @@ impl ApiInterface {
         );
 
         let response: AllTimePvPStatsResponse = self
-        .client
-        .call_and_parse::<AllTimePvPStatsResponse>(&url)
-        .await?;
+            .client
+            .call_and_parse::<AllTimePvPStatsResponse>(&url)
+            .await?;
 
-
-        let data:Option<PvpStatsData> = response.response.ok_or(
-            Error::ApiRequest {
+        let data: Option<PvpStatsData> = response
+            .response
+            .ok_or(Error::ApiRequest {
                 description: String::from("No response data from API Call."),
-            }
-        )?.data.ok_or(
-            Error::ApiRequest {
+            })?
+            .data
+            .ok_or(Error::ApiRequest {
                 description: String::from("No all_pvp data from API Call."),
-            }
-        )?.all_time;
+            })?
+            .all_time;
 
         Ok(data)
     }
 
-    pub async fn retrieve_aggregate_crucible_stats(&self, member_id:&str, character_id:&str, platform:&Platform, mode:&CrucibleMode, start_time:DateTime<Utc>) -> Result<Option<Vec<DailyPvPStatsValuesData>>, Error> {
-
+    pub async fn retrieve_aggregate_crucible_stats(
+        &self,
+        member_id: &str,
+        character_id: &str,
+        platform: &Platform,
+        mode: &CrucibleMode,
+        start_time: DateTime<Utc>,
+    ) -> Result<Option<Vec<DailyPvPStatsValuesData>>, Error> {
         let day_start = start_time.to_rfc3339();
         let day_end = Utc::now().to_rfc3339();
 
@@ -205,22 +214,21 @@ impl ApiInterface {
         );
 
         let response: DailyPvPStatsResponse = self
-        .client
-        .call_and_parse::<DailyPvPStatsResponse>(&url)
-        .await?;
+            .client
+            .call_and_parse::<DailyPvPStatsResponse>(&url)
+            .await?;
 
-
-        let data:Option<Vec<DailyPvPStatsValuesData>> = response.response.ok_or(
-            Error::ApiRequest {
+        let data: Option<Vec<DailyPvPStatsValuesData>> = response
+            .response
+            .ok_or(Error::ApiRequest {
                 description: String::from("No response data from API Call."),
-            }
-        )?.data.ok_or(
-            Error::ApiRequest {
+            })?
+            .data
+            .ok_or(Error::ApiRequest {
                 description: String::from("No all_pvp data from API Call."),
-            }
-        )?.daily;
+            })?
+            .daily;
 
         Ok(data)
     }
-
 }

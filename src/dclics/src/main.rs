@@ -69,18 +69,14 @@ fn print_tsv(
     ));
     name_values.push(("seconds_played", format!("{}", data.seconds_played)));
 
-    name_values.push((
-        "human_time_played",
-        format!("{}", human_duration(data.seconds_played)),
-    ));
+    name_values.push(("human_time_played", human_duration(data.seconds_played)));
 
     name_values.push(("deaths", format!("{}", data.deaths)));
     name_values.push(("average_lifespan", format!("{}", data.average_lifespan)));
 
-
     name_values.push((
         "human_average_lifespan",
-        format!("{}", human_duration(data.average_lifespan)),
+        human_duration(data.average_lifespan),
     ));
 
     name_values.push(("total_lifespan", format!("{}", data.total_lifespan)));

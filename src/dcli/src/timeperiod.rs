@@ -20,10 +20,10 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use chrono::{DateTime, Utc, Duration};
 use crate::utils::get_last_reset;
-use std::str::FromStr;
+use chrono::{DateTime, Duration, Utc};
 use std::fmt;
+use std::str::FromStr;
 
 #[derive(PartialEq, Debug)]
 pub enum TimePeriod {
@@ -36,13 +36,12 @@ pub enum TimePeriod {
 
 impl TimePeriod {
     pub fn get_date_time(&self) -> DateTime<Utc> {
-
         match self {
             TimePeriod::Day => Utc::now() - Duration::hours(24),
             TimePeriod::Reset => {
                 get_last_reset()
                 // /let tomorrow_midnight = (now + Duration::days(1)).date().and_hms(0, 0, 0);
-            },
+            }
             TimePeriod::Week => Utc::now() - Duration::days(7),
             TimePeriod::Month => Utc::now() - Duration::days(30),
             TimePeriod::Alltime => Utc::now() - Duration::weeks(7 * 52),

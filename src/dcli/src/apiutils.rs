@@ -20,8 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use serde::Deserialize;
 use chrono::{DateTime, NaiveDateTime, Utc};
+use serde::Deserialize;
 use serde::Deserializer;
 
 //TODO:: might not be best place. maybe in a consts mod?
@@ -45,19 +45,15 @@ pub fn prepend_base_url_option<'de, D>(deserializer: D) -> Result<Option<String>
 where
     D: serde::de::Deserializer<'de>,
 {
-    Option::<String>::deserialize(deserializer)
-    .map(|o: Option<String>| {
-        match o {
-            Some(e) => {
-                let mut s = String::from(RESOURCE_BASE_URL);
-                s.push_str(&e);
-                Some(s)
-            },
-            None => None,
+    Option::<String>::deserialize(deserializer).map(|o: Option<String>| match o {
+        Some(e) => {
+            let mut s = String::from(RESOURCE_BASE_URL);
+            s.push_str(&e);
+            Some(s)
         }
+        None => None,
     })
 }
-
 
 //str_to_datetime
 pub fn str_to_datetime<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>

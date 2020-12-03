@@ -26,10 +26,10 @@ use dcli::apiinterface::ApiInterface;
 //use dcli::error::Error;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::mode::Mode;
-use dcli::platform::Platform;
-use dcli::utils::{print_error, print_verbose, build_tsv};
-use dcli::utils::EXIT_FAILURE;
 use dcli::output::Output;
+use dcli::platform::Platform;
+use dcli::utils::EXIT_FAILURE;
+use dcli::utils::{build_tsv, print_error, print_verbose};
 
 use dcli::manifest::definitions::{
     ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData,
@@ -43,16 +43,16 @@ const ORBIT_PLACE_HASH: u32 = 2961497387;
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving current Destiny 2 activity status for player.
-/// 
+///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
-/// 
+///
 /// Get support, request features or just chat on the dcli Discord server:
 /// https://discord.gg/2Y8bV2Mq3p
-/// 
+///
 /// Get the latest version, download the source and log issues at:
 /// https://github.com/mikechambers/dcli
-/// 
+///
 /// Released under an MIT License.
 struct Opt {
     /// Platform for specified id
@@ -68,7 +68,7 @@ struct Opt {
     member_id: String,
 
     ///Print out additional information
-    /// 
+    ///
     ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
@@ -80,10 +80,10 @@ struct Opt {
     /// Format for command output
     ///
     /// Valid values are default (Default) and tsv.
-    /// 
+    ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "o", long = "output", default_value="default")]
+    #[structopt(short = "o", long = "output", default_value = "default")]
     output: Output,
 }
 
@@ -111,10 +111,10 @@ async fn main() {
             match opt.output {
                 Output::Default => {
                     println!("Not currently in an activity.");
-                },
+                }
                 Output::Tsv => {
                     print_tsv_no_activity();
-                },
+                }
             };
             return;
         }
@@ -128,7 +128,13 @@ async fn main() {
         }
     };
 
-    print_verbose(&format!("Getting activity definition data from manifest : {}", activity_data_a.current_activity_hash), opt.verbose);
+    print_verbose(
+        &format!(
+            "Getting activity definition data from manifest : {}",
+            activity_data_a.current_activity_hash
+        ),
+        opt.verbose,
+    );
     let activity_data_m: ActivityDefinitionData = match manifest
         .get_activity_definition(activity_data_a.current_activity_hash)
         .await
@@ -144,16 +150,22 @@ async fn main() {
         match opt.output {
             Output::Default => {
                 println!("Currently sitting in Orbit");
-            },
+            }
             Output::Tsv => {
                 print_tsv_orbit();
-            },
+            }
         };
 
         return;
     }
 
-    print_verbose(&format!("Getting place definition data from manifest : {}", activity_data_m.place_hash), opt.verbose);
+    print_verbose(
+        &format!(
+            "Getting place definition data from manifest : {}",
+            activity_data_m.place_hash
+        ),
+        opt.verbose,
+    );
     let place_data_m: PlaceDefinitionData = match manifest
         .get_place_definition(activity_data_m.place_hash)
         .await
@@ -165,7 +177,13 @@ async fn main() {
         }
     };
 
-    print_verbose(&format!("Getting destination definition data from manifest : {}", activity_data_m.destination_hash), opt.verbose);
+    print_verbose(
+        &format!(
+            "Getting destination definition data from manifest : {}",
+            activity_data_m.destination_hash
+        ),
+        opt.verbose,
+    );
     let destination_data_m: DestinationDefinitionData = match manifest
         .get_destination_definition(activity_data_m.destination_hash)
         .await
@@ -188,7 +206,13 @@ async fn main() {
             format!("{}", e)
         }
         None => {
-            print_verbose(&format!("Activity mode not returned from API. Checking Manifest : {}", activity_data_m.activity_type_hash), opt.verbose);
+            print_verbose(
+                &format!(
+                    "Activity mode not returned from API. Checking Manifest : {}",
+                    activity_data_m.activity_type_hash
+                ),
+                opt.verbose,
+            );
             //otherwise, we go into the manifest to find it
             match manifest
                 .get_activity_type_definition(activity_data_m.activity_type_hash)
@@ -196,7 +220,10 @@ async fn main() {
             {
                 Ok(e) => e.display_properties.name,
                 Err(e) => {
-                    print_verbose(&format!("Activity Mode not found in Manifest : {:?}", e), opt.verbose);
+                    print_verbose(
+                        &format!("Activity Mode not found in Manifest : {:?}", e),
+                        opt.verbose,
+                    );
                     //Todo: this either means an error, unknown activity, or they are in orbit
                     "Unknown".to_string()
                 }
@@ -207,18 +234,32 @@ async fn main() {
     let description = activity_data_m
         .display_properties
         .description
-        .unwrap_or("".to_string());
+        .unwrap_or_else(|| "".to_string());
     let activity_name = activity_data_m.display_properties.name;
     let place_name = place_data_m.display_properties.name;
     let destination_name = destination_data_m.display_properties.name;
 
     match opt.output {
         Output::Default => {
-            print_default(mode, &activity_type_name, &activity_name, &place_name, &destination_name, &description);
-        },
+            print_default(
+                mode,
+                &activity_type_name,
+                &activity_name,
+                &place_name,
+                &destination_name,
+                &description,
+            );
+        }
         Output::Tsv => {
-            print_tsv(&activity_type_name, &activity_name, &place_name, &destination_name, &description, true);
-        },
+            print_tsv(
+                &activity_type_name,
+                &activity_name,
+                &place_name,
+                &destination_name,
+                &description,
+                true,
+            );
+        }
     };
 }
 
@@ -230,7 +271,14 @@ fn print_tsv_no_activity() {
     print_tsv("", "", "", "", "", false);
 }
 
-fn print_tsv(activity_type_name:&str, activity_name:&str, place_name:&str, destination_name:&str, description:&str, in_activity:bool) {
+fn print_tsv(
+    activity_type_name: &str,
+    activity_name: &str,
+    place_name: &str,
+    destination_name: &str,
+    description: &str,
+    in_activity: bool,
+) {
     //activity_type_name, activity_name, place_name, destination_name, description
 
     let mut name_values: Vec<(&str, String)> = Vec::new();
@@ -245,16 +293,17 @@ fn print_tsv(activity_type_name:&str, activity_name:&str, place_name:&str, desti
     print!("{}", build_tsv(name_values));
 }
 
-fn print_default(mode:Mode, activity_type_name:&str, activity_name:&str, place_name:&str, _destination_name:&str, description:&str) {
-
+fn print_default(
+    mode: Mode,
+    activity_type_name: &str,
+    activity_name: &str,
+    place_name: &str,
+    _destination_name: &str,
+    description: &str,
+) {
     let out = if mode == Mode::Patrol {
         format!("Exploring on {}", place_name)
-    } else if mode.is_gambit() {
-        format!(
-            "Playing {} on {} ({})",
-            activity_type_name, activity_name, description
-        )
-    } else if mode.is_crucible() {
+    } else if mode.is_gambit() || mode.is_crucible() {
         format!(
             "Playing {} on {} ({})",
             activity_type_name, activity_name, description

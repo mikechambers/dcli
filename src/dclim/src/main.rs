@@ -27,7 +27,7 @@ use dcli::error::Error;
 use dcli::output::Output;
 use dcli::response::manifest::ManifestResponse;
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{print_error, print_verbose, build_tsv};
+use dcli::utils::{build_tsv, print_error, print_verbose};
 use manifest_info::ManifestInfo;
 use structopt::StructOpt;
 
@@ -131,16 +131,16 @@ async fn download_manifest(url: &str, path: &PathBuf, print_url: bool) -> Result
 /// Manifest will be stored in the specified local directory, along with meta-data
 /// with information about the downloaded version. This is used to to determine
 /// whether the remote version has been updated.
-/// 
+///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
-/// 
+///
 /// Get support, request features or just chat on the dcli Discord server:
 /// https://discord.gg/2Y8bV2Mq3p
-/// 
+///
 /// Get the latest version, download the source and log issues at:
 /// https://github.com/mikechambers/dcli
-/// 
+///
 /// Released under an MIT License.
 struct Opt {
     ///Directory where the manifest and meta-data will be stored.
@@ -148,7 +148,7 @@ struct Opt {
     manifest_dir: PathBuf,
 
     ///Print out additional information
-    /// 
+    ///
     ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
@@ -203,8 +203,18 @@ async fn main() {
 
     let col_w = 30;
     if opt.output == Output::Default {
-        println!("{:<0col_w$}{}", "Remote Manifest version", remote_manifest_info.version, col_w=col_w);
-        println!("{:<0col_w$}{}", "Remote Manifest url", remote_manifest_info.url, col_w=col_w);
+        println!(
+            "{:<0col_w$}{}",
+            "Remote Manifest version",
+            remote_manifest_info.version,
+            col_w = col_w
+        );
+        println!(
+            "{:<0col_w$}{}",
+            "Remote Manifest url",
+            remote_manifest_info.url,
+            col_w = col_w
+        );
     }
 
     let mut manifest_needs_updating = !m_path.exists() || !m_info_path.exists();
@@ -214,8 +224,18 @@ async fn main() {
             let local_manifest_info: ManifestInfo = e;
 
             if opt.output == Output::Default {
-                println!("{:<0col_w$}{}", "Local Manifest version", local_manifest_info.version, col_w=col_w);
-                println!("{:<0col_w$}{}", "Local Manifest url", local_manifest_info.url, col_w=col_w);
+                println!(
+                    "{:<0col_w$}{}",
+                    "Local Manifest version",
+                    local_manifest_info.version,
+                    col_w = col_w
+                );
+                println!(
+                    "{:<0col_w$}{}",
+                    "Local Manifest url",
+                    local_manifest_info.url,
+                    col_w = col_w
+                );
             }
 
             manifest_needs_updating = local_manifest_info.url != remote_manifest_info.url;
@@ -230,22 +250,23 @@ async fn main() {
         }
     }
 
-    if manifest_needs_updating {
-        if opt.output == Output::Default {
-            println!("{:<0col_w$}{}", "Updated manifest available", &remote_manifest_info.version, col_w=col_w);
-        }
+    if manifest_needs_updating && opt.output == Output::Default {
+        println!(
+            "{:<0col_w$}{}",
+            "Updated manifest available",
+            &remote_manifest_info.version,
+            col_w = col_w
+        );
     }
 
     if opt.check {
-
         match opt.output {
             Output::Default => {
                 if !manifest_needs_updating {
                     println!("No new manifest avaliable.");
                 }
-            },
+            }
             Output::Tsv => {
-
                 let mut name_values: Vec<(&str, String)> = Vec::new();
                 name_values.push(("update_avaliable", format!("{}", manifest_needs_updating)));
                 name_values.push(("updated", format!("{}", false)));
@@ -253,13 +274,12 @@ async fn main() {
                 name_values.push(("url", remote_manifest_info.url));
 
                 print!("{}", build_tsv(name_values));
-            },
+            }
         }
         return;
     }
 
     if opt.force || manifest_needs_updating {
-
         //print to stderr so user can redirect other output (such as tsv) to stdout
         eprintln!("Downloading manifest. This may take a bit of time.");
         match download_manifest(&remote_manifest_info.url, &m_path, opt.verbose).await {
@@ -284,18 +304,15 @@ async fn main() {
         if opt.output == Output::Default {
             println!("Manifest info saved.");
         }
-    } else {
-        if opt.output == Output::Default {
-            println!("No new manifest available");
-        }
+    } else if opt.output == Output::Default {
+        println!("No new manifest available");
     }
 
     match opt.output {
         Output::Default => {
             println!("{}", m_path.display());
-        },
+        }
         Output::Tsv => {
-
             let mut name_values: Vec<(&str, String)> = Vec::new();
             name_values.push(("local_path", format!("{}", m_path.display())));
             name_values.push(("updated", format!("{}", manifest_needs_updating)));
@@ -303,6 +320,6 @@ async fn main() {
             name_values.push(("url", remote_manifest_info.url));
 
             print!("{}", build_tsv(name_values));
-        },
+        }
     }
 }

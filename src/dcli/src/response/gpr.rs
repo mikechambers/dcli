@@ -20,13 +20,13 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use crate::mode::Mode;
 use crate::response::character::CharacterData;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
-use crate::mode::Mode;
 
+use crate::apiutils::str_to_datetime;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::apiutils::str_to_datetime;
 
 use chrono::{DateTime, Utc};
 
@@ -70,7 +70,6 @@ pub struct CharacterActivitiesFieldData {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CharacterActivitiesData {
-
     #[serde(
         rename = "dateActivityStarted",
         skip_serializing,
@@ -79,13 +78,13 @@ pub struct CharacterActivitiesData {
     pub date_activity_started: DateTime<Utc>,
 
     #[serde(rename = "currentActivityHash")]
-    pub current_activity_hash:u32, 
+    pub current_activity_hash: u32,
 
     #[serde(rename = "currentActivityModeHash")]
-    pub current_activity_mode_hash:u32, //these both point to the same data (0 if not active)
+    pub current_activity_mode_hash: u32, //these both point to the same data (0 if not active)
 
     #[serde(rename = "currentActivityModeType")] //todo: could default this to none / 0
-    pub current_activity_mode_type:Option<Mode>,// (0 if not active)
+    pub current_activity_mode_type: Option<Mode>, // (0 if not active)
 
     #[serde(rename = "currentPlaylistActivityHash")]
     pub current_playlist_activity_hash: Option<u32>, //how is this different than currentActivityHash?

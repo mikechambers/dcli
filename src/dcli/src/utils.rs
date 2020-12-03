@@ -20,11 +20,11 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use chrono::{DateTime, Utc, Duration, TimeZone, Datelike, Timelike};
 use crate::error::Error;
+use chrono::{DateTime, Datelike, Duration, TimeZone, Timelike, Utc};
 use std::env;
-use std::path::Path;
 use std::ffi::OsStr;
+use std::path::Path;
 
 //use chrono::prelude::*;
 
@@ -33,14 +33,14 @@ pub const EXIT_FAILURE: i32 = 1;
 
 pub const WEEK_IN_SECONDS: i64 = 604800;
 
-pub const TSV_EOL:&str = "\n";
-pub const TSV_DELIM:&str = "\t";
+pub const TSV_EOL: &str = "\n";
+pub const TSV_DELIM: &str = "\t";
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn get_last_reset() -> DateTime<Utc> {
     //get a hardcoded past reset date / time (17:00 UTC every tuesday)
-    let past_reset : DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);
+    let past_reset: DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);
     let now: DateTime<Utc> = Utc::now();
 
     //get total seconds between now and the past reset
@@ -49,7 +49,7 @@ pub fn get_last_reset() -> DateTime<Utc> {
     now - Duration::seconds((now - past_reset).num_seconds() % WEEK_IN_SECONDS)
 }
 
-pub fn print_verbose(msg: &str, verbose:bool) {
+pub fn print_verbose(msg: &str, verbose: bool) {
     if !verbose {
         return;
     }
@@ -57,14 +57,15 @@ pub fn print_verbose(msg: &str, verbose:bool) {
     eprintln!("{}", msg);
 }
 
-pub fn print_error(msg: &str, error:Error) {
-
-    let app_name = env::current_exe().ok()
-    .as_ref()
-    .map(Path::new)
-    .and_then(Path::file_name)
-    .and_then(OsStr::to_str)
-    .map(String::from).unwrap_or_else(|| "".to_string());
+pub fn print_error(msg: &str, error: Error) {
+    let app_name = env::current_exe()
+        .ok()
+        .as_ref()
+        .map(Path::new)
+        .and_then(Path::file_name)
+        .and_then(OsStr::to_str)
+        .map(String::from)
+        .unwrap_or_else(|| "".to_string());
 
     eprintln!("{} : v{}", app_name, VERSION);
 
@@ -74,11 +75,11 @@ pub fn print_error(msg: &str, error:Error) {
     match error {
         Error::InvalidParameters => {
             eprintln!("This can occur if --platform is set incorrectly.");
-        },
+        }
         Error::ParameterParseFailure => {
             eprintln!("This can occur if --member-id or --character-id were entered incorrectly.");
-        },
-        _ => {},
+        }
+        _ => {}
     }
 
     eprintln!();
@@ -88,20 +89,31 @@ pub fn print_error(msg: &str, error:Error) {
     eprintln!("       https://github.com/mikechambers/dcli/issues");
 }
 
-pub fn calculate_efficiency(kills:f32, deaths:f32, assists:f32) -> f32 {
+pub fn calculate_efficiency(kills: f32, deaths: f32, assists: f32) -> f32 {
     let t = kills + assists;
-    if deaths > 0.0 { t / deaths } else { t }
+    if deaths > 0.0 {
+        t / deaths
+    } else {
+        t
+    }
 }
 
-pub fn calculate_kills_deaths_ratio(kills:f32, deaths:f32) -> f32 {
-    if deaths > 0.0 { kills / deaths } else { kills } 
+pub fn calculate_kills_deaths_ratio(kills: f32, deaths: f32) -> f32 {
+    if deaths > 0.0 {
+        kills / deaths
+    } else {
+        kills
+    }
 }
 
-pub fn calculate_kills_deaths_assists(kills:f32, deaths:f32, assists:f32) -> f32 {
+pub fn calculate_kills_deaths_assists(kills: f32, deaths: f32, assists: f32) -> f32 {
     let t = kills + (assists / 2.0);
-    if deaths > 0.0 { t / deaths } else { t }
+    if deaths > 0.0 {
+        t / deaths
+    } else {
+        t
+    }
 }
-
 
 pub fn format_f32(val: f32, precision: usize) -> String {
     format!("{:.p$}", val, p = precision)
@@ -116,8 +128,7 @@ pub fn clear_scr() {
 }
 
 //this could use some more work and polish. Add "and" before the last item.
-pub fn human_duration(seconds:f32) -> String {
-
+pub fn human_duration(seconds: f32) -> String {
     let s = seconds as i64;
 
     let dt = Utc.ymd(0, 1, 1).and_hms(0, 0, 0) + Duration::seconds(s);
@@ -129,23 +140,35 @@ pub fn human_duration(seconds:f32) -> String {
     let min = build_time_str(dt.minute() as i32, "minute");
     let s = build_time_str(dt.second() as i32, "second");
 
-    (&format!("{y} {mon} {d} {h} {min} {s}", y=y, mon=mon, d=d, h=h, min=min, s=s)).trim().to_string()
+    (&format!(
+        "{y} {mon} {d} {h} {min} {s}",
+        y = y,
+        mon = mon,
+        d = d,
+        h = h,
+        min = min,
+        s = s
+    ))
+        .trim()
+        .to_string()
 }
 
-pub fn build_time_str(t:i32, label:&str) -> String {
-    let mut out:String = "".to_string();
+pub fn build_time_str(t: i32, label: &str) -> String {
+    let mut out: String = "".to_string();
     if t > 0 {
-
         out.push_str(&format!("{} {}", t, label));
 
         if t > 1 {
-            out.push_str("s");
+            out.push('s');
         }
     }
 
     out
 }
 
-pub fn build_tsv(name_values:Vec<(&str, String)>) -> String {
-    name_values.iter().map(|x| format!("{}{}{}{}", x.0, TSV_DELIM, x.1, TSV_EOL) ).collect()
+pub fn build_tsv(name_values: Vec<(&str, String)>) -> String {
+    name_values
+        .iter()
+        .map(|x| format!("{}{}{}{}", x.0, TSV_DELIM, x.1, TSV_EOL))
+        .collect()
 }

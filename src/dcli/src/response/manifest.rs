@@ -22,8 +22,8 @@
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::apiutils::prepend_base_url;
+use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestResponse {
@@ -53,4 +53,3 @@ pub struct MobileWorldContentPathsData {
     #[serde(deserialize_with = "prepend_base_url")]
     pub en: String,
 }
-

@@ -29,7 +29,7 @@ const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
 const API_TIMEOUT: u64 = 10; //seconds
 
 //this makes sure that the env variable isnt set, but empty
-static_assertions::const_assert!(DESTINY_API_KEY.len() > 0);
+static_assertions::const_assert!(!DESTINY_API_KEY.is_empty());
 
 pub struct ApiClient {
     pub verbose: bool,
@@ -62,10 +62,9 @@ impl ApiClient {
         &self,
         url: &str,
     ) -> Result<T, Error> {
-
         let body = match self.call(url).await {
             Ok(e) => e.text().await?,
-            Err(e) =>  { return Err(Error::from(e)) },
+            Err(e) => return Err(e),
         };
 
         if self.verbose {
@@ -73,7 +72,7 @@ impl ApiClient {
             println!("{}", &body);
             println!("---------End API response---------");
         }
-        
+
         //we split the parsing from the request so we can capture the body and
         //print it out if we need to
         let r = serde_json::from_str::<T>(&body)?;

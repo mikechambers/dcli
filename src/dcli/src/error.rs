@@ -53,7 +53,7 @@ pub enum Error {
     ZipError { description: String },
     Unknown { description: String },
     ManifestNotSet,
-    ManifestItemNotFound  { description: String },
+    ManifestItemNotFound { description: String },
 }
 
 impl Display for Error {
@@ -131,7 +131,6 @@ impl From<serde_json::Error> for Error {
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Error {
-
         /*
         //todo: need to figure out how to downcast to hyber error
         //so we can get more details on the error (i.e. network failure)
@@ -142,17 +141,15 @@ impl From<reqwest::Error> for Error {
             .downcast_ref();
         */
 
-        let error = if err.is_timeout() {
+        if err.is_timeout() {
             Error::RequestTimedOut
         } else if err.is_request() {
             Error::Request
         } else {
             Error::ApiRequest {
-                description: format!("reqwest::Error : {:#?}", err)
+                description: format!("reqwest::Error : {:#?}", err),
             }
-        };
-
-        error
+        }
     }
 }
 
