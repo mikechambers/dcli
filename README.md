@@ -51,6 +51,6 @@ which will place the compiled tools in *src/target/release*
 
 ## License
 
-All utilities released under a [MIT License](LICENSE.md).
+Project released under a [MIT License](LICENSE.md).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE.md)
