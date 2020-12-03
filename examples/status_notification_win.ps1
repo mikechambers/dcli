@@ -13,7 +13,6 @@
 # https://github.com/mikechambers/dcli/
 
 
-
 ################ Script configuration #################
 $default_check_interval_seconds=15
 
@@ -25,6 +24,7 @@ $only_check_if_destiny_running = $true
 #whether it should print out status and other output to console
 $quiet=$false
 
+#you can get member_id and platform by running dclis
 $member_id="00000000000000000000"
 $platform="xbox"
 
