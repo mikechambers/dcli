@@ -22,3 +22,13 @@ Requires a modern / updated version of bash to run on OS X. More info [here](htt
 ### [osx_status_notification](osx_status_notification)
 
 Bash script for Mac OS X which monitors a player's Destiny 2 status, and sends a notification with info on the new status when it changes.
+
+### Snippets
+
+#### Grab and print a single value
+
+Prints out K/D for all modes for the past month:
+```
+$ dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period month --output tsv | grep kills_deaths_ratio | awk '{print $2}'
+1.5986928
+```
