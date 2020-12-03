@@ -9,11 +9,6 @@ repository = "https://github.com/mikechambers/dcli"
 license = "MIT"
 readme = "README.md"
 
-[profile.release]
-opt-level = 'z'
-lto = true
-codegen-units = 1
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
