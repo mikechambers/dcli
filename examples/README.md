@@ -19,9 +19,12 @@ Bash script that reads crucible stat data from dclics, and outputs a summary (wi
 
 Requires a modern / updated version of bash to run on OS X. More info [here](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba).
 
-### [osx_status_notification](osx_status_notification)
+### [status_notification]
 
-Bash script for Mac OS X which monitors a player's Destiny 2 status, and sends a notification with info on the new status when it changes.
+* [osx_status_notification](osx_status_notification)
+* [windows_status_notification.ps1](osx_status_notification)
+
+Bash (for Mac OS X) and Windows Powershell scripts script which monitors a player's Destiny 2 status, and sends a notification with info on the new status when it changes.
 
 ### Snippets
 
