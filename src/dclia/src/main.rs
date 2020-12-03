@@ -149,7 +149,7 @@ async fn main() {
     if activity_data_m.place_hash == ORBIT_PLACE_HASH {
         match opt.output {
             Output::Default => {
-                println!("Currently sitting in Orbit");
+                println!("{}", get_in_orbit_human());
             }
             Output::Tsv => {
                 print_tsv_orbit();
@@ -200,7 +200,9 @@ async fn main() {
     //lets find out the mode / activity type name
     print_verbose("Determining activity mode", opt.verbose);
     let activity_type_name: String = match activity_data_a.current_activity_mode_type {
-        //if its set in the API data, we use that
+        // if its set in the API data, we use that
+        // this is due to this bug:
+        // https://github.com/Bungie-net/api/issues/1341
         Some(e) => {
             mode = e;
             format!("{}", e)
@@ -231,6 +233,11 @@ async fn main() {
         }
     };
 
+    // note if for some reason correct activities are not displayed for some
+    // crucible modes, then this may be false (i've only seen this as an issue
+    // for raids thought (see link above for bug (raid)))
+    let is_crucible = mode.is_crucible();
+
     let description = activity_data_m
         .display_properties
         .description
@@ -252,11 +259,13 @@ async fn main() {
         }
         Output::Tsv => {
             print_tsv(
+                mode,
                 &activity_type_name,
                 &activity_name,
                 &place_name,
                 &destination_name,
                 &description,
+                is_crucible,
                 true,
             );
         }
@@ -264,23 +273,32 @@ async fn main() {
 }
 
 fn print_tsv_orbit() {
-    print_tsv("", "", "Orbit", "", "", true);
+    print_tsv(Mode::None, "", "", "Orbit", "", "", false, true);
 }
 
 fn print_tsv_no_activity() {
-    print_tsv("", "", "", "", "", false);
+    print_tsv(Mode::None, "", "", "", "", "", false, false);
 }
 
 fn print_tsv(
+    mode:Mode,
     activity_type_name: &str,
     activity_name: &str,
     place_name: &str,
     destination_name: &str,
     description: &str,
+    is_crucible:bool,
     in_activity: bool,
 ) {
-    //activity_type_name, activity_name, place_name, destination_name, description
 
+    //figure out if they are in orbit since bungie doesnt give us
+    //a mode for it
+    let human_status = if mode == Mode::None && in_activity {
+        get_in_orbit_human()
+    } else {
+        build_human_status(mode, activity_type_name, activity_name, place_name, destination_name, description)
+    };
+    
     let mut name_values: Vec<(&str, String)> = Vec::new();
 
     name_values.push(("in_activity", in_activity.to_string()));
@@ -289,19 +307,33 @@ fn print_tsv(
     name_values.push(("place_name", place_name.to_string()));
     name_values.push(("destination_name", destination_name.to_string()));
     name_values.push(("description", description.to_string()));
+    name_values.push(("human_status", human_status));
+    name_values.push(("is_crucible", is_crucible.to_string()));
 
     print!("{}", build_tsv(name_values));
 }
 
-fn print_default(
+fn print_default(    mode: Mode,
+    activity_type_name: &str,
+    activity_name: &str,
+    place_name: &str,
+    _destination_name: &str,
+    description: &str,) {
+
+    let out = build_human_status(mode, activity_type_name, activity_name, place_name, _destination_name, description);
+
+    println!("{}", out);
+}
+
+fn build_human_status(
     mode: Mode,
     activity_type_name: &str,
     activity_name: &str,
     place_name: &str,
     _destination_name: &str,
     description: &str,
-) {
-    let out = if mode == Mode::Patrol {
+) -> String {
+    if mode == Mode::Patrol {
         format!("Exploring on {}", place_name)
     } else if mode.is_gambit() || mode.is_crucible() {
         format!(
@@ -314,7 +346,7 @@ fn print_default(
             activity_name, activity_type_name, place_name
         )
     } else if mode == Mode::Social {
-        format!("Hanging out in {} on {}", activity_name, place_name)
+        format!("Hanging out in the {} on {}", activity_name, place_name)
     } else if mode == Mode::Story {
         format!("Playing {} story on {}", activity_name, place_name)
     } else if mode.is_nightfall() {
@@ -327,7 +359,9 @@ fn print_default(
             "Playing {} {} on {}",
             activity_name, activity_type_name, place_name
         )
-    };
+    }
+}
 
-    println!("{}", out);
+fn get_in_orbit_human() -> String {
+    "Currently sitting in Orbit".to_string()
 }

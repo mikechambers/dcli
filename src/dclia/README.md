@@ -79,12 +79,14 @@ dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --p
 outputs:
 
 ```
-in_activity     true
-activity_type_name      Strike
-activity_name   The Inverted Spire
-place_name      Nessus
-destination_name        Arcadian Valley
-description     End the Red Legion expedition that's ripped open the planet's surface.
+in_activity	true
+activity_type_name	Strike
+activity_name	The Inverted Spire
+place_name	Nessus
+destination_name	Arcadian Valley
+description	End the Red Legion expedition that's ripped open the planet's surface.
+human_status	Running The Inverted Spire Strike on Nessus
+is_crucible	false
 ```
 
 ## Questions, Feature Requests, Feedback
