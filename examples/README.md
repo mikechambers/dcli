@@ -13,7 +13,7 @@ All examples in hosted in this project are released under an MIT license.
 
 ## Examples
 
-### stats_report
+### [stats_report](stats_report)
 
 bash script that reads crucible stat data from dclics, and outputs a summary (will speak it if running on OS X). Demonstrates how to parse TSV name / value data from dcli apps into bash variables.
 
