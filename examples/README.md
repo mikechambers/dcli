@@ -18,3 +18,13 @@ All examples in hosted in this project are released under an MIT license.
 bash script that reads crucible stat data from dclics, and outputs a summary (will speak it if running on OS X). Demonstrates how to parse TSV name / value data from dcli apps into bash variables.
 
 Requires a modern / updated version of bash to run on OS X. More info [here](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba).
+
+### Snippets
+
+#### Grab and print a single value
+
+Prints out K/D for all modes for the past month:
+```
+$ dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period month --output tsv | grep kills_deaths_ratio | awk '{print $2}'
+1.5986928
+```
