@@ -80,8 +80,6 @@ while ($true) {
 
             $old_activity = $activity
     
-            #TODO: when we find a new activity, lets delay the next check for a bit, in case the server api returns old data
-            # for a short period
             $check_interval_seconds = 60
         }
     } else {
