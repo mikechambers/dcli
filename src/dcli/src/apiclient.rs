@@ -26,6 +26,7 @@ use crate::utils::print_verbose;
 use reqwest::Url;
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
+const API_TIMEOUT: u64 = 10; //seconds
 
 //this makes sure that the env variable isnt set, but empty
 static_assertions::const_assert!(DESTINY_API_KEY.len() > 0);
@@ -44,7 +45,9 @@ impl ApiClient {
 
         print_verbose(&format!("{}", url), self.verbose);
 
-        let client = reqwest::Client::new();
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(API_TIMEOUT))
+            .build()?;
 
         let response = client
             .get(url)

@@ -42,6 +42,8 @@ pub enum Error {
     //Api key not set correctly
     ApiKeyMissingFromRequest,
     ApiNotAvailableException,
+    RequestTimedOut,
+    Request,
     PrivacyException,
     Database { description: String },
     ApiParse { description: String },
@@ -107,7 +109,14 @@ impl Display for Error {
                 f,
                 "Received response from API but no response property was present."
             ),
-            
+            Error::RequestTimedOut => write!(
+                f,
+                "The API request took too long. Check your network connection and try again. (The API servers may be slow right now)."
+            ),
+            Error::Request => write!(
+                f,
+                "There was an error during the API request. This often means that we could not reach the Destiny servers. Check the network connection and try again (The API servers might not be available.)."
+            ),
         }
     }
 }
@@ -122,9 +131,28 @@ impl From<serde_json::Error> for Error {
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Error {
-        Error::ApiRequest {
-            description: format!("reqwest::Error : {:#?}", err),
-        }
+
+        /*
+        //todo: need to figure out how to downcast to hyber error
+        //so we can get more details on the error (i.e. network failure)
+        //https://stackoverflow.com/a/61100595/10232
+        let hyper_error: Option<&hyper::Error> = reqwest_error
+            .source()
+            .unwrap()
+            .downcast_ref();
+        */
+
+        let error = if err.is_timeout() {
+            Error::RequestTimedOut
+        } else if err.is_request() {
+            Error::Request
+        } else {
+            Error::ApiRequest {
+                description: format!("reqwest::Error : {:#?}", err)
+            }
+        };
+
+        error
     }
 }
 
