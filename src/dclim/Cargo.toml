@@ -17,7 +17,7 @@ tokio = { version="0.2.21", features=["full"] }
 serde = "1.0.117"
 serde_json = "1.0.59"
 serde_derive = "1.0.117"
-reqwest = { version="0.10.8", features=["json"] }
+reqwest = { version="0.10.8"}
 zip = "0.5"
 
 dcli = { path = "../dcli/"}
