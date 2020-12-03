@@ -22,7 +22,7 @@ OLD_ACTIVITY=""
 while :
 do
     echo "Checking Status"
-	ACTIVITY=$(dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id $MEMBER_ID --platform $PLATFORM)
+    ACTIVITY=$(dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id $MEMBER_ID --platform $PLATFORM)
     #note should do some error checking here in case command fails (can capture exit code)
 
     echo $OLD_ACTIVITY
@@ -37,5 +37,5 @@ do
         OLD_ACTIVITY=$ACTIVITY
     fi
 
-	sleep $CHECK_INTERVAL_SECONDS
+    sleep $CHECK_INTERVAL_SECONDS
 done
