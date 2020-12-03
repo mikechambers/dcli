@@ -27,7 +27,7 @@ round() {
 }
 
 #capture output of command into a variable / we could also pipe this in
-OUTPUT=$(/Users/mesh/src/dcli/src/target/release/dclics --member-id 4611686018429783292 --platform xbox --mode all \
+OUTPUT=$(dclics --member-id 4611686018429783292 --platform xbox --mode all \
 --character-id 2305843009264966985 --period month --output tsv)
 
 # replace tabs with '='. We could probably skip this step, but I couldnt get it
