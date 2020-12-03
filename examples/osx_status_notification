@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# Monitors changes in activity status and send notification when it changes
+#
+# Works on: Mac OS X
+#
+# Created by Mike Chambers
+# https://www.mikechambers.com
+#
+# Released under an MIT License
+# More info at:
+# https://github.com/mikechambers/dcli/
+
+#get member id and platform from dclim
+MEMBER_ID=00000000000000000000
+PLATFORM=xbox
+CHECK_INTERVAL_SECONDS=15
+
+echo "CTRL-C to end program"
+
+OLD_ACTIVITY=""
+while :
+do
+    echo "Checking Status"
+	ACTIVITY=$(dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id $MEMBER_ID --platform $PLATFORM)
+    #note should do some error checking here in case command fails (can capture exit code)
+
+    echo $OLD_ACTIVITY
+    echo $ACTIVITY
+
+    #we could have the command above output name / value pairs via --output tsv
+    #and then filter based on type of activity (i.e. crucible, strikes, etc...)
+    if [ "$OLD_ACTIVITY" != "$ACTIVITY" ]; then
+        echo "Status has changed"
+        echo $ACTIVITY
+        osascript -e "display notification \"${ACTIVITY}\" with title \"Destiny 2 Activity Changed\""
+        OLD_ACTIVITY=$ACTIVITY
+    fi
+
+	sleep $CHECK_INTERVAL_SECONDS
+done

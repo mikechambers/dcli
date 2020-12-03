@@ -15,6 +15,10 @@ All examples in hosted in this project are released under an MIT license.
 
 ### [stats_report](stats_report)
 
-bash script that reads crucible stat data from dclics, and outputs a summary (will speak it if running on OS X). Demonstrates how to parse TSV name / value data from dcli apps into bash variables.
+Bash script that reads crucible stat data from dclics, and outputs a summary (will speak it if running on OS X). Demonstrates how to parse TSV name / value data from dcli apps into bash variables.
 
 Requires a modern / updated version of bash to run on OS X. More info [here](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba).
+
+### [osx_status_notification](osx_status_notification)
+
+Bash script for Mac OS X which monitors a player's Destiny 2 status, and sends a notification with info on the new status when it changes.
