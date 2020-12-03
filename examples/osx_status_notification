@@ -11,7 +11,7 @@
 # More info at:
 # https://github.com/mikechambers/dcli/
 
-#get member id and platform from dclim
+#you can get your member id and platform from dclim
 MEMBER_ID=00000000000000000000
 PLATFORM=xbox
 CHECK_INTERVAL_SECONDS=15
@@ -24,9 +24,6 @@ do
     echo "Checking Status"
     ACTIVITY=$(dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id $MEMBER_ID --platform $PLATFORM)
     #note should do some error checking here in case command fails (can capture exit code)
-
-    echo $OLD_ACTIVITY
-    echo $ACTIVITY
 
     #we could have the command above output name / value pairs via --output tsv
     #and then filter based on type of activity (i.e. crucible, strikes, etc...)
