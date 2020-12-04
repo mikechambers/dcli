@@ -1,6 +1,6 @@
 [package]
 name = "dclim"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
 edition = "2018"
 description = "Command line tool for managing and syncing the remote Destiny 2 API manifest database."

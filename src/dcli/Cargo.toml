@@ -1,6 +1,6 @@
 [package]
 name = "dcli"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
 edition = "2018"
 description = "Library for the dcli collection of command line tools for Destiny 2."

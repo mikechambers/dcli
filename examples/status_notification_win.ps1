@@ -11,6 +11,8 @@
 # Released under an MIT License
 # More info at:
 # https://github.com/mikechambers/dcli/
+#
+# Requires dclia v0.1.1
 
 
 ################ Script configuration #################
@@ -51,7 +53,7 @@ while ($true) {
         # assumes dclia is in your path
         $activity = (dclia --manifest-path $manifest_path --member-id $member_id --platform $platform) -join "`n"
         #note the inconsistent use of trailing period. Ill fix this in the app
-        $skip_notification = (($activity -eq "Not currently in an activity.") -or ($activity -eq "Currently sitting in Orbit"))
+        $skip_notification = (($activity -eq "Not currently in an activity") -or ($activity -eq "Currently sitting in Orbit"))
     
         #dont send notification the first time we run
         if($old_activity -eq "") {
@@ -79,7 +81,6 @@ while ($true) {
             }
 
             $old_activity = $activity
-    
             $check_interval_seconds = 60
         }
     } else {

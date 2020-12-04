@@ -281,24 +281,30 @@ fn print_tsv_no_activity() {
 }
 
 fn print_tsv(
-    mode:Mode,
+    mode: Mode,
     activity_type_name: &str,
     activity_name: &str,
     place_name: &str,
     destination_name: &str,
     description: &str,
-    is_crucible:bool,
+    is_crucible: bool,
     in_activity: bool,
 ) {
-
     //figure out if they are in orbit since bungie doesnt give us
     //a mode for it
     let human_status = if mode == Mode::None && in_activity {
         get_in_orbit_human()
     } else {
-        build_human_status(mode, activity_type_name, activity_name, place_name, destination_name, description)
+        build_human_status(
+            mode,
+            activity_type_name,
+            activity_name,
+            place_name,
+            destination_name,
+            description,
+        )
     };
-    
+
     let mut name_values: Vec<(&str, String)> = Vec::new();
 
     name_values.push(("in_activity", in_activity.to_string()));
@@ -313,14 +319,22 @@ fn print_tsv(
     print!("{}", build_tsv(name_values));
 }
 
-fn print_default(    mode: Mode,
+fn print_default(
+    mode: Mode,
     activity_type_name: &str,
     activity_name: &str,
     place_name: &str,
     _destination_name: &str,
-    description: &str,) {
-
-    let out = build_human_status(mode, activity_type_name, activity_name, place_name, _destination_name, description);
+    description: &str,
+) {
+    let out = build_human_status(
+        mode,
+        activity_type_name,
+        activity_name,
+        place_name,
+        _destination_name,
+        description,
+    );
 
     println!("{}", out);
 }

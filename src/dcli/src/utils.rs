@@ -26,8 +26,8 @@ use std::env;
 use std::ffi::OsStr;
 use std::path::Path;
 
-use std::io::{stdout, Write};
 use crossterm::{execute, terminal};
+use std::io::{stdout, Write};
 
 //use chrono::prelude::*;
 
@@ -128,7 +128,6 @@ pub fn repeat_str(s: &str, count: usize) -> String {
 
 /// Clears screen. Works across platforms
 pub fn clear_scr() {
-    
     let mut stdout = stdout();
     //just silently fail if something goes wrong
     //note execute flushes queue immediately
