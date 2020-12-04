@@ -110,7 +110,7 @@ async fn main() {
         None => {
             match opt.output {
                 Output::Default => {
-                    println!("Not currently in an activity.");
+                    println!("Not currently in an activity");
                 }
                 Output::Tsv => {
                     print_tsv_no_activity();

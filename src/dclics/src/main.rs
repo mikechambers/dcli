@@ -106,6 +106,8 @@ fn print_tsv(
 fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
     let p = format_f32;
     let title: String = format!("Destiny 2 stats for {:#} {:#}", mode, period);
+
+    println!();
     println!("{}", title);
     println!("{}", repeat_str("=", title.chars().count()));
 

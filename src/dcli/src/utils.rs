@@ -26,6 +26,9 @@ use std::env;
 use std::ffi::OsStr;
 use std::path::Path;
 
+use std::io::{stdout, Write};
+use crossterm::{execute, terminal};
+
 //use chrono::prelude::*;
 
 pub const EXIT_SUCCESS: i32 = 0;
@@ -123,7 +126,16 @@ pub fn repeat_str(s: &str, count: usize) -> String {
     std::iter::repeat(s).take(count).collect::<String>()
 }
 
+/// Clears screen. Works across platforms
 pub fn clear_scr() {
+    
+    let mut stdout = stdout();
+    //just silently fail if something goes wrong
+    //note execute flushes queue immediately
+    let _ = execute!(stdout, terminal::Clear(terminal::ClearType::All));
+}
+
+pub fn clear_terminal() {
     print!("{}[2J", 27 as char);
 }
 
