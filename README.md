@@ -2,4 +2,4 @@
 
 This is a non-maintained copy of [dcli](https://github.com/mikechambers/dcli/) used to test Github Actions workflows.
 
-[#1](#1)
+#1
