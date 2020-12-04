@@ -52,7 +52,6 @@ while ($true) {
 
         # assumes dclia is in your path
         $activity = (dclia --manifest-path $manifest_path --member-id $member_id --platform $platform) -join "`n"
-        #note the inconsistent use of trailing period. Ill fix this in the app
         $skip_notification = (($activity -eq "Not currently in an activity") -or ($activity -eq "Currently sitting in Orbit"))
     
         #dont send notification the first time we run
