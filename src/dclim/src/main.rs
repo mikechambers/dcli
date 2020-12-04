@@ -68,8 +68,9 @@ fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
         let _m = std::fs::create_dir_all(&m_dir)?;
     }
 
-    //do we really need this step?
-    let m_dir = std::fs::canonicalize(&m_dir.as_path())?;
+    //commenting out as it creates weird paths on windows. need to test this
+    //doesnt break other platforms.
+    //let m_dir = std::fs::canonicalize(&m_dir.as_path())?;
 
     Ok(m_dir)
 }
