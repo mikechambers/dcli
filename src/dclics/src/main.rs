@@ -33,7 +33,7 @@ use dcli::timeperiod::TimePeriod;
 use dcli::cruciblestats::CrucibleStats;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{
-    build_tsv, clear_scr, format_f32, human_duration, print_error, print_verbose, repeat_str,
+    build_tsv, format_f32, human_duration, print_error, print_verbose, repeat_str,
 };
 
 fn print_tsv(
@@ -362,9 +362,6 @@ async fn main() {
 
     match opt.output {
         Output::Default => {
-            if !opt.verbose {
-                clear_scr();
-            }
             print_default(data, opt.mode, opt.period);
         }
         Output::Tsv => {
