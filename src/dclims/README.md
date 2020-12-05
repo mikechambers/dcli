@@ -46,7 +46,7 @@ Manifest can be downloaded and synced with from [dclim](https://github.com/mikec
 
 #### Retrieve information for *Luna's Howl* by its API hash id.
 ```
-dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 3260604718
+$ dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 3260604718
 ```
 
 which returns:
@@ -63,7 +63,7 @@ Icon Path      https://www.bungie.net/common/destiny2_content/icons/f59ce6481de3
 #### Retrieve information for *Luna's Howl* by its API hash id and output to tab seperated format (tsv)
 
 ```
-dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 153979396 --output tsv
+$ dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 153979396 --output tsv
 ```
 
 outputs:
@@ -86,7 +86,7 @@ When compiling you must have an environment variable named `DESTINY_API_KEY` whi
 To compile, switch to the `src/` directory and run:
 
 ```
-cargo build --release
+$ cargo build --release
 ```
 
 which will place the compiled tools in *src/target/release*

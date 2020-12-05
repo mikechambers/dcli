@@ -91,7 +91,7 @@ member-id and platform can be retrieved with [dclis](https://github.com/mikecham
 #### Print all stats for last week
 
 ```
-dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period week
+$ dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period week
 ```
 
 outputs:
@@ -115,19 +115,19 @@ You have had an average life span of 1 minute 11 seconds with an average kill di
 #### Show life time stats for Iron Banner across all characters
 
 ```
-dclics --member-id 4611686018429783292 --platform xbox --mode ironbanner --period alltime
+$ dclics --member-id 4611686018429783292 --platform xbox --mode ironbanner --period alltime
 ```
 
 #### Show stats for Trials of Osiris since the last weekly reset
 
 ```
-dclics --member-id 4611686018429783292 --platform xbox --mode trialsofosiris --character-id 2305843009264966985 --period reset
+$ dclics --member-id 4611686018429783292 --platform xbox --mode trialsofosiris --character-id 2305843009264966985 --period reset
 ```
 
 #### Show life time stats for comp, outputing to a tab seperated format
 
 ```
-dclics --member-id 4611686018429783292 --platform xbox --mode comp --period alltime --output tsv
+$ dclics --member-id 4611686018429783292 --platform xbox --mode comp --period alltime --output tsv
 ```
 
 outputs:
@@ -181,7 +181,7 @@ When compiling you must have an environment variable named `DESTINY_API_KEY` whi
 To compile, switch to the `src/` directory and run:
 
 ```
-cargo build --release
+$ cargo build --release
 ```
 
 which will place the compiled tools in *src/target/release*

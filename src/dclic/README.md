@@ -95,7 +95,7 @@ When compiling you must have an environment variable named `DESTINY_API_KEY` whi
 To compile, switch to the `src/` directory and run:
 
 ```
-cargo build --release
+$ cargo build --release
 ```
 
 which will place the compiled tools in *src/target/release*

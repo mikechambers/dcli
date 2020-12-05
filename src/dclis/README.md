@@ -55,7 +55,7 @@ Id is either an Xbox, or PSN gamertag, a Stadia gamertag in the form of NAME#ID,
 
 #### Search for member id for a player on xbox
 ```
-dclis --id mesh --platform xbox
+$ dclis --id mesh --platform xbox
 ```
 
 which will output:
@@ -70,7 +70,7 @@ Platform Id    1
 #### Search for the membership id using the steam 64 id
 
 ```
-dclis --id 76561197984551459 --platform steam
+$ dclis --id 76561197984551459 --platform steam
 ```
 
 which will output:
@@ -86,7 +86,7 @@ When searching via steam id, Display Name will be the steam id.
 #### Search for member id for a player on xbox and output to a tab seperated format (tsv)
 
 ```
-dclis --id mesh --platform xbox --output tsv
+$ dclis --id mesh --platform xbox --output tsv
 ```
 outputs:
 
@@ -109,7 +109,7 @@ When compiling you must have an environment variable named `DESTINY_API_KEY` whi
 To compile, switch to the `src/` directory and run:
 
 ```
-cargo build --release
+$ cargo build --release
 ```
 
 which will place the compiled tools in *src/target/release*

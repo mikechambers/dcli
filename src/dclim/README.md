@@ -50,17 +50,17 @@ OPTIONS:
 
 #### Check for an updated manifest and store any new version in *~/manifest/*:
 ```
-dclim --manifest-dir ~/manifest/
+$ dclim --manifest-dir ~/manifest/
 ```
 
 #### Download remote manifest and store in *~/manifest/* directory regardless of whether remote is updated.
 ```
-dclim --manifest-dir ~/manifest/ --force
+$ dclim --manifest-dir ~/manifest/ --force
 ```
 
 #### Check status of remote manifest, but do not download. Print out additional information.
 ```
-dclim --manifest-dir ~/manifest/ --check --verbose
+$ dclim --manifest-dir ~/manifest/ --check --verbose
 ```
 
 which outputs:
@@ -77,7 +77,7 @@ Updated manifest available    89360.20.11.18.2249-6
 #### Check for an updated manifest print output in a tab seperated format (tsv)
 
 ```
-dclim --manifest-dir ~/manifest/ --output tsv
+$ dclim --manifest-dir ~/manifest/ --output tsv
 ```
 
 outputs:
@@ -106,7 +106,7 @@ When compiling you must have an environment variable named `DESTINY_API_KEY` whi
 To compile, switch to the `src/` directory and run:
 
 ```
-cargo build --release
+$ cargo build --release
 ```
 
 which will place the compiled tools in *src/target/release*

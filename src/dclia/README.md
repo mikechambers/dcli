@@ -61,7 +61,7 @@ Manifest can be downloaded and synced with from [dclim](https://github.com/mikec
 
 
 ```
-dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox
+$ dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox
 ```
 
 outputs:
@@ -73,7 +73,7 @@ Playing Deep Stone Crypt Raid on Castalia Macula, Europa
 #### Check for current activity with tab seperated output:
 
 ```
-dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox --output tsv
+$ dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox --output tsv
 ```
 
 outputs:
@@ -104,7 +104,7 @@ When compiling you must have an environment variable named `DESTINY_API_KEY` whi
 To compile, switch to the `src/` directory and run:
 
 ```
-cargo build --release
+$ cargo build --release
 ```
 
 which will place the compiled tools in *src/target/release*
