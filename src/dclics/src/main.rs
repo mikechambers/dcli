@@ -324,7 +324,7 @@ async fn main() {
                 Ok(e) => match e {
                     Some(e) => e,
                     None => {
-                        println!("No results found.");
+                        println!("No results found");
                         return;
                     }
                 },
@@ -348,7 +348,7 @@ async fn main() {
                 Ok(e) => match e {
                     Some(e) => e,
                     None => {
-                        println!("No results found.");
+                        println!("No results found");
                         return;
                     }
                 },
