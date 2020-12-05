@@ -19,7 +19,7 @@ Bash script that reads crucible stat data from dclics, and outputs a summary (wi
 
 Requires a modern / updated version of bash to run on OS X. More info [here](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba).
 
-### [status_notification]
+### status_notification
 
 * [status_notification_osx](status_notification_osx)
 * [status_notification_win.ps1](status_notification_win.ps1)
@@ -28,7 +28,7 @@ Bash (for Mac OS X) and Windows Powershell scripts script which monitors a playe
 
 This is particularly useful on Windows when playing Crucible, as it will display a notification as you load into the map, telling you which map you are loading into.
 
-### [mail_report][mail_report]
+### [mail_report](mail_report)
 
 Bash script that uses dclics to generate and send a email report of weekly Crucible stats. Can be scheduled as part of a crontab job to automate sending.
 
