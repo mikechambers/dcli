@@ -26,4 +26,5 @@ pub mod gpr;
 pub mod manifest;
 pub mod stats;
 pub mod utils;
+pub mod activities;
 

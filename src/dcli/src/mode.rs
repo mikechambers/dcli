@@ -247,6 +247,7 @@ impl fmt::Display for Mode {
     }
 }
 
+/*************************** Crucible Mode *******************************/
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub enum CrucibleMode {
     AllPvP = 5,
@@ -308,6 +309,71 @@ impl fmt::Display for CrucibleMode {
             CrucibleMode::PvPCompetitive => "Competitive",
             CrucibleMode::PvPQuickplay => "Quickplay",
             CrucibleMode::TrialsOfOsiris => "Trials of Osiris",
+        };
+
+        write!(f, "{}", out)
+    }
+}
+
+/*************************** Activity Mode *******************************/
+#[derive(PartialEq, Clone, Copy, Debug)]
+pub enum ActivityMode {
+    AllPvP = 5,
+    Control = 10,
+    Clash = 12,
+    AllMayhem = 25,
+    IronBanner = 19,
+    PrivateMatchesAll = 32,
+    Rumble = 48,
+    PvPCompetitive = 69,
+    PvPQuickplay = 70,
+    TrialsOfOsiris = 84,
+}
+
+impl ActivityMode {
+    pub fn to_id(&self) -> u32 {
+        *self as u32
+    }
+}
+
+impl FromStr for ActivityMode {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        //wrap in String so we can convert to lower case
+        let s = String::from(s).to_lowercase();
+
+        //get a slice to get a &str for the match
+        match &s[..] {
+            "all" => Ok(ActivityMode::AllPvP),
+            "control" => Ok(ActivityMode::Control),
+            "clash" => Ok(ActivityMode::Clash),
+            "mayhem" => Ok(ActivityMode::AllMayhem),
+            "ironbanner" => Ok(ActivityMode::IronBanner),
+            "private" => Ok(ActivityMode::PrivateMatchesAll),
+            "rumble" => Ok(ActivityMode::Rumble),
+            "comp" => Ok(ActivityMode::PvPCompetitive),
+            "quickplay" => Ok(ActivityMode::PvPQuickplay),
+            "trialsofosiris" => Ok(ActivityMode::TrialsOfOsiris),
+
+            _ => Err("Unknown Crucible Mode type"),
+        }
+    }
+}
+
+impl fmt::Display for ActivityMode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let out = match self {
+            ActivityMode::AllPvP => "all Crucible modes",
+            ActivityMode::Control => "Control",
+            ActivityMode::Clash => "Clash",
+            ActivityMode::AllMayhem => "Mayhem",
+            ActivityMode::IronBanner => "Iron Banner",
+            ActivityMode::PrivateMatchesAll => "Private Matches",
+            ActivityMode::Rumble => "Rumble",
+            ActivityMode::PvPCompetitive => "Competitive",
+            ActivityMode::PvPQuickplay => "Quickplay",
+            ActivityMode::TrialsOfOsiris => "Trials of Osiris",
         };
 
         write!(f, "{}", out)

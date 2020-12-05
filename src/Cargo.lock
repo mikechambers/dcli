@@ -340,6 +340,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dcliah"
+version = "0.1.0"
+dependencies = [
+ "dcli",
+ "structopt",
+ "tokio",
+]
+
+[[package]]
 name = "dclic"
 version = "0.1.1"
 dependencies = [

@@ -28,6 +28,7 @@
 //and app specific errors
 
 use std::fmt::{Display, Formatter, Result};
+use crate::response::activities::MAX_ACTIVITIES_REQUEST_COUNT;
 
 #[derive(PartialEq, Debug)]
 pub enum Error {
@@ -54,6 +55,7 @@ pub enum Error {
     Unknown { description: String },
     ManifestNotSet,
     ManifestItemNotFound { description: String },
+    MaxActivitiesRequestCountExceeded,
 }
 
 impl Display for Error {
@@ -116,6 +118,12 @@ impl Display for Error {
             Error::Request => write!(
                 f,
                 "There was an error during the API request. This often means that we could not reach the Destiny servers. Check the network connection and try again (The API servers might not be available.)."
+            ),
+
+            Error::MaxActivitiesRequestCountExceeded => write!(
+                f,
+                "The maximum number of activities ({}) requested was exceeded.",
+                MAX_ACTIVITIES_REQUEST_COUNT
             ),
         }
     }

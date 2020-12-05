@@ -22,13 +22,14 @@
 
 use crate::apiclient::ApiClient;
 use crate::error::Error;
-use crate::mode::CrucibleMode;
+use crate::mode::{CrucibleMode, ActivityMode};
 use crate::platform::Platform;
 use crate::response::character::CharacterData;
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
 };
+use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
 use chrono::{DateTime, Utc};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -230,5 +231,50 @@ impl ApiInterface {
             .daily;
 
         Ok(data)
+    }
+
+
+    pub async fn retrieve_last_activities(
+        &self,
+        member_id: &str,
+        character_id: &str,
+        platform: &Platform,
+        mode: &ActivityMode,
+        count:i32,
+    ) -> Result<Option<Vec<Activity>>, Error> {
+
+        if count > MAX_ACTIVITIES_REQUEST_COUNT {
+            return Err(Error::MaxActivitiesRequestCountExceeded);
+        }
+
+
+        //
+        let url =
+        format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/Activities/?mode={mode_id}&count={count}",
+            platform_id = platform.to_id(),
+            member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
+            character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
+            mode_id = mode.to_id(),
+            count=count,
+        );
+
+        let response: ActivitiesResponse = self
+            .client
+            .call_and_parse::<ActivitiesResponse>(&url)
+            .await?;
+
+        //It would be nice to handle the missing response property in call_and_parse
+        //but we cant set a trait that requires a property, and since every Response
+        //is actually a different type / struct, we cant dynamically specify it to the
+        //call_and_parse function. Maybe there is a way to do it, but I have figured it
+        //out so for now, we need to write some boilerplate code
+        let activities: Option<Vec<Activity>> = response
+            .response
+            .ok_or(Error::ApiRequest {
+                description: String::from("No response data from API Call."),
+            })?
+            .activities;
+
+        Ok(activities)
     }
 }
