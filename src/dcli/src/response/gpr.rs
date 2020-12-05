@@ -24,7 +24,7 @@ use crate::mode::Mode;
 use crate::response::character::CharacterData;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 
-use crate::apiutils::str_to_datetime;
+use crate::response::utils::str_to_datetime;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 

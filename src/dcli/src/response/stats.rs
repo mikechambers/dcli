@@ -20,11 +20,15 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::apiutils::str_to_datetime;
-use crate::cruciblestats::CrucibleStats;
+use crate::response::utils::str_to_datetime;
+use crate::utils::{
+    calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
+};
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
+use crate::response::utils::{property_to_float, property_to_option_float};
+use std::ops;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AllTimePvPStatsResponse {
@@ -65,96 +69,126 @@ pub struct AllTimePvPStatsData {
     pub all_time: Option<PvpStatsData>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy)]
 pub struct PvpStatsData {
-    #[serde(rename = "activitiesEntered")]
-    pub activities_entered: PvpAllTimeStatItemData,
+    #[serde(rename = "activitiesEntered", deserialize_with="property_to_float")]
+    pub activities_entered:f32,
 
-    #[serde(rename = "activitiesWon")]
-    pub activities_won: PvpAllTimeStatItemData,
+    #[serde(rename = "activitiesWon", deserialize_with="property_to_float")]
+    pub activities_won:f32,
 
-    pub assists: PvpAllTimeStatItemData,
+    #[serde(deserialize_with="property_to_float")]
+    pub assists:f32,
 
-    pub kills: PvpAllTimeStatItemData,
+    #[serde(deserialize_with="property_to_float")]
+    pub kills:f32,
 
-    #[serde(rename = "averageKillDistance")]
-    pub average_kill_distance: PvpAllTimeStatItemData,
+    #[serde(rename = "averageKillDistance", deserialize_with="property_to_float")]
+    pub average_kill_distance:f32,
 
-    #[serde(rename = "totalKillDistance")]
-    pub total_kill_distance: PvpAllTimeStatItemData,
+    #[serde(rename = "totalKillDistance", deserialize_with="property_to_float")]
+    pub total_kill_distance:f32,
 
-    #[serde(rename = "secondsPlayed")]
-    pub seconds_played: PvpAllTimeStatItemData,
+    #[serde(rename = "secondsPlayed", deserialize_with="property_to_float")]
+    pub seconds_played:f32,
 
-    pub deaths: PvpAllTimeStatItemData,
+    #[serde(deserialize_with="property_to_float")]
+    pub deaths:f32,
 
-    #[serde(rename = "averageLifespan")]
-    pub average_lifespan: PvpAllTimeStatItemData,
+    #[serde(rename = "averageLifespan", deserialize_with="property_to_float")]
+    pub average_lifespan:f32,
 
-    #[serde(rename = "bestSingleGameKills")]
-    pub best_single_game_kills: Option<PvpAllTimeStatItemData>,
+    #[serde(rename = "bestSingleGameKills", deserialize_with="property_to_option_float")]
+    pub best_single_game_kills:Option<f32>,
 
-    #[serde(rename = "opponentsDefeated")]
-    pub opponents_defeated: PvpAllTimeStatItemData,
+    #[serde(rename = "opponentsDefeated", deserialize_with="property_to_float")]
+    pub opponents_defeated:f32,
 
-    pub efficiency: PvpAllTimeStatItemData,
+    #[serde(deserialize_with="property_to_float")]
+    pub efficiency:f32,
 
-    #[serde(rename = "killsDeathsRatio")]
-    pub kills_deaths_ratio: PvpAllTimeStatItemData,
+    #[serde(rename = "killsDeathsRatio", deserialize_with="property_to_float")]
+    pub kills_deaths_ratio:f32,
 
-    #[serde(rename = "killsDeathsAssists")]
-    pub kills_deaths_assists: PvpAllTimeStatItemData,
+    #[serde(rename = "killsDeathsAssists", deserialize_with="property_to_float")]
+    pub kills_deaths_assists:f32,
 
-    #[serde(rename = "precisionKills")]
-    pub precision_kills: PvpAllTimeStatItemData,
+    #[serde(rename = "precisionKills", deserialize_with="property_to_float")]
+    pub precision_kills:f32,
 
-    pub suicides: PvpAllTimeStatItemData,
+    #[serde(deserialize_with="property_to_float")]
+    pub suicides:f32,
 }
 
 impl PvpStatsData {
-    pub fn get_crucible_stats(&self) -> CrucibleStats {
-        let best_single_game_kills: Option<f32> = match self.best_single_game_kills.as_ref() {
-            Some(ref e) => Some(e.basic.value),
-            None => None,
-        };
+    pub fn get_activities_lost(&self) -> f32 {
+        self.activities_entered - self.activities_won
+    }
 
-        CrucibleStats {
-            activities_entered: self.activities_entered.basic.value,
-            activities_won: self.activities_won.basic.value,
-            activities_lost: self.activities_entered.basic.value - self.activities_won.basic.value,
-            assists: self.assists.basic.value,
-            kills: self.kills.basic.value,
-            average_kill_distance: self.average_kill_distance.basic.value,
-            total_kill_distance: self.total_kill_distance.basic.value,
-            seconds_played: self.seconds_played.basic.value,
-            deaths: self.deaths.basic.value,
-            average_lifespan: self.average_lifespan.basic.value,
-            total_lifespan: self.average_lifespan.basic.value * self.deaths.basic.value, //estimate
-            opponents_defeated: self.opponents_defeated.basic.value,
-            efficiency: self.efficiency.basic.value,
-            kills_deaths_ratio: self.kills_deaths_ratio.basic.value,
-            kills_deaths_assists: self.kills_deaths_assists.basic.value,
-            suicides: self.suicides.basic.value,
-            precision_kills: self.precision_kills.basic.value,
+    pub fn get_total_lifespan(&self) -> f32 {
+        self.average_lifespan * self.deaths //estimate
+    }
+}
+
+impl ops::Add<PvpStatsData> for PvpStatsData {
+    type Output = PvpStatsData;
+
+    fn add(self, _cs: PvpStatsData) -> PvpStatsData {
+        //note, all of this stuff for single game kills is actually not necessary
+        //since right now, its only returned when we get all time stats, not daily
+        //so we dont really every need to aggregate stats.
+        //but we will keep it here for completeness sake and in case the API is
+        //ever updated
+        let best_single_game_kills: Option<f32>;
+        if _cs.best_single_game_kills.is_none() || self.best_single_game_kills.is_none() {
+            if _cs.best_single_game_kills.is_none() {
+                best_single_game_kills = self.best_single_game_kills;
+            } else {
+                best_single_game_kills = _cs.best_single_game_kills;
+            }
+        } else {
+            let a = _cs.best_single_game_kills.unwrap();
+            let b = self.best_single_game_kills.unwrap();
+            let c = if a > b { a } else { b };
+            best_single_game_kills = Some(c);
+        }
+
+        let kills = self.kills + _cs.kills;
+        let total_kill_distance = self.total_kill_distance + _cs.total_kill_distance;
+        let assists = self.assists + _cs.assists;
+        let deaths = self.deaths + _cs.deaths;
+
+        let total_lifespan = self.get_total_lifespan() + _cs.get_total_lifespan();
+
+        //this doesnt completely work, since there are times where a lifespan
+        //does not end in death (i.e. end of game)
+        //so when aggregating values, this is an estimate
+        let average_lifespan = total_lifespan / deaths;
+
+        //todo : add activities_lost
+        PvpStatsData {
+            activities_entered: self.activities_entered + _cs.activities_entered,
+            activities_won: self.activities_won + _cs.activities_won,
+            //activities_lost: self.activities_lost + _cs.activities_lost,
+            assists,
+            kills,
+            average_kill_distance: total_kill_distance / kills,
+            total_kill_distance,
+            seconds_played: self.seconds_played + _cs.seconds_played,
+            deaths,
+            average_lifespan,
+            //total_lifespan,
+            opponents_defeated: self.opponents_defeated + _cs.opponents_defeated,
+            efficiency: calculate_efficiency(kills, deaths, assists),
+            kills_deaths_ratio: calculate_kills_deaths_ratio(kills, deaths),
+            kills_deaths_assists: calculate_kills_deaths_assists(kills, deaths, assists),
+            suicides: self.suicides + _cs.suicides,
             best_single_game_kills,
+            precision_kills: self.precision_kills + _cs.precision_kills,
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct PvpAllTimeStatItemData {
-    #[serde(rename = "statId")]
-    pub stat_id: String,
-    pub basic: BasicFloatData,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct BasicFloatData {
-    pub value: f32,
-
-    #[serde(rename = "displayValue")]
-    pub display_value: String,
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DailyPvPStatsResponse {

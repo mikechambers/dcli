@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::apiutils::str_to_datetime;
+use crate::response::utils::str_to_datetime;
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use serde_derive::{Deserialize, Serialize};

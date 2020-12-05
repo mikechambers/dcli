@@ -30,14 +30,13 @@ use dcli::platform::Platform;
 use dcli::response::stats::{DailyPvPStatsValuesData, PvpStatsData};
 use dcli::timeperiod::TimePeriod;
 
-use dcli::cruciblestats::CrucibleStats;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{
     build_tsv, format_f32, human_duration, print_error, print_verbose, repeat_str,
 };
 
 fn print_tsv(
-    data: CrucibleStats,
+    data: PvpStatsData,
     member_id: &str,
     character_id: &str,
     platform: Platform,
@@ -56,7 +55,7 @@ fn print_tsv(
     name_values.push(("mode_id", format!("{}", mode.to_id())));
     name_values.push(("activities_entered", format!("{}", data.activities_entered)));
     name_values.push(("activities_won", format!("{}", data.activities_won)));
-    name_values.push(("activities_lost", format!("{}", data.activities_lost)));
+    name_values.push(("activities_lost", format!("{}", data.get_activities_lost())));
     name_values.push(("assists", format!("{}", data.assists)));
     name_values.push(("kills", format!("{}", data.kills)));
     name_values.push((
@@ -79,7 +78,7 @@ fn print_tsv(
         human_duration(data.average_lifespan),
     ));
 
-    name_values.push(("total_lifespan", format!("{}", data.total_lifespan)));
+    name_values.push(("total_lifespan", format!("{}", data.get_total_lifespan())));
     name_values.push(("opponents_defeated", format!("{}", data.opponents_defeated)));
     name_values.push(("efficiency", format!("{}", data.efficiency)));
     name_values.push(("kills_deaths_ratio", format!("{}", data.kills_deaths_ratio)));
@@ -103,7 +102,7 @@ fn print_tsv(
     print!("{}", build_tsv(name_values));
 }
 
-fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
+fn print_default(data: PvpStatsData, mode: CrucibleMode, period: TimePeriod) {
     let p = format_f32;
     let title: String = format!("Destiny 2 stats for {:#} {:#}", mode, period);
 
@@ -115,7 +114,7 @@ fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
     println!(
         "{wins} wins and {losses} losses for a {win_percentage}% win rate",
         wins = data.activities_won,
-        losses = data.activities_lost,
+        losses = data.get_activities_lost(),
         win_percentage = p((data.activities_won / data.activities_entered) * 100.0, 2),
     );
 
@@ -252,7 +251,7 @@ async fn retrieve_all_time_stats(
     platform: &Platform,
     mode: &CrucibleMode,
     verbose: bool,
-) -> Result<Option<CrucibleStats>, Error> {
+) -> Result<Option<PvpStatsData>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let data: PvpStatsData = match client
@@ -265,9 +264,7 @@ async fn retrieve_all_time_stats(
         }
     };
 
-    let p_stats: CrucibleStats = data.get_crucible_stats();
-
-    Ok(Some(p_stats))
+    Ok(Some(data))
 }
 
 async fn retrieve_aggregate_crucible_stats(
@@ -277,7 +274,7 @@ async fn retrieve_aggregate_crucible_stats(
     mode: &CrucibleMode,
     period: &TimePeriod,
     verbose: bool,
-) -> Result<Option<CrucibleStats>, Error> {
+) -> Result<Option<PvpStatsData>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let start_date = period.get_date_time();
@@ -292,11 +289,10 @@ async fn retrieve_aggregate_crucible_stats(
         }
     };
 
-    let mut p_stats: CrucibleStats = CrucibleStats::default();
+    let mut p_stats: PvpStatsData = PvpStatsData::default();
 
     for d in data.iter() {
-        let cs = d.values.get_crucible_stats();
-        p_stats = cs + p_stats;
+        p_stats = d.values + p_stats;
     }
 
     Ok(Some(p_stats))

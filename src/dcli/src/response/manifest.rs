@@ -22,7 +22,7 @@
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::apiutils::prepend_base_url;
+use crate::response::utils::prepend_base_url;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 
 #[derive(Serialize, Deserialize, Debug)]

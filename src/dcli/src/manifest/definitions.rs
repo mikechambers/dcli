@@ -1,4 +1,4 @@
-use crate::apiutils::prepend_base_url_option;
+use crate::response::utils::prepend_base_url_option;
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
