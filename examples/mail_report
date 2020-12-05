@@ -14,15 +14,19 @@
 # data
 # Requires dclics v0.1.2
 
-EMAIL_ADDRESS=foo@bar.com
+# (pulling from environment but you can also hardcode)
+EMAIL_ADDRESS=$EMAIL
 
 # you can get member_id and platform from dclim
-MEMBER_ID=0000000000000000000
+# (here it pulls from environment but you can also hardcode)
+MEMBER_ID=$MEMBER_ID
+
 PLATFORM=xbox
 
 # character_id to retrieve stats for
 # can retrieve character_ids from dclic
-CHARACTER_ID=0000000000000000000
+# (here it pulls from environment but you can also hardcode)
+CHARACTER_ID=$CHARACTER_ID
 
 # modes to generate a report for. options include: all, control, 
 # clash, mayhem, ironbanner, private, rumble, comp, quickplay 
