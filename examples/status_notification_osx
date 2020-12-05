@@ -12,13 +12,13 @@
 # https://github.com/mikechambers/dcli/
 
 #you can get your member id and platform from dclim
-MEMBER_ID=00000000000000000000
+# pull member_id from environment variable but you can just hardcode here
+MEMBER_ID=$MEMBER_ID
 PLATFORM=xbox
 
 #run dclim --manifest-path ~/tmp/
 #to sync manifest before running this script
 $MANIFEST_PATH="~/tmp/manifest.sqlite3"
-
 
 CHECK_INTERVAL_SECONDS=15
 

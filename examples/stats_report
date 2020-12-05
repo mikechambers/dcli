@@ -14,6 +14,17 @@
 
 # function for rounding floating point values
 # https://unix.stackexchange.com/a/265202
+
+
+#you can get your member id and platform from dclim
+# pull member_id from environment variable but you can just hardcode here
+MEMBER_ID=$MEMBER_ID
+
+# character_id to retrieve stats for
+# can retrieve character_ids from dclic
+# (here it pulls from environment but you can also hardcode)
+CHARACTER_ID=$CHARACTER_ID
+
 round() {
     n=$(printf "%.${1}g" "$2")
     if [ "$n" != "${n#*e}" ]
@@ -27,8 +38,8 @@ round() {
 }
 
 #capture output of command into a variable / we could also pipe this in
-OUTPUT=$(dclics --member-id 4611686018429783292 --platform xbox --mode all \
---character-id 2305843009264966985 --period month --output tsv)
+OUTPUT=$(dclics --member-id ${MEMBER_ID} --platform xbox --mode all \
+--character-id ${CHARACTER_ID} --period month --output tsv)
 
 # replace tabs with '='. We could probably skip this step, but I couldnt get it
 # working below
