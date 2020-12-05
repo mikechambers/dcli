@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+
+# Generates weekly PVP reports for Destiny 2, and emails them
+#
+# Created by Mike Chambers
+# https://www.mikechambers.com
+#
+# Released under an MIT License
+# More info at:
+# https://github.com/mikechambers/dcli/
+#
+# This is a pretty simple script / output. You could get more advanced control
+# by passing in '--output tsv' to dclics and then generating the email from the
+# data
+# Requires dclics v0.1.2
+
+EMAIL_ADDRESS=foo@bar.com
+
+# you can get member_id and platform from dclim
+MEMBER_ID=0000000000000000000
+PLATFORM=xbox
+
+# character_id to retrieve stats for
+# can retrieve character_ids from dclic
+CHARACTER_ID=0000000000000000000
+
+# modes to generate a report for. options include: all, control, 
+# clash, mayhem, ironbanner, private, rumble, comp, quickplay 
+# and trialsofosiris
+declare -a MODES=("all" "quickplay" "ironbanner" "trialsofosiris" "rumble" "comp" )
+
+REPORT_START=$(date -v-7d  +"%A, %B %-d, %Y")
+REPORT_END=$(date +"%A, %B %-d, %Y")
+
+SUBJECT="Destiny Crucible Report for week of ${REPORT_START}"
+
+OUTPUT="Here is your weekly Destiny 2 Crucible report for the week ending on ${REPORT_END}."
+OUTPUT+="\n"
+OUTPUT+="\n"
+
+echo "Gathering data for report"
+
+# Iterate the string array using for loop
+for mode in ${MODES[@]}; do
+
+    echo "Getting data for $mode"
+    
+    PRETTY_MODE=""
+    if [ "${mode}" == "all" ]
+    then
+        PRETTY_MODE="All Matches"
+    elif [ "${mode}" == "quickplay" ]
+    then
+        PRETTY_MODE="Quickplay"
+    elif [ "${mode}" == "ironbanner" ]
+    then
+        PRETTY_MODE="Iron Banner"
+    elif [ "${mode}" == "trialsofosiris" ]
+    then
+        PRETTY_MODE="Trials of Osiris"
+    elif [ "${mode}" == "rumble" ]
+    then
+        PRETTY_MODE="Rumble"
+    elif [ "${mode}" == "comp" ]
+    then
+        PRETTY_MODE="Competitive"
+    fi
+
+    OUTPUT+="                                           ${PRETTY_MODE}\n"
+    OUTPUT+="************************************************************************************************************\n"
+
+    #2>&1 this redirects stderr to stdout so we can capture
+    TMP_OUTPUT=$(dclics --member-id $MEMBER_ID --character-id $CHARACTER_ID --platform $PLATFORM --mode $mode --period reset 2>&1)
+
+    if [ $? -eq 1 ] 
+    then
+        echo "${TMP_OUTPUT}">&2 #redirect to stderr
+        echo -e "\nError running dclics (see output above). Aborting. Exit code received from command [$?]">&2 #redirect to stderr
+        exit 1
+    fi
+
+    if [ "${TMP_OUTPUT}" == "No results found." ]
+    then
+        OUTPUT+="No games played"
+        OUTPUT+="\n"
+        OUTPUT+="\n"
+    else
+        OUTPUT+="${TMP_OUTPUT}"
+        OUTPUT+="\n"
+        OUTPUT+="\n"
+        OUTPUT+="\n"
+    fi
+
+    sleep 2
+done
+
+OUTPUT+="\n\n"
+OUTPUT+="Report generated using dcli\n"
+OUTPUT+="https://github.com/mikechambers/dcli"
+
+#echo -e # | mail -s "${SUBJECT}" $EMAIL_ADDRESS
+
+echo -e "${OUTPUT}\n"
+
+echo "Emailing report to: ${EMAIL_ADDRESS}"
+
+#just wrap in <pre>, so it maintains formatting from dclics output
+BODY="Mime-Version: 1.0\nContent-Type: text/html\n<html><body><pre style=\"font-family: monospace; font-size:medium;\">${OUTPUT}</pre></body></html>"
+
+#mail -s "${SUBJECT}" $EMAIL_ADDRESS <<< "${BODY}"
+#echo -e "$BODY"
+
+(echo "To: ${EMAIL_ADDRESS}"
+    echo "Subject: ${SUBJECT}"
+    echo "Content-Type: text/html"
+    echo -e "${BODY}"
+) | sendmail -t

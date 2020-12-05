@@ -28,6 +28,12 @@ Bash (for Mac OS X) and Windows Powershell scripts script which monitors a playe
 
 This is particularly useful on Windows when playing Crucible, as it will display a notification as you load into the map, telling you which map you are loading into.
 
+### [mail_report][mail_report]
+
+Bash script that uses dclics to generate and send a email report of weekly Crucible stats. Can be scheduled as part of a crontab job to automate sending.
+
+Requires that a sendmail client is configured on system (although that should be easy to change in the scripts). Requires a newer version of Bash, so you may need to upgrade if running on OS X. Read script for configuration info.
+
 ### Snippets
 
 #### Grab and print a single value
