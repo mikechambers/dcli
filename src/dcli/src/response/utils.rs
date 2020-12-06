@@ -49,18 +49,22 @@ pub fn property_to_float<'de, D>(deserializer: D) -> Result<f32, D::Error>
 pub fn property_to_option_float<'de, D>(deserializer: D) -> Result<Option<f32>, D::Error>
     where D: serde::de::Deserializer<'de>,
 {
-    #[derive(Deserialize)]
+    println!("PARSER");
+    #[derive(Deserialize, Debug, )]
     struct Outer {
         pub basic: Inner,
     }
     
-    #[derive(Deserialize)]
+    #[derive(Deserialize, Debug, )]
     struct Inner {
         pub value: f32,
     }
 
     Option::<Outer>::deserialize(deserializer).map(|o:Option<Outer>| match o {
-        Some(e) => Some(e.basic.value),
+        Some(e) => {
+            println!("{:?}", e);
+            Some(e.basic.value)
+        },
         None => None,
     })
 }

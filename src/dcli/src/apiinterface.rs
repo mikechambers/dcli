@@ -29,7 +29,13 @@ use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
 };
-use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
+use crate::response::activities::{
+    ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT
+};
+
+use crate::timeperiod::DateTimePeriod;
+
+
 use chrono::{DateTime, Utc};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -146,17 +152,6 @@ impl ApiInterface {
         Ok(characters)
     }
 
-    /*
-    static const int daily = 1;
-    static const int allTime = 2;
-    */
-
-    /*
-    async fn retrieve_daily_crucible_stats(member_id:u32, character_id:u32, platform:Platform, mode:CrucibleMode, start_date:DateTime) {
-        //"/Platform/Destiny2/1/Account/$memberId/Character/$characterId/Stats/?modes=$modesString$dateRangeString&periodType=$periodTypeId&groups=1,2,3";
-    }
-    */
-
     pub async fn retrieve_alltime_crucible_stats(
         &self,
         member_id: &str,
@@ -198,10 +193,13 @@ impl ApiInterface {
         character_id: &str,
         platform: &Platform,
         mode: &CrucibleMode,
-        start_time: DateTime<Utc>,
+        period: &DateTimePeriod,
     ) -> Result<Option<Vec<DailyPvPStatsValuesData>>, Error> {
-        let day_start = start_time.to_rfc3339();
-        let day_end = Utc::now().to_rfc3339();
+        let day_start = period.start.to_rfc3339();
+        let day_end = period.end.to_rfc3339();
+
+        println!("{}", day_start);
+        println!("{}", day_end);
 
         //
         let url =

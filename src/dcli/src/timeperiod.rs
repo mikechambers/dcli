@@ -25,31 +25,70 @@ use chrono::{DateTime, Duration, Utc};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(PartialEq, Debug)]
-pub enum TimePeriod {
-    Day,
-    Reset,
-    Week,
-    Month,
-    Alltime,
+pub struct DateTimePeriod {
+    pub start:DateTime<Utc>,
+    pub end:DateTime<Utc>,
 }
 
-impl TimePeriod {
-    pub fn get_date_time(&self) -> DateTime<Utc> {
+#[derive(PartialEq, Debug)]
+pub enum StatsTimePeriod {
+    Yesterday,
+    CurrentReset,
+    LastReset,
+    LastWeek,
+    LastMonth,
+    AllTime,
+}
+
+impl StatsTimePeriod {
+    pub fn get_period(&self) -> DateTimePeriod {
         match self {
-            TimePeriod::Day => Utc::now() - Duration::hours(24),
-            TimePeriod::Reset => {
-                get_last_reset()
-                // /let tomorrow_midnight = (now + Duration::days(1)).date().and_hms(0, 0, 0);
-            }
-            TimePeriod::Week => Utc::now() - Duration::days(7),
-            TimePeriod::Month => Utc::now() - Duration::days(30),
-            TimePeriod::Alltime => Utc::now() - Duration::weeks(7 * 52),
+            StatsTimePeriod::Yesterday => {
+                let n = Utc::now();
+                DateTimePeriod {
+                    start:n,
+                    end:n - Duration::hours(24)
+                }
+            },
+            StatsTimePeriod::CurrentReset => {
+                DateTimePeriod {
+                    start:Utc::now(),
+                    end:get_last_reset(),
+                }
+            },
+            StatsTimePeriod::LastReset => {
+                let reset = get_last_reset();
+                DateTimePeriod {
+                    start:reset  - Duration::days(7),
+                    end:reset,
+                }
+            },
+            StatsTimePeriod::LastWeek => {
+                let n = Utc::now();
+                DateTimePeriod {
+                    start:n,
+                    end:n - Duration::weeks(1)
+                }
+            },
+            StatsTimePeriod::LastMonth => {
+                let n = Utc::now();
+                DateTimePeriod {
+                    start:n,
+                    end:n - Duration::days(30)
+                }
+            },
+            StatsTimePeriod::AllTime => {
+                let n = Utc::now();
+                DateTimePeriod {
+                    start:n,
+                    end:n - Duration::weeks(7 * 52)
+                }
+            },
         }
     }
 }
 
-impl FromStr for TimePeriod {
+impl FromStr for StatsTimePeriod {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -58,24 +97,28 @@ impl FromStr for TimePeriod {
 
         //get a slice to get a &str for the match
         match &s[..] {
-            "day" => Ok(TimePeriod::Day),
-            "reset" => Ok(TimePeriod::Reset),
-            "week" => Ok(TimePeriod::Week),
-            "month" => Ok(TimePeriod::Month),
-            "alltime" => Ok(TimePeriod::Alltime),
-            _ => Err("Unknown TimePeriod type"),
+            "yesterday" => Ok(StatsTimePeriod::Yesterday),
+            "currentreset" => Ok(StatsTimePeriod::CurrentReset),
+            "lastreset" => Ok(StatsTimePeriod::LastReset),
+            "lastweek" => Ok(StatsTimePeriod::LastWeek),
+            "lastmonth" => Ok(StatsTimePeriod::LastMonth),
+            "alltime" => Ok(StatsTimePeriod::AllTime),
+            _ => Err("Unknown StatsTimePeriod type"),
         }
     }
 }
 
-impl fmt::Display for TimePeriod {
+
+impl fmt::Display for StatsTimePeriod {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
-            TimePeriod::Day => "for last day",
-            TimePeriod::Reset => "since reset",
-            TimePeriod::Week => "for the last week",
-            TimePeriod::Month => "for the last month",
-            TimePeriod::Alltime => "for all time",
+            StatsTimePeriod::Yesterday => "yesterday",
+            StatsTimePeriod::CurrentReset => "currentreset",
+            StatsTimePeriod::LastReset => "lastreset",
+            StatsTimePeriod::LastWeek => "lastweek",
+            StatsTimePeriod::LastMonth => "lastmonth",
+            StatsTimePeriod::AllTime => "alltime",
+ 
         };
 
         write!(f, "{}", out)
