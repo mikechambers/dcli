@@ -14,5 +14,6 @@ readme = "README.md"
 [dependencies]
 structopt = "0.3"
 tokio = { version="0.2.21", features=["full"] }
+chrono = "0.4.19"
 
 dcli = { path = "../dcli/"}

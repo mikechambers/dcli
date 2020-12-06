@@ -1,10 +1,10 @@
+use crate::mode::Mode;
+use crate::platform::Platform;
+use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
+use crate::response::utils::property_to_value;
 use crate::response::utils::str_to_datetime;
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
-use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
-use crate::response::utils::property_to_value;
-use crate::mode::Mode;
-use crate::platform::Platform;
 
 pub const MAX_ACTIVITIES_REQUEST_COUNT: i32 = 250;
 
@@ -29,69 +29,112 @@ impl IsDestinyAPIResponse for ActivitiesResponse {
 pub struct ActivitiesResponseData {
     #[serde(rename = "activities")]
     pub activities: Option<Vec<Activity>>,
-
 }
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyHistoricalStatsPeriodGroup.html#schema_Destiny-HistoricalStats-DestinyHistoricalStatsPeriodGroup
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Activity {
-    
-    #[serde(
-        skip_serializing,
-        deserialize_with = "str_to_datetime"
-    )]
+    #[serde(skip_serializing, deserialize_with = "str_to_datetime")]
     pub period: DateTime<Utc>,
 
     #[serde(rename = "activityDetails")]
-    pub details:ActivityDetails,
+    pub details: ActivityDetails,
 
     //todo: can we collapse these down?
-    pub values:ActivityValues,
-
+    pub values: ActivityValues,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ActivityValues {
-    #[serde(deserialize_with="property_to_value")]
-    assists:f32,
+    #[serde(deserialize_with = "property_to_value")]
+    assists: f32,
+
+    #[serde(deserialize_with = "property_to_value")]
+    score: f32,
+
+    #[serde(deserialize_with = "property_to_value")]
+    kills: f32,
+
+    #[serde(deserialize_with = "property_to_value")]
+    deaths: f32,
+
+    #[serde(rename = "averageScorePerKill", deserialize_with = "property_to_value")]
+    average_score_per_kill: f32,
+
+    #[serde(rename = "averageScorePerLife", deserialize_with = "property_to_value")]
+    average_score_per_life: f32,
+
+    #[serde(deserialize_with = "property_to_value")]
+    completed: f32,
+
+    #[serde(rename = "opponentsDefeated", deserialize_with = "property_to_value")]
+    opponents_defeated: f32,
+
+    #[serde(deserialize_with = "property_to_value")]
+    efficiency: f32,
+
+    #[serde(rename = "killsDeathsRatio", deserialize_with = "property_to_value")]
+    kills_deaths_ratio: f32,
+
+    #[serde(rename = "killsDeathsAssists", deserialize_with = "property_to_value")]
+    kills_deaths_assists: f32,
+
+    #[serde(
+        rename = "activityDurationSeconds",
+        deserialize_with = "property_to_value"
+    )]
+    activity_duration_seconds: f32,
+
+    //TODO: need to make this an option
+    #[serde(deserialize_with = "property_to_value")]
+    #[serde(default)]
+    standing: f32,
+
+    #[serde(deserialize_with = "property_to_value")]
+    team: f32,
+
+    #[serde(rename = "completionReason", deserialize_with = "property_to_value")]
+    completion_reason: f32,
+
+    #[serde(rename = "startSeconds", deserialize_with = "property_to_value")]
+    start_seconds: f32,
+
+    #[serde(rename = "timePlayedSeconds", deserialize_with = "property_to_value")]
+    time_played_seconds: f32,
+
+    #[serde(rename = "playerCount", deserialize_with = "property_to_value")]
+    player_count: f32,
+
+    #[serde(rename = "teamScore", deserialize_with = "property_to_value")]
+    team_score: f32,
 }
 
-/*
-    Parses this structure
-    "assists": {
-        "statId": "assists",
-        "basic": {
-            "value": 9.0,
-*/
-
-
-//https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity.html#schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity#[derive(Serialize, Deserialize, Debug)]
+//https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity.html#schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ActivityDetails {
-
     /// The unique hash identifier of the DestinyActivityDefinition that was played.
     /// (Seems to be the same as director_activity_hash)
     #[serde(rename = "referenceId")]
-    pub reference_id:u32,
+    pub reference_id: u32,
 
     /// The unique hash identifier of the DestinyActivityDefinition (Manifest) that was played
     #[serde(rename = "directorActivityHash")]
-    pub director_activity_hash:u32,
+    pub director_activity_hash: u32,
 
     /// The unique identifier for this *specific* match that was played.
-    /// 
-    /// This value can be used to get additional data about this activity such 
-    /// as who else was playing via the GetPostGameCarnageReport endpoint. 
+    ///
+    /// This value can be used to get additional data about this activity such
+    /// as who else was playing via the GetPostGameCarnageReport endpoint.
     #[serde(rename = "instanceId")]
-    pub instance_id:String,
+    pub instance_id: String,
 
-    pub mode:Mode,
+    pub mode: Mode,
 
-    pub modes : Vec<Mode>, //may need to make Option?
+    pub modes: Vec<Mode>, //may need to make Option?
 
     /// Whether or not the match was a private match
     #[serde(rename = "isPrivate")]
-    pub is_private:bool,
+    pub is_private: bool,
 
     /// The platform the activitity was played on
     #[serde(rename = "membershipType")]

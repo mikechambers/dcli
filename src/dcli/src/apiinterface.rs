@@ -22,18 +22,16 @@
 
 use crate::apiclient::ApiClient;
 use crate::error::Error;
-use crate::mode::{CrucibleMode, ActivityMode};
+use crate::mode::{ActivityMode, CrucibleMode};
 use crate::platform::Platform;
+use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
 use crate::response::character::CharacterData;
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
 };
-use crate::response::activities::{
-    ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT
-};
 use crate::timeperiod::DateTimePeriod;
-
+use chrono::{DateTime, Utc};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
@@ -192,7 +190,6 @@ impl ApiInterface {
         mode: &CrucibleMode,
         period: &DateTimePeriod,
     ) -> Result<Option<Vec<DailyPvPStatsValuesData>>, Error> {
-
         let day_start = period.start.to_rfc3339();
         let day_end = period.end.to_rfc3339();
 
@@ -226,29 +223,115 @@ impl ApiInterface {
         Ok(data)
     }
 
+    pub async fn retrieve_last_activity(
+        &self,
+        member_id: &str,
+        character_id: &str,
+        platform: &Platform,
+        mode: &ActivityMode
+    ) -> Result<Option<Activity>, Error> {
 
-    pub async fn retrieve_last_activities(
+        let activities =
+            self.retrieve_activities(member_id, character_id, platform, mode, 1, 0).await?;
+
+        let activity:Option<Activity> = match activities {
+            Some(mut e) => {
+                if e.is_empty() {
+                    None
+                } else {
+                    Some(e.remove(0))
+                }
+            },
+            None => {
+                None
+            }
+        };
+
+        Ok(activity)
+    }
+
+
+    pub async fn retrieve_activities_since(
         &self,
         member_id: &str,
         character_id: &str,
         platform: &Platform,
         mode: &ActivityMode,
-        count:i32,
+        date_time:DateTime<Utc>,
     ) -> Result<Option<Vec<Activity>>, Error> {
 
-        if count > MAX_ACTIVITIES_REQUEST_COUNT {
-            return Err(Error::MaxActivitiesRequestCountExceeded);
+
+        let mut out:Vec<Activity> = Vec::new();
+        let mut page = 0;
+        let mut count = MAX_ACTIVITIES_REQUEST_COUNT;
+
+        //TODO: if error occurs on an individual call, retry?
+        loop {
+            println!("Page: {}", page);
+            let activities =
+            self.retrieve_activities(member_id, character_id, platform, mode, count, page).await?;
+
+            if activities.is_none() {
+                break;
+            }
+
+            let mut t:Vec<Activity> = activities.unwrap();
+
+            let len = t.len() as i32;
+
+            println!("Results : {} : {}", len, page * count + len);
+
+            if len == 0 {
+                println!("Results 0 : break");
+                break;
+            }
+
+            //filter vector based on whether they are after the filter date / time
+            t.retain(|x| x.period > date_time);
+
+            //if any items were removed, then we dont need to call apis anymore
+            let should_break = t.len() as i32 != len;
+
+            //move the items from the temp vec to the out
+            out.append(& mut t);
+
+            if should_break || len < count{
+                println!("break");
+                println!("should_break : {}", should_break);
+                break;
+            }
+
+            page += 1;
+
+            //TODO: check order, and whether we need to sort
+            //TODO: think through if this could get into a never ending loop
         }
 
+        if out.len() == 0 {
+            return Ok(None);
+        }
 
+        Ok(Some(out))
+    }
+    
+    pub async fn retrieve_activities(
+        &self,
+        member_id: &str,
+        character_id: &str,
+        platform: &Platform,
+        mode: &ActivityMode,
+        count: i32,
+        page: i32,
+    ) -> Result<Option<Vec<Activity>>, Error> {
         //
         let url =
-        format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/Activities/?mode={mode_id}&count={count}",
+        format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/Activities/?mode={mode_id}&count={count}&page={page}",
             platform_id = platform.to_id(),
             member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
             character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
             mode_id = mode.to_id(),
             count=count,
+            page=page,
         );
 
         let response: ActivitiesResponse = self

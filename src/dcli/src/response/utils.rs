@@ -20,22 +20,25 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use chrono::{DateTime, NaiveDateTime, Utc};
 use crate::apiutils::RESOURCE_BASE_URL;
-use serde_derive::Deserialize;
+use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::Deserialize;
+use serde_derive::Deserialize;
 
 //2020-10-05T18:49:25Z
 pub const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
 
-pub fn property_to_value<'de, D, T: serde::de::Deserialize<'de>>(deserializer: D) -> Result<T, D::Error> 
-where D: serde::de::Deserializer<'de>,
+pub fn property_to_value<'de, D, T: serde::de::Deserialize<'de>>(
+    deserializer: D,
+) -> Result<T, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct Outer<T> {
         pub basic: Inner<T>,
     }
-    
+
     #[derive(Deserialize)]
     struct Inner<T> {
         pub value: T,
@@ -47,24 +50,23 @@ where D: serde::de::Deserializer<'de>,
 
 //BUG: this doesnt get called if the property is not include in the JSON
 //https://github.com/serde-rs/json/issues/734
-pub fn property_to_option_float<'de, D>(deserializer: D) -> Result<Option<f32>, D::Error> 
-where D: serde::de::Deserializer<'de>,
+pub fn property_to_option_float<'de, D>(deserializer: D) -> Result<Option<f32>, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
 {
     println!("PARSER");
     #[derive(Deserialize, Debug)]
     struct Outer {
         pub basic: Inner,
     }
-    
+
     #[derive(Deserialize, Debug)]
     struct Inner {
         pub value: f32,
     }
 
-    Option::<Outer>::deserialize(deserializer).map(|o:Option<Outer>| match o {
-        Some(e) => {
-            Some(e.basic.value)
-        },
+    Option::<Outer>::deserialize(deserializer).map(|o: Option<Outer>| match o {
+        Some(e) => Some(e.basic.value),
         None => None,
     })
 }
@@ -79,7 +81,6 @@ Option::<String>::deserialize(deserializer).map(|o: Option<String>| match o {
     None => None,
 })
 */
-
 
 pub fn prepend_base_url<'de, D>(deserializer: D) -> Result<String, D::Error>
 where

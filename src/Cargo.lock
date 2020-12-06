@@ -343,6 +343,7 @@ dependencies = [
 name = "dcliah"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "dcli",
  "structopt",
  "tokio",

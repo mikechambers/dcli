@@ -20,7 +20,6 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use structopt::StructOpt;
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
 use dcli::mode::ActivityMode;
@@ -28,11 +27,10 @@ use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::activities::Activity;
 use dcli::timeperiod::StatsTimePeriod;
+use structopt::StructOpt;
 
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{
-    build_tsv, format_f32, human_duration, print_error, print_verbose,
-};
+use dcli::utils::{build_tsv, format_f32, human_duration, print_error, print_verbose};
 
 /*
 fn print_tsv(
@@ -115,7 +113,7 @@ struct Opt {
     /// will be returned.
     /// Required when period is set to day, reset, week or month.
     #[structopt(short = "c", long = "character-id")]
-    character_id:String,
+    character_id: String,
 
     ///Print out additional information
     ///
@@ -130,12 +128,11 @@ async fn retrieve_activities(
     platform: &Platform,
     mode: &ActivityMode,
     verbose: bool,
-) -> Result<Option<Vec<Activity>>, Error> {
+) -> Result<Option<Activity>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
-    
-    let activities: Vec<Activity> = match client
-        .retrieve_last_activities(&member_id, &character_id, &platform, &mode, 1)
+    let activity: Activity = match client
+        .retrieve_last_activity(&member_id, &character_id, &platform, &mode)
         .await?
     {
         Some(e) => e,
@@ -144,11 +141,38 @@ async fn retrieve_activities(
         }
     };
 
-    println!("{:?}", activities);
+    println!("{:#?}", activity);
+
+    Ok(Some(activity))
+}
+
+use chrono::{DateTime, Utc, Duration};
+
+async fn retrieve_activities_since(
+    member_id: &str,
+    character_id: &str,
+    platform: &Platform,
+    mode: &ActivityMode,
+    verbose: bool,
+) -> Result<Option<Vec<Activity>>, Error> {
+    let client: ApiInterface = ApiInterface::new(verbose);
+
+    let date_filter = Utc::now() - Duration::weeks(52 * 6);
+
+    let activities: Vec<Activity> = match client
+        .retrieve_activities_since(&member_id, &character_id, &platform, &mode, date_filter)
+        .await?
+    {
+        Some(e) => e,
+        None => {
+            return Ok(None);
+        }
+    };
+
+    println!("{:#?}", activities.len());
 
     Ok(Some(activities))
 }
-
 
 #[tokio::main]
 async fn main() {
@@ -156,11 +180,18 @@ async fn main() {
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     //todo: is there any need to send a reference to an enum?
-    match retrieve_activities(&opt.member_id, &opt.character_id, &opt.platform, &opt.mode, opt.verbose).await {
-        Ok(e) => {},
+    match retrieve_activities_since(
+        &opt.member_id,
+        &opt.character_id,
+        &opt.platform,
+        &opt.mode,
+        opt.verbose,
+    )
+    .await
+    {
+        Ok(_e) => {}
         Err(e) => {
             print_error("Error Loading Activities", e);
-        },
+        }
     };
-
 }

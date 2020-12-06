@@ -27,8 +27,8 @@
 //If it turns out this becomes unwieldy, then we will break it out, into API
 //and app specific errors
 
-use std::fmt::{Display, Formatter, Result};
 use crate::response::activities::MAX_ACTIVITIES_REQUEST_COUNT;
+use std::fmt::{Display, Formatter, Result};
 
 #[derive(PartialEq, Debug)]
 pub enum Error {

@@ -26,8 +26,8 @@ use std::fmt;
 use std::str::FromStr;
 
 pub struct DateTimePeriod {
-    pub start:DateTime<Utc>,
-    pub end:DateTime<Utc>,
+    pub start: DateTime<Utc>,
+    pub end: DateTime<Utc>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -43,52 +43,48 @@ pub enum StatsTimePeriod {
 impl StatsTimePeriod {
     pub fn get_period(&self) -> DateTimePeriod {
         match self {
-
             //TODO: Right now, this period doesnt seem to ever return any data
             // https://github.com/mikechambers/dcli/issues/6
             StatsTimePeriod::Yesterday => {
                 let n = Utc::now();
 
                 DateTimePeriod {
-                    start:n - Duration::hours(48),
-                    end:Utc::now(),
+                    start: n - Duration::hours(48),
+                    end: Utc::now(),
                 }
-
-            },
-            StatsTimePeriod::CurrentReset => {
-                DateTimePeriod {
-                    start:get_last_reset(),
-                    end:Utc::now(),
-                }
+            }
+            StatsTimePeriod::CurrentReset => DateTimePeriod {
+                start: get_last_reset(),
+                end: Utc::now(),
             },
             StatsTimePeriod::LastReset => {
                 let reset = get_last_reset();
                 DateTimePeriod {
-                    start:reset  - Duration::days(7),
-                    end:reset,
+                    start: reset - Duration::days(7),
+                    end: reset,
                 }
-            },
+            }
             StatsTimePeriod::LastWeek => {
                 let n = Utc::now();
                 DateTimePeriod {
-                    start:n - Duration::weeks(1),
-                    end:n
+                    start: n - Duration::weeks(1),
+                    end: n,
                 }
-            },
+            }
             StatsTimePeriod::LastMonth => {
                 let n = Utc::now();
                 DateTimePeriod {
-                    start:n - Duration::days(30),
-                    end:n,
+                    start: n - Duration::days(30),
+                    end: n,
                 }
-            },
+            }
             StatsTimePeriod::AllTime => {
                 let n = Utc::now();
                 DateTimePeriod {
-                    start:n - Duration::weeks(7 * 52),
-                    end:n,
+                    start: n - Duration::weeks(7 * 52),
+                    end: n,
                 }
-            },
+            }
         }
     }
 }
@@ -113,7 +109,6 @@ impl FromStr for StatsTimePeriod {
     }
 }
 
-
 impl fmt::Display for StatsTimePeriod {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
@@ -123,7 +118,6 @@ impl fmt::Display for StatsTimePeriod {
             StatsTimePeriod::LastWeek => "lastweek",
             StatsTimePeriod::LastMonth => "lastmonth",
             StatsTimePeriod::AllTime => "alltime",
- 
         };
 
         write!(f, "{}", out)

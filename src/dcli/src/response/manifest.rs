@@ -22,8 +22,8 @@
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::response::utils::prepend_base_url;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
+use crate::response::utils::prepend_base_url;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestResponse {
