@@ -27,7 +27,7 @@ use dcli::mode::ActivityMode;
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::activities::Activity;
-use dcli::timeperiod::TimePeriod;
+use dcli::timeperiod::StatsTimePeriod;
 
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{
@@ -91,7 +91,7 @@ struct Opt {
     /// Valid values include day (last day), reset (since reset), week
     /// (last week), month (last month), alltime (default).
     #[structopt(long = "period", default_value = "alltime")]
-    period: TimePeriod,
+    period: StatsTimePeriod,
 
     /// Activity mode to return stats for
     ///
