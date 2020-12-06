@@ -27,7 +27,7 @@ use crate::utils::{
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
-use crate::response::utils::{property_to_float, property_to_option_float};
+use crate::response::utils::{property_to_value, property_to_option_float};
 use std::ops;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -71,52 +71,58 @@ pub struct AllTimePvPStatsData {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Copy)]
 pub struct PvpStatsData {
-    #[serde(rename = "activitiesEntered", deserialize_with="property_to_float")]
+    #[serde(rename = "activitiesEntered", deserialize_with="property_to_value")]
     pub activities_entered:f32,
 
-    #[serde(rename = "activitiesWon", deserialize_with="property_to_float")]
+    #[serde(rename = "activitiesWon", deserialize_with="property_to_value")]
     pub activities_won:f32,
 
-    #[serde(deserialize_with="property_to_float")]
+    #[serde(deserialize_with="property_to_value")]
     pub assists:f32,
 
-    #[serde(deserialize_with="property_to_float")]
+    #[serde(deserialize_with="property_to_value")]
     pub kills:f32,
 
-    #[serde(rename = "averageKillDistance", deserialize_with="property_to_float")]
+    #[serde(rename = "averageKillDistance", deserialize_with="property_to_value")]
     pub average_kill_distance:f32,
 
-    #[serde(rename = "totalKillDistance", deserialize_with="property_to_float")]
+    #[serde(rename = "totalKillDistance", deserialize_with="property_to_value")]
     pub total_kill_distance:f32,
 
-    #[serde(rename = "secondsPlayed", deserialize_with="property_to_float")]
+    #[serde(rename = "secondsPlayed", deserialize_with="property_to_value")]
     pub seconds_played:f32,
 
-    #[serde(deserialize_with="property_to_float")]
+    #[serde(deserialize_with="property_to_value")]
     pub deaths:f32,
 
-    #[serde(rename = "averageLifespan", deserialize_with="property_to_float")]
+    #[serde(rename = "averageLifespan", deserialize_with="property_to_value")]
     pub average_lifespan:f32,
 
+    //TODO: this doesnt get called if the property is not include in the JSON
+    //Have set defalt so we dont get a parse error at run time, but that means
+    //right now the value will never be None, but will be -1 if the property doesnt
+    //exists. will update once i get more info on the issue
+    //BUG: https://github.com/serde-rs/json/issues/734
     #[serde(rename = "bestSingleGameKills", deserialize_with="property_to_option_float")]
+    #[serde(default)]
     pub best_single_game_kills:Option<f32>,
 
-    #[serde(rename = "opponentsDefeated", deserialize_with="property_to_float")]
+    #[serde(rename = "opponentsDefeated", deserialize_with="property_to_value")]
     pub opponents_defeated:f32,
 
-    #[serde(deserialize_with="property_to_float")]
+    #[serde(deserialize_with="property_to_value")]
     pub efficiency:f32,
 
-    #[serde(rename = "killsDeathsRatio", deserialize_with="property_to_float")]
+    #[serde(rename = "killsDeathsRatio", deserialize_with="property_to_value")]
     pub kills_deaths_ratio:f32,
 
-    #[serde(rename = "killsDeathsAssists", deserialize_with="property_to_float")]
+    #[serde(rename = "killsDeathsAssists", deserialize_with="property_to_value")]
     pub kills_deaths_assists:f32,
 
-    #[serde(rename = "precisionKills", deserialize_with="property_to_float")]
+    #[serde(rename = "precisionKills", deserialize_with="property_to_value")]
     pub precision_kills:f32,
 
-    #[serde(deserialize_with="property_to_float")]
+    #[serde(deserialize_with="property_to_value")]
     pub suicides:f32,
 }
 

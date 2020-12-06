@@ -24,6 +24,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::fmt;
 use std::str::FromStr;
 
+//https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType.html#schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType
 #[derive(PartialEq, Clone, Copy, Debug, Serialize_repr, Deserialize_repr)]
 #[repr(u32)]
 pub enum Mode {

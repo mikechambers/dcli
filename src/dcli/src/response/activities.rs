@@ -2,7 +2,7 @@ use crate::response::utils::str_to_datetime;
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
-use crate::response::utils::property_to_float;
+use crate::response::utils::property_to_value;
 use crate::mode::Mode;
 use crate::platform::Platform;
 
@@ -52,7 +52,7 @@ pub struct Activity {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ActivityValues {
-    #[serde(deserialize_with="property_to_float")]
+    #[serde(deserialize_with="property_to_value")]
     assists:f32,
 }
 

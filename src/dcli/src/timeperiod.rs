@@ -43,17 +43,22 @@ pub enum StatsTimePeriod {
 impl StatsTimePeriod {
     pub fn get_period(&self) -> DateTimePeriod {
         match self {
+
+            //TODO: Right now, this period doesnt seem to ever return any data
+            // https://github.com/mikechambers/dcli/issues/6
             StatsTimePeriod::Yesterday => {
                 let n = Utc::now();
+
                 DateTimePeriod {
-                    start:n,
-                    end:n - Duration::hours(24)
+                    start:n - Duration::hours(48),
+                    end:Utc::now(),
                 }
+
             },
             StatsTimePeriod::CurrentReset => {
                 DateTimePeriod {
-                    start:Utc::now(),
-                    end:get_last_reset(),
+                    start:get_last_reset(),
+                    end:Utc::now(),
                 }
             },
             StatsTimePeriod::LastReset => {
@@ -66,22 +71,22 @@ impl StatsTimePeriod {
             StatsTimePeriod::LastWeek => {
                 let n = Utc::now();
                 DateTimePeriod {
-                    start:n,
-                    end:n - Duration::weeks(1)
+                    start:n - Duration::weeks(1),
+                    end:n
                 }
             },
             StatsTimePeriod::LastMonth => {
                 let n = Utc::now();
                 DateTimePeriod {
-                    start:n,
-                    end:n - Duration::days(30)
+                    start:n - Duration::days(30),
+                    end:n,
                 }
             },
             StatsTimePeriod::AllTime => {
                 let n = Utc::now();
                 DateTimePeriod {
-                    start:n,
-                    end:n - Duration::weeks(7 * 52)
+                    start:n - Duration::weeks(7 * 52),
+                    end:n,
                 }
             },
         }

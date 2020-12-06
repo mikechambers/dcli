@@ -1,13 +1,14 @@
 # dclics
 
-Command line tool for retrieving Destiny 2 Crucible activity stats.
+Command line tool for retrieving historic Destiny 2 Crucible activity stats.
 
 Enables control of which stats are retrieved via:
 
 * Game Mode such as all, control, ironbanner, trialsofosiris, etc...
-* Time period such as alltime, reset, day...
+* Time period such as alltime, sincereset, lastmonth...
 * Character, specify for all characters or specific character (any period other than alltime requires that the character is specified)
 
+Retrieves stats based on the period specified, up to, but excluding the current day.
 
 ## USAGE
 ```
@@ -40,18 +41,21 @@ OPTIONS:
             Crucible mode to return stats for
             
             Valid values are all (default), control, clash, mayhem, ironbanner, private, trialsofnine, rumble, comp,
-            quickplay and trialsofosiris.
+            quickplay and trialsofosiris. [default: all]
     -o, --output <output>                
             Format for command output
             
             Valid values are default (Default) and tsv.
             
             tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
-            (\n).
+            (\n). [default: default]
         --period <period>                
             Time range to pull stats from
             
-            Valid values include day (last day), reset (since reset), week (last week), month (last month), alltime (default).
+            Valid values include yesterday, currentreset (since reset), lastreset (previous week reset period), lastweek
+            (last 7 days), lastmonth (last 30 days), alltime.
+            
+            All ranges are up to, but not including current day. [default: alltime]
     -p, --platform <platform>            
             Platform for specified id
             
@@ -78,10 +82,11 @@ Valid game modes are:
 * trialsofosiris
 
 Valid time period values are:
-* day (last day)
-* reset (since reset)
-* week (last week)
-* month (last month)
+* yesterday
+* currentreset (since reset)
+* currentreset (last reset period)
+* lastweek (last week)
+* lastmonth (last month)
 * alltime (default)
 
 member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).
@@ -91,13 +96,13 @@ member-id and platform can be retrieved with [dclis](https://github.com/mikecham
 #### Print all stats for last week
 
 ```
-$ dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period week
+$ dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period lastweek
 ```
 
 outputs:
 
 ```
-Destiny 2 stats for all Crucible modes for the last week
+Destiny 2 stats for all Crucible modes for the last the last week
 ========================================================
 Time played is 3 hours 11 minutes 6 seconds
 13 wins and 12 losses for a 52.00% win rate

@@ -28,41 +28,41 @@ use serde::Deserialize;
 //2020-10-05T18:49:25Z
 pub const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
 
-
-pub fn property_to_float<'de, D>(deserializer: D) -> Result<f32, D::Error>
-    where D: serde::de::Deserializer<'de>,
+pub fn property_to_value<'de, D, T: serde::de::Deserialize<'de>>(deserializer: D) -> Result<T, D::Error> 
+where D: serde::de::Deserializer<'de>,
 {
     #[derive(Deserialize)]
-    struct Outer {
-        pub basic: Inner,
+    struct Outer<T> {
+        pub basic: Inner<T>,
     }
     
     #[derive(Deserialize)]
-    struct Inner {
-        pub value: f32,
+    struct Inner<T> {
+        pub value: T,
     }
 
-    let helper = Outer::deserialize(deserializer)?;
+    let helper = <Outer<T>>::deserialize(deserializer)?;
     Ok(helper.basic.value)
 }
 
-pub fn property_to_option_float<'de, D>(deserializer: D) -> Result<Option<f32>, D::Error>
-    where D: serde::de::Deserializer<'de>,
+//BUG: this doesnt get called if the property is not include in the JSON
+//https://github.com/serde-rs/json/issues/734
+pub fn property_to_option_float<'de, D>(deserializer: D) -> Result<Option<f32>, D::Error> 
+where D: serde::de::Deserializer<'de>,
 {
     println!("PARSER");
-    #[derive(Deserialize, Debug, )]
+    #[derive(Deserialize, Debug)]
     struct Outer {
         pub basic: Inner,
     }
     
-    #[derive(Deserialize, Debug, )]
+    #[derive(Deserialize, Debug)]
     struct Inner {
         pub value: f32,
     }
 
     Option::<Outer>::deserialize(deserializer).map(|o:Option<Outer>| match o {
         Some(e) => {
-            println!("{:?}", e);
             Some(e.basic.value)
         },
         None => None,

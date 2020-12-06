@@ -110,7 +110,29 @@ fn print_tsv(
 
 fn print_default(data: PvpStatsData, mode: CrucibleMode, period: StatsTimePeriod) {
     let p = format_f32;
-    let title: String = format!("Destiny 2 stats for {:#} {:#}", mode, period);
+
+    let period_string = match period {
+        StatsTimePeriod::Yesterday => {
+            "for yesterday"
+        },
+        StatsTimePeriod::CurrentReset => {
+            "since the last reset"
+        },
+        StatsTimePeriod::LastReset => {
+            "for last week's reset period"
+        },
+        StatsTimePeriod::LastWeek => {
+            "for the last week"
+        },
+        StatsTimePeriod::LastMonth => {
+            "for the last month"
+        },
+        StatsTimePeriod::AllTime => {
+            "for all time"
+        },
+    };
+
+    let title: String = format!("Destiny 2 stats for {:#} {}", mode, period_string);
 
     println!();
     println!("{}", title);
@@ -183,8 +205,9 @@ fn print_default(data: PvpStatsData, mode: CrucibleMode, period: StatsTimePeriod
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
-/// Command line tool for retrieving current Destiny 2 Crucible activity stats.
+/// Command line tool for retrieving historic Destiny 2 Crucible activity stats.
 ///
+/// Retrieves stats based on the period specified, up to, but excluding the current day.
 /// Enables control of which stats are retrieved via game mode, time period and
 /// character.
 ///

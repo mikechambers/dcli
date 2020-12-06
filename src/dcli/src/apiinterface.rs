@@ -32,11 +32,8 @@ use crate::response::stats::{
 use crate::response::activities::{
     ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT
 };
-
 use crate::timeperiod::DateTimePeriod;
 
-
-use chrono::{DateTime, Utc};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
@@ -195,11 +192,9 @@ impl ApiInterface {
         mode: &CrucibleMode,
         period: &DateTimePeriod,
     ) -> Result<Option<Vec<DailyPvPStatsValuesData>>, Error> {
+
         let day_start = period.start.to_rfc3339();
         let day_end = period.end.to_rfc3339();
-
-        println!("{}", day_start);
-        println!("{}", day_end);
 
         //
         let url =
