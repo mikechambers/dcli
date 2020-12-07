@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::utils::get_last_reset;
+use crate::utils::get_last_weekly_reset;
 use chrono::{DateTime, Duration, Utc};
 use std::fmt;
 use std::str::FromStr;
@@ -54,11 +54,11 @@ impl StatsTimePeriod {
                 }
             }
             StatsTimePeriod::CurrentReset => DateTimePeriod {
-                start: get_last_reset(),
+                start: get_last_weekly_reset(),
                 end: Utc::now(),
             },
             StatsTimePeriod::LastReset => {
-                let reset = get_last_reset();
+                let reset = get_last_weekly_reset();
                 DateTimePeriod {
                     start: reset - Duration::days(7),
                     end: reset,

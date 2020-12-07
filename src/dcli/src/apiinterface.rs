@@ -268,6 +268,15 @@ impl ApiInterface {
         //TODO: if error occurs on an individual call, retry?
         loop {
             println!("Page: {}", page);
+
+
+            // TODO: if we call more pages that there is data, it will return back with no Response
+            // property. Usually this means an error but in this case, it just means we have 
+            // got all of the data. This is only an issue, if they user has a number of activities
+            // divisible by MAX_ACTIVITIES_REQUEST_COUNT.
+            // We could catch the error and see if its because the response header is missing, and if
+            // so assume we are out of data. (maybe compare to whether we have found any items).
+            // This would mean we might miss legitimate API errors though.
             let activities =
             self.retrieve_activities(member_id, character_id, platform, mode, count, page).await?;
 
