@@ -4,13 +4,13 @@ Command line tool for retrieving date / time stamps for Destiny 2 weekly event m
 
 Supported weekly event momenets are:
 * **Now** : *(now)* Current date / time
-* **Current Weekly Reset** *(current_weekly) : Previous weekly Tuesday reset date / time.
+* **Current Weekly Reset** *(current_weekly) : Current weekly Tuesday reset date / time (i.e. previous Tuesday).
 * **Next Weekly Reset** *(next_weekly)* : Upcoming weekly Tuesday reset date / time.
-* **Current Daily Reset** *(current_daily)* : Previous daily reset date / time.
+* **Current Daily Reset** *(current_daily)* : Currently daily reset date / time.
 * **Next Daily Reset** *(next_daily)* : Upcoming daily reset date / time.
-* **Current Xur Reset** *(current_xur)* : Last Xur Weekly Reset (on Friday).
+* **Current Xur Reset** *(current_xur)* : Current Xur Weekly Reset (on Friday).
 * **Next Xur Reset** *(next_xur)* : Upcoming Xur Weekly Reset (on Friday).
-* **Current Trials Reset** *(current_trials)* : Last Trials of Osiris Weekly Reset (on Friday).
+* **Current Trials Reset** *(current_trials)* : Current Trials of Osiris Weekly Reset (on Friday).
 * **Next Trials Reset** *(next_trials)* : Upcoming Trials of Osiris Weekly Reset (on Friday).
 
 Output formats supported are:
