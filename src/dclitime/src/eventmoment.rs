@@ -12,13 +12,13 @@ use dcli::utils::{
 #[derive(PartialEq, Debug)]
 pub enum EventMoment {
     Now,
-    LastWeeklyReset,
+    CurrentWeeklyReset,
     NextWeeklyReset,
-    LastDailyReset,
+    CurrentDailyReset,
     NextDailyReset,
-    LastXurReset,
+    CurrentXurReset,
     NextXurReset,
-    LastTrialsReset,
+    CurrentTrialsReset,
     NextTrialsReset,
 }
 
@@ -27,13 +27,13 @@ impl EventMoment {
     pub fn get_date_time(&self) -> DateTime<Utc> {
         match self {
             EventMoment::Now => Utc::now(),
-            EventMoment::LastWeeklyReset => get_last_weekly_reset(),
+            EventMoment::CurrentWeeklyReset => get_last_weekly_reset(),
             EventMoment::NextWeeklyReset => get_last_weekly_reset() + Duration::weeks(1),
-            EventMoment::LastDailyReset => get_last_daily_reset(),
+            EventMoment::CurrentDailyReset => get_last_daily_reset(),
             EventMoment::NextDailyReset => get_last_daily_reset() + Duration::days(1),
-            EventMoment::LastXurReset => get_last_friday_reset(),
+            EventMoment::CurrentXurReset => get_last_friday_reset(),
             EventMoment::NextXurReset => get_last_friday_reset() + Duration::weeks(1),
-            EventMoment::LastTrialsReset => get_last_friday_reset(),
+            EventMoment::CurrentTrialsReset => get_last_friday_reset(),
             EventMoment::NextTrialsReset => get_last_friday_reset() + Duration::weeks(1),
         }
     }
@@ -49,14 +49,14 @@ impl FromStr for EventMoment {
         //get a slice to get a &str for the match
         match &s[..] {
             "now" => Ok(EventMoment::Now),
-            "lastweeklyreset" => Ok(EventMoment::LastWeeklyReset),
-            "nextweeklyreset" => Ok(EventMoment::NextWeeklyReset),
-            "lastdailyreset" => Ok(EventMoment::LastDailyReset),
-            "nextdailyreset" => Ok(EventMoment::NextDailyReset),
-            "lastxurreset" => Ok(EventMoment::LastXurReset),
-            "nextxurreset" => Ok(EventMoment::NextXurReset),
-            "lasttrialsreset" => Ok(EventMoment::LastTrialsReset),
-            "nexttrialsreset" => Ok(EventMoment::NextTrialsReset),
+            "current_weekly" => Ok(EventMoment::CurrentWeeklyReset),
+            "next_weekly" => Ok(EventMoment::NextWeeklyReset),
+            "current_daily" => Ok(EventMoment::CurrentDailyReset),
+            "next_daily" => Ok(EventMoment::NextDailyReset),
+            "current_xur" => Ok(EventMoment::CurrentXurReset),
+            "next_xur" => Ok(EventMoment::NextXurReset),
+            "current_trials" => Ok(EventMoment::CurrentTrialsReset),
+            "next_trials" => Ok(EventMoment::NextTrialsReset),
 
             _ => Err("Unknown EventMoment type"),
         }
@@ -67,13 +67,13 @@ impl fmt::Display for EventMoment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
             EventMoment::Now => "Now",
-            EventMoment::LastWeeklyReset => " Last Weekly Reset",
+            EventMoment::CurrentWeeklyReset => " Current Weekly Reset",
             EventMoment::NextWeeklyReset => "Next Weekly Reset",
-            EventMoment::LastDailyReset => "Last Daily Reset",
+            EventMoment::CurrentDailyReset => "Current Daily Reset",
             EventMoment::NextDailyReset => "Next Daily Reset",
-            EventMoment::LastXurReset => "Last Weekly Xur Reset",
+            EventMoment::CurrentXurReset => "Current Weekly Xur Reset",
             EventMoment::NextXurReset => "Next Weekly Xur Reset",
-            EventMoment::LastTrialsReset => "Last Trials of Osiris Weekly Reset",
+            EventMoment::CurrentTrialsReset => "Current Trials of Osiris Weekly Reset",
             EventMoment::NextTrialsReset => "Next Trials of Osiris Weekly Reset",
         };
 

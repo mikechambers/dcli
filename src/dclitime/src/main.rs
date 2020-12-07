@@ -51,11 +51,11 @@ struct Opt {
 
     /// The weekly Destiny 2 moment to retrieve the date / time stamp for.
     ///
-    /// Valid values are now, lastweeklyreset (previous Tuesday weekly reset), 
-    /// nextweeklyreset (upcoming Tuesday weekly reset), lastdailyreset, nextdailyreset,
-    /// lastxureset (previous Friday Xur reset), nextxurreset (upcoming Friday Xur reset),
-    /// lasttrialsreset (previous Friday Trials reset), nexttrialsreset (upcoming Friday Trials reset)
-    #[structopt(short = "m", long = "moment")]
+    /// Valid values are now, current_weekly (previous Tuesday weekly reset), 
+    /// next_weekly (upcoming Tuesday weekly reset), current_daily, next_daily,
+    /// current_xur (previous Friday Xur reset), next_xur (upcoming Friday Xur reset),
+    /// current_trials (previous Friday Trials reset), next_trials (upcoming Friday Trials reset)
+    #[structopt(short = "m", long = "moment", default_value="now")]
     moment: EventMoment,
 
     ///Date / time format to output moment

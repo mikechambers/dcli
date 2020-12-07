@@ -3,24 +3,24 @@
 Command line tool for retrieving date / time stamps for Destiny 2 weekly event moments
 
 Supported weekly event momenets are:
-* Now : (now) Current date / time
-* Last Weekly Reset (lastweeklyreset) : Previous weekly Tuesday reset date / time.
-* Next Weekly Reset (nextweeklyreset) : Upcoming weekly Tuesday reset date / time.
-* Last Daily Reset (lastdailyreset) : Previous daily reset date / time.
-* Next Daily Reset (lastdailyreset) : Upcoming daily reset date / time.
-* Last Xur Reset (lastxurreset) : Last Xur Weekly Reset (on Friday).
-* Next Xur Reset (nextxurreset) : Upcoming Xur Weekly Reset (on Friday).
-* Last Trials Reset (lastxurreset) : Last Trials of Osiris Weekly Reset (on Friday).
-* Next Trials Reset (nextxurreset) : Upcoming Trials of Osiris Weekly Reset (on Friday).
+* **Now** : *(now)* Current date / time
+* **Current Weekly Reset** *(current_weekly) : Previous weekly Tuesday reset date / time.
+* **Next Weekly Reset** *(next_weekly)* : Upcoming weekly Tuesday reset date / time.
+* **Current Daily Reset** *(current_daily)* : Previous daily reset date / time.
+* **Next Daily Reset** *(next_daily)* : Upcoming daily reset date / time.
+* **Current Xur Reset** *(current_xur)* : Last Xur Weekly Reset (on Friday).
+* **Next Xur Reset** *(next_xur)* : Upcoming Xur Weekly Reset (on Friday).
+* **Current Trials Reset** *(current_trials)* : Last Trials of Osiris Weekly Reset (on Friday).
+* **Next Trials Reset** *(next_trials)* : Upcoming Trials of Osiris Weekly Reset (on Friday).
 
 Output formats supported are:
-* [rfc3339](https://tools.ietf.org/html/rfc3339) : (default) Example: 2020-12-07T02:59:59.187080+00:00
-* [rfc2822](https://tools.ietf.org/html/rfc2822) : Example: Mon, 07 Dec 2020 03:00:30 +0000
+* [rfc3339](https://tools.ietf.org/html/rfc3339) : (default) Example: *2020-12-07T02:59:59.187080+00:00*
+* [rfc2822](https://tools.ietf.org/html/rfc2822) : Example: *Mon, 07 Dec 2020 03:00:30 +0000*
 
 ## USAGE
 ```
 USAGE:
-    dclitime [FLAGS] [OPTIONS] --moment <moment>
+    dclitime [FLAGS] [OPTIONS]
 
 FLAGS:
     -h, --help       
@@ -42,10 +42,10 @@ OPTIONS:
     -m, --moment <moment>    
             The weekly Destiny 2 moment to retrieve the date / time stamp for.
             
-            Valid values are now, lastweeklyreset (previous Tuesday weekly reset), nextweeklyreset (upcoming Tuesday
-            weekly reset), lastdailyreset, nextdailyreset, lastxureset (previous Friday Xur reset), nextxurreset
-            (upcoming Friday Xur reset), lasttrialsreset (previous Friday Trials reset), nexttrialsreset (upcoming
-            Friday Trials reset)
+            Valid values are now, current_weekly (previous Tuesday weekly reset), next_weekly (upcoming Tuesday weekly
+            reset), current_daily, next_daily, current_xur (previous Friday Xur reset), next_xur (upcoming Friday Xur
+            reset), current_trials (previous Friday Trials reset), next_trials (upcoming Friday Trials reset) [default:
+            now]
     -o, --output <output>    
             Format for command output
             
