@@ -29,13 +29,12 @@ impl EventMoment {
             EventMoment::Now => Utc::now(),
             EventMoment::LastWeeklyReset => get_last_weekly_reset(),
             EventMoment::NextWeeklyReset => get_last_weekly_reset() + Duration::weeks(1),
-            EventMoment::LastDailyReset => Utc::now(),
-            EventMoment::NextDailyReset => Utc::now(),
+            EventMoment::LastDailyReset => get_last_daily_reset(),
+            EventMoment::NextDailyReset => get_last_daily_reset() + Duration::days(1),
             EventMoment::LastXurReset => get_last_friday_reset(),
             EventMoment::NextXurReset => get_last_friday_reset() + Duration::weeks(1),
             EventMoment::LastTrialsReset => get_last_friday_reset(),
             EventMoment::NextTrialsReset => get_last_friday_reset() + Duration::weeks(1),
-
         }
     }
 }
@@ -54,8 +53,8 @@ impl FromStr for EventMoment {
             "nextweeklyreset" => Ok(EventMoment::NextWeeklyReset),
             "lastdailyreset" => Ok(EventMoment::LastDailyReset),
             "nextdailyreset" => Ok(EventMoment::NextDailyReset),
-            "lastxureset" => Ok(EventMoment::LastXurReset),
-            "Nextxurreset" => Ok(EventMoment::NextXurReset),
+            "lastxurreset" => Ok(EventMoment::LastXurReset),
+            "nextxurreset" => Ok(EventMoment::NextXurReset),
             "lasttrialsreset" => Ok(EventMoment::LastTrialsReset),
             "nexttrialsreset" => Ok(EventMoment::NextTrialsReset),
 

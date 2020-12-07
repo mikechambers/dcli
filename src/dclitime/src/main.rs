@@ -25,17 +25,17 @@ mod datetimeformat;
 
 use eventmoment::EventMoment;
 use datetimeformat::DateTimeFormat;
+use dcli::output::Output;
 
-use dcli::utils::print_verbose;
+use dcli::utils::{print_verbose, build_tsv};
 
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
-/// Command line tool for retrieving current Destiny 2 activity stats.
-///
-/// Enables control of which stats are retrieved via game mode, time period and
-/// character.
+/// Command line tool for retrieving date / time stamps for Destiny 2 weekly event
+/// moments
+/// 
 ///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
@@ -49,15 +49,18 @@ use structopt::StructOpt;
 /// Released under an MIT License.
 struct Opt {
 
-    ///Print out additional information
+    /// The weekly Destiny 2 moment to retrieve the date / time stamp for.
     ///
-    ///Output is printed to stderr.
+    /// Valid values are now, lastweeklyreset (previous Tuesday weekly reset), 
+    /// nextweeklyreset (upcoming Tuesday weekly reset), lastdailyreset, nextdailyreset,
+    /// lastxureset (previous Friday Xur reset), nextxurreset (upcoming Friday Xur reset),
+    /// lasttrialsreset (previous Friday Trials reset), nexttrialsreset (upcoming Friday Trials reset)
     #[structopt(short = "m", long = "moment")]
     moment: EventMoment,
 
-    ///Print out additional information
+    ///Date / time format to output moment
     ///
-    ///Output is printed to stderr.
+    ///Valid values are rfc3339 (default) and rfc2822
     #[structopt(short = "f", long = "format", default_value="rfc3339")]
     format: DateTimeFormat,
 
@@ -66,11 +69,16 @@ struct Opt {
     ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
-}
 
-//TODO: specify format output
-//to_rfc2822
-//to_rfc3339
+    /// Format for command output
+    ///
+    /// Valid values are default (Default) and tsv.
+    ///
+    /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
+    /// ending in a new line character (\n).
+    #[structopt(short = "o", long = "output", default_value = "default")]
+    output: Output,
+}
 
 #[tokio::main]
 async fn main() {
@@ -79,12 +87,22 @@ async fn main() {
 
     let dt = opt.moment.get_date_time();
     let date_time_str = match opt.format {
-        DateTimeFormat::Chrono => format!("{}", dt),
         DateTimeFormat::RFC3339 => dt.to_rfc3339(),
         DateTimeFormat::RFC2822 => dt.to_rfc2822(),
     };
 
-    println!("{}", date_time_str);
-    
+    match opt.output {
+        Output::Default => {
+            println!("{}", date_time_str);
+        },
+        Output::Tsv => {
+            let mut name_values: Vec<(&str, String)> = Vec::new();
+            name_values.push(("date_time", date_time_str));
+            name_values.push(("format", format!("{}", opt.format)));
+            name_values.push(("moment", format!("{}", opt.moment)));
 
+            print!("{}", build_tsv(name_values));
+        },
+    }
+    
 }

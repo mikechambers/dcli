@@ -35,6 +35,7 @@ pub const EXIT_SUCCESS: i32 = 0;
 pub const EXIT_FAILURE: i32 = 1;
 
 pub const WEEK_IN_SECONDS: i64 = 604800;
+pub const DAY_IN_SECONDS: i64 = 86400;
 
 pub const TSV_EOL: &str = "\n";
 pub const TSV_DELIM: &str = "\t";
@@ -176,33 +177,29 @@ pub fn build_tsv(name_values: Vec<(&str, String)>) -> String {
 pub fn get_last_weekly_reset() -> DateTime<Utc> {
     //get a hardcoded past reset date / time (17:00 UTC every tuesday)
     let past_reset: DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);
-    let now: DateTime<Utc> = Utc::now();
-
-    //get total seconds between now and the past reset
-    //take the mod of that divided by a week in seconds
-    //subtract that amount from current date / time to find previous reset
-    now - Duration::seconds((now - past_reset).num_seconds() % WEEK_IN_SECONDS)
+    find_previous_moment(past_reset, WEEK_IN_SECONDS)
 }
 
 pub fn get_last_friday_reset() -> DateTime<Utc> {
-    //get a hardcoded past reset date / time (17:00 UTC every tuesday)
-    let past_reset: DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);
-    let now: DateTime<Utc> = Utc::now();
+    //get a hardcoded past reset date / time (17:00 UTC every friday)
+    let past_reset: DateTime<Utc> = Utc.ymd(2020, 12, 4).and_hms(17, 0, 0);
+    find_previous_moment(past_reset, WEEK_IN_SECONDS)
 
-    //get total seconds between now and the past reset
-    //take the mod of that divided by a week in seconds
-    //subtract that amount from current date / time to find previous reset
-    now - Duration::seconds((now - past_reset).num_seconds() % WEEK_IN_SECONDS)
 }
 
 pub fn get_last_daily_reset() -> DateTime<Utc> {
-    //get a hardcoded past reset date / time (17:00 UTC every tuesday)
+    //get a hardcoded past daily date / time (17:00 UTC every tuesday)
     let past_reset: DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);
+
+    find_previous_moment(past_reset, DAY_IN_SECONDS)
+}
+
+fn find_previous_moment(past_reset:DateTime<Utc>, interval:i64) -> DateTime<Utc> {
     let now: DateTime<Utc> = Utc::now();
 
     //get total seconds between now and the past reset
     //take the mod of that divided by a week in seconds
     //subtract that amount from current date / time to find previous reset
-    now - Duration::seconds((now - past_reset).num_seconds() % WEEK_IN_SECONDS)
+    now - Duration::seconds((now - past_reset).num_seconds() % interval)
 }
 

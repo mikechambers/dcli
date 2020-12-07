@@ -3,7 +3,6 @@ use std::str::FromStr;
 
 #[derive(PartialEq, Debug)]
 pub enum DateTimeFormat {
-    Chrono,
     RFC2822,
     RFC3339,
 }
@@ -17,11 +16,9 @@ impl FromStr for DateTimeFormat {
 
         //get a slice to get a &str for the match
         match &s[..] {
-            "chrono" => Ok(DateTimeFormat::Chrono),
             "rfc2822" => Ok(DateTimeFormat::RFC2822),
             "rfc3339" => Ok(DateTimeFormat::RFC3339),
-
-
+            
             _ => Err("Unknown DateTimeFormat type"),
         }
     }
@@ -30,7 +27,6 @@ impl FromStr for DateTimeFormat {
 impl fmt::Display for DateTimeFormat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
-            DateTimeFormat::Chrono => "Chrono Library Format",
             DateTimeFormat::RFC2822 => " RFC 2822",
             DateTimeFormat::RFC3339 => "RFC 3339",
         };
