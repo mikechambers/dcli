@@ -16,6 +16,7 @@ Supported weekly event momenets are:
 Output formats supported are:
 * [rfc3339](https://tools.ietf.org/html/rfc3339) : (default) Example: *2020-12-07T02:59:59.187080+00:00*
 * [rfc2822](https://tools.ietf.org/html/rfc2822) : Example: *Mon, 07 Dec 2020 03:00:30 +0000*
+* unix : Unix timestamp, number of non-leap seconds since January 1, 1970 0:00:00 UTC. Example: *1607446800*
 
 ## USAGE
 ```
@@ -38,9 +39,10 @@ OPTIONS:
     -f, --format <format>    
             Date / time format to output moment
             
-            Valid values are rfc3339 (default) and rfc2822 [default: rfc3339]
+            Valid values are rfc3339 (default), rfc2822 and unix (unix timestamp, number of non-leap seconds since
+            January 1, 1970 0:00:00 UTC). [default: rfc3339]
     -m, --moment <moment>    
-            The weekly Destiny 2 moment to retrieve the date / time stamp for.
+            The weekly Destiny 2 moment to retrieve the date / time stamp for
             
             Valid values are now, current_weekly (previous Tuesday weekly reset), next_weekly (upcoming Tuesday weekly
             reset), current_daily, next_daily, current_xur (previous Friday Xur reset), next_xur (upcoming Friday Xur
@@ -59,17 +61,17 @@ OPTIONS:
 
 #### Get date / time for the weekly Tuesday reset for the current week:
 ```
-$ dclitime--moment lastweeklyreset
+$ dclitime--moment current_weekly
 ```
 
 #### Get date / time for the upcoming Xur reset on Friday in rfc2822 format:
 ```
-$ dclitime --moment nextxurreset --format rfc2822
+$ dclitime --moment next_xur --format rfc2822
 ```
 
 #### Get date / time for next week's weekly reset on Tuesday and output in tab seperated value format:
 ```
-$ dclitime --moment nextweeklyreset --output tsv
+$ dclitime --moment next_weekly --output tsv
 ```
 
 which outputs:

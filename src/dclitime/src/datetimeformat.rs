@@ -5,6 +5,7 @@ use std::str::FromStr;
 pub enum DateTimeFormat {
     RFC2822,
     RFC3339,
+    Unix,
 }
 
 impl FromStr for DateTimeFormat {
@@ -18,7 +19,9 @@ impl FromStr for DateTimeFormat {
         match &s[..] {
             "rfc2822" => Ok(DateTimeFormat::RFC2822),
             "rfc3339" => Ok(DateTimeFormat::RFC3339),
-            
+            "unix" => Ok(DateTimeFormat::Unix),
+
+
             _ => Err("Unknown DateTimeFormat type"),
         }
     }
@@ -29,6 +32,7 @@ impl fmt::Display for DateTimeFormat {
         let out = match self {
             DateTimeFormat::RFC2822 => " RFC 2822",
             DateTimeFormat::RFC3339 => "RFC 3339",
+            DateTimeFormat::Unix => "Unix Timestamp",
         };
 
         write!(f, "{}", out)

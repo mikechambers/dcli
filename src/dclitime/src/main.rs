@@ -36,7 +36,6 @@ use structopt::StructOpt;
 /// Command line tool for retrieving date / time stamps for Destiny 2 weekly event
 /// moments
 /// 
-///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
 ///
@@ -49,7 +48,7 @@ use structopt::StructOpt;
 /// Released under an MIT License.
 struct Opt {
 
-    /// The weekly Destiny 2 moment to retrieve the date / time stamp for.
+    /// The weekly Destiny 2 moment to retrieve the date / time stamp for
     ///
     /// Valid values are now, current_weekly (previous Tuesday weekly reset), 
     /// next_weekly (upcoming Tuesday weekly reset), current_daily, next_daily,
@@ -58,15 +57,16 @@ struct Opt {
     #[structopt(short = "m", long = "moment", default_value="now")]
     moment: EventMoment,
 
-    ///Date / time format to output moment
+    /// Date / time format to output moment
     ///
-    ///Valid values are rfc3339 (default) and rfc2822
+    /// Valid values are rfc3339 (default), rfc2822 and unix (unix timestamp, 
+    /// number of non-leap seconds since January 1, 1970 0:00:00 UTC).
     #[structopt(short = "f", long = "format", default_value="rfc3339")]
     format: DateTimeFormat,
 
-    ///Print out additional information
+    /// Print out additional information
     ///
-    ///Output is printed to stderr.
+    /// Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
@@ -89,6 +89,7 @@ async fn main() {
     let date_time_str = match opt.format {
         DateTimeFormat::RFC3339 => dt.to_rfc3339(),
         DateTimeFormat::RFC2822 => dt.to_rfc2822(),
+        DateTimeFormat::Unix => dt.timestamp().to_string(),
     };
 
     match opt.output {
