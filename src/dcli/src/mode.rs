@@ -337,6 +337,7 @@ impl ActivityMode {
     }
 }
 
+//TODO: add other activity types?
 impl FromStr for ActivityMode {
     type Err = &'static str;
 

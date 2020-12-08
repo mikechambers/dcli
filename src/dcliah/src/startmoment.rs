@@ -24,11 +24,12 @@
 use std::fmt;
 use std::str::FromStr;
 
+//TODO: sync these with dclitime
 #[derive(PartialEq, Debug)]
 pub enum StartMoment {
-    DailyReset,
-    FridayReset,
-    WeeklyReset,
+    Daily,
+    Weekend,
+    Weekly,
     Day,
     Week,
     Month, 
@@ -46,9 +47,9 @@ impl FromStr for StartMoment {
 
         //get a slice to get a &str for the match
         match &s[..] {
-            "daily_reset" => Ok(StartMoment::DailyReset),
-            "friday_reset" => Ok(StartMoment::FridayReset),
-            "weekly_reset" => Ok(StartMoment::WeeklyReset),
+            "daily" => Ok(StartMoment::Daily),
+            "friday" => Ok(StartMoment::Weekend),
+            "weekly" => Ok(StartMoment::Weekly),
             "day" => Ok(StartMoment::Day),
             "week" => Ok(StartMoment::Week),
             "month" => Ok(StartMoment::Month),
@@ -63,9 +64,9 @@ impl FromStr for StartMoment {
 impl fmt::Display for StartMoment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
-            StartMoment::DailyReset => "since the last daily reset",
-            StartMoment::FridayReset => "since the last Friday reset",
-            StartMoment::WeeklyReset => "since the last weekly reset",
+            StartMoment::Daily => "since the last daily reset",
+            StartMoment::Weekend => "since the last Friday reset",
+            StartMoment::Weekly => "since the last weekly reset",
             StartMoment::Day => "last day",
             StartMoment::Week => "last week",
             StartMoment::Month => "last month", 

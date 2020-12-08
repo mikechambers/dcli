@@ -117,10 +117,10 @@ async fn retrieve_activities_since(
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
-/// Command line tool for retrieving current Destiny 2 activity stats.
+/// Command line tool for retrieving Destiny 2 activity history.
 ///
-/// Enables control of which stats are retrieved via game mode, time period and
-/// character.
+/// Enables control of which stats are retrieved via game mode, start time 
+/// (to present) and character.
 ///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
@@ -135,8 +135,7 @@ async fn retrieve_activities_since(
 struct Opt {
     /// Destiny 2 API member id
     ///
-    /// This is not the user name, but the member id
-    /// retrieved from the Destiny API.
+    /// This is not the user name, but the member id retrieved from the Destiny API.
     #[structopt(short = "m", long = "member-id", required = true)]
     member_id: String,
 
@@ -153,17 +152,29 @@ struct Opt {
     /// Required when period is set to day, reset, week or month.
     #[structopt(short = "d", long = "start-time", parse(try_from_str = parse_rfc3339), required_if("start-moment", "custom"))]
     start_time: Option<DateTime<Utc>>,
-    //required_ifs=&[("start_moment","custom"),]
-    //required_if("start-moment", "custom")
 
-    /// Time range to pull stats from
+    /// Start moment from which to pull activities from
     ///
-    /// Valid values include day (last day), reset (since reset), week
-    /// (last week), month (last month), alltime (default).
-    #[structopt(long = "start-moment" )]
+    /// Activities will be retrieved from start moment to the current time. 
+    /// For example, Specifying:
+    /// --start-moment weekly_reset
+    /// 
+    /// will return all activities since the last weekly reset on Tuesday. 
+    /// 
+    /// Valid values include daily (last daily reset), weekend 
+    /// (last weekend reset on Friday), weekly (last weekly reset on Tuesday),
+    /// day (last day), week (last week), month (last month), alltime and custom.
+    /// 
+    /// When custom is specified, the custom start date in RFC3339 format must 
+    /// be specified with the --start-time argument.
+    /// 
+    /// For example:
+    /// --start-moment custom --start-time 2020-12-08T17:00:00.774187+00:00
+    /// 
+    /// Specifying alltime retrieves all activitiy history and may take an extended
+    /// amount of time to retrieve depending on the number of activities.
+    #[structopt(long = "start-moment", default_value="day")]
     start_moment: StartMoment,
-
-    // required_ifs=&[("start_moment","custom"),]
 
     /// Activity mode to return stats for
     ///
@@ -183,9 +194,7 @@ struct Opt {
 
     /// Destiny 2 API character id
     ///
-    /// Destiny 2 API character id. If not specified, data for all characters
-    /// will be returned.
-    /// Required when period is set to day, reset, week or month.
+    /// Destiny 2 API character id for the character to retrieve activities for.
     #[structopt(short = "c", long = "character-id")]
     character_id: String,
 
