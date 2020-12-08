@@ -27,6 +27,7 @@ use crate::platform::Platform;
 use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
 use crate::response::character::CharacterData;
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
+use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
 };
@@ -312,8 +313,8 @@ impl ApiInterface {
 
             page += 1;
 
-            //TODO: check order, and whether we need to sort
-            //TODO: think through if this could get into a never ending loop
+            //if we try to page past where there is valid data, bungie will return
+            //empty response, which we detect retrieve_activities (and returns None)
         }
 
         if out.len() == 0 {
@@ -353,12 +354,24 @@ impl ApiInterface {
         //is actually a different type / struct, we cant dynamically specify it to the
         //call_and_parse function. Maybe there is a way to do it, but I have figured it
         //out so for now, we need to write some boilerplate code
-        let activities: Option<Vec<Activity>> = response
-            .response
-            .ok_or(Error::ApiRequest {
-                description: String::from("No response data from API Call."),
-            })?
-            .activities;
+        //
+        //If we get a response with no Response data, we first check to see if
+        //error_status == 1, if it is, it just means there is no more data, and it
+        //doesnt mean some error occured.
+        let activities = match response.response {
+            Some(e) => e,
+            None => {
+                if response.status.error_code == API_RESPONSE_STATUS_SUCCESS {
+                    return Ok(None);
+                } else {
+                    return Err(Error::ApiRequest {
+                        description: String::from("No response data from API Call."),
+                    });
+                }
+            },
+        }.activities;
+
+        //let activities: Option<Vec<Activity>> = response.activities;
 
         Ok(activities)
     }
