@@ -23,6 +23,8 @@
 use crate::error::Error;
 use serde_derive::{Deserialize, Serialize};
 
+pub const API_RESPONSE_STATUS_SUCCESS: u32 = 1;
+
 pub fn check_destiny_response_status(status: &DestinyResponseStatus) -> Result<(), Error> {
     match status.error_code {
         1 => Ok(()),
