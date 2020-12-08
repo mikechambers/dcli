@@ -57,8 +57,11 @@ fn print_default(data: PvpStatsData, mode: CrucibleMode, period: TimePeriod) {
 */
 
 
-fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, ParseError> {
-    let d = DateTime::parse_from_rfc3339(src)?;
+fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
+    let d = match DateTime::parse_from_rfc3339(src) {
+        Ok(e) => e,
+        Err(_e) => {return Err("Invalid RFC 3339 Date / Time String : Example : 2020-12-08T17:00:00.774187+00:00".to_string())},
+    };
     Ok(d.with_timezone(&Utc))
 }
 
@@ -148,7 +151,7 @@ struct Opt {
     /// Destiny 2 API character id. If not specified, data for all characters
     /// will be returned.
     /// Required when period is set to day, reset, week or month.
-    #[structopt(short = "d", long = "start-time", parse(try_from_str = parse_rfc3339), conflicts_with("start-moment"), required_unless("start-moment"))]
+    #[structopt(short = "d", long = "start-time", parse(try_from_str = parse_rfc3339), required_if("start-moment", "custom"))]
     start_time: Option<DateTime<Utc>>,
     //required_ifs=&[("start_moment","custom"),]
     //required_if("start-moment", "custom")
@@ -157,8 +160,8 @@ struct Opt {
     ///
     /// Valid values include day (last day), reset (since reset), week
     /// (last week), month (last month), alltime (default).
-    #[structopt(long = "start-moment", required_unless("datetime") )]
-    start_moment: Option<StartMoment>,
+    #[structopt(long = "start-moment" )]
+    start_moment: StartMoment,
 
     // required_ifs=&[("start_moment","custom"),]
 
