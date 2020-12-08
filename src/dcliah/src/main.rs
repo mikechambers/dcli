@@ -20,13 +20,16 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+mod startmoment;
+use startmoment::StartMoment;
+
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
 use dcli::mode::ActivityMode;
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::activities::Activity;
-use dcli::timeperiod::StatsTimePeriod;
+use chrono::{DateTime, Duration, Utc, ParseError};
 use structopt::StructOpt;
 
 use dcli::utils::EXIT_FAILURE;
@@ -52,6 +55,62 @@ fn print_default(data: PvpStatsData, mode: CrucibleMode, period: TimePeriod) {
 
 }
 */
+
+
+fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, ParseError> {
+    let d = DateTime::parse_from_rfc3339(src)?;
+    Ok(d.with_timezone(&Utc))
+}
+
+async fn retrieve_activities(
+    member_id: &str,
+    character_id: &str,
+    platform: &Platform,
+    mode: &ActivityMode,
+    verbose: bool,
+) -> Result<Option<Activity>, Error> {
+    let client: ApiInterface = ApiInterface::new(verbose);
+
+    let activity: Activity = match client
+        .retrieve_last_activity(&member_id, &character_id, &platform, &mode)
+        .await?
+    {
+        Some(e) => e,
+        None => {
+            return Ok(None);
+        }
+    };
+
+    println!("{:#?}", activity);
+
+    Ok(Some(activity))
+}
+
+async fn retrieve_activities_since(
+    member_id: &str,
+    character_id: &str,
+    platform: &Platform,
+    mode: &ActivityMode,
+    verbose: bool,
+) -> Result<Option<Vec<Activity>>, Error> {
+    let client: ApiInterface = ApiInterface::new(verbose);
+
+    let date_filter = Utc::now() - Duration::weeks(52 * 6);
+
+    let activities: Vec<Activity> = match client
+        .retrieve_activities_since(&member_id, &character_id, &platform, &mode, date_filter)
+        .await?
+    {
+        Some(e) => e,
+        None => {
+            return Ok(None);
+        }
+    };
+
+    println!("{:#?}", activities.len());
+
+    Ok(Some(activities))
+}
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
@@ -84,12 +143,24 @@ struct Opt {
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
+    /// Destiny 2 API character id
+    ///
+    /// Destiny 2 API character id. If not specified, data for all characters
+    /// will be returned.
+    /// Required when period is set to day, reset, week or month.
+    #[structopt(short = "d", long = "start-time", parse(try_from_str = parse_rfc3339), conflicts_with("start-moment"), required_unless("start-moment"))]
+    start_time: Option<DateTime<Utc>>,
+    //required_ifs=&[("start_moment","custom"),]
+    //required_if("start-moment", "custom")
+
     /// Time range to pull stats from
     ///
     /// Valid values include day (last day), reset (since reset), week
     /// (last week), month (last month), alltime (default).
-    #[structopt(long = "period", default_value = "alltime")]
-    period: StatsTimePeriod,
+    #[structopt(long = "start-moment", required_unless("datetime") )]
+    start_moment: Option<StartMoment>,
+
+    // required_ifs=&[("start_moment","custom"),]
 
     /// Activity mode to return stats for
     ///
@@ -121,63 +192,14 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 }
-
-async fn retrieve_activities(
-    member_id: &str,
-    character_id: &str,
-    platform: &Platform,
-    mode: &ActivityMode,
-    verbose: bool,
-) -> Result<Option<Activity>, Error> {
-    let client: ApiInterface = ApiInterface::new(verbose);
-
-    let activity: Activity = match client
-        .retrieve_last_activity(&member_id, &character_id, &platform, &mode)
-        .await?
-    {
-        Some(e) => e,
-        None => {
-            return Ok(None);
-        }
-    };
-
-    println!("{:#?}", activity);
-
-    Ok(Some(activity))
-}
-
-use chrono::{DateTime, Utc, Duration};
-
-async fn retrieve_activities_since(
-    member_id: &str,
-    character_id: &str,
-    platform: &Platform,
-    mode: &ActivityMode,
-    verbose: bool,
-) -> Result<Option<Vec<Activity>>, Error> {
-    let client: ApiInterface = ApiInterface::new(verbose);
-
-    let date_filter = Utc::now() - Duration::weeks(52 * 6);
-
-    let activities: Vec<Activity> = match client
-        .retrieve_activities_since(&member_id, &character_id, &platform, &mode, date_filter)
-        .await?
-    {
-        Some(e) => e,
-        None => {
-            return Ok(None);
-        }
-    };
-
-    println!("{:#?}", activities.len());
-
-    Ok(Some(activities))
-}
-
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
+
+    if opt.start_time.is_some() {
+        println!("{}", opt.start_time.unwrap());
+    }
 
     //todo: is there any need to send a reference to an enum?
     match retrieve_activities_since(
