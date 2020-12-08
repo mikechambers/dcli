@@ -57,12 +57,21 @@ fn print_default(data: PvpStatsData, mode: CrucibleMode, period: TimePeriod) {
 */
 
 
+//TODO: this is called twice. need to track down.
 fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
+
     let d = match DateTime::parse_from_rfc3339(src) {
         Ok(e) => e,
         Err(_e) => {return Err("Invalid RFC 3339 Date / Time String : Example : 2020-12-08T17:00:00.774187+00:00".to_string())},
     };
-    Ok(d.with_timezone(&Utc))
+
+    let d = d.with_timezone(&Utc);
+
+    if d > Utc::now() {
+        return Err("start-date must be in the past.".to_string());
+    }
+
+    Ok(d)
 }
 
 async fn retrieve_activities(
@@ -145,11 +154,13 @@ struct Opt {
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
-    /// Destiny 2 API character id
+    /// Custom start time in RFC 3339 date / time format
     ///
-    /// Destiny 2 API character id. If not specified, data for all characters
-    /// will be returned.
-    /// Required when period is set to day, reset, week or month.
+    /// Must be a valid date in the past.
+    /// 
+    /// Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
+    /// 
+    /// Required when start-moment is set to custom, but otherwise not applicable.
     #[structopt(short = "d", long = "start-time", parse(try_from_str = parse_rfc3339), required_if("start-moment", "custom"))]
     start_time: Option<DateTime<Utc>>,
 
