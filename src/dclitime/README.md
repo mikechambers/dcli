@@ -4,7 +4,7 @@ Command line tool for retrieving date / time stamps for Destiny 2 weekly event m
 
 Supported weekly event momenets are:
 * **Now** : *(now)* Current date / time
-* **Current Weekly Reset** *(current_weekly) : Current weekly Tuesday reset date / time (i.e. previous Tuesday).
+* **Current Weekly Reset** *(current_weekly)* : Current weekly Tuesday reset date / time (i.e. previous Tuesday).
 * **Next Weekly Reset** *(next_weekly)* : Upcoming weekly Tuesday reset date / time.
 * **Current Daily Reset** *(current_daily)* : Currently daily reset date / time.
 * **Next Daily Reset** *(next_daily)* : Upcoming daily reset date / time.
