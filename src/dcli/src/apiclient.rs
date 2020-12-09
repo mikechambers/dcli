@@ -68,8 +68,13 @@ impl ApiClient {
         };
 
         if self.verbose {
-            println!("---------Begin API response---------");
-            println!("{}", &body);
+
+            let len = body.chars().count();
+            const MAX:usize = 200;
+            let limit = std::cmp::min(len, MAX);
+     
+            println!("---------Begin API response : First {}  chars---------", limit);
+            println!("{}", &body[..limit]);
             println!("---------End API response---------");
         }
 
