@@ -20,13 +20,12 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
+use chrono::prelude::*;
+use chrono::{DateTime, Duration, Utc};
 use std::fmt;
 use std::str::FromStr;
-use chrono::{DateTime, Utc, Duration};
-use chrono::prelude::*;
 
-use dcli::utils::{get_last_weekly_reset, get_last_daily_reset, get_last_friday_reset};
+use dcli::utils::{get_last_daily_reset, get_last_friday_reset, get_last_weekly_reset};
 
 //TODO: sync these with dclitime
 #[derive(PartialEq, Debug)]
@@ -36,7 +35,7 @@ pub enum StartMoment {
     Weekly,
     Day,
     Week,
-    Month, 
+    Month,
     AllTime,
     Custom,
 }
@@ -44,34 +43,19 @@ pub enum StartMoment {
 impl StartMoment {
     pub fn get_date_time(&self) -> DateTime<Utc> {
         match self {
-            StartMoment::Daily => {
-                get_last_daily_reset()
-            },
-            StartMoment::Weekend => {
-                get_last_friday_reset()
-            },
-            StartMoment::Weekly => {
-                get_last_weekly_reset()
-            },
-            StartMoment::Day => {
-                Utc::now() - Duration::days(1)
-            },
-            StartMoment::Week => {
-                Utc::now() - Duration::weeks(1)
-            },
-            StartMoment::Month => {
-                Utc::now() - Duration::days(30)
-            },
-            StartMoment::AllTime => {
-                Utc::now() - Duration::weeks(52 * 7)
-            },
+            StartMoment::Daily => get_last_daily_reset(),
+            StartMoment::Weekend => get_last_friday_reset(),
+            StartMoment::Weekly => get_last_weekly_reset(),
+            StartMoment::Day => Utc::now() - Duration::days(1),
+            StartMoment::Week => Utc::now() - Duration::weeks(1),
+            StartMoment::Month => Utc::now() - Duration::days(30),
+            StartMoment::AllTime => Utc::now() - Duration::weeks(52 * 7),
             //The entire point of custom is to let user specify they will enter
             //their own value, so get_date_time should not be called for custom/
             //TODO: could assert here to enforce it
             StartMoment::Custom => {
                 Utc.ymd(0, 0, 0).and_hms(0, 0, 0) //TODO: change this to unixtimestamp
-            },
-
+            }
         }
     }
 }
@@ -107,7 +91,7 @@ impl fmt::Display for StartMoment {
             StartMoment::Weekly => "since the last weekly reset",
             StartMoment::Day => "last day",
             StartMoment::Week => "last week",
-            StartMoment::Month => "last month", 
+            StartMoment::Month => "last month",
             StartMoment::AllTime => "all time",
             StartMoment::Custom => "custom date / time",
         };

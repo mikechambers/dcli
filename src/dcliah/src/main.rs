@@ -23,6 +23,7 @@
 mod startmoment;
 use startmoment::StartMoment;
 
+use chrono::{DateTime, Utc};
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
 use dcli::mode::ActivityMode;
@@ -30,7 +31,6 @@ use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::activities::Activity;
 use dcli::statscontainer::ActivityStatsContainer;
-use chrono::{DateTime, Utc};
 use structopt::StructOpt;
 
 //use dcli::utils::EXIT_FAILURE;
@@ -57,14 +57,16 @@ fn print_default(data: PvpStatsData, mode: CrucibleMode, period: TimePeriod) {
 }
 */
 
-
 //TODO: this is called twice. need to track down.
 fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
-
-    let d = match DateTime::parse_from_rfc3339(src) {
-        Ok(e) => e,
-        Err(_e) => {return Err("Invalid RFC 3339 Date / Time String : Example : 2020-12-08T17:00:00.774187+00:00".to_string())},
-    };
+    let d =
+        match DateTime::parse_from_rfc3339(src) {
+            Ok(e) => e,
+            Err(_e) => return Err(
+                "Invalid RFC 3339 Date / Time String : Example : 2020-12-08T17:00:00.774187+00:00"
+                    .to_string(),
+            ),
+        };
 
     let d = d.with_timezone(&Utc);
 
@@ -105,7 +107,7 @@ async fn retrieve_activities_since(
     character_id: &str,
     platform: &Platform,
     mode: &ActivityMode,
-    start_time:&DateTime<Utc>,
+    start_time: &DateTime<Utc>,
     verbose: bool,
 ) -> Result<Option<ActivityStatsContainer>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
@@ -132,7 +134,7 @@ async fn retrieve_activities_since(
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving Destiny 2 activity history.
 ///
-/// Enables control of which stats are retrieved via game mode, start time 
+/// Enables control of which stats are retrieved via game mode, start time
 /// (to present) and character.
 ///
 /// Created by Mike Chambers.
@@ -161,34 +163,34 @@ struct Opt {
     /// Custom start time in RFC 3339 date / time format
     ///
     /// Must be a valid date in the past.
-    /// 
+    ///
     /// Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
-    /// 
+    ///
     /// Required when start-moment is set to custom, but otherwise not applicable.
     #[structopt(short = "d", long = "start-time", parse(try_from_str = parse_rfc3339), required_if("start-moment", "custom"))]
     start_time: Option<DateTime<Utc>>,
 
     /// Start moment from which to pull activities from
     ///
-    /// Activities will be retrieved from start moment to the current time. 
+    /// Activities will be retrieved from start moment to the current time.
     /// For example, Specifying:
     /// --start-moment weekly_reset
-    /// 
-    /// will return all activities since the last weekly reset on Tuesday. 
-    /// 
-    /// Valid values include daily (last daily reset), weekend 
+    ///
+    /// will return all activities since the last weekly reset on Tuesday.
+    ///
+    /// Valid values include daily (last daily reset), weekend
     /// (last weekend reset on Friday), weekly (last weekly reset on Tuesday),
     /// day (last day), week (last week), month (last month), alltime and custom.
-    /// 
-    /// When custom is specified, the custom start date in RFC3339 format must 
+    ///
+    /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --start-time argument.
-    /// 
+    ///
     /// For example:
     /// --start-moment custom --start-time 2020-12-08T17:00:00.774187+00:00
-    /// 
+    ///
     /// Specifying alltime retrieves all activitiy history and may take an extended
     /// amount of time to retrieve depending on the number of activities.
-    #[structopt(long = "start-moment", default_value="day")]
+    #[structopt(long = "start-moment", default_value = "day")]
     start_moment: StartMoment,
 
     /// Activity mode to return stats for
@@ -231,8 +233,8 @@ async fn main() {
     let start_time = match opt.start_moment {
         StartMoment::Custom => {
             opt.start_time.unwrap() //note, this should be ok, because struct opt should ensure valid value
-        },
-        _ => opt.start_moment.get_date_time()
+        }
+        _ => opt.start_moment.get_date_time(),
     };
 
     //todo: is there any need to send a reference to an enum?

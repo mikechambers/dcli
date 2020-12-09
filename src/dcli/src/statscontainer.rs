@@ -21,10 +21,8 @@
 */
 
 use crate::utils::{
-    calculate_efficiency,
-    calculate_kills_deaths_ratio,
-    calculate_kills_deaths_assists,
-    calculate_per_activity_average
+    calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
+    calculate_per_activity_average,
 };
 
 use crate::response::activities::Activity;
@@ -32,51 +30,49 @@ use crate::standing::Standing;
 
 #[derive(Default)]
 pub struct ActivityStatsContainer {
-    pub activities:Vec<Activity>,
+    pub activities: Vec<Activity>,
 
-    assists:f32,
-    score:f32,
-    kills:f32,
-    deaths:f32,
-    opponents_defeated:f32,
-    efficiency:f32,
-    kills_deaths_ratio:f32,
-    kills_deaths_assists:f32,
-    wins:f32,
-    losses:f32,
-    draws:f32,
-    time_played_seconds:f32,
-
+    assists: f32,
+    score: f32,
+    kills: f32,
+    deaths: f32,
+    opponents_defeated: f32,
+    efficiency: f32,
+    kills_deaths_ratio: f32,
+    kills_deaths_assists: f32,
+    wins: f32,
+    losses: f32,
+    draws: f32,
+    time_played_seconds: f32,
 }
 
 impl ActivityStatsContainer {
-    pub fn with_activities(activities:Vec<Activity>) -> ActivityStatsContainer {
+    pub fn with_activities(activities: Vec<Activity>) -> ActivityStatsContainer {
         let mut a = ActivityStatsContainer {
             activities,
-            assists:0.0,
-            score:0.0,
-            kills:0.0,
-            deaths:0.0,
-            opponents_defeated:0.0,
-            efficiency:0.0,
-            kills_deaths_ratio:0.0,
-            kills_deaths_assists:0.0,
-            wins:0.0,
-            losses:0.0,
-            draws:0.0,
-            time_played_seconds:0.0,
+            assists: 0.0,
+            score: 0.0,
+            kills: 0.0,
+            deaths: 0.0,
+            opponents_defeated: 0.0,
+            efficiency: 0.0,
+            kills_deaths_ratio: 0.0,
+            kills_deaths_assists: 0.0,
+            wins: 0.0,
+            losses: 0.0,
+            draws: 0.0,
+            time_played_seconds: 0.0,
         };
 
         a.update();
         a
     }
 
-    fn per_activity_average(&self, value:f32) -> f32 {
+    fn per_activity_average(&self, value: f32) -> f32 {
         calculate_per_activity_average(value, self.activities.len() as f32)
     }
 
     fn update(&mut self) {
-
         for a in self.activities.iter() {
             self.assists += a.values.assists;
             self.score += a.values.score;
@@ -84,22 +80,22 @@ impl ActivityStatsContainer {
             self.deaths += a.values.deaths;
             self.opponents_defeated += a.values.opponents_defeated;
             self.time_played_seconds += a.values.time_played_seconds;
-            
+
             match a.values.standing {
                 Standing::Victory => {
                     self.wins += 1.0;
-                },
+                }
                 Standing::Defeat => {
                     self.losses += 1.0;
-                },
+                }
                 Standing::Unknown => {
                     self.draws += 1.0;
-                },
+                }
             }
-
         }
 
-        self.kills_deaths_assists = calculate_kills_deaths_assists(self.kills, self.deaths, self.assists);
+        self.kills_deaths_assists =
+            calculate_kills_deaths_assists(self.kills, self.deaths, self.assists);
         self.kills_deaths_ratio = calculate_kills_deaths_ratio(self.kills, self.deaths);
         self.efficiency = calculate_efficiency(self.kills, self.deaths, self.assists);
     }

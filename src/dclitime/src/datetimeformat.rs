@@ -20,7 +20,6 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
 use std::fmt;
 use std::str::FromStr;
 
@@ -43,7 +42,6 @@ impl FromStr for DateTimeFormat {
             "rfc2822" => Ok(DateTimeFormat::RFC2822),
             "rfc3339" => Ok(DateTimeFormat::RFC3339),
             "unix" => Ok(DateTimeFormat::Unix),
-
 
             _ => Err("Unknown DateTimeFormat type"),
         }

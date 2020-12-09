@@ -20,14 +20,14 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-mod eventmoment;
 mod datetimeformat;
+mod eventmoment;
 
-use eventmoment::EventMoment;
 use datetimeformat::DateTimeFormat;
 use dcli::output::Output;
+use eventmoment::EventMoment;
 
-use dcli::utils::{print_verbose, build_tsv};
+use dcli::utils::{build_tsv, print_verbose};
 
 use structopt::StructOpt;
 
@@ -35,7 +35,7 @@ use structopt::StructOpt;
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving date / time stamps for Destiny 2 weekly event
 /// moments
-/// 
+///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
 ///
@@ -47,21 +47,20 @@ use structopt::StructOpt;
 ///
 /// Released under an MIT License.
 struct Opt {
-
     /// The weekly Destiny 2 moment to retrieve the date / time stamp for
     ///
-    /// Valid values are now, current_weekly (previous Tuesday weekly reset), 
+    /// Valid values are now, current_weekly (previous Tuesday weekly reset),
     /// next_weekly (upcoming Tuesday weekly reset), current_daily, next_daily,
     /// current_xur (previous Friday Xur reset), next_xur (upcoming Friday Xur reset),
     /// current_trials (previous Friday Trials reset), next_trials (upcoming Friday Trials reset)
-    #[structopt(short = "m", long = "moment", default_value="now")]
+    #[structopt(short = "m", long = "moment", default_value = "now")]
     moment: EventMoment,
 
     /// Date / time format to output moment
     ///
-    /// Valid values are rfc3339 (default), rfc2822 and unix (unix timestamp, 
+    /// Valid values are rfc3339 (default), rfc2822 and unix (unix timestamp,
     /// number of non-leap seconds since January 1, 1970 0:00:00 UTC).
-    #[structopt(short = "f", long = "format", default_value="rfc3339")]
+    #[structopt(short = "f", long = "format", default_value = "rfc3339")]
     format: DateTimeFormat,
 
     /// Print out additional information
@@ -95,7 +94,7 @@ async fn main() {
     match opt.output {
         Output::Default => {
             println!("{}", date_time_str);
-        },
+        }
         Output::Tsv => {
             let mut name_values: Vec<(&str, String)> = Vec::new();
             name_values.push(("date_time", date_time_str));
@@ -103,7 +102,6 @@ async fn main() {
             name_values.push(("moment", format!("{}", opt.moment)));
 
             print!("{}", build_tsv(name_values));
-        },
+        }
     }
-    
 }

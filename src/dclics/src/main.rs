@@ -31,9 +31,7 @@ use dcli::response::stats::{DailyPvPStatsValuesData, PvpStatsData};
 use dcli::timeperiod::StatsTimePeriod;
 
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{
-    build_tsv, format_f32, human_duration, print_error, print_verbose, repeat_str,
-};
+use dcli::utils::{build_tsv, format_f32, human_duration, print_error, print_verbose, repeat_str};
 
 fn print_tsv(
     data: PvpStatsData,
@@ -50,11 +48,9 @@ fn print_tsv(
     name_values.push(("platform_id", format!("{}", platform.to_id())));
     name_values.push(("character_id", character_id.to_string()));
 
-
     let p = period.get_period();
     name_values.push(("start_period_dt", format!("{}", p.start)));
     name_values.push(("end_period_dt", format!("{}", p.end)));
-
 
     name_values.push(("period_human", format!("{}", period)));
     name_values.push(("mode", format!("{}", mode)));
@@ -112,24 +108,12 @@ fn print_default(data: PvpStatsData, mode: CrucibleMode, period: StatsTimePeriod
     let p = format_f32;
 
     let period_string = match period {
-        StatsTimePeriod::Yesterday => {
-            "for yesterday"
-        },
-        StatsTimePeriod::CurrentReset => {
-            "since the last reset"
-        },
-        StatsTimePeriod::LastReset => {
-            "for last week's reset period"
-        },
-        StatsTimePeriod::LastWeek => {
-            "for the last week"
-        },
-        StatsTimePeriod::LastMonth => {
-            "for the last month"
-        },
-        StatsTimePeriod::AllTime => {
-            "for all time"
-        },
+        StatsTimePeriod::Yesterday => "for yesterday",
+        StatsTimePeriod::CurrentReset => "since the last reset",
+        StatsTimePeriod::LastReset => "for last week's reset period",
+        StatsTimePeriod::LastWeek => "for the last week",
+        StatsTimePeriod::LastMonth => "for the last month",
+        StatsTimePeriod::AllTime => "for all time",
     };
 
     let title: String = format!("Destiny 2 stats for {:#} {}", mode, period_string);
@@ -238,9 +222,9 @@ struct Opt {
     /// Time range to pull stats from
     ///
     /// Valid values include yesterday, currentreset (since reset), lastreset
-    /// (previous week reset period), lastweek (last 7 days), lastmonth 
+    /// (previous week reset period), lastweek (last 7 days), lastmonth
     /// (last 30 days), alltime.
-    /// 
+    ///
     /// All ranges are up to, but not including current day.
     #[structopt(long = "period", default_value = "alltime")]
     period: StatsTimePeriod,
@@ -310,8 +294,13 @@ async fn retrieve_aggregate_crucible_stats(
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let data: Vec<DailyPvPStatsValuesData> = match client
-        .retrieve_aggregate_crucible_stats(&member_id, &character_id, &platform,
-            &mode, &period.get_period())
+        .retrieve_aggregate_crucible_stats(
+            &member_id,
+            &character_id,
+            &platform,
+            &mode,
+            &period.get_period(),
+        )
         .await?
     {
         Some(e) => e,

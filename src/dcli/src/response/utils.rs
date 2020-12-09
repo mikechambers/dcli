@@ -21,10 +21,10 @@
 */
 
 use crate::apiutils::RESOURCE_BASE_URL;
+use crate::standing::Standing;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::Deserialize;
 use serde_derive::Deserialize;
-use crate::standing::Standing;
 
 //2020-10-05T18:49:25Z
 pub const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
@@ -50,13 +50,14 @@ where
 }
 
 pub fn property_to_standing<'de, D>(deserializer: D) -> Result<Standing, D::Error>
-    where D: serde::de::Deserializer<'de>,
+where
+    D: serde::de::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct Outer {
         pub basic: Inner,
     }
-    
+
     #[derive(Deserialize)]
     struct Inner {
         pub value: f32,

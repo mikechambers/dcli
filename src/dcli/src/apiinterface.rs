@@ -26,8 +26,8 @@ use crate::mode::{ActivityMode, CrucibleMode};
 use crate::platform::Platform;
 use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
 use crate::response::character::CharacterData;
-use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;
+use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
 };
@@ -229,28 +229,25 @@ impl ApiInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
-        mode: &ActivityMode
+        mode: &ActivityMode,
     ) -> Result<Option<Activity>, Error> {
+        let activities = self
+            .retrieve_activities(member_id, character_id, platform, mode, 1, 0)
+            .await?;
 
-        let activities =
-            self.retrieve_activities(member_id, character_id, platform, mode, 1, 0).await?;
-
-        let activity:Option<Activity> = match activities {
+        let activity: Option<Activity> = match activities {
             Some(mut e) => {
                 if e.is_empty() {
                     None
                 } else {
                     Some(e.remove(0))
                 }
-            },
-            None => {
-                None
             }
+            None => None,
         };
 
         Ok(activity)
     }
-
 
     pub async fn retrieve_activities_since(
         &self,
@@ -258,11 +255,9 @@ impl ApiInterface {
         character_id: &str,
         platform: &Platform,
         mode: &ActivityMode,
-        start_time:&DateTime<Utc>,
+        start_time: &DateTime<Utc>,
     ) -> Result<Option<Vec<Activity>>, Error> {
-
-
-        let mut out:Vec<Activity> = Vec::new();
+        let mut out: Vec<Activity> = Vec::new();
         let mut page = 0;
         let count = MAX_ACTIVITIES_REQUEST_COUNT;
 
@@ -270,22 +265,22 @@ impl ApiInterface {
         loop {
             println!("Page: {}", page);
 
-
             // TODO: if we call more pages that there is data, it will return back with no Response
-            // property. Usually this means an error but in this case, it just means we have 
+            // property. Usually this means an error but in this case, it just means we have
             // got all of the data. This is only an issue, if they user has a number of activities
             // divisible by MAX_ACTIVITIES_REQUEST_COUNT.
             // We could catch the error and see if its because the response header is missing, and if
             // so assume we are out of data. (maybe compare to whether we have found any items).
             // This would mean we might miss legitimate API errors though.
-            let activities =
-            self.retrieve_activities(member_id, character_id, platform, mode, count, page).await?;
+            let activities = self
+                .retrieve_activities(member_id, character_id, platform, mode, count, page)
+                .await?;
 
             if activities.is_none() {
                 break;
             }
 
-            let mut t:Vec<Activity> = activities.unwrap();
+            let mut t: Vec<Activity> = activities.unwrap();
 
             let len = t.len() as i32;
 
@@ -303,9 +298,9 @@ impl ApiInterface {
             let should_break = t.len() as i32 != len;
 
             //move the items from the temp vec to the out
-            out.append(& mut t);
+            out.append(&mut t);
 
-            if should_break || len < count{
+            if should_break || len < count {
                 println!("break");
                 println!("should_break : {}", should_break);
                 break;
@@ -323,7 +318,7 @@ impl ApiInterface {
 
         Ok(Some(out))
     }
-    
+
     pub async fn retrieve_activities(
         &self,
         member_id: &str,
@@ -368,8 +363,9 @@ impl ApiInterface {
                         description: String::from("No response data from API Call."),
                     });
                 }
-            },
-        }.activities;
+            }
+        }
+        .activities;
 
         //let activities: Option<Vec<Activity>> = response.activities;
 

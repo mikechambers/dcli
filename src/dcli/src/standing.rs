@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use serde_derive::{Serialize};
+use serde_derive::Serialize;
 
 #[derive(Serialize, Debug)]
 pub enum Standing {
@@ -30,11 +30,13 @@ pub enum Standing {
 }
 
 impl Default for Standing {
-    fn default() -> Self { Standing::Unknown }
+    fn default() -> Self {
+        Standing::Unknown
+    }
 }
 
 impl Standing {
-    pub fn from_f32(value:f32) -> Standing{
+    pub fn from_f32(value: f32) -> Standing {
         if value == 1.0 {
             Standing::Defeat
         } else if value == 0.0 {

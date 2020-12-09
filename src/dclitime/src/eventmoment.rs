@@ -20,17 +20,12 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
 use std::fmt;
 use std::str::FromStr;
 
-use chrono::{DateTime, Utc, Duration};
+use chrono::{DateTime, Duration, Utc};
 
-use dcli::utils::{
-    get_last_weekly_reset,
-    get_last_friday_reset,
-    get_last_daily_reset
-};
+use dcli::utils::{get_last_daily_reset, get_last_friday_reset, get_last_weekly_reset};
 
 #[derive(PartialEq, Debug)]
 pub enum EventMoment {
@@ -44,7 +39,6 @@ pub enum EventMoment {
     CurrentTrialsReset,
     NextTrialsReset,
 }
-
 
 impl EventMoment {
     pub fn get_date_time(&self) -> DateTime<Utc> {

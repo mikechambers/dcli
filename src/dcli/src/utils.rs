@@ -82,8 +82,7 @@ pub fn print_error(msg: &str, error: Error) {
     eprintln!("       https://github.com/mikechambers/dcli/issues");
 }
 
-pub fn calculate_per_activity_average(value:f32, total_activities:f32) -> f32 {
-
+pub fn calculate_per_activity_average(value: f32, total_activities: f32) -> f32 {
     if total_activities == 0.0 {
         return 0.0;
     }
@@ -193,7 +192,6 @@ pub fn get_last_friday_reset() -> DateTime<Utc> {
     //get a hardcoded past reset date / time (17:00 UTC every friday)
     let past_reset: DateTime<Utc> = Utc.ymd(2020, 12, 4).and_hms(18, 0, 0);
     find_previous_moment(past_reset, WEEK_IN_SECONDS)
-
 }
 
 pub fn get_last_daily_reset() -> DateTime<Utc> {
@@ -203,7 +201,7 @@ pub fn get_last_daily_reset() -> DateTime<Utc> {
     find_previous_moment(past_reset, DAY_IN_SECONDS)
 }
 
-fn find_previous_moment(past_reset:DateTime<Utc>, interval:i64) -> DateTime<Utc> {
+fn find_previous_moment(past_reset: DateTime<Utc>, interval: i64) -> DateTime<Utc> {
     let now: DateTime<Utc> = Utc::now();
 
     //get total seconds between now and the past reset
@@ -211,4 +209,3 @@ fn find_previous_moment(past_reset:DateTime<Utc>, interval:i64) -> DateTime<Utc>
     //subtract that amount from current date / time to find previous reset
     now - Duration::seconds((now - past_reset).num_seconds() % interval)
 }
-
