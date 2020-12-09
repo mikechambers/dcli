@@ -1,10 +1,11 @@
 use crate::mode::Mode;
 use crate::platform::Platform;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
-use crate::response::utils::property_to_value;
+use crate::response::utils::{property_to_value, property_to_standing};
 use crate::response::utils::str_to_datetime;
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
+use crate::standing::Standing;
 
 pub const MAX_ACTIVITIES_REQUEST_COUNT: i32 = 250;
 
@@ -47,66 +48,66 @@ pub struct Activity {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ActivityValues {
     #[serde(deserialize_with = "property_to_value")]
-    assists: f32,
+    pub assists: f32,
 
     #[serde(deserialize_with = "property_to_value")]
-    score: f32,
+    pub score: f32,
 
     #[serde(deserialize_with = "property_to_value")]
-    kills: f32,
+    pub kills: f32,
 
     #[serde(deserialize_with = "property_to_value")]
-    deaths: f32,
+    pub deaths: f32,
 
     #[serde(rename = "averageScorePerKill", deserialize_with = "property_to_value")]
-    average_score_per_kill: f32,
+    pub average_score_per_kill: f32,
 
     #[serde(rename = "averageScorePerLife", deserialize_with = "property_to_value")]
-    average_score_per_life: f32,
+    pub average_score_per_life: f32,
 
     #[serde(deserialize_with = "property_to_value")]
-    completed: f32,
+    pub completed: f32,
 
     #[serde(rename = "opponentsDefeated", deserialize_with = "property_to_value")]
-    opponents_defeated: f32,
+    pub opponents_defeated: f32,
 
     #[serde(deserialize_with = "property_to_value")]
-    efficiency: f32,
+    pub efficiency: f32,
 
     #[serde(rename = "killsDeathsRatio", deserialize_with = "property_to_value")]
-    kills_deaths_ratio: f32,
+    pub kills_deaths_ratio: f32,
 
     #[serde(rename = "killsDeathsAssists", deserialize_with = "property_to_value")]
-    kills_deaths_assists: f32,
+    pub kills_deaths_assists: f32,
 
     #[serde(
         rename = "activityDurationSeconds",
         deserialize_with = "property_to_value"
     )]
-    activity_duration_seconds: f32,
+    pub activity_duration_seconds: f32,
 
     //TODO: need to make this an option
-    #[serde(deserialize_with = "property_to_value")]
+    #[serde(deserialize_with = "property_to_standing")]
     #[serde(default)]
-    standing: f32,
+    pub standing: Standing,
 
     #[serde(deserialize_with = "property_to_value")]
-    team: f32,
+    pub team: f32,
 
     #[serde(rename = "completionReason", deserialize_with = "property_to_value")]
-    completion_reason: f32,
+    pub completion_reason: f32,
 
     #[serde(rename = "startSeconds", deserialize_with = "property_to_value")]
-    start_seconds: f32,
+    pub start_seconds: f32,
 
     #[serde(rename = "timePlayedSeconds", deserialize_with = "property_to_value")]
-    time_played_seconds: f32,
+    pub time_played_seconds: f32,
 
     #[serde(rename = "playerCount", deserialize_with = "property_to_value")]
-    player_count: f32,
+    pub player_count: f32,
 
     #[serde(rename = "teamScore", deserialize_with = "property_to_value")]
-    team_score: f32,
+    pub team_score: f32,
 }
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity.html#schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity

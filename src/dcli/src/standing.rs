@@ -20,19 +20,27 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod apiclient;
-pub mod apiinterface;
-pub mod apiutils;
-pub mod cruciblestats;
-pub mod emblem;
-pub mod error;
-pub mod manifest;
-pub mod manifestinterface;
-pub mod mode;
-pub mod output;
-pub mod platform;
-pub mod response;
-pub mod timeperiod;
-pub mod utils;
-pub mod standing;
-pub mod statscontainer;
+use serde_derive::{Serialize};
+
+#[derive(Serialize, Debug)]
+pub enum Standing {
+    Victory = 0,
+    Defeat = 1,
+    Unknown = 2,
+}
+
+impl Default for Standing {
+    fn default() -> Self { Standing::Unknown }
+}
+
+impl Standing {
+    pub fn from_f32(value:f32) -> Standing{
+        if value == 1.0 {
+            Standing::Defeat
+        } else if value == 0.0 {
+            Standing::Victory
+        } else {
+            Standing::Unknown
+        }
+    }
+}

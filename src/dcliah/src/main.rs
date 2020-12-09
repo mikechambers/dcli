@@ -29,11 +29,12 @@ use dcli::mode::ActivityMode;
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::activities::Activity;
-use chrono::{DateTime, Duration, Utc, ParseError};
+use dcli::statscontainer::ActivityStatsContainer;
+use chrono::{DateTime, Utc};
 use structopt::StructOpt;
 
-use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{build_tsv, format_f32, human_duration, print_error, print_verbose};
+//use dcli::utils::EXIT_FAILURE;
+use dcli::utils::{print_error, print_verbose};
 
 /*
 fn print_tsv(
@@ -73,8 +74,8 @@ fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
 
     Ok(d)
 }
-
-async fn retrieve_activities(
+/*
+async fn _retrieve_activities(
     member_id: &str,
     character_id: &str,
     platform: &Platform,
@@ -97,20 +98,20 @@ async fn retrieve_activities(
 
     Ok(Some(activity))
 }
+*/
 
 async fn retrieve_activities_since(
     member_id: &str,
     character_id: &str,
     platform: &Platform,
     mode: &ActivityMode,
+    start_time:&DateTime<Utc>,
     verbose: bool,
-) -> Result<Option<Vec<Activity>>, Error> {
+) -> Result<Option<ActivityStatsContainer>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
-    let date_filter = Utc::now() - Duration::weeks(52 * 6);
-
     let activities: Vec<Activity> = match client
-        .retrieve_activities_since(&member_id, &character_id, &platform, &mode, date_filter)
+        .retrieve_activities_since(&member_id, &character_id, &platform, &mode, &start_time)
         .await?
     {
         Some(e) => e,
@@ -119,9 +120,12 @@ async fn retrieve_activities_since(
         }
     };
 
-    println!("{:#?}", activities.len());
+    //TODO: check if we get back and empty vector
+    let container = ActivityStatsContainer::with_activities(activities);
 
-    Ok(Some(activities))
+    println!("{:#?}", container.total_activities());
+
+    Ok(Some(container))
 }
 
 #[derive(StructOpt, Debug)]
@@ -224,17 +228,27 @@ async fn main() {
         println!("{}", opt.start_time.unwrap());
     }
 
+    let start_time = match opt.start_moment {
+        StartMoment::Custom => {
+            opt.start_time.unwrap() //note, this should be ok, because struct opt should ensure valid value
+        },
+        _ => opt.start_moment.get_date_time()
+    };
+
     //todo: is there any need to send a reference to an enum?
     match retrieve_activities_since(
         &opt.member_id,
         &opt.character_id,
         &opt.platform,
         &opt.mode,
+        &start_time,
         opt.verbose,
     )
     .await
     {
-        Ok(_e) => {}
+        Ok(_e) => {
+            println!("DONE");
+        }
         Err(e) => {
             print_error("Error Loading Activities", e);
         }

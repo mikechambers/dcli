@@ -258,13 +258,13 @@ impl ApiInterface {
         character_id: &str,
         platform: &Platform,
         mode: &ActivityMode,
-        date_time:DateTime<Utc>,
+        start_time:&DateTime<Utc>,
     ) -> Result<Option<Vec<Activity>>, Error> {
 
 
         let mut out:Vec<Activity> = Vec::new();
         let mut page = 0;
-        let mut count = MAX_ACTIVITIES_REQUEST_COUNT;
+        let count = MAX_ACTIVITIES_REQUEST_COUNT;
 
         //TODO: if error occurs on an individual call, retry?
         loop {
@@ -297,7 +297,7 @@ impl ApiInterface {
             }
 
             //filter vector based on whether they are after the filter date / time
-            t.retain(|x| x.period > date_time);
+            t.retain(|x| x.period > *start_time);
 
             //if any items were removed, then we dont need to call apis anymore
             let should_break = t.len() as i32 != len;

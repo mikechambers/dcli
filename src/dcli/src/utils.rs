@@ -82,6 +82,15 @@ pub fn print_error(msg: &str, error: Error) {
     eprintln!("       https://github.com/mikechambers/dcli/issues");
 }
 
+pub fn calculate_per_activity_average(value:f32, total_activities:f32) -> f32 {
+
+    if total_activities == 0.0 {
+        return 0.0;
+    }
+
+    value / total_activities
+}
+
 pub fn calculate_efficiency(kills: f32, deaths: f32, assists: f32) -> f32 {
     let t = kills + assists;
     if deaths > 0.0 {

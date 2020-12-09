@@ -23,6 +23,8 @@
 
 use std::fmt;
 use std::str::FromStr;
+use chrono::{DateTime, Utc, Duration};
+use dcli::utils::{get_last_weekly_reset, get_last_daily_reset, get_last_friday_reset};
 
 //TODO: sync these with dclitime
 #[derive(PartialEq, Debug)]
@@ -37,6 +39,37 @@ pub enum StartMoment {
     Custom,
 }
 
+impl StartMoment {
+    pub fn get_date_time(&self) -> DateTime<Utc> {
+        match self {
+            StartMoment::Daily => {
+                get_last_daily_reset()
+            },
+            StartMoment::Weekend => {
+                get_last_friday_reset()
+            },
+            StartMoment::Weekly => {
+                get_last_weekly_reset()
+            },
+            StartMoment::Day => {
+                Utc::now() - Duration::days(1)
+            },
+            StartMoment::Week => {
+                Utc::now() - Duration::weeks(1)
+            },
+            StartMoment::Month => {
+                Utc::now() - Duration::days(30)
+            },
+            StartMoment::AllTime => {
+                Utc::now() - Duration::weeks(52 * 7)
+            },
+            StartMoment::Custom => {
+                Utc::now() //TODO: change this to unixtimestamp
+            },
+
+        }
+    }
+}
 
 impl FromStr for StartMoment {
     type Err = &'static str;
