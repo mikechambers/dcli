@@ -136,6 +136,15 @@ pub fn clear_terminal() {
     print!("{}[2J", 27 as char);
 }
 
+//https://stackoverflow.com/a/38406885/10232
+pub fn uppercase_first_char(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
 //this could use some more work and polish. Add "and" before the last item.
 pub fn human_duration(seconds: f32) -> String {
     let s = seconds as i64;

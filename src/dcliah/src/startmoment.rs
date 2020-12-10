@@ -53,9 +53,7 @@ impl StartMoment {
             //The entire point of custom is to let user specify they will enter
             //their own value, so get_date_time should not be called for custom/
             //TODO: could assert here to enforce it
-            StartMoment::Custom => {
-                Utc.ymd(0, 0, 0).and_hms(0, 0, 0) //TODO: change this to unixtimestamp
-            }
+            StartMoment::Custom => Utc.ymd(0, 0, 0).and_hms(0, 0, 0),
         }
     }
 }

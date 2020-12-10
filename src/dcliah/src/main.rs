@@ -23,14 +23,16 @@
 mod startmoment;
 use startmoment::StartMoment;
 
-use chrono::{DateTime, Utc};
-use dcli::apiinterface::ApiInterface;
+use chrono::{DateTime, Utc, Duration};
 use dcli::error::Error;
 use dcli::mode::ActivityMode;
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::activities::Activity;
 use dcli::statscontainer::ActivityStatsContainer;
+use dcli::utils::{repeat_str, uppercase_first_char};
+use dcli::{apiinterface::ApiInterface, utils::EXIT_FAILURE};
+
 use structopt::StructOpt;
 
 //use dcli::utils::EXIT_FAILURE;
@@ -38,24 +40,93 @@ use dcli::utils::{print_error, print_verbose};
 
 /*
 fn print_tsv(
-    data: PvpStatsData,
-    member_id: &str,
-    character_id: &str,
-    platform: Platform,
-    mode: CrucibleMode,
-    period: TimePeriod,
+    data: ActivityStatsContainer,
+    display_limit:i32,
+    moment: StartMoment,
 ) {
     let mut name_values: Vec<(&str, String)> = Vec::new();
 
     name_values.push(("member_id", member_id.to_string()));
     print!("{}", build_tsv(name_values));
 }
-
-
-fn print_default(data: PvpStatsData, mode: CrucibleMode, period: TimePeriod) {
-
-}
 */
+
+fn print_default(
+    data: ActivityStatsContainer,
+    display_limit: i32,
+    mode: ActivityMode,
+    moment: StartMoment,
+    date_time: DateTime<Utc>,
+) {
+    let activity_count = data.activities.len();
+
+    if activity_count == 0 {
+        println!("No activities found.");
+        return;
+    }
+
+    let display_count = std::cmp::min(activity_count, display_limit as usize);
+    let is_limited = activity_count != display_count;
+
+    let date_time_label = if Utc::now() - date_time > Duration::days(6) {
+        date_time.format("%B %-d %Y")
+    } else {
+        date_time.format("%A, %B %-d, %Y")
+    };
+
+    let title = format!(
+        "{mode} activities since {date_time} ({moment})",
+        mode = uppercase_first_char(&format!("{}", mode)),
+        date_time = date_time_label,
+        moment = moment,
+    );
+    
+    println!();
+    println!("{}", title);
+    println!("{}", repeat_str(&"-", title.chars().count()));
+    println!();
+    println!("ACTIVITIES");
+    println!("==================");
+
+    if is_limited {
+        println!(
+            "Displaying details for last {display_count} of {activity_count} activities.",
+            display_count = display_count,
+            activity_count = activity_count,
+        );
+    } else {
+        println!(
+            "Displaying details for last {display_count} activit{ies}.",
+            display_count = display_count,
+            ies = {
+                if (display_count) == 1 {
+                    "y"
+                } else {
+                    "ies"
+                }
+            },
+        );
+    }
+
+    //repeat_str
+
+    /*
+    println!(
+        "{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}",
+        "",
+        "K/D",
+        "KD/A",
+        "EFFICIENCY",
+        "KILLS",
+        "ASSISTS",
+        "DEFEATS",
+        "DEATHS",
+        "SUICIDES",
+        col_w = col_w
+    );
+
+    */
+}
 
 //TODO: this is called twice. need to track down.
 fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
@@ -76,31 +147,6 @@ fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
 
     Ok(d)
 }
-/*
-async fn _retrieve_activities(
-    member_id: &str,
-    character_id: &str,
-    platform: &Platform,
-    mode: &ActivityMode,
-    verbose: bool,
-) -> Result<Option<Activity>, Error> {
-    let client: ApiInterface = ApiInterface::new(verbose);
-
-    let activity: Activity = match client
-        .retrieve_last_activity(&member_id, &character_id, &platform, &mode)
-        .await?
-    {
-        Some(e) => e,
-        None => {
-            return Ok(None);
-        }
-    };
-
-    println!("{:#?}", activity);
-
-    Ok(Some(activity))
-}
-*/
 
 async fn retrieve_activities_since(
     member_id: &str,
@@ -200,6 +246,13 @@ struct Opt {
     #[structopt(long = "mode", default_value = "all")]
     mode: ActivityMode,
 
+    /// Limit the number of activity details that will be displayed.
+    ///
+    /// Summary information will be generated based on all activities. Ignored if
+    /// --output is tsv.
+    #[structopt(long = "display-limit", default_value = "10")]
+    display_limit: i32,
+
     /// Format for command output
     ///
     /// Valid values are default (Default) and tsv.
@@ -238,7 +291,7 @@ async fn main() {
     };
 
     //todo: is there any need to send a reference to an enum?
-    match retrieve_activities_since(
+    let data = match retrieve_activities_since(
         &opt.member_id,
         &opt.character_id,
         &opt.platform,
@@ -248,11 +301,24 @@ async fn main() {
     )
     .await
     {
-        Ok(_e) => {
-            println!("DONE");
-        }
+        Ok(e) => e,
         Err(e) => {
             print_error("Error Loading Activities", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
+    match data {
+        Some(e) => match opt.output {
+            Output::Default => {
+                print_default(e, opt.display_limit, opt.mode, opt.start_moment, start_time);
+            }
+            Output::Tsv => {
+                println!("TSV OUTPUT GOES HERE TAB TAB TAB");
+            }
+        },
+        None => {
+            println!("No activities found.");
         }
     };
 }

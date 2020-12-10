@@ -299,7 +299,7 @@ impl FromStr for CrucibleMode {
 impl fmt::Display for CrucibleMode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
-            CrucibleMode::AllPvP => "all Crucible modes",
+            CrucibleMode::AllPvP => "all Crucible",
             CrucibleMode::Control => "Control",
             CrucibleMode::Clash => "Clash",
             CrucibleMode::AllMayhem => "Mayhem",
@@ -366,7 +366,7 @@ impl FromStr for ActivityMode {
 impl fmt::Display for ActivityMode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
-            ActivityMode::AllPvP => "all Crucible modes",
+            ActivityMode::AllPvP => "all Crucible mode",
             ActivityMode::Control => "Control",
             ActivityMode::Clash => "Clash",
             ActivityMode::AllMayhem => "Mayhem",
