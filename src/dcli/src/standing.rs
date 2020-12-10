@@ -21,6 +21,7 @@
 */
 
 use serde_derive::Serialize;
+use std::fmt;
 
 #[derive(Serialize, Debug)]
 pub enum Standing {
@@ -44,5 +45,17 @@ impl Standing {
         } else {
             Standing::Unknown
         }
+    }
+}
+
+impl fmt::Display for Standing {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let out = match self {
+            Standing::Victory => "Win",
+            Standing::Defeat => "Loss",
+            Standing::Unknown => "Unknown",
+        };
+
+        write!(f, "{}", out)
     }
 }

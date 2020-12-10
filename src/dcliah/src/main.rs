@@ -30,7 +30,7 @@ use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::activities::Activity;
 use dcli::statscontainer::ActivityStatsContainer;
-use dcli::utils::{repeat_str, uppercase_first_char};
+use dcli::utils::{repeat_str, uppercase_first_char, format_f32};
 use dcli::{apiinterface::ApiInterface, utils::EXIT_FAILURE};
 
 use structopt::StructOpt;
@@ -58,6 +58,10 @@ fn print_default(
     moment: StartMoment,
     date_time: DateTime<Utc>,
 ) {
+
+    //todo: might want to look at buffering output
+    //https://rust-cli.github.io/book/tutorial/output.html
+
     let activity_count = data.activities.len();
 
     if activity_count == 0 {
@@ -90,13 +94,13 @@ fn print_default(
 
     if is_limited {
         println!(
-            "Displaying details for last {display_count} of {activity_count} activities.",
+            "Displaying details for the last {display_count} of {activity_count} activities.",
             display_count = display_count,
             activity_count = activity_count,
         );
     } else {
         println!(
-            "Displaying details for last {display_count} activit{ies}.",
+            "Displaying details for the last {display_count} activit{ies}.",
             display_count = display_count,
             ies = {
                 if (display_count) == 1 {
@@ -107,25 +111,71 @@ fn print_default(
             },
         );
     }
+    println!();
 
-    //repeat_str
+    let col_w = 9;
+    let col_wx2 = col_w * 2;
 
-    /*
-    println!(
-        "{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}{:<0col_w$}",
-        "",
-        "K/D",
-        "KD/A",
-        "EFFICIENCY",
+    //TODO: maybe format this yello background
+    let header = format!(
+        "{:>0col_wx2$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        "MODE",
+        "RESULT",
+        "STREAK",
         "KILLS",
         "ASSISTS",
-        "DEFEATS",
+        "K+A",
         "DEATHS",
-        "SUICIDES",
-        col_w = col_w
+        "K/D",
+        "KD/A",
+        "EFF",
+        col_w = col_w,
+        col_wx2=col_wx2
     );
+    println!("{}", header);
+    println!("{}", repeat_str(&"-", header.chars().count()));
 
-    */
+    let start_index = if is_limited {
+
+        println!(
+            "{:>0col_wx2$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "...", "...", "...", "...", "...", "...", "...","...","...","...",
+            col_w = col_w,
+            col_wx2=col_wx2
+        );
+
+        activity_count - display_limit as usize
+    } else {0};
+
+    let slice = &data.activities[start_index..];
+
+    for activity in slice {
+
+        let mut mode_str = format!("{}", activity.details.mode);
+
+        if mode_str.chars().count() > col_wx2 - 5 {
+            mode_str = mode_str[..(col_wx2-5)].to_string();
+            mode_str.push_str("..")
+        }
+
+        println!(
+            "{:>0col_wx2$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            mode_str,
+            format!("{}", activity.values.standing),
+            "0",
+            format!("{}", activity.values.kills),
+            format!("{}", activity.values.assists),
+            format!("{}", activity.values.opponents_defeated),
+            format!("{}", activity.values.deaths),
+            format_f32(activity.values.kills_deaths_ratio, 2),
+            format_f32(activity.values.kills_deaths_assists, 2),
+            format_f32(activity.values.efficiency, 2),
+    
+            col_w = col_w,
+            col_wx2=col_wx2
+        );
+    }
+    println!();
 }
 
 //TODO: this is called twice. need to track down.
