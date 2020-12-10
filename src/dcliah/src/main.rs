@@ -118,7 +118,7 @@ fn print_default(
 
     //TODO: maybe format this yello background
     let header = format!(
-        "{:>0col_wx2$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        "{:<0col_wx2$}{:<0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
         "MODE",
         "RESULT",
         "STREAK",
@@ -138,7 +138,7 @@ fn print_default(
     let start_index = if is_limited {
 
         println!(
-            "{:>0col_wx2$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "{:<0col_wx2$}{:<0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             "...", "...", "...", "...", "...", "...", "...","...","...","...",
             col_w = col_w,
             col_wx2=col_wx2
@@ -159,7 +159,7 @@ fn print_default(
         }
 
         println!(
-            "{:>0col_wx2$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "{:<0col_wx2$}{:<0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             mode_str,
             format!("{}", activity.values.standing),
             "0",
