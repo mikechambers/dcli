@@ -129,7 +129,7 @@ async fn print_default(
 
     let col_w = 8;
     let map_col_w = 18;
-    let str_col_w = 6;
+    let str_col_w = 10;
 
     //TODO: maybe format this yello background
     let header = format!(
@@ -181,8 +181,6 @@ async fn print_default(
             println!("{}", repeat_str(&"-", col_w + map_col_w));
             last_mode = activity.details.mode;
         }
-
-        //TODO: this shows the sstreak. could also show + - for positive / negative
 
         if activity.values.standing == last_standing {
             streak = match last_standing {
@@ -292,7 +290,7 @@ async fn print_default(
     println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "HIGHS",
     "",
-    "",
+    format!("{}W {}L", data.longest_win_streak(), data.longest_loss_streak()),
     format!("{}", data.highest_kills()),
     format!("{}", data.highest_assists()),
     format!("{}", data.highest_opponents_defeated()),

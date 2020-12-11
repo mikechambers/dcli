@@ -52,6 +52,9 @@ pub struct ActivityStatsContainer {
     highest_efficiency:f32,
     highest_kills_deaths_ratio:f32,
     highest_kills_deaths_assists:f32,
+
+    longest_win_streak:f32,
+    longest_loss_streak:f32,
 }
 
 impl ActivityStatsContainer {
@@ -78,6 +81,9 @@ impl ActivityStatsContainer {
             highest_efficiency:0.0,
             highest_kills_deaths_ratio:0.0,
             highest_kills_deaths_assists:0.0,
+
+            longest_win_streak:0.0,
+            longest_loss_streak:0.0,
         };
 
         a.update();
@@ -90,6 +96,9 @@ impl ActivityStatsContainer {
 
     
     fn update(&mut self) {
+
+        let mut last_standing = Standing::Unknown;
+        let mut streak = 0.0;
         for a in self.activities.iter() {
             self.assists += a.values.assists;
             self.score += a.values.score;
@@ -120,12 +129,38 @@ impl ActivityStatsContainer {
                     self.draws += 1.0;
                 }
             };
+
+            if a.values.standing == last_standing {
+                streak = match last_standing {
+                    Standing::Unknown => 0.0,
+                    Standing::Victory => streak + 1.0,
+                    Standing::Defeat => streak - 1.0,
+                };
+            } else {
+                last_standing = a.values.standing;
+                streak = match last_standing {
+                    Standing::Unknown => 0.0,
+                    Standing::Victory => 1.0,
+                    Standing::Defeat => -1.0,
+                };
+            }
+
+            self.longest_loss_streak = self.longest_loss_streak.min(streak);
+            self.longest_win_streak = self.longest_win_streak.max(streak);
         }
 
         self.kills_deaths_assists =
             calculate_kills_deaths_assists(self.kills, self.deaths, self.assists);
         self.kills_deaths_ratio = calculate_kills_deaths_ratio(self.kills, self.deaths);
         self.efficiency = calculate_efficiency(self.kills, self.deaths, self.assists);
+    }
+
+    pub fn longest_win_streak(&self) -> f32 {
+        self.longest_win_streak
+    }
+
+    pub fn longest_loss_streak(&self) -> f32 {
+        self.longest_loss_streak.abs()
     }
 
     pub fn win_percentage(&self) -> f32 {
