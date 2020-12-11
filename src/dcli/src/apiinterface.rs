@@ -33,6 +33,7 @@ use crate::response::stats::{
 };
 use crate::timeperiod::DateTimePeriod;
 use chrono::{DateTime, Utc};
+use std::io::{self, Write};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
@@ -261,9 +262,11 @@ impl ApiInterface {
         let mut page = 0;
         let count = MAX_ACTIVITIES_REQUEST_COUNT;
 
+        eprint!("[");
         //TODO: if error occurs on an individual call, retry?
         loop {
-            println!("Page: {}", page);
+            eprint!("#");
+            io::stderr().flush().unwrap();
 
             // TODO: if we call more pages that there is data, it will return back with no Response
             // property. Usually this means an error but in this case, it just means we have
@@ -284,10 +287,7 @@ impl ApiInterface {
 
             let len = t.len() as i32;
 
-            println!("Results : {} : {}", len, page * count + len);
-
             if len == 0 {
-                println!("Results 0 : break");
                 break;
             }
 
@@ -301,8 +301,6 @@ impl ApiInterface {
             out.append(&mut t);
 
             if should_break || len < count {
-                println!("break");
-                println!("should_break : {}", should_break);
                 break;
             }
 
@@ -311,6 +309,8 @@ impl ApiInterface {
             //if we try to page past where there is valid data, bungie will return
             //empty response, which we detect retrieve_activities (and returns None)
         }
+
+        eprintln!("] : COMPLETE");
 
         if out.len() == 0 {
             return Ok(None);

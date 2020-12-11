@@ -23,7 +23,7 @@
 use serde_derive::Serialize;
 use std::fmt;
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Standing {
     Victory = 0,
     Defeat = 1,

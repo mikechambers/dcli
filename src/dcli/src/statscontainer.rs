@@ -44,6 +44,14 @@ pub struct ActivityStatsContainer {
     losses: f32,
     draws: f32,
     time_played_seconds: f32,
+
+    highest_kills:f32,
+    highest_assists:f32,
+    highest_deaths:f32,
+    highest_opponents_defeated:f32,
+    highest_efficiency:f32,
+    highest_kills_deaths_ratio:f32,
+    highest_kills_deaths_assists:f32,
 }
 
 impl ActivityStatsContainer {
@@ -62,21 +70,41 @@ impl ActivityStatsContainer {
             losses: 0.0,
             draws: 0.0,
             time_played_seconds: 0.0,
+
+            highest_kills:0.0,
+            highest_assists:0.0,
+            highest_deaths:0.0,
+            highest_opponents_defeated:0.0,
+            highest_efficiency:0.0,
+            highest_kills_deaths_ratio:0.0,
+            highest_kills_deaths_assists:0.0,
         };
 
         a.update();
         a
     }
 
-    fn per_activity_average(&self, value: f32) -> f32 {
+    pub fn per_activity_average(&self, value: f32) -> f32 {
         calculate_per_activity_average(value, self.activities.len() as f32)
     }
 
+    
     fn update(&mut self) {
         for a in self.activities.iter() {
             self.assists += a.values.assists;
             self.score += a.values.score;
             self.kills += a.values.kills;
+
+            //self.highest_kills = max(self.highest_kills as u32, a.values.kills as u32);
+            self.highest_kills = self.highest_kills.max(a.values.kills);
+            self.highest_assists = self.highest_assists.max(a.values.assists);
+            self.highest_deaths = self.highest_deaths.max(a.values.deaths);
+            self.highest_opponents_defeated = self.highest_opponents_defeated.max(a.values.opponents_defeated);
+
+            self.highest_efficiency = self.highest_efficiency.max(a.values.efficiency);
+            self.highest_kills_deaths_ratio = self.highest_kills_deaths_ratio.max(a.values.kills_deaths_ratio);
+            self.highest_kills_deaths_assists = self.highest_kills_deaths_assists.max(a.values.kills_deaths_assists);
+
             self.deaths += a.values.deaths;
             self.opponents_defeated += a.values.opponents_defeated;
             self.time_played_seconds += a.values.time_played_seconds;
@@ -91,7 +119,7 @@ impl ActivityStatsContainer {
                 Standing::Unknown => {
                     self.draws += 1.0;
                 }
-            }
+            };
         }
 
         self.kills_deaths_assists =
@@ -100,7 +128,45 @@ impl ActivityStatsContainer {
         self.efficiency = calculate_efficiency(self.kills, self.deaths, self.assists);
     }
 
-    fn assists(&self) -> f32 {
+    pub fn win_percentage(&self) -> f32 {
+        let total = self.total_activities();
+
+        if total == 0.0 {
+            return 0.0;
+        }
+
+        self.wins / total * 100.0
+    } 
+
+    pub fn highest_efficiency(&self) -> f32 {
+        self.highest_efficiency
+    }
+
+    pub fn highest_kills_deaths_assists(&self) -> f32 {
+        self.highest_kills_deaths_assists
+    }
+
+    pub fn highest_kills_deaths_ratio(&self) -> f32 {
+        self.highest_kills_deaths_ratio
+    }
+
+    pub fn highest_kills(&self) -> f32 {
+        self.highest_kills
+    }
+
+    pub fn highest_deaths(&self) -> f32 {
+        self.highest_deaths
+    }
+
+    pub fn highest_assists(&self) -> f32 {
+        self.highest_assists
+    }
+
+    pub fn highest_opponents_defeated(&self) -> f32 {
+        self.highest_opponents_defeated
+    }
+
+    pub fn assists(&self) -> f32 {
         self.assists
     }
 
