@@ -106,8 +106,6 @@ async fn print_default(
     println!("ACTIVITIES");
     println!("==================");
 
-    //todo: calculate highest kills, assists, defeated, deaths, and the [] in chart
-
     if is_limited {
         println!(
             "Displaying details for the last {display_count} of {activity_count} activities.",
@@ -119,7 +117,7 @@ async fn print_default(
             "Displaying details for the last {display_count} activit{ies}.",
             display_count = display_count,
             ies = {
-                if (display_count) == 1 {
+                if display_count == 1 {
                     "y"
                 } else {
                     "ies"
@@ -133,7 +131,7 @@ async fn print_default(
     let map_col_w = 18;
     let str_col_w = 10;
 
-    //TODO: maybe format this yello background
+    //TODO: maybe format this to yellow background
     let header = format!(
         "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
         "MAP",
@@ -154,7 +152,7 @@ async fn print_default(
     let header_divider = repeat_str(&"=", header.chars().count());
     println!("{}", header_divider);
 
-    let slice:&[Activity] = if is_limited {
+    let slice: &[Activity] = if is_limited {
         println!(
             "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             "...", "...", "...", "...", "...", "...", "...","...","...",
@@ -169,10 +167,9 @@ async fn print_default(
     };
 
     let mut last_mode = Mode::None;
-
     let mut streak: i32 = 0;
     let mut last_standing: Standing = Standing::Unknown;
-    let highest_flag = "^";
+    let highest_flag: &str = "^";
 
     for activity in slice.iter().rev() {
         if activity.details.mode != last_mode {
@@ -196,14 +193,6 @@ async fn print_default(
                 Standing::Defeat => -1,
             };
         }
-
-        /*
-        streak = match activity.values.standing {
-            Standing::Unknown => streak,
-            Standing::Victory => streak +1,
-            Standing::Defeat => streak -1,
-        };
-        */
 
         //todo: we can get better mode name from director_activity_hash i.e. Control as opposed to Control Quickplay
         let mut map_name = match manifest
@@ -285,8 +274,6 @@ async fn print_default(
 
     println!("{}", repeat_str(&"-", header.chars().count()));
 
-
-
     println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "HIGHS",
     format!("{}-{}", data.wins(), data.losses()),
@@ -296,9 +283,10 @@ async fn print_default(
     format!("{}", data.highest_opponents_defeated()),
     format!("{}", data.highest_deaths()),
 
-    format!("{}", format_f32(data.highest_kills_deaths_ratio(), 2)),
-    format!("{}", format_f32(data.highest_kills_deaths_assists(), 2)),
-    format!("{}", format_f32(data.highest_efficiency(), 2)),
+    format_f32(data.highest_kills_deaths_ratio(), 2),
+    format_f32(data.highest_kills_deaths_assists(), 2),
+    format_f32(data.highest_efficiency(), 2),
+
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
@@ -308,24 +296,24 @@ async fn print_default(
     "PER GAME",
     format!("{}% w", format_f32(data.win_percentage(), 2)),
     format!("{}", ""),
-    
-    format!("{}", format_f32(data.per_activity_average(data.kills()), 2)),
-    format!("{}", format_f32(data.per_activity_average(data.assists()), 2)),
-    format!("{}", format_f32(data.per_activity_average(data.opponents_defeated()), 2)),
-    format!("{}", format_f32(data.per_activity_average(data.deaths()), 2)),
-    format!("{}", format_f32(data.kills_deaths_ratio(), 2)),
-    format!("{}", format_f32(data.kills_deaths_assists(), 2)),
-    format!("{}", format_f32(data.efficiency(), 2)),
+    format_f32(data.per_activity_average(data.kills()), 2),
+    format_f32(data.per_activity_average(data.assists()), 2),
+    format_f32(data.per_activity_average(data.opponents_defeated()), 2),
+    format_f32(data.per_activity_average(data.deaths()), 2),
+    format_f32(data.kills_deaths_ratio(), 2),
+    format_f32(data.kills_deaths_assists(), 2),
+    format_f32(data.efficiency(), 2),
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
-);
+    );
 
     println!("{}", header_divider);
     println!("{}", header);
 
     println!();
     println!("{} - denotes highest over all", highest_flag);
+    println!();
 
     manifest.close().await?;
     Ok(())
