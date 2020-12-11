@@ -191,6 +191,10 @@ pub fn build_tsv(name_values: Vec<(&str, String)>) -> String {
         .collect()
 }
 
+pub fn get_destiny2_launch_date() -> DateTime<Utc> {
+    Utc.ymd(2017, 9, 6).and_hms(17, 0, 0)
+}
+
 pub fn get_last_weekly_reset() -> DateTime<Utc> {
     //get a hardcoded past reset date / time (17:00 UTC every tuesday)
     let past_reset: DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);

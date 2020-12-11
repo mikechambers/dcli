@@ -87,7 +87,7 @@ async fn print_default(
     let is_limited = activity_count != display_count;
 
     let date_time_label = if Utc::now() - date_time > Duration::days(6) {
-        date_time.format("%B %-d %Y")
+        date_time.format("%B %-d, %Y")
     } else {
         date_time.format("%A, %B %-d, %Y")
     };

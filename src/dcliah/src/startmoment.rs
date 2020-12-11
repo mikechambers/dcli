@@ -25,7 +25,12 @@ use chrono::{DateTime, Duration, Utc};
 use std::fmt;
 use std::str::FromStr;
 
-use dcli::utils::{get_last_daily_reset, get_last_friday_reset, get_last_weekly_reset};
+use dcli::utils::{
+    get_destiny2_launch_date,
+    get_last_daily_reset,
+    get_last_friday_reset,
+    get_last_weekly_reset,
+};
 
 //TODO: sync these with dclitime
 #[derive(PartialEq, Debug)]
@@ -49,7 +54,7 @@ impl StartMoment {
             StartMoment::Day => Utc::now() - Duration::days(1),
             StartMoment::Week => Utc::now() - Duration::weeks(1),
             StartMoment::Month => Utc::now() - Duration::days(30),
-            StartMoment::AllTime => Utc::now() - Duration::weeks(52 * 7),
+            StartMoment::AllTime => get_destiny2_launch_date(),
             //The entire point of custom is to let user specify they will enter
             //their own value, so get_date_time should not be called for custom/
             //TODO: could assert here to enforce it
