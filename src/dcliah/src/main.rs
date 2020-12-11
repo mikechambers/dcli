@@ -154,8 +154,8 @@ async fn print_default(
 
     let slice: &[Activity] = if is_limited {
         println!(
-            "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-            "...", "...", "...", "...", "...", "...", "...","...","...",
+            "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "...", "...", "...", "...", "...", "...", "...","...","...","...",
             col_w = col_w,
             map_col_w = map_col_w,
             str_col_w=str_col_w,
