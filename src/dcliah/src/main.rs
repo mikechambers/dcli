@@ -81,6 +81,8 @@ async fn print_default(
         return Ok(());
     }
 
+    let mut manifest = get_manifest(manifest_path).await?;
+
     let display_count = std::cmp::min(activity_count, display_limit as usize);
     let is_limited = activity_count != display_count;
 
@@ -135,7 +137,7 @@ async fn print_default(
     let header = format!(
         "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
         "MAP",
-        "RESULT",
+        "W / L",
         "STREAK",
         "KILLS",
         "ASTS",
@@ -165,8 +167,6 @@ async fn print_default(
     } else {
         &data.activities[..]
     };
-
-    let mut manifest = get_manifest(manifest_path).await?;
 
     let mut last_mode = Mode::None;
 
@@ -289,7 +289,7 @@ async fn print_default(
 
     println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "HIGHS",
-    "",
+    format!("{}-{}", data.wins(), data.losses()),
     format!("{}W {}L", data.longest_win_streak(), data.longest_loss_streak()),
     format!("{}", data.highest_kills()),
     format!("{}", data.highest_assists()),

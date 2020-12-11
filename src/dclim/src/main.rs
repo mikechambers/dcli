@@ -71,6 +71,7 @@ fn get_manifest_dir(dir: &PathBuf) -> Result<PathBuf, Error> {
     //commenting out as it creates weird paths on windows. need to test this
     //doesnt break other platforms.
     //let m_dir = std::fs::canonicalize(&m_dir.as_path())?;
+    //let m_dir = m_dir.canonicalize()?;
 
     Ok(m_dir)
 }
