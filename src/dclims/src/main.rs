@@ -50,10 +50,6 @@ struct Opt {
     #[structopt(short = "m", long = "manifest-path", parse(from_os_str))]
     manifest_path: PathBuf,
 
-    //Output raw json data from manifest.
-    //#[structopt(short = "j", long = "json", conflicts_with = "verbose", conflicts_with="terse")]
-    //json: bool,
-
     //Print out additional information for the API call
     //#[structopt(short = "v", long = "verbose")]
     //verbose: bool,

@@ -24,7 +24,7 @@ use structopt::StructOpt;
 
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
-use dcli::mode::CrucibleMode;
+use dcli::mode::Mode;
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::stats::{DailyPvPStatsValuesData, PvpStatsData};
@@ -38,7 +38,7 @@ fn print_tsv(
     member_id: &str,
     character_id: &str,
     platform: Platform,
-    mode: CrucibleMode,
+    mode: Mode,
     period: StatsTimePeriod,
 ) {
     let mut name_values: Vec<(&str, String)> = Vec::new();
@@ -104,7 +104,8 @@ fn print_tsv(
     print!("{}", build_tsv(name_values));
 }
 
-fn print_default(data: PvpStatsData, mode: CrucibleMode, period: StatsTimePeriod) {
+//TODO: should pass in by reference here
+fn print_default(data: PvpStatsData, mode: Mode, period: StatsTimePeriod) {
     let p = format_f32;
 
     let period_string = match period {
@@ -234,7 +235,7 @@ struct Opt {
     /// Valid values are all (default), control, clash, mayhem, ironbanner,
     /// private, trialsofnine, rumble, comp, quickplay and trialsofosiris.
     #[structopt(long = "mode", default_value = "all")]
-    mode: CrucibleMode,
+    mode: Mode,
 
     /// Format for command output
     ///
@@ -265,7 +266,7 @@ async fn retrieve_all_time_stats(
     member_id: &str,
     character_id: &str,
     platform: &Platform,
-    mode: &CrucibleMode,
+    mode: &Mode,
     verbose: bool,
 ) -> Result<Option<PvpStatsData>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
@@ -287,7 +288,7 @@ async fn retrieve_aggregate_crucible_stats(
     member_id: &str,
     character_id: &str,
     platform: &Platform,
-    mode: &CrucibleMode,
+    mode: &Mode,
     period: &StatsTimePeriod,
     verbose: bool,
 ) -> Result<Option<PvpStatsData>, Error> {

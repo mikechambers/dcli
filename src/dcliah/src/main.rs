@@ -25,7 +25,7 @@ use startmoment::StartMoment;
 
 use chrono::{DateTime, Duration, Utc};
 use dcli::error::Error;
-use dcli::mode::{ActivityMode, Mode};
+use dcli::mode::Mode;
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::activities::Activity;
@@ -67,7 +67,7 @@ async fn print_default(
     manifest_path: PathBuf,
     data: ActivityStatsContainer,
     display_limit: i32,
-    mode: ActivityMode,
+    mode: Mode,
     moment: StartMoment,
     date_time: DateTime<Utc>,
 ) -> Result<(), Error> {
@@ -343,7 +343,7 @@ async fn retrieve_activities_since(
     member_id: &str,
     character_id: &str,
     platform: &Platform,
-    mode: &ActivityMode,
+    mode: &Mode,
     start_time: &DateTime<Utc>,
     verbose: bool,
 ) -> Result<Option<ActivityStatsContainer>, Error> {
@@ -432,8 +432,8 @@ struct Opt {
     ///
     /// Valid values are all (default), control, clash, mayhem, ironbanner,
     /// private, rumble, comp, quickplay and trialsofosiris.
-    #[structopt(long = "mode", short = "a", default_value = "all")]
-    mode: ActivityMode,
+    #[structopt(long = "mode", short = "a", default_value = "all_pvp")]
+    mode: Mode,
 
     /// Limit the number of activity details that will be displayed.
     ///

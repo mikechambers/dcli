@@ -22,7 +22,7 @@
 
 use crate::apiclient::ApiClient;
 use crate::error::Error;
-use crate::mode::{ActivityMode, CrucibleMode};
+use crate::mode::Mode;
 use crate::platform::Platform;
 use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
 use crate::response::character::CharacterData;
@@ -154,7 +154,7 @@ impl ApiInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
-        mode: &CrucibleMode,
+        mode: &Mode,
     ) -> Result<Option<PvpStatsData>, Error> {
         //"/Platform/Destiny2/1/Account/$memberId/Character/$characterId/Stats/?modes=$modesString$dateRangeString&periodType=$periodTypeId&groups=1,2,3";
         let url =
@@ -189,7 +189,7 @@ impl ApiInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
-        mode: &CrucibleMode,
+        mode: &Mode,
         period: &DateTimePeriod,
     ) -> Result<Option<Vec<DailyPvPStatsValuesData>>, Error> {
         let day_start = period.start.to_rfc3339();
@@ -230,7 +230,7 @@ impl ApiInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
-        mode: &ActivityMode,
+        mode: &Mode,
     ) -> Result<Option<Activity>, Error> {
         let activities = self
             .retrieve_activities(member_id, character_id, platform, mode, 1, 0)
@@ -255,7 +255,7 @@ impl ApiInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
-        mode: &ActivityMode,
+        mode: &Mode,
         start_time: &DateTime<Utc>,
     ) -> Result<Option<Vec<Activity>>, Error> {
         let mut out: Vec<Activity> = Vec::new();
@@ -324,7 +324,7 @@ impl ApiInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
-        mode: &ActivityMode,
+        mode: &Mode,
         count: i32,
         page: i32,
     ) -> Result<Option<Vec<Activity>>, Error> {
