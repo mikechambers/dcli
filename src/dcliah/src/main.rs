@@ -20,8 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-mod startmoment;
-use startmoment::StartMoment;
+use dcli::moment::Moment;
+use std::str::FromStr;
 
 use chrono::{DateTime, Duration, Utc};
 use dcli::error::Error;
@@ -47,7 +47,7 @@ use dcli::utils::{print_error, print_verbose};
 fn print_tsv(
     data: ActivityStatsContainer,
     display_limit:i32,
-    moment: StartMoment,
+    moment: Moment,
 ) {
     let mut name_values: Vec<(&str, String)> = Vec::new();
 
@@ -55,6 +55,31 @@ fn print_tsv(
     print!("{}", build_tsv(name_values));
 }
 */
+
+
+fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
+    let moment = Moment::from_str(src)?; 
+
+    //note, we positive capture what we want in case new properties
+    //are added in the future
+    match moment {
+        Moment::Daily => {}
+        Moment::Weekend => {},
+        Moment::Weekly => {},
+        Moment::Day => {},
+        Moment::Week => {},
+        Moment::Month => {}
+        Moment::AllTime => {},
+        Moment::Custom => {},
+        _ => {
+            return Err(format!("Unsupported moment specified : {}", src));
+        },
+    };
+
+    Ok(moment)
+}
+
+
 
 async fn get_manifest(manifest_path: PathBuf) -> Result<ManifestInterface, Error> {
     //TODO: may need to make this mutable
@@ -68,7 +93,7 @@ async fn print_default(
     data: ActivityStatsContainer,
     display_limit: i32,
     mode: Mode,
-    moment: StartMoment,
+    moment: Moment,
     date_time: DateTime<Utc>,
 ) -> Result<(), Error> {
     //todo: might want to look at buffering output
@@ -344,13 +369,13 @@ async fn retrieve_activities_since(
     character_id: &str,
     platform: &Platform,
     mode: &Mode,
-    start_time: &DateTime<Utc>,
+    custom_time: &DateTime<Utc>,
     verbose: bool,
 ) -> Result<Option<ActivityStatsContainer>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let activities: Vec<Activity> = match client
-        .retrieve_activities_since(&member_id, &character_id, &platform, &mode, &start_time)
+        .retrieve_activities_since(&member_id, &character_id, &platform, &mode, &custom_time)
         .await?
     {
         Some(e) => e,
@@ -402,8 +427,8 @@ struct Opt {
     /// Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
     ///
     /// Required when start-moment is set to custom, but otherwise not applicable.
-    #[structopt(short = "t", long = "start-time", parse(try_from_str = parse_rfc3339), required_if("start-moment", "custom"))]
-    start_time: Option<DateTime<Utc>>,
+    #[structopt(short = "t", long = "custom-time", parse(try_from_str = parse_rfc3339), required_if("start-moment", "custom"))]
+    custom_time: Option<DateTime<Utc>>,
 
     /// Start moment from which to pull activities from
     ///
@@ -418,15 +443,15 @@ struct Opt {
     /// day (last day), week (last week), month (last month), alltime and custom.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
-    /// be specified with the --start-time argument.
+    /// be specified with the --custom-time argument.
     ///
     /// For example:
-    /// --start-moment custom --start-time 2020-12-08T17:00:00.774187+00:00
+    /// --start-moment custom --custom-time 2020-12-08T17:00:00.774187+00:00
     ///
     /// Specifying alltime retrieves all activitiy history and may take an extended
     /// amount of time to retrieve depending on the number of activities.
-    #[structopt(long = "start-moment", short = "s", default_value = "day")]
-    start_moment: StartMoment,
+    #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), short = "s", default_value = "day")]
+    moment: Moment,
 
     /// Activity mode to return stats for
     ///
@@ -473,11 +498,11 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
-    let start_time = match opt.start_moment {
-        StartMoment::Custom => {
-            opt.start_time.unwrap() //note, this should be ok, because struct opt should ensure valid value
+    let custom_time = match opt.moment {
+        Moment::Custom => {
+            opt.custom_time.unwrap() //note, this should be ok, because struct opt should ensure valid value
         }
-        _ => opt.start_moment.get_date_time(),
+        _ => opt.moment.get_date_time(),
     };
 
     eprintln!("Retrieving activities. This may take a moment...");
@@ -487,7 +512,7 @@ async fn main() {
         &opt.character_id,
         &opt.platform,
         &opt.mode,
-        &start_time,
+        &custom_time,
         opt.verbose,
     )
     .await
@@ -514,8 +539,8 @@ async fn main() {
                 container,
                 opt.display_limit,
                 opt.mode,
-                opt.start_moment,
-                start_time,
+                opt.moment,
+                custom_time,
             )
             .await
             {
