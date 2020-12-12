@@ -21,15 +21,47 @@
 */
 
 mod datetimeformat;
-mod eventmoment;
 
 use datetimeformat::DateTimeFormat;
 use dcli::output::Output;
-use eventmoment::EventMoment;
+use dcli::moment::Moment;
+
+use std::str::FromStr;
 
 use dcli::utils::{build_tsv, print_verbose};
 
 use structopt::StructOpt;
+
+//we do a custom parse / validation here so we can reuse Moment enum
+//across apps but not have to have all apps support all time ranges.
+fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
+    let moment = Moment::from_str(src)?; 
+
+    //note, we positive capture what we want in case new properties
+    //are added in the future
+    match moment {
+        Moment::Now => {},
+        Moment::Daily => {}
+        Moment::NextDaily => {},
+        Moment::Weekend => {},
+        Moment::NextWeekend => {},
+        Moment::Weekly => {},
+        Moment::NextWeekly => {},
+        Moment::Day => {},
+        Moment::NextDay => {},
+        Moment::Week => {},
+        Moment::NextWeek => {},
+        Moment::Month => {}
+        Moment::NextMonth => {},
+        Moment::AllTime => {},
+        _ => {
+            return Err(format!("Unsupported moment specified : {}", src));
+        },
+    };
+
+    Ok(moment)
+}
+
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
@@ -53,8 +85,8 @@ struct Opt {
     /// next_weekly (upcoming Tuesday weekly reset), current_daily, next_daily,
     /// current_xur (previous Friday Xur reset), next_xur (upcoming Friday Xur reset),
     /// current_trials (previous Friday Trials reset), next_trials (upcoming Friday Trials reset)
-    #[structopt(short = "m", long = "moment", default_value = "now")]
-    moment: EventMoment,
+    #[structopt(short = "m", parse(try_from_str = parse_and_validate_moment), long = "moment", default_value = "now")]
+    moment: Moment,
 
     /// Date / time format to output moment
     ///
