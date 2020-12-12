@@ -42,6 +42,11 @@ pub const TSV_DELIM: &str = "\t";
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub trait Period {
+    fn get_start(&self) -> DateTime<Utc>;
+    fn get_end(&self) -> DateTime<Utc>;
+}
+
 pub fn print_verbose(msg: &str, verbose: bool) {
     if !verbose {
         return;

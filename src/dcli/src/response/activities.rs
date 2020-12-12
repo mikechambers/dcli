@@ -84,7 +84,6 @@ pub struct ActivityValues {
         rename = "activityDurationSeconds",
         deserialize_with = "property_to_value"
     )]
-
     pub activity_duration_seconds: f32,
     //TODO: need to make this an option
     #[serde(deserialize_with = "property_to_standing")]

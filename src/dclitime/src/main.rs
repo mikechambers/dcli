@@ -23,8 +23,8 @@
 mod datetimeformat;
 
 use datetimeformat::DateTimeFormat;
-use dcli::output::Output;
 use dcli::moment::Moment;
+use dcli::output::Output;
 
 use std::str::FromStr;
 
@@ -35,33 +35,32 @@ use structopt::StructOpt;
 //we do a custom parse / validation here so we can reuse Moment enum
 //across apps but not have to have all apps support all time ranges.
 fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
-    let moment = Moment::from_str(src)?; 
+    let moment = Moment::from_str(src)?;
 
     //note, we positive capture what we want in case new properties
     //are added in the future
     match moment {
-        Moment::Now => {},
+        Moment::Now => {}
         Moment::Daily => {}
-        Moment::NextDaily => {},
-        Moment::Weekend => {},
-        Moment::NextWeekend => {},
-        Moment::Weekly => {},
-        Moment::NextWeekly => {},
-        Moment::Day => {},
-        Moment::NextDay => {},
-        Moment::Week => {},
-        Moment::NextWeek => {},
+        Moment::NextDaily => {}
+        Moment::Weekend => {}
+        Moment::NextWeekend => {}
+        Moment::Weekly => {}
+        Moment::NextWeekly => {}
+        Moment::Day => {}
+        Moment::NextDay => {}
+        Moment::Week => {}
+        Moment::NextWeek => {}
         Moment::Month => {}
-        Moment::NextMonth => {},
-        Moment::AllTime => {},
+        Moment::NextMonth => {}
+        Moment::AllTime => {}
         _ => {
             return Err(format!("Unsupported moment specified : {}", src));
-        },
+        }
     };
 
     Ok(moment)
 }
-
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]

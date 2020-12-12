@@ -108,7 +108,6 @@ pub enum Mode {
 }
 
 impl Mode {
-
     pub fn to_id(&self) -> u32 {
         *self as u32
     }
@@ -262,9 +261,6 @@ impl FromStr for Mode {
     }
 }
 
-
-
-
 impl fmt::Display for Mode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
@@ -350,4 +346,3 @@ impl fmt::Display for Mode {
         write!(f, "{}", out)
     }
 }
-

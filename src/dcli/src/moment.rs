@@ -23,17 +23,15 @@
 use std::fmt;
 use std::str::FromStr;
 
-use chrono::{DateTime, Duration, Utc};
 use chrono::prelude::*;
+use chrono::{DateTime, Duration, Utc};
 
 use crate::utils::{
-    get_last_daily_reset,
-    get_last_friday_reset,
-    get_last_weekly_reset,
-    get_destiny2_launch_date, 
+    get_destiny2_launch_date, get_last_daily_reset, get_last_friday_reset, get_last_weekly_reset,
+    Period,
 };
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Moment {
     Now,
     Daily,
@@ -51,7 +49,6 @@ pub enum Moment {
     AllTime,
     Custom,
 }
-
 
 impl Moment {
     pub fn get_date_time(&self) -> DateTime<Utc> {
@@ -131,5 +128,39 @@ impl fmt::Display for Moment {
         };
 
         write!(f, "{}", out)
+    }
+}
+
+pub struct MomentPeriod {
+    pub moment: Moment,
+    pub start: DateTime<Utc>,
+    pub end: DateTime<Utc>,
+}
+
+impl Period for MomentPeriod {
+    fn get_start(&self) -> DateTime<Utc> {
+        self.start
+    }
+
+    fn get_end(&self) -> DateTime<Utc> {
+        self.end
+    }
+}
+
+impl MomentPeriod {
+    ///Takes a Moment and creates MomentPeriod relative to now.
+    ///If Moment is in the future, it will be from now to moment,
+    ///If Moment is in the past, it will be from moment to now.
+    pub fn from_moment(moment: Moment) -> MomentPeriod {
+        let mut start = moment.get_date_time();
+        let mut end = Utc::now();
+
+        if start > end {
+            let tmp = start;
+            start = end;
+            end = tmp;
+        }
+
+        MomentPeriod { moment, start, end }
     }
 }

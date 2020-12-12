@@ -25,21 +25,44 @@ use structopt::StructOpt;
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
 use dcli::mode::Mode;
+use dcli::moment::{Moment, MomentPeriod};
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::stats::{DailyPvPStatsValuesData, PvpStatsData};
-use dcli::timeperiod::StatsTimePeriod;
+
+use std::str::FromStr;
 
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{build_tsv, format_f32, human_duration, print_error, print_verbose, repeat_str};
+
+fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
+    let moment = Moment::from_str(src)?;
+
+    //note, we positive capture what we want in case new properties
+    //are added in the future
+    match moment {
+        Moment::Daily => {}
+        Moment::Weekend => {}
+        Moment::Weekly => {}
+        Moment::Day => {}
+        Moment::Week => {}
+        Moment::Month => {}
+        Moment::AllTime => {}
+        _ => {
+            return Err(format!("Unsupported moment specified : {}", src));
+        }
+    };
+
+    Ok(moment)
+}
 
 fn print_tsv(
     data: PvpStatsData,
     member_id: &str,
     character_id: &str,
-    platform: Platform,
-    mode: Mode,
-    period: StatsTimePeriod,
+    platform: &Platform,
+    mode: &Mode,
+    period: &MomentPeriod,
 ) {
     let mut name_values: Vec<(&str, String)> = Vec::new();
 
@@ -48,11 +71,10 @@ fn print_tsv(
     name_values.push(("platform_id", format!("{}", platform.to_id())));
     name_values.push(("character_id", character_id.to_string()));
 
-    let p = period.get_period();
-    name_values.push(("start_period_dt", format!("{}", p.start)));
-    name_values.push(("end_period_dt", format!("{}", p.end)));
+    name_values.push(("start_moment_dt", format!("{}", period.start)));
+    name_values.push(("end_moment_dt", format!("{}", period.end)));
 
-    name_values.push(("period_human", format!("{}", period)));
+    name_values.push(("moment_human", format!("{}", period.moment)));
     name_values.push(("mode", format!("{}", mode)));
     name_values.push(("mode_id", format!("{}", mode.to_id())));
     name_values.push(("activities_entered", format!("{}", data.activities_entered)));
@@ -105,19 +127,21 @@ fn print_tsv(
 }
 
 //TODO: should pass in by reference here
-fn print_default(data: PvpStatsData, mode: Mode, period: StatsTimePeriod) {
+fn print_default(data: PvpStatsData, mode: Mode, moment: Moment) {
     let p = format_f32;
 
-    let period_string = match period {
-        StatsTimePeriod::Yesterday => "for yesterday",
-        StatsTimePeriod::CurrentReset => "since the last reset",
-        StatsTimePeriod::LastReset => "for last week's reset period",
-        StatsTimePeriod::LastWeek => "for the last week",
-        StatsTimePeriod::LastMonth => "for the last month",
-        StatsTimePeriod::AllTime => "for all time",
+    let moment_string = match moment {
+        Moment::Daily => "since the daily reset",
+        Moment::Weekend => "since last Friday",
+        Moment::Weekly => "since the weekly reset",
+        Moment::Day => "for the last day",
+        Moment::Week => "for the last week",
+        Moment::Month => "for the last month",
+        Moment::AllTime => "for all time",
+        _ => "",
     };
 
-    let title: String = format!("Destiny 2 stats for {:#} {}", mode, period_string);
+    let title: String = format!("Destiny 2 stats for {:#} {}", mode, moment_string);
 
     println!();
     println!("{}", title);
@@ -192,8 +216,8 @@ fn print_default(data: PvpStatsData, mode: Mode, period: StatsTimePeriod) {
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving historic Destiny 2 Crucible activity stats.
 ///
-/// Retrieves stats based on the period specified, up to, but excluding the current day.
-/// Enables control of which stats are retrieved via game mode, time period and
+/// Retrieves stats based on the moment specified, up to, but excluding the current day.
+/// Enables control of which stats are retrieved via game mode, time moment and
 /// character.
 ///
 /// Created by Mike Chambers.
@@ -223,18 +247,18 @@ struct Opt {
     /// Time range to pull stats from
     ///
     /// Valid values include yesterday, currentreset (since reset), lastreset
-    /// (previous week reset period), lastweek (last 7 days), lastmonth
-    /// (last 30 days), alltime.
+    /// (previous week reset moment), lastweek (last 7 days), lastmonth
+    /// (last 30 days), all_time.
     ///
     /// All ranges are up to, but not including current day.
-    #[structopt(long = "period", default_value = "alltime")]
-    period: StatsTimePeriod,
+    #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), default_value = "alltime")]
+    moment: Moment,
 
     /// Crucible mode to return stats for
     ///
     /// Valid values are all (default), control, clash, mayhem, ironbanner,
     /// private, trialsofnine, rumble, comp, quickplay and trialsofosiris.
-    #[structopt(long = "mode", default_value = "all")]
+    #[structopt(long = "mode", default_value = "all_pvp")]
     mode: Mode,
 
     /// Format for command output
@@ -250,9 +274,9 @@ struct Opt {
     ///
     /// Destiny 2 API character id. If not specified, data for all characters
     /// will be returned.
-    /// Required when period is set to day, reset, week or month.
-    #[structopt(short = "c", long = "character-id", required_ifs=&[("period","day"),
-        ("period","reset"),("period","week"),("period","month"),])]
+    /// Required when moment is set to day, reset, week or month.
+    #[structopt(short = "c", long = "character-id", required_ifs=&[("moment","day"),
+        ("moment","reset"),("moment","week"),("moment","month"),])]
     character_id: Option<String>,
 
     ///Print out additional information
@@ -289,19 +313,13 @@ async fn retrieve_aggregate_crucible_stats(
     character_id: &str,
     platform: &Platform,
     mode: &Mode,
-    period: &StatsTimePeriod,
+    period: &MomentPeriod,
     verbose: bool,
 ) -> Result<Option<PvpStatsData>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let data: Vec<DailyPvPStatsValuesData> = match client
-        .retrieve_aggregate_crucible_stats(
-            &member_id,
-            &character_id,
-            &platform,
-            &mode,
-            &period.get_period(),
-        )
+        .retrieve_aggregate_crucible_stats(&member_id, &character_id, &platform, &mode, period)
         .await?
     {
         Some(e) => e,
@@ -327,8 +345,10 @@ async fn main() {
     //use unwrap_or_else as it is lazily evaluated
     let character_id: String = opt.character_id.unwrap_or_else(|| "0".to_string());
 
-    let data = match opt.period {
-        StatsTimePeriod::AllTime => {
+    //TODO: probably need to pass a reference here and then clone it.
+    let moment_period = MomentPeriod::from_moment(opt.moment);
+    let data = match opt.moment {
+        Moment::AllTime => {
             match retrieve_all_time_stats(
                 &opt.member_id,
                 &character_id,
@@ -357,7 +377,7 @@ async fn main() {
                 &character_id,
                 &opt.platform,
                 &opt.mode,
-                &opt.period,
+                &moment_period,
                 opt.verbose,
             )
             .await
@@ -379,16 +399,16 @@ async fn main() {
 
     match opt.output {
         Output::Default => {
-            print_default(data, opt.mode, opt.period);
+            print_default(data, opt.mode, opt.moment);
         }
         Output::Tsv => {
             print_tsv(
                 data,
                 &opt.member_id,
                 &character_id,
-                opt.platform,
-                opt.mode,
-                opt.period,
+                &opt.platform,
+                &opt.mode,
+                &moment_period,
             );
         }
     }

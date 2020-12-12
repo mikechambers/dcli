@@ -31,7 +31,9 @@ use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
 };
-use crate::timeperiod::DateTimePeriod;
+
+use crate::utils::Period;
+
 use chrono::{DateTime, Utc};
 use std::io::{self, Write};
 
@@ -184,16 +186,16 @@ impl ApiInterface {
         Ok(data)
     }
 
-    pub async fn retrieve_aggregate_crucible_stats(
+    pub async fn retrieve_aggregate_crucible_stats<T: Period>(
         &self,
         member_id: &str,
         character_id: &str,
         platform: &Platform,
         mode: &Mode,
-        period: &DateTimePeriod,
+        period: &T,
     ) -> Result<Option<Vec<DailyPvPStatsValuesData>>, Error> {
-        let day_start = period.start.to_rfc3339();
-        let day_end = period.end.to_rfc3339();
+        let day_start = period.get_start().to_rfc3339();
+        let day_end = period.get_end().to_rfc3339();
 
         //
         let url =

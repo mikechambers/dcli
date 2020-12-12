@@ -56,30 +56,27 @@ fn print_tsv(
 }
 */
 
-
 fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
-    let moment = Moment::from_str(src)?; 
+    let moment = Moment::from_str(src)?;
 
     //note, we positive capture what we want in case new properties
     //are added in the future
     match moment {
         Moment::Daily => {}
-        Moment::Weekend => {},
-        Moment::Weekly => {},
-        Moment::Day => {},
-        Moment::Week => {},
+        Moment::Weekend => {}
+        Moment::Weekly => {}
+        Moment::Day => {}
+        Moment::Week => {}
         Moment::Month => {}
-        Moment::AllTime => {},
-        Moment::Custom => {},
+        Moment::AllTime => {}
+        Moment::Custom => {}
         _ => {
             return Err(format!("Unsupported moment specified : {}", src));
-        },
+        }
     };
 
     Ok(moment)
 }
-
-
 
 async fn get_manifest(manifest_path: PathBuf) -> Result<ManifestInterface, Error> {
     //TODO: may need to make this mutable

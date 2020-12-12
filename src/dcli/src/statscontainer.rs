@@ -45,16 +45,16 @@ pub struct ActivityStatsContainer {
     draws: f32,
     time_played_seconds: f32,
 
-    highest_kills:f32,
-    highest_assists:f32,
-    highest_deaths:f32,
-    highest_opponents_defeated:f32,
-    highest_efficiency:f32,
-    highest_kills_deaths_ratio:f32,
-    highest_kills_deaths_assists:f32,
+    highest_kills: f32,
+    highest_assists: f32,
+    highest_deaths: f32,
+    highest_opponents_defeated: f32,
+    highest_efficiency: f32,
+    highest_kills_deaths_ratio: f32,
+    highest_kills_deaths_assists: f32,
 
-    longest_win_streak:f32,
-    longest_loss_streak:f32,
+    longest_win_streak: f32,
+    longest_loss_streak: f32,
 }
 
 impl ActivityStatsContainer {
@@ -74,16 +74,16 @@ impl ActivityStatsContainer {
             draws: 0.0,
             time_played_seconds: 0.0,
 
-            highest_kills:0.0,
-            highest_assists:0.0,
-            highest_deaths:0.0,
-            highest_opponents_defeated:0.0,
-            highest_efficiency:0.0,
-            highest_kills_deaths_ratio:0.0,
-            highest_kills_deaths_assists:0.0,
+            highest_kills: 0.0,
+            highest_assists: 0.0,
+            highest_deaths: 0.0,
+            highest_opponents_defeated: 0.0,
+            highest_efficiency: 0.0,
+            highest_kills_deaths_ratio: 0.0,
+            highest_kills_deaths_assists: 0.0,
 
-            longest_win_streak:0.0,
-            longest_loss_streak:0.0,
+            longest_win_streak: 0.0,
+            longest_loss_streak: 0.0,
         };
 
         a.update();
@@ -94,9 +94,7 @@ impl ActivityStatsContainer {
         calculate_per_activity_average(value, self.activities.len() as f32)
     }
 
-    
     fn update(&mut self) {
-
         let mut last_standing = Standing::Unknown;
         let mut streak = 0.0;
         for a in self.activities.iter() {
@@ -108,11 +106,17 @@ impl ActivityStatsContainer {
             self.highest_kills = self.highest_kills.max(a.values.kills);
             self.highest_assists = self.highest_assists.max(a.values.assists);
             self.highest_deaths = self.highest_deaths.max(a.values.deaths);
-            self.highest_opponents_defeated = self.highest_opponents_defeated.max(a.values.opponents_defeated);
+            self.highest_opponents_defeated = self
+                .highest_opponents_defeated
+                .max(a.values.opponents_defeated);
 
             self.highest_efficiency = self.highest_efficiency.max(a.values.efficiency);
-            self.highest_kills_deaths_ratio = self.highest_kills_deaths_ratio.max(a.values.kills_deaths_ratio);
-            self.highest_kills_deaths_assists = self.highest_kills_deaths_assists.max(a.values.kills_deaths_assists);
+            self.highest_kills_deaths_ratio = self
+                .highest_kills_deaths_ratio
+                .max(a.values.kills_deaths_ratio);
+            self.highest_kills_deaths_assists = self
+                .highest_kills_deaths_assists
+                .max(a.values.kills_deaths_assists);
 
             self.deaths += a.values.deaths;
             self.opponents_defeated += a.values.opponents_defeated;
@@ -171,7 +175,7 @@ impl ActivityStatsContainer {
         }
 
         self.wins / total * 100.0
-    } 
+    }
 
     pub fn highest_efficiency(&self) -> f32 {
         self.highest_efficiency
