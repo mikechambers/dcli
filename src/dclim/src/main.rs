@@ -130,9 +130,9 @@ async fn download_manifest(url: &str, path: &PathBuf, print_url: bool) -> Result
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving and managing the Destiny 2 manifest database.
 ///
-/// Manifest will be stored in the specified local directory, along with meta-data
-/// with information about the downloaded version. This is used to to determine
-/// whether the remote version has been updated.
+/// Manifest will be stored in the specified local directory with the file name:
+/// manifest.sqlite3, along with meta-data with information about the downloaded
+/// version. This is used to to determine whether the remote version has been updated.
 ///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
@@ -146,7 +146,9 @@ async fn download_manifest(url: &str, path: &PathBuf, print_url: bool) -> Result
 /// Released under an MIT License.
 struct Opt {
     ///Directory where the manifest and meta-data will be stored.
-    #[structopt(short = "m", long = "manifest-dir", parse(from_os_str))]
+    ///
+    ///The manifest will be stored in this directory in a file named manifest.sqlite3
+    #[structopt(short = "D", long = "manifest-dir", parse(from_os_str))]
     manifest_dir: PathBuf,
 
     ///Print out additional information
@@ -156,11 +158,11 @@ struct Opt {
     verbose: bool,
 
     ///Force a download of manifest regardless of whether it has been updated.
-    #[structopt(short = "f", long = "force", conflicts_with = "check")]
+    #[structopt(short = "F", long = "force", conflicts_with = "check")]
     force: bool,
 
     ///Check whether a new manifest version is available, but do not download.
-    #[structopt(short = "c", long = "check")]
+    #[structopt(short = "C", long = "check")]
     check: bool,
 
     /// Format for command output

@@ -50,9 +50,6 @@ async fn retrieve_characters(
 /// Retrieves character information for all characters, as well as most recently
 /// played character.
 ///
-/// By default information on all characters will be displayed, although there
-/// are flags to filter which information is output.
-///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
 ///
@@ -66,8 +63,8 @@ async fn retrieve_characters(
 struct Opt {
     /// Destiny 2 API member id
     ///
-    /// This is not the user name, but the member id
-    /// retrieved from the Destiny API.
+    /// This is not the user name, but the member id retrieved from the Destiny
+    /// API.
     #[structopt(short = "m", long = "member-id", required = true)]
     member_id: String,
 

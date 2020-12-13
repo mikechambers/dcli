@@ -217,7 +217,7 @@ fn print_default(data: PvpStatsData, mode: Mode, moment: Moment) {
 /// Command line tool for retrieving historic Destiny 2 Crucible activity stats.
 ///
 /// Retrieves stats based on the moment specified, up to, but excluding the current day.
-/// Enables control of which stats are retrieved via game mode, time moment and
+/// Enables control of which stats are retrieved via game mode, past time moment and
 /// character.
 ///
 /// Created by Mike Chambers.
@@ -246,19 +246,27 @@ struct Opt {
 
     /// Time range to pull stats from
     ///
-    /// Valid values include yesterday, currentreset (since reset), lastreset
-    /// (previous week reset moment), lastweek (last 7 days), lastmonth
-    /// (last 30 days), all_time.
+    /// Valid values include day (last day), daily (since last daily reset),
+    /// week (last week), weekly (since last weekly reset on Tuesday), month
+    /// (last month), weekend (since last Friday reset) and all_time.
     ///
-    /// All ranges are up to, but not including current day.
-    #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), default_value = "alltime")]
+    /// All ranges are up to, but not including current day, and thus some values
+    /// may not return data depending on time of day.
+    #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment),
+    default_value = "all_time")]
     moment: Moment,
 
-    /// Crucible mode to return stats for
+    /// Activity mode to return stats for
     ///
-    /// Valid values are all (default), control, clash, mayhem, ironbanner,
-    /// private, trialsofnine, rumble, comp, quickplay and trialsofosiris.
-    #[structopt(long = "mode", default_value = "all_pvp")]
+    /// Supported values are all_pvp (default), control, clash, elimination,
+    /// all_mayhem, iron_banner, all_private, rumble, pvp_competitive,
+    /// pvp_quickplay and trials_of_osiris.
+    ///
+    /// Addition values available are crimsom_doubles, supremacy, survival,
+    /// countdown, all_doubles, doubles, private_matches_clash, private_matches_control,
+    /// private_matches_survival, private_matches_rumble, showdown, lockdown,
+    /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine
+    #[structopt(short = "M", long = "mode", default_value = "all_pvp")]
     mode: Mode,
 
     /// Format for command output
@@ -274,7 +282,8 @@ struct Opt {
     ///
     /// Destiny 2 API character id. If not specified, data for all characters
     /// will be returned.
-    /// Required when moment is set to day, reset, week or month.
+    ///
+    /// Required unless moment is set to all_time
     #[structopt(short = "c", long = "character-id", required_ifs=&[("moment","day"),
         ("moment","reset"),("moment","week"),("moment","month"),])]
     character_id: Option<String>,

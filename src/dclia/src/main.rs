@@ -78,7 +78,7 @@ struct Opt {
     ///This will normally be downloaded using the dclim tool, and stored in a file
     ///named manifest.sqlite3 (in the manifest directory specified when running
     ///dclim).
-    #[structopt(short="P", long = "manifest-path", parse(from_os_str))]
+    #[structopt(short = "P", long = "manifest-path", parse(from_os_str))]
     manifest_path: PathBuf,
 
     /// Format for command output

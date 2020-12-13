@@ -205,7 +205,7 @@ impl FromStr for Mode {
             "supremacy" => Ok(Mode::Supremacy),
             //todo: think about renaming allprivatematches, or just privatematches (same with other
             //alls
-            "all_private_matches" => Ok(Mode::PrivateMatchesAll),
+            "all_private" => Ok(Mode::PrivateMatchesAll),
             "survival" => Ok(Mode::Survival),
             "countdown" => Ok(Mode::Countdown),
             "trials_of_the_nine" => Ok(Mode::TrialsOfTheNine),
