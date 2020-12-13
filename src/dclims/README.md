@@ -1,17 +1,17 @@
 # dclims
 
-Command line tool for returning information from the Destiny 2 manifest from hash ids (from API calls).
+Command line tool for returning item information from the Destiny 2 manifest from hash ids (from API calls).
 
-Takes a hash / id from the Destiny 2 API, and returns data from the item from the manifest. May return more than one result.
+May return more than one result.
 
 
 ## USAGE
 ```
 USAGE:
-    dclims [OPTIONS] --hash <hash> --manifest-path <manifest-path>
+    dclims [FLAGS] [OPTIONS] --hash <hash> --manifest-path <manifest-path>
 
 FLAGS:
-    -h, --help       
+        --help       
             Prints help information
 
     -V, --version    
@@ -22,12 +22,12 @@ FLAGS:
             
             Output is printed to stderr.
 
-
 OPTIONS:
-        --hash <hash>                      
-            The hash id from the Destiny 2 API for the item to be searched for. Example : 326060471
-
-    -m, --manifest-path <manifest-path>    
+    -h, --hash <hash>                      
+            The hash id from the Destiny 2 API for the item to be searched for.
+            
+            Example : 326060471
+    -P, --manifest-path <manifest-path>    
             Local path for Destiny 2 manifest database file
 
     -o, --output <output>                  
@@ -35,9 +35,8 @@ OPTIONS:
             
             Valid values are default (Default) and tsv.
             
-            tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
-            (\n). [default: default]
-
+            tsv outputs in a tab (\t) seperated format of columns with lines ending in a new line character (\n).
+            [default: default]
 ```
 
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).

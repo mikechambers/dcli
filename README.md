@@ -15,12 +15,14 @@ Just download, place them in your path and run from the command line (use --help
 **IMPORTANT**: Mac binaries are not signed, which can cause some hassle the first time you run them. You can find info on how to easily run them [here](https://github.com/mikechambers/dcli/wiki/Running-dcli-tools-on-Mac-OS-X).
 
 ## Utilities
-* [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) Tool for retrieving primary platform and membership ids for Destiny 2 players.
-* [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) Tool for managing and syncing the remote Destiny 2 API manifest database.
-* [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) Tool for retrieving character information for specified member id.
-* [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) Tool for searching the Destiny 2 manifest by hash ids (from API calls).
 * [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) Tool for retrieving information on player's current activity within Destiny 2.
+* [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) Tool for retrieving Destiny 2 activity history.
+* [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) Tool for retrieving character information for specified member id.
 * [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) Tool for retrieving Destiny 2 Crucible activity stats.
+* [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) Tool for managing and syncing the remote Destiny 2 API manifest database.
+* [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) Tool for searching the Destiny 2 manifest by hash ids (from API calls).
+* [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) Tool for retrieving primary platform and membership ids for Destiny 2 players.
+* [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) Tool for retrieving date / time stamps for Destiny 2 weekly event moments.
 * [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) Library used across all of the dcli apps.
 
 Each tool page contains additional tool specific information and usage examples.

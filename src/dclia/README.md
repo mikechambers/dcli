@@ -1,6 +1,6 @@
 # dclia
 
-Command line tool for retrieving information on current activity for specified player character.
+Command line tool for retrieving current Destiny 2 activity status for players.
 
 Information includes current activity, location, and in the case of PvP modes (Crucible and Gambit), current map.
 
@@ -25,9 +25,11 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-        --manifest-path <manifest-path>    
-            Local path for the Destiny 2 manifest database file
-
+    -P, --manifest-path <manifest-path>    
+            Local path for the Destiny 2 manifest database file.
+            
+            This will normally be downloaded using the dclim tool, and stored in a file named manifest.sqlite3 (in the
+            manifest directory specified when running dclim).
     -m, --member-id <member-id>            
             Destiny 2 API member id
             
@@ -45,14 +47,13 @@ OPTIONS:
             Valid values are: xbox, playstation, stadia or steam.
 ```
 
-Valid platforms are:
-* xbox
-* playstation
-* steam
-* stadia
+| ARGUMENT | OPTIONS |
+|---|---|
+| --platform | xbox, playstation, stadia or steam |
 
-member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).
 
+
+member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
 ### Examples

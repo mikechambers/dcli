@@ -73,7 +73,6 @@ pub fn property_to_option_float<'de, D>(deserializer: D) -> Result<Option<f32>, 
 where
     D: serde::de::Deserializer<'de>,
 {
-    println!("PARSER");
     #[derive(Deserialize, Debug)]
     struct Outer {
         pub basic: Inner,

@@ -40,20 +40,20 @@ OPTIONS:
             Valid values are: xbox, playstation, stadia or steam.
 ```
 
-Valid platform values are:
-* xbox
-* playstation
-* steam
-* stadia
 
-member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).
+| ARGUMENT | OPTIONS |
+|---|---|
+| --platform | xbox, playstation, stadia or steam |
+
+member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
+
 
 ### Examples
 
 #### Retrieve character information
 
 ```
-dclic --member-id 4611686018429783292 --platform xbox
+$ dclic --member-id 4611686018429783292 --platform xbox
 ```
 
 outputs:
@@ -69,7 +69,7 @@ Warlock     2305843009264966986
 #### Retrieve all character information with tab seperated output
 
 ```
-dclic --member-id 4611686018429783292 --platform xbox --output tsv
+$ dclic --member-id 4611686018429783292 --platform xbox --output tsv
 ```
 
 outputs:
