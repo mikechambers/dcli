@@ -60,7 +60,7 @@ OPTIONS:
 
 #### Get date / time for the weekly Tuesday reset for the current week:
 ```
-$ dclitime--moment weekly
+$ dclitime --moment weekly
 ```
 
 #### Get date / time for the upcoming Xur reset on Friday in rfc2822 format:

@@ -28,4 +28,10 @@ echo "------------- RUNNING dclia--------------"
 dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox
 
 echo "------------- RUNNING dclics--------------"
-dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period week
+dclics --member-id 4611686018429783292 --platform xbox --mode all_pvp --character-id 2305843009264966985 --moment 
+
+echo "------------- RUNNING dclitime--------------"
+dclitime --moment weekly
+
+echo "------------- RUNNING dcliah --------------"
+dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path ~/tmp/manifest.sqlite3 --moment weekend --mode trials_of_osiris
