@@ -18,11 +18,11 @@ jobs:
         with:
           args: /bin/bash -c "export DESTINY_API_KEY=${{ secrets.DESTINY_API_KEY }} && rustup update && cargo build --manifest-path=src/Cargo.toml --release --target=x86_64-unknown-linux-musl"
       - name: Process and Package
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        #if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dclics . && strip dclics && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dclic dclics dclims dclim dclis dclitime
+        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dclics . && strip dclics && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dclic dclics dclims dclim dclis dclitime dcliah
         
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -30,6 +30,7 @@ jobs:
         with:
           files: |
             dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip
+            RELEASE.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -62,21 +63,22 @@ jobs:
           command: build
           args: --manifest-path=src/Cargo.toml --release --target ${{ steps.config.outputs.TARGET_NAME }}
       - name: Process
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        #if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia.exe . && strip dclia.exe && cp src/target/${TARGET_NAME}/release/dclic.exe . && strip dclic.exe  && cp src/target/${TARGET_NAME}/release/dclics.exe . && strip dclics.exe && cp src/target/${TARGET_NAME}/release/dclims.exe . && strip dclims.exe && cp src/target/${TARGET_NAME}/release/dclim.exe . && strip dclim.exe && cp src/target/${TARGET_NAME}/release/dclis.exe . && strip dclis.exe && cp src/target/${TARGET_NAME}/release/dclitime.exe . && strip dclitime.exe
+        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia.exe . && strip dclia.exe && cp src/target/${TARGET_NAME}/release/dclic.exe . && strip dclic.exe  && cp src/target/${TARGET_NAME}/release/dclics.exe . && strip dclics.exe && cp src/target/${TARGET_NAME}/release/dclims.exe . && strip dclims.exe && cp src/target/${TARGET_NAME}/release/dclim.exe . && strip dclim.exe && cp src/target/${TARGET_NAME}/release/dclis.exe . && strip dclis.exe && cp src/target/${TARGET_NAME}/release/dclitime.exe . && strip dclitime.exe && cp src/target/${TARGET_NAME}/release/dcliah.exe . && strip dcliah.exe
         shell: bash
       - name: Package
         if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        run: Compress-Archive -Path RELEASE.md, README.md, LICENSE.md, dclia.exe, dclic.exe, dclics.exe, dclim.exe, dclims.exe, dclis.exe, dclitime.exe -DestinationPath dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip -CompressionLevel Optimal
+        run: Compress-Archive -Path RELEASE.md, README.md, LICENSE.md, dclia.exe, dclic.exe, dclics.exe, dclim.exe, dclims.exe, dclis.exe, dclitime.exe, dcliah.exe -DestinationPath dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip -CompressionLevel Optimal
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip
+            RELEASE.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -107,12 +109,12 @@ jobs:
           command: build
           args: --manifest-path=src/Cargo.toml --release --target ${{ steps.config.outputs.TARGET_NAME }}
       - name: Process
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        #if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
           DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dclics . && strip dclics && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dclic dclics dclims dclim dclis
+        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dclics . && strip dclics && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dclic dclics dclims dclim dclis dclitime dcliah
         
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -120,5 +122,6 @@ jobs:
         with:
           files: |
             dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip
+            RELEASE.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
