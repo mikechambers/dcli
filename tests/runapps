@@ -12,26 +12,29 @@
 
 # make sure you place the app in your PATH
 
+MANIFEST_DIR=~/tmp/
+MANIFEST_PATH=${MANIFEST_DIR}manifest.sqlite3
+
 echo "------------- RUNNING dclis--------------"
-dclis --id mesh --platform xbox
+dclis --name mesh --platform xbox
 
 echo "------------- RUNNING dclim--------------"
-dclim --manifest-dir ~/tmp/
+dclim --manifest-dir $MANIFEST_DIR
 
 echo "------------- RUNNING dclic--------------"
 dclic --member-id 4611686018429783292 --platform xbox
 
 echo "------------- RUNNING dclims--------------"
-dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 3260604718
+dclims --manifest-path $MANIFEST_PATH --hash 3260604718
 
 echo "------------- RUNNING dclia--------------"
-dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox
+dclia --manifest-path $MANIFEST_PATH --member-id 4611686018429783292 --platform xbox
 
 echo "------------- RUNNING dclics--------------"
-dclics --member-id 4611686018429783292 --platform xbox --mode all_pvp --character-id 2305843009264966985 --moment 
+dclics --member-id 4611686018429783292 --platform xbox --character-id 2305843009264966985 
 
 echo "------------- RUNNING dclitime--------------"
-dclitime --moment weekly
+dclitime
 
 echo "------------- RUNNING dcliah --------------"
-dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path ~/tmp/manifest.sqlite3 --moment weekend --mode trials_of_osiris
+dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path $MANIFEST_PATH
