@@ -22,6 +22,7 @@
 
 use serde_derive::Serialize;
 use std::fmt;
+use crate::utils::f32_are_equal;
 
 #[derive(Serialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Standing {
@@ -38,7 +39,7 @@ impl Default for Standing {
 
 impl Standing {
     pub fn from_f32(value: f32) -> Standing {
-        if (value - 1.0).abs() > f32::EPSILON {
+        if f32_are_equal(value, 1.0) {
             Standing::Defeat
         } else if value == 0.0 {
             Standing::Victory
