@@ -35,7 +35,7 @@ use dcli::statscontainer::ActivityStatsContainer;
 use dcli::manifestinterface::ManifestInterface;
 use std::path::PathBuf;
 
-use dcli::utils::{format_f32, repeat_str, uppercase_first_char};
+use dcli::utils::{f32_are_equal, format_f32, repeat_str, uppercase_first_char};
 use dcli::{apiinterface::ApiInterface, utils::EXIT_FAILURE};
 
 use structopt::StructOpt;
@@ -231,50 +231,58 @@ async fn print_default(
             map_name.push_str("..")
         }
 
-        let highest_kills_flag = if activity.values.kills == data.highest_kills() {
+        let highest_kills_flag = if f32_are_equal(activity.values.kills, data.highest_kills()) {
             highest_flag
         } else {
             ""
         };
 
-        let highest_assists_flag = if activity.values.assists == data.highest_assists() {
+        let highest_assists_flag = if f32_are_equal(activity.values.assists, data.highest_assists())
+        {
             highest_flag
         } else {
             ""
         };
 
-        let highest_deaths_flag = if activity.values.deaths == data.highest_deaths() {
+        let highest_deaths_flag = if f32_are_equal(activity.values.deaths, data.highest_deaths()) {
             highest_flag
         } else {
             ""
         };
 
-        let highest_opponents_defeated_flag =
-            if activity.values.opponents_defeated == data.highest_opponents_defeated() {
+        let highest_opponents_defeated_flag = if f32_are_equal(
+            activity.values.opponents_defeated,
+            data.highest_opponents_defeated(),
+        ) {
+            highest_flag
+        } else {
+            ""
+        };
+
+        let highest_efficiency_flag =
+            if f32_are_equal(activity.values.efficiency, data.highest_efficiency()) {
                 highest_flag
             } else {
                 ""
             };
 
-        let highest_efficiency_flag = if activity.values.efficiency == data.highest_efficiency() {
+        let highest_highest_kills_deaths_ratio_flag = if f32_are_equal(
+            activity.values.kills_deaths_ratio,
+            data.kills_deaths_ratio(),
+        ) {
             highest_flag
         } else {
             ""
         };
 
-        let highest_highest_kills_deaths_ratio_flag =
-            if activity.values.kills_deaths_ratio == data.kills_deaths_ratio() {
-                highest_flag
-            } else {
-                ""
-            };
-
-        let highest_kills_deaths_assists_flag =
-            if activity.values.kills_deaths_assists == data.highest_kills_deaths_assists() {
-                highest_flag
-            } else {
-                ""
-            };
+        let highest_kills_deaths_assists_flag = if f32_are_equal(
+            activity.values.kills_deaths_assists,
+            data.highest_kills_deaths_assists(),
+        ) {
+            highest_flag
+        } else {
+            ""
+        };
 
         println!(
             "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
@@ -317,7 +325,7 @@ async fn print_default(
     println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "PER GAME",
     format!("{}% w", format_f32(data.win_percentage(), 2)),
-    format!("{}", ""),
+    "",
     format_f32(data.per_activity_average(data.kills()), 2),
     format_f32(data.per_activity_average(data.assists()), 2),
     format_f32(data.per_activity_average(data.opponents_defeated()), 2),

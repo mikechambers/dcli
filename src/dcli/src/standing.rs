@@ -38,7 +38,7 @@ impl Default for Standing {
 
 impl Standing {
     pub fn from_f32(value: f32) -> Standing {
-        if value == 1.0 {
+        if (value - 1.0).abs() > f32::EPSILON {
             Standing::Defeat
         } else if value == 0.0 {
             Standing::Victory

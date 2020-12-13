@@ -236,8 +236,6 @@ async fn main() {
     // note if for some reason correct activities are not displayed for some
     // crucible modes, then this may be false (i've only seen this as an issue
     // for raids thought (see link above for bug (raid)))
-    let is_crucible = mode.is_crucible();
-
     let description = activity_data_m
         .display_properties
         .description
@@ -265,7 +263,6 @@ async fn main() {
                 &place_name,
                 &destination_name,
                 &description,
-                is_crucible,
                 true,
             );
         }
@@ -273,11 +270,11 @@ async fn main() {
 }
 
 fn print_tsv_orbit() {
-    print_tsv(Mode::None, "", "", "Orbit", "", "", false, true);
+    print_tsv(Mode::None, "", "", "Orbit", "", "", true);
 }
 
 fn print_tsv_no_activity() {
-    print_tsv(Mode::None, "", "", "", "", "", false, false);
+    print_tsv(Mode::None, "", "", "", "", "", false);
 }
 
 fn print_tsv(
@@ -287,7 +284,6 @@ fn print_tsv(
     place_name: &str,
     destination_name: &str,
     description: &str,
-    is_crucible: bool,
     in_activity: bool,
 ) {
     //figure out if they are in orbit since bungie doesnt give us
@@ -314,7 +310,7 @@ fn print_tsv(
     name_values.push(("destination_name", destination_name.to_string()));
     name_values.push(("description", description.to_string()));
     name_values.push(("human_status", human_status));
-    name_values.push(("is_crucible", is_crucible.to_string()));
+    name_values.push(("is_crucible", mode.is_crucible().to_string()));
 
     print!("{}", build_tsv(name_values));
 }

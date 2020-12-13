@@ -42,6 +42,10 @@ pub const TSV_DELIM: &str = "\t";
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub fn f32_are_equal(a: f32, b: f32) -> bool {
+    (a - b).abs() < f32::EPSILON
+}
+
 pub trait Period {
     fn get_start(&self) -> DateTime<Utc>;
     fn get_end(&self) -> DateTime<Utc>;
