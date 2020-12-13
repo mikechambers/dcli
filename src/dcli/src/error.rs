@@ -27,27 +27,26 @@
 //If it turns out this becomes unwieldy, then we will break it out, into API
 //and app specific errors
 
+use crate::response::activities::MAX_ACTIVITIES_REQUEST_COUNT;
 use std::fmt::{Display, Formatter, Result};
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Error {
     ApiRequest { description: String },
     ApiStatus { description: String },
+    ApiResponseMissing,
 
     //when parameters are malformed in wrong format (i.e. expecting id, getting a name)
     ParameterParseFailure,
-
     //when id & platform are not correct combination
     InvalidParameters,
-
     //Api key not set correctly
     ApiKeyMissingFromRequest,
-
     ApiNotAvailableException,
-
+    RequestTimedOut,
+    Request,
     PrivacyException,
     Database { description: String },
-
     ApiParse { description: String },
     IoError { description: String },
     IoErrorDirIsFile { description: String },
@@ -55,7 +54,8 @@ pub enum Error {
     ZipError { description: String },
     Unknown { description: String },
     ManifestNotSet,
-    ManifestItemNotFound  { description: String },
+    ManifestItemNotFound { description: String },
+    MaxActivitiesRequestCountExceeded,
 }
 
 impl Display for Error {
@@ -63,10 +63,10 @@ impl Display for Error {
         match self {
             Error::ApiRequest { description } => {
                 write!(f, "Error calling Destiny 2 API. {}", description)
-            }
+            },
             Error::ApiStatus { description } => {
                 write!(f, "Destiny 2 API call returned an error. {}", description)
-            }
+            },
             Error::ApiParse { description } => write!(
                 f,
                 "Error parsing results from Destiny 2 API call. {}",
@@ -74,16 +74,16 @@ impl Display for Error {
             ),
             Error::IoError { description } => {
                 write!(f, "Error working with file system. {}", description)
-            }
+            },
             Error::ZipError { description } => {
                 write!(f, "Error decompressing manifest. {}", description)
-            }
+            },
             Error::IoErrorDirIsFile { description } => {
                 write!(f, "Expected directory but found file. {}", description)
-            }
+            },
             Error::Unknown { description } => {
                 write!(f, "An unknown error occured. {}", description)
-            }
+            },
             Error::ParameterParseFailure => write!(f, "Could not parse Parameters. Make sure your inputs were correct and try again. (code 7)"),
             Error::InvalidParameters => write!(f, "Invalid input parameters. (code 18)"),
             Error::ManifestNotSet => write!(f, "Manifest was not set in Manifest Interface."),
@@ -93,7 +93,7 @@ impl Display for Error {
             ),
             Error::ApiNotAvailableException => {
                 write!(f, "The Destiny API is currently not available. (code 5)")
-            }
+            },
             Error::PrivacyException => write!(
                 f,
                 "Privacy settings for Bungie account are too restrictive. (code 5)"
@@ -107,6 +107,24 @@ impl Display for Error {
             Error::ManifestItemNotFound { description } => {
                 write!(f, "Manifest Item not found : {}", description)
             },
+            Error::ApiResponseMissing => write!(
+                f,
+                "Received response from API but no response property was present."
+            ),
+            Error::RequestTimedOut => write!(
+                f,
+                "The API request took too long. Check your network connection and try again. (The API servers may be slow right now)."
+            ),
+            Error::Request => write!(
+                f,
+                "There was an error during the API request. This often means that we could not reach the Destiny servers. Check the network connection and try again (The API servers might not be available.)."
+            ),
+
+            Error::MaxActivitiesRequestCountExceeded => write!(
+                f,
+                "The maximum number of activities ({}) requested was exceeded.",
+                MAX_ACTIVITIES_REQUEST_COUNT
+            ),
         }
     }
 }
@@ -121,8 +139,24 @@ impl From<serde_json::Error> for Error {
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Error {
-        Error::ApiRequest {
-            description: format!("reqwest::Error : {:#?}", err),
+        /*
+        //todo: need to figure out how to downcast to hyber error
+        //so we can get more details on the error (i.e. network failure)
+        //https://stackoverflow.com/a/61100595/10232
+        let hyper_error: Option<&hyper::Error> = reqwest_error
+            .source()
+            .unwrap()
+            .downcast_ref();
+        */
+
+        if err.is_timeout() {
+            Error::RequestTimedOut
+        } else if err.is_request() {
+            Error::Request
+        } else {
+            Error::ApiRequest {
+                description: format!("reqwest::Error : {:#?}", err),
+            }
         }
     }
 }

@@ -288,10 +288,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossterm"
+version = "0.18.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e86d73f2a0b407b5768d10a8c720cf5d2df49a9efc10ca09176d201ead4b7fb"
+dependencies = [
+ "bitflags",
+ "crossterm_winapi",
+ "lazy_static",
+ "libc",
+ "mio 0.7.6",
+ "parking_lot",
+ "signal-hook",
+ "winapi 0.3.9",
+]
+
+[[package]]
+name = "crossterm_winapi"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2265c3f8e080075d9b6417aa72293fc71662f34b4af2612d8d1b074d29510db"
+dependencies = [
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "dcli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
+ "crossterm",
  "futures",
  "percent-encoding",
  "reqwest",
@@ -300,12 +326,13 @@ dependencies = [
  "serde_json",
  "serde_repr",
  "sqlx",
+ "static_assertions",
  "zip",
 ]
 
 [[package]]
 name = "dclia"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "dcli",
  "structopt",
@@ -313,8 +340,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "dclic"
+name = "dcliah"
 version = "0.1.0"
+dependencies = [
+ "chrono",
+ "dcli",
+ "structopt",
+ "tokio",
+]
+
+[[package]]
+name = "dclic"
+version = "0.2.0"
 dependencies = [
  "dcli",
  "structopt",
@@ -323,7 +360,7 @@ dependencies = [
 
 [[package]]
 name = "dclics"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "dcli",
@@ -333,7 +370,7 @@ dependencies = [
 
 [[package]]
 name = "dclim"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "dcli",
  "reqwest",
@@ -347,7 +384,7 @@ dependencies = [
 
 [[package]]
 name = "dclims"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "dcli",
  "structopt",
@@ -356,7 +393,7 @@ dependencies = [
 
 [[package]]
 name = "dclis"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "dcli",
  "percent-encoding",
@@ -364,6 +401,16 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "structopt",
+ "tokio",
+]
+
+[[package]]
+name = "dclitime"
+version = "0.2.0"
+dependencies = [
+ "chrono",
+ "dcli",
  "structopt",
  "tokio",
 ]
@@ -918,13 +965,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "mio"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f33bc887064ef1fd66020c9adfc45bb9f33d75a42096c81e7c56c65b75dd1a8b"
+dependencies = [
+ "libc",
+ "log",
+ "miow 0.3.6",
+ "ntapi",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "mio-named-pipes"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0840c1c50fd55e521b247f949c241c9997709f23bd7f023b9762cd561e935656"
 dependencies = [
  "log",
- "mio",
+ "mio 0.6.22",
  "miow 0.3.6",
  "winapi 0.3.9",
 ]
@@ -937,7 +997,7 @@ checksum = "afcb699eb26d4332647cc848492bbc15eafb26f08d0304550d5aa1f612e066f0"
 dependencies = [
  "iovec",
  "libc",
- "mio",
+ "mio 0.6.22",
 ]
 
 [[package]]
@@ -1001,6 +1061,15 @@ dependencies = [
  "lexical-core",
  "memchr",
  "version_check",
+]
+
+[[package]]
+name = "ntapi"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f6bb902e437b6d86e03cce10a7e2af662292c5dfef23b65899ea3ac9354ad44"
+dependencies = [
+ "winapi 0.3.9",
 ]
 
 [[package]]
@@ -1338,7 +1407,6 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite 0.2.0",
  "serde",
- "serde_json",
  "serde_urlencoded",
  "tokio",
  "tokio-tls",
@@ -1501,6 +1569,17 @@ dependencies = [
  "cpuid-bool",
  "digest",
  "opaque-debug",
+]
+
+[[package]]
+name = "signal-hook"
+version = "0.1.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "604508c1418b99dfe1925ca9224829bb2a8a9a04dda655cc01fcad46f4ab05ed"
+dependencies = [
+ "libc",
+ "mio 0.7.6",
+ "signal-hook-registry",
 ]
 
 [[package]]
@@ -1791,7 +1870,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "memchr",
- "mio",
+ "mio 0.6.22",
  "mio-named-pipes",
  "mio-uds",
  "num_cpus",

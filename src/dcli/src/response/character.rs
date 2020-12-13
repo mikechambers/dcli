@@ -20,6 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use crate::response::utils::str_to_datetime;
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use serde_derive::{Deserialize, Serialize};
@@ -27,7 +28,6 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::fmt;
 use std::fmt::Display;
 use std::str::FromStr;
-use crate::apiutils::str_to_datetime;
 
 use crate::emblem::Emblem;
 

@@ -24,11 +24,11 @@ use structopt::StructOpt;
 
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
-use dcli::platform::Platform;
-use dcli::response::character::{CharacterData};
-use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{print_error, repeat_str, TSV_DELIM, TSV_EOL};
 use dcli::output::Output;
+use dcli::platform::Platform;
+use dcli::response::character::CharacterData;
+use dcli::utils::EXIT_FAILURE;
+use dcli::utils::{print_error, print_verbose, repeat_str, TSV_DELIM, TSV_EOL};
 
 //todo: could move this to apiclient
 async fn retrieve_characters(
@@ -43,25 +43,28 @@ async fn retrieve_characters(
     Ok(characters)
 }
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
+#[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving character information for specified member id.
 ///
 /// Retrieves character information for all characters, as well as most recently
 /// played character.
 ///
-/// By default information on all characters will be displayed, although there
-/// are flags to filter which information is output.
-/// 
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
-/// 
+///
+/// Get support, request features or just chat on the dcli Discord server:
+/// https://discord.gg/2Y8bV2Mq3p
+///
+/// Get the latest version, download the source and log issues at:
+/// https://github.com/mikechambers/dcli
+///
 /// Released under an MIT License.
-/// More info at: https://github.com/mikechambers/dcli
 struct Opt {
     /// Destiny 2 API member id
     ///
-    /// This is not the user name, but the member id
-    /// retrieved from the Destiny API.
+    /// This is not the user name, but the member id retrieved from the Destiny
+    /// API.
     #[structopt(short = "m", long = "member-id", required = true)]
     member_id: String,
 
@@ -72,7 +75,7 @@ struct Opt {
     platform: Platform,
 
     ///Print out additional information
-    /// 
+    ///
     ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
@@ -80,17 +83,17 @@ struct Opt {
     /// Format for command output
     ///
     /// Valid values are default (Default) and tsv.
-    /// 
+    ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "o", long = "output", default_value="default")]
+    #[structopt(short = "o", long = "output", default_value = "default")]
     output: Output,
-
 }
 
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
+    print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     let chars: Vec<CharacterData> =
         match retrieve_characters(opt.member_id, opt.platform, opt.verbose).await {
@@ -106,10 +109,10 @@ async fn main() {
     match opt.output {
         Output::Default => {
             print_default(char_data);
-        },
+        }
         Output::Tsv => {
             print_tsv(char_data);
-        },
+        }
     }
 }
 
@@ -139,7 +142,7 @@ fn print_default(char_data: Vec<(CharacterData, String)>) {
     }
 }
 
-fn get_char_info(characters: &Vec<CharacterData>) -> Vec<(CharacterData, String)> {
+fn get_char_info(characters: &[CharacterData]) -> Vec<(CharacterData, String)> {
     let mut out: Vec<(CharacterData, String)> = Vec::new();
 
     if characters.is_empty() {

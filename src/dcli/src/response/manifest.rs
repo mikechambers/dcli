@@ -22,19 +22,19 @@
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
-use crate::apiutils::prepend_base_url;
+use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
+use crate::response::utils::prepend_base_url;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestResponse {
     #[serde(rename = "Response")]
-    pub manifest: ManifestData,
+    pub response: Option<ManifestData>,
 
     #[serde(flatten)]
     pub status: DestinyResponseStatus,
 }
 
-impl HasDestinyResponseStatus for ManifestResponse {
+impl IsDestinyAPIResponse for ManifestResponse {
     fn get_status(&self) -> &DestinyResponseStatus {
         &self.status
     }
@@ -53,4 +53,3 @@ pub struct MobileWorldContentPathsData {
     #[serde(deserialize_with = "prepend_base_url")]
     pub en: String,
 }
-

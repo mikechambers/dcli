@@ -24,26 +24,45 @@ use structopt::StructOpt;
 
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
-use dcli::mode::CrucibleMode;
+use dcli::mode::Mode;
+use dcli::moment::{Moment, MomentPeriod};
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::stats::{DailyPvPStatsValuesData, PvpStatsData};
-use dcli::timeperiod::TimePeriod;
 
-use dcli::cruciblestats::CrucibleStats;
+use std::str::FromStr;
+
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{
-    build_tsv, clear_scr, format_f32, human_duration, print_error, repeat_str,
-};
+use dcli::utils::{build_tsv, format_f32, human_duration, print_error, print_verbose, repeat_str};
 
+fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
+    let moment = Moment::from_str(src)?;
+
+    //note, we positive capture what we want in case new properties
+    //are added in the future
+    match moment {
+        Moment::Daily => {}
+        Moment::Weekend => {}
+        Moment::Weekly => {}
+        Moment::Day => {}
+        Moment::Week => {}
+        Moment::Month => {}
+        Moment::AllTime => {}
+        _ => {
+            return Err(format!("Unsupported moment specified : {}", src));
+        }
+    };
+
+    Ok(moment)
+}
 
 fn print_tsv(
-    data: CrucibleStats,
+    data: PvpStatsData,
     member_id: &str,
     character_id: &str,
-    platform: Platform,
-    mode: CrucibleMode,
-    period: TimePeriod,
+    platform: &Platform,
+    mode: &Mode,
+    period: &MomentPeriod,
 ) {
     let mut name_values: Vec<(&str, String)> = Vec::new();
 
@@ -51,12 +70,16 @@ fn print_tsv(
     name_values.push(("platform", format!("{}", platform)));
     name_values.push(("platform_id", format!("{}", platform.to_id())));
     name_values.push(("character_id", character_id.to_string()));
-    name_values.push(("period_dt", format!("{}", period.get_date_time())));
+
+    name_values.push(("start_moment_dt", format!("{}", period.start)));
+    name_values.push(("end_moment_dt", format!("{}", period.end)));
+
+    name_values.push(("moment_human", format!("{}", period.moment)));
     name_values.push(("mode", format!("{}", mode)));
     name_values.push(("mode_id", format!("{}", mode.to_id())));
     name_values.push(("activities_entered", format!("{}", data.activities_entered)));
     name_values.push(("activities_won", format!("{}", data.activities_won)));
-    name_values.push(("activities_lost", format!("{}", data.activities_lost)));
+    name_values.push(("activities_lost", format!("{}", data.get_activities_lost())));
     name_values.push(("assists", format!("{}", data.assists)));
     name_values.push(("kills", format!("{}", data.kills)));
     name_values.push((
@@ -68,9 +91,18 @@ fn print_tsv(
         format!("{}", data.total_kill_distance),
     ));
     name_values.push(("seconds_played", format!("{}", data.seconds_played)));
+
+    name_values.push(("human_time_played", human_duration(data.seconds_played)));
+
     name_values.push(("deaths", format!("{}", data.deaths)));
     name_values.push(("average_lifespan", format!("{}", data.average_lifespan)));
-    name_values.push(("total_lifespan", format!("{}", data.total_lifespan)));
+
+    name_values.push((
+        "human_average_lifespan",
+        human_duration(data.average_lifespan),
+    ));
+
+    name_values.push(("total_lifespan", format!("{}", data.get_total_lifespan())));
     name_values.push(("opponents_defeated", format!("{}", data.opponents_defeated)));
     name_values.push(("efficiency", format!("{}", data.efficiency)));
     name_values.push(("kills_deaths_ratio", format!("{}", data.kills_deaths_ratio)));
@@ -94,9 +126,24 @@ fn print_tsv(
     print!("{}", build_tsv(name_values));
 }
 
-fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
+//TODO: should pass in by reference here
+fn print_default(data: PvpStatsData, mode: Mode, moment: Moment) {
     let p = format_f32;
-    let title: String = format!("Destiny 2 stats for {:#} {:#}", mode, period);
+
+    let moment_string = match moment {
+        Moment::Daily => "since the daily reset",
+        Moment::Weekend => "since last Friday",
+        Moment::Weekly => "since the weekly reset",
+        Moment::Day => "for the last day",
+        Moment::Week => "for the last week",
+        Moment::Month => "for the last month",
+        Moment::AllTime => "for all time",
+        _ => "",
+    };
+
+    let title: String = format!("Destiny 2 stats for {:#} {}", mode, moment_string);
+
+    println!();
     println!("{}", title);
     println!("{}", repeat_str("=", title.chars().count()));
 
@@ -104,7 +151,7 @@ fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
     println!(
         "{wins} wins and {losses} losses for a {win_percentage}% win rate",
         wins = data.activities_won,
-        losses = data.activities_lost,
+        losses = data.get_activities_lost(),
         win_percentage = p((data.activities_won / data.activities_entered) * 100.0, 2),
     );
 
@@ -165,18 +212,24 @@ fn print_default(data: CrucibleStats, mode: CrucibleMode, period: TimePeriod) {
     println!();
 }
 
-#[derive(StructOpt)]
-/// Command line tool for retrieving current Destiny 2 Crucible activity stats.
+#[derive(StructOpt, Debug)]
+#[structopt(verbatim_doc_comment)]
+/// Command line tool for retrieving historic Destiny 2 Crucible activity stats.
 ///
-/// Enables control of which stats are retrieved via game mode, time period and
+/// Retrieves stats based on the moment specified, up to, but excluding the current day.
+/// Enables control of which stats are retrieved via game mode, past time moment and
 /// character.
-/// 
+///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
-/// 
+///
+/// Get support, request features or just chat on the dcli Discord server:
+/// https://discord.gg/2Y8bV2Mq3p
+///
+/// Get the latest version, download the source and log issues at:
+/// https://github.com/mikechambers/dcli
+///
 /// Released under an MIT License.
-/// More info at: https://github.com/mikechambers/dcli
-#[structopt(verbatim_doc_comment)]
 struct Opt {
     /// Destiny 2 API member id
     ///
@@ -193,38 +246,50 @@ struct Opt {
 
     /// Time range to pull stats from
     ///
-    /// Valid values include day (last day), reset (since reset), week 
-    /// (last week), month (last month), alltime (default).
-    #[structopt(long = "period", default_value="alltime")]
-    period: TimePeriod,
-
-    /// Crucible mode to return stats for
+    /// Valid values include day (last day), daily (since last daily reset),
+    /// week (last week), weekly (since last weekly reset on Tuesday), month
+    /// (last month), weekend (since last Friday reset) and all_time.
     ///
-    /// Valid values are all (default), control, clash, mayhem, ironbanner, 
-    /// private, trialsofnine, rumble, comp, quickplay and trialsofosiris.
-    #[structopt(long = "mode", default_value="all")]
-    mode: CrucibleMode,
+    /// All ranges are up to, but not including current day, and thus some values
+    /// may not return data depending on time of day.
+    #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment),
+    default_value = "all_time")]
+    moment: Moment,
+
+    /// Activity mode to return stats for
+    ///
+    /// Supported values are all_pvp (default), control, clash, elimination,
+    /// all_mayhem, iron_banner, all_private, rumble, pvp_competitive,
+    /// pvp_quickplay and trials_of_osiris.
+    ///
+    /// Addition values available are crimsom_doubles, supremacy, survival,
+    /// countdown, all_doubles, doubles, private_matches_clash, private_matches_control,
+    /// private_matches_survival, private_matches_rumble, showdown, lockdown,
+    /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine
+    #[structopt(short = "M", long = "mode", default_value = "all_pvp")]
+    mode: Mode,
 
     /// Format for command output
     ///
     /// Valid values are default (Default) and tsv.
-    /// 
+    ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "o", long = "output", default_value="default")]
+    #[structopt(short = "o", long = "output", default_value = "default")]
     output: Output,
 
     /// Destiny 2 API character id
     ///
-    /// Destiny 2 API character id. If not specified, data for all characters 
+    /// Destiny 2 API character id. If not specified, data for all characters
     /// will be returned.
-    /// Required when period is set to day, reset, week or month.
-    #[structopt(short = "c", long = "character-id", required_ifs=&[("period","day"),
-        ("period","reset"),("period","week"),("period","month"),])]
+    ///
+    /// Required unless moment is set to all_time
+    #[structopt(short = "c", long = "character-id", required_ifs=&[("moment","day"),
+        ("moment","reset"),("moment","week"),("moment","month"),])]
     character_id: Option<String>,
 
     ///Print out additional information
-    /// 
+    ///
     ///Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
@@ -233,14 +298,14 @@ struct Opt {
 async fn retrieve_all_time_stats(
     member_id: &str,
     character_id: &str,
-    platform: Platform,
-    mode: CrucibleMode,
+    platform: &Platform,
+    mode: &Mode,
     verbose: bool,
-) -> Result<Option<CrucibleStats>, Error> {
+) -> Result<Option<PvpStatsData>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
     let data: PvpStatsData = match client
-        .retrieve_alltime_crucible_stats(&member_id, &character_id, platform, mode)
+        .retrieve_alltime_crucible_stats(&member_id, &character_id, &platform, &mode)
         .await?
     {
         Some(e) => e,
@@ -249,25 +314,21 @@ async fn retrieve_all_time_stats(
         }
     };
 
-    let p_stats: CrucibleStats = data.get_crucible_stats();
-
-    Ok(Some(p_stats))
+    Ok(Some(data))
 }
 
 async fn retrieve_aggregate_crucible_stats(
     member_id: &str,
     character_id: &str,
-    platform: Platform,
-    mode: CrucibleMode,
-    period: TimePeriod,
+    platform: &Platform,
+    mode: &Mode,
+    period: &MomentPeriod,
     verbose: bool,
-) -> Result<Option<CrucibleStats>, Error> {
+) -> Result<Option<PvpStatsData>, Error> {
     let client: ApiInterface = ApiInterface::new(verbose);
 
-    let start_date = period.get_date_time();
-
     let data: Vec<DailyPvPStatsValuesData> = match client
-        .retrieve_aggregate_crucible_stats(&member_id, &character_id, platform, mode, start_date)
+        .retrieve_aggregate_crucible_stats(&member_id, &character_id, &platform, &mode, period)
         .await?
     {
         Some(e) => e,
@@ -276,11 +337,10 @@ async fn retrieve_aggregate_crucible_stats(
         }
     };
 
-    let mut p_stats: CrucibleStats = CrucibleStats::default();
+    let mut p_stats: PvpStatsData = PvpStatsData::default();
 
     for d in data.iter() {
-        let cs = d.values.get_crucible_stats();
-        p_stats = cs + p_stats;
+        p_stats = d.values + p_stats;
     }
 
     Ok(Some(p_stats))
@@ -289,17 +349,20 @@ async fn retrieve_aggregate_crucible_stats(
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
+    print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     //use unwrap_or_else as it is lazily evaluated
     let character_id: String = opt.character_id.unwrap_or_else(|| "0".to_string());
 
-    let data = match opt.period {
-        TimePeriod::Alltime => {
+    //TODO: probably need to pass a reference here and then clone it.
+    let moment_period = MomentPeriod::from_moment(opt.moment);
+    let data = match opt.moment {
+        Moment::AllTime => {
             match retrieve_all_time_stats(
                 &opt.member_id,
                 &character_id,
-                opt.platform,
-                opt.mode,
+                &opt.platform,
+                &opt.mode,
                 opt.verbose,
             )
             .await
@@ -307,7 +370,7 @@ async fn main() {
                 Ok(e) => match e {
                     Some(e) => e,
                     None => {
-                        println!("No results found.");
+                        println!("No results found");
                         return;
                     }
                 },
@@ -321,9 +384,9 @@ async fn main() {
             match retrieve_aggregate_crucible_stats(
                 &opt.member_id,
                 &character_id,
-                opt.platform,
-                opt.mode,
-                TimePeriod::Reset,
+                &opt.platform,
+                &opt.mode,
+                &moment_period,
                 opt.verbose,
             )
             .await
@@ -331,7 +394,7 @@ async fn main() {
                 Ok(e) => match e {
                     Some(e) => e,
                     None => {
-                        println!("No results found.");
+                        println!("No results found");
                         return;
                     }
                 },
@@ -345,19 +408,16 @@ async fn main() {
 
     match opt.output {
         Output::Default => {
-            if !opt.verbose {
-                clear_scr();
-            }
-            print_default(data, opt.mode, opt.period);
+            print_default(data, opt.mode, opt.moment);
         }
         Output::Tsv => {
             print_tsv(
                 data,
                 &opt.member_id,
                 &character_id,
-                opt.platform,
-                opt.mode,
-                opt.period,
+                &opt.platform,
+                &opt.mode,
+                &moment_period,
             );
         }
     }

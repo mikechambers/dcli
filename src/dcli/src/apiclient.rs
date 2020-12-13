@@ -21,27 +21,33 @@
 */
 
 use crate::error::Error;
-use crate::response::drs::{check_destiny_response_status, HasDestinyResponseStatus};
+use crate::response::drs::{check_destiny_response_status, IsDestinyAPIResponse};
 use crate::utils::print_verbose;
 use reqwest::Url;
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
+const API_TIMEOUT: u64 = 10; //seconds
+
+//this makes sure that the env variable isnt set, but empty
+static_assertions::const_assert!(!DESTINY_API_KEY.is_empty());
 
 pub struct ApiClient {
-    pub print_url: bool,
+    pub verbose: bool,
 }
 
 impl ApiClient {
-    pub fn new(print_url: bool) -> ApiClient {
-        ApiClient { print_url }
+    pub fn new(verbose: bool) -> ApiClient {
+        ApiClient { verbose }
     }
 
     pub async fn call(&self, url: &str) -> Result<reqwest::Response, Error> {
         let url = Url::parse(&url).unwrap();
 
-        print_verbose(&format!("{}", url), self.print_url);
+        print_verbose(&format!("{}", url), self.verbose);
 
-        let client = reqwest::Client::new();
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(API_TIMEOUT))
+            .build()?;
 
         let response = client
             .get(url)
@@ -52,11 +58,31 @@ impl ApiClient {
         Ok(response)
     }
 
-    pub async fn call_and_parse<T: serde::de::DeserializeOwned + HasDestinyResponseStatus>(
+    pub async fn call_and_parse<T: serde::de::DeserializeOwned + IsDestinyAPIResponse>(
         &self,
         url: &str,
     ) -> Result<T, Error> {
-        let r = self.call(url).await?.json::<T>().await?;
+        let body = match self.call(url).await {
+            Ok(e) => e.text().await?,
+            Err(e) => return Err(e),
+        };
+
+        if self.verbose {
+            let len = body.chars().count();
+            const MAX: usize = 200;
+            let limit = std::cmp::min(len, MAX);
+
+            println!(
+                "---------Begin API response : First {}  chars---------",
+                limit
+            );
+            println!("{}", &body[..limit]);
+            println!("---------End API response---------");
+        }
+
+        //we split the parsing from the request so we can capture the body and
+        //print it out if we need to
+        let r = serde_json::from_str::<T>(&body)?;
 
         check_destiny_response_status(r.get_status())?;
 

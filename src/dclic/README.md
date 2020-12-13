@@ -40,20 +40,20 @@ OPTIONS:
             Valid values are: xbox, playstation, stadia or steam.
 ```
 
-Valid platform values are:
-* xbox
-* playstation
-* steam
-* stadia
 
-member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).
+| ARGUMENT | OPTIONS |
+|---|---|
+| --platform | xbox, playstation, stadia or steam |
+
+member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
+
 
 ### Examples
 
 #### Retrieve character information
 
 ```
-dclic --member-id 4611686018429783292 --platform xbox
+$ dclic --member-id 4611686018429783292 --platform xbox
 ```
 
 outputs:
@@ -69,7 +69,7 @@ Warlock     2305843009264966986
 #### Retrieve all character information with tab seperated output
 
 ```
-dclic --member-id 4611686018429783292 --platform xbox --output tsv
+$ dclic --member-id 4611686018429783292 --platform xbox --output tsv
 ```
 
 outputs:
@@ -79,6 +79,11 @@ Warlock 2305843009264966986
 Titan   2305843009264966984
 Hunter  2305843009264966985     LAST ACTIVE
 ```
+## Questions, Feature Requests, Feedback
+
+If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
+
+You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
 
 
 ## Compiling
@@ -87,10 +92,10 @@ This utility is written and compiled in [Rust](https://www.rust-lang.org/).
 
 When compiling you must have an environment variable named `DESTINY_API_KEY` which contains your [Bungie API key](https://www.bungie.net/en/Application).
 
-To compile, switch to the base directory for the program, and run:
+To compile, switch to the `src/` directory and run:
 
 ```
-cargo build --release
+$ cargo build --release
 ```
 
-which will place the build in *target/release*
+which will place the compiled tools in *src/target/release*

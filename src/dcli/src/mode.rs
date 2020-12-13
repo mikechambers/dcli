@@ -20,10 +20,11 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::fmt;
 use std::str::FromStr;
-use serde_repr::{Deserialize_repr, Serialize_repr};
 
+//https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType.html#schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType
 #[derive(PartialEq, Clone, Copy, Debug, Serialize_repr, Deserialize_repr)]
 #[repr(u32)]
 pub enum Mode {
@@ -107,58 +108,156 @@ pub enum Mode {
 }
 
 impl Mode {
+    pub fn to_id(&self) -> u32 {
+        *self as u32
+    }
+
     pub fn is_gambit(&self) -> bool {
         *self == Mode::Gambit || *self == Mode::GambitPrime
     }
 
     pub fn is_nightfall(&self) -> bool {
-        *self == Mode::Nightfall ||
-        *self == Mode::HeroicNightfall ||
-        *self == Mode::ScoredNightfall ||
-        *self == Mode::ScoredHeroicNightfall
-
+        *self == Mode::Nightfall
+            || *self == Mode::HeroicNightfall
+            || *self == Mode::ScoredNightfall
+            || *self == Mode::ScoredHeroicNightfall
     }
 
     pub fn is_crucible(&self) -> bool {
-        *self == Mode::AllPvP || 
-        *self == Mode::Control || 
-        *self == Mode::Clash ||
-        *self == Mode::CrimsonDoubles ||
-        *self == Mode::IronBanner ||
-        *self == Mode::AllMayhem ||
-        *self == Mode::Supremacy ||
-        *self == Mode::Survival ||
-        *self == Mode::Countdown ||
-        *self == Mode::TrialsOfTheNine ||
-        *self == Mode::TrialsCountdown ||
-        *self == Mode::TrialsSurvival ||
-        *self == Mode::IronBannerControl ||
-        *self == Mode::IronBannerClash ||
-        *self == Mode::IronBannerSupremacy ||
-        *self == Mode::Rumble ||
-        *self == Mode::AllDoubles ||
-        *self == Mode::Doubles ||
-        *self == Mode::PrivateMatchesClash ||
-        *self == Mode::PrivateMatchesControl ||
-        *self == Mode::PrivateMatchesSupremacy ||
-        *self == Mode::PrivateMatchesCountdown ||
-        *self == Mode::PrivateMatchesSurvival ||
-        *self == Mode::PrivateMatchesMayhem ||
-        *self == Mode::PrivateMatchesRumble ||
-        *self == Mode::Showdown ||
-        *self == Mode::Lockdown ||
-        *self == Mode::Scorched ||
-        *self == Mode::ScorchedTeam ||
-        *self == Mode::Breakthrough ||
-        *self == Mode::Salvage ||
-        *self == Mode::IronBannerSalvage ||
-        *self == Mode::PvPCompetitive ||
-        *self == Mode::PvPQuickplay ||
-        *self == Mode::ClashQuickplay ||
-        *self == Mode::ClashCompetitive ||
-        *self == Mode::ControlQuickplay ||
-        *self == Mode::ControlCompetitive ||
-        *self == Mode::TrialsOfOsiris
+        *self == Mode::AllPvP
+            || *self == Mode::Control
+            || *self == Mode::Clash
+            || *self == Mode::CrimsonDoubles
+            || *self == Mode::IronBanner
+            || *self == Mode::AllMayhem
+            || *self == Mode::Supremacy
+            || *self == Mode::Survival
+            || *self == Mode::Countdown
+            || *self == Mode::TrialsOfTheNine
+            || *self == Mode::TrialsCountdown
+            || *self == Mode::TrialsSurvival
+            || *self == Mode::IronBannerControl
+            || *self == Mode::IronBannerClash
+            || *self == Mode::IronBannerSupremacy
+            || *self == Mode::Rumble
+            || *self == Mode::AllDoubles
+            || *self == Mode::Doubles
+            || *self == Mode::PrivateMatchesClash
+            || *self == Mode::PrivateMatchesControl
+            || *self == Mode::PrivateMatchesSupremacy
+            || *self == Mode::PrivateMatchesCountdown
+            || *self == Mode::PrivateMatchesSurvival
+            || *self == Mode::PrivateMatchesMayhem
+            || *self == Mode::PrivateMatchesRumble
+            || *self == Mode::Showdown
+            || *self == Mode::Lockdown
+            || *self == Mode::Scorched
+            || *self == Mode::ScorchedTeam
+            || *self == Mode::Breakthrough
+            || *self == Mode::Salvage
+            || *self == Mode::IronBannerSalvage
+            || *self == Mode::PvPCompetitive
+            || *self == Mode::PvPQuickplay
+            || *self == Mode::ClashQuickplay
+            || *self == Mode::ClashCompetitive
+            || *self == Mode::ControlQuickplay
+            || *self == Mode::ControlCompetitive
+            || *self == Mode::TrialsOfOsiris
+    }
+}
+
+impl FromStr for Mode {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        //wrap in String so we can convert to lower case
+        let s = String::from(s).to_lowercase();
+
+        //get a slice to get a &str for the match
+        match &s[..] {
+            "none" => Ok(Mode::None),
+            "story" => Ok(Mode::Story),
+            "strike" => Ok(Mode::Strike),
+            "raid" => Ok(Mode::Raid),
+            "all_pvp" => Ok(Mode::AllPvP),
+            "patrol" => Ok(Mode::Patrol),
+            "all_pve" => Ok(Mode::AllPvE),
+            //Reserved9 = 9,
+            "control" => Ok(Mode::Control),
+            //Reserved11 = 11,
+            "clash" => Ok(Mode::Clash),
+            //Reserved13 = 13,
+            "crimsom_doubles" => Ok(Mode::CrimsonDoubles),
+            "nightfall" => Ok(Mode::Nightfall),
+            "heroic_nightfall" => Ok(Mode::HeroicNightfall),
+            "all_strikes" => Ok(Mode::AllStrikes),
+            "iron_banner" => Ok(Mode::IronBanner),
+            //Reserved20 = 20,
+            //Reserved21 = 21,
+            //Reserved22 = 22,
+            //Reserved24 = 24,
+            "all_mayhem" => Ok(Mode::AllMayhem),
+            //Reserved26 = 26,
+            //Reserved27 = 27,
+            //Reserved28 = 28,
+            //Reserved29 = 29,
+            //Reserved30 = 30,
+            "supremacy" => Ok(Mode::Supremacy),
+            //todo: think about renaming allprivatematches, or just privatematches (same with other
+            //alls
+            "all_private" => Ok(Mode::PrivateMatchesAll),
+            "survival" => Ok(Mode::Survival),
+            "countdown" => Ok(Mode::Countdown),
+            "trials_of_the_nine" => Ok(Mode::TrialsOfTheNine),
+            "social" => Ok(Mode::Social),
+            "trials_countdown" => Ok(Mode::TrialsCountdown),
+            "trials_survival" => Ok(Mode::TrialsSurvival),
+            "iron_banner_control" => Ok(Mode::IronBannerControl),
+            "iron_banner_clash" => Ok(Mode::IronBannerClash),
+            "iron_banner_supremacy" => Ok(Mode::IronBannerSupremacy),
+            "scored_nightfall" => Ok(Mode::ScoredNightfall),
+            "scored_heroic_nightfall" => Ok(Mode::ScoredHeroicNightfall),
+            "rumble" => Ok(Mode::Rumble),
+            "all_doubles" => Ok(Mode::AllDoubles),
+            "doubles" => Ok(Mode::Doubles),
+            "private_matches_clash" => Ok(Mode::PrivateMatchesClash),
+            "private_matches_control" => Ok(Mode::PrivateMatchesControl),
+            "private_matches_supremacy" => Ok(Mode::PrivateMatchesSupremacy),
+            "private_matches_countdown" => Ok(Mode::PrivateMatchesCountdown),
+            "private_matches_survival" => Ok(Mode::PrivateMatchesSurvival),
+            "private_matches_mayhem" => Ok(Mode::PrivateMatchesMayhem),
+            "private_matches_rumble" => Ok(Mode::PrivateMatchesRumble),
+            "heroic_adventures" => Ok(Mode::HeroicAdventure),
+            "showdown" => Ok(Mode::Showdown),
+            "lockdown" => Ok(Mode::Lockdown),
+            "scorched" => Ok(Mode::Scorched),
+            "scorched_team" => Ok(Mode::ScorchedTeam),
+            "gambit" => Ok(Mode::Gambit),
+            //TODO: is this just all gambit?
+            "all_pve_competitive" => Ok(Mode::AllPvECompetitive),
+            "breakthrough" => Ok(Mode::Breakthrough),
+            "black_armory_run" => Ok(Mode::BlackArmoryRun),
+            "salvage" => Ok(Mode::Salvage),
+            "iron_banner_salvage" => Ok(Mode::IronBannerSalvage),
+            "pvp_competitive" => Ok(Mode::PvPCompetitive),
+            "pvp_quickplay" => Ok(Mode::PvPQuickplay),
+            "clash_quickplay" => Ok(Mode::ClashQuickplay),
+            "clash_competitive" => Ok(Mode::ClashCompetitive),
+            "control_quickplay" => Ok(Mode::ControlQuickplay),
+            "control_competitive" => Ok(Mode::ControlCompetitive),
+            "gambit_prime" => Ok(Mode::GambitPrime),
+            "reckoning" => Ok(Mode::Reckoning),
+            "menagerie" => Ok(Mode::Menagerie),
+            "vex_offensive" => Ok(Mode::VexOffensive),
+            "nightmare_hunt" => Ok(Mode::NightmareHunt),
+            "elimination" => Ok(Mode::Elimination),
+            "momentum" => Ok(Mode::Momentum),
+            "dungeon" => Ok(Mode::Dungeon),
+            "sundial" => Ok(Mode::Sundial),
+            "trials_of_osiris" => Ok(Mode::TrialsOfOsiris),
+
+            _ => Err("Unknown Mode type"),
+        }
     }
 }
 
@@ -242,74 +341,6 @@ impl fmt::Display for Mode {
             Mode::Dungeon => "Dungeon",
             Mode::Sundial => "Sundial",
             Mode::TrialsOfOsiris => "Trials Of Osiris",
-        };
-
-        write!(f, "{}", out)
-    }
-}
-
-
-#[derive(PartialEq, Clone, Copy)]
-pub enum CrucibleMode {
-    AllPvP = 5,
-    Control = 10,
-    Clash = 12,
-    AllMayhem = 25,
-    IronBanner = 19,
-    PrivateMatchesAll = 32,
-    TrialsOfTheNine = 39,
-    Rumble = 48,
-    PvPCompetitive = 69,
-    PvPQuickplay = 70,
-    TrialsOfOsiris = 84,
-}
-
-impl CrucibleMode {
-    pub fn to_id(&self) -> u32 {
-        *self as u32
-    }
-}
-
-impl FromStr for CrucibleMode {
-    type Err = &'static str;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        //wrap in String so we can convert to lower case
-        let s = String::from(s).to_lowercase();
-
-        //get a slice to get a &str for the match
-        match &s[..] {
-            "all" => Ok(CrucibleMode::AllPvP),
-            "control" => Ok(CrucibleMode::Control),
-            "clash" => Ok(CrucibleMode::Clash),
-            "mayhem" => Ok(CrucibleMode::AllMayhem),
-            "ironbanner" => Ok(CrucibleMode::IronBanner),
-            "private" => Ok(CrucibleMode::PrivateMatchesAll),
-            "trialsofnine" => Ok(CrucibleMode::TrialsOfTheNine),
-            "rumble" => Ok(CrucibleMode::Rumble),
-            "comp" => Ok(CrucibleMode::PvPCompetitive),
-            "quickplay" => Ok(CrucibleMode::PvPQuickplay),
-            "trialsofosiris" => Ok(CrucibleMode::TrialsOfOsiris),
-  
-            _ => Err("Unknown Crucible Mode type"),
-        }
-    }
-}
-
-impl fmt::Display for CrucibleMode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let out = match self {
-            CrucibleMode::AllPvP => "all Crucible modes",
-            CrucibleMode::Control => "Control",
-            CrucibleMode::Clash => "Clash",
-            CrucibleMode::AllMayhem => "Mayhem",
-            CrucibleMode::IronBanner => "Iron Banner",
-            CrucibleMode::PrivateMatchesAll => "Private Matches",
-            CrucibleMode::TrialsOfTheNine => "Trials of the Nine",
-            CrucibleMode::Rumble => "Rumble",
-            CrucibleMode::PvPCompetitive => "Competitive",
-            CrucibleMode::PvPQuickplay => "Quickplay",
-            CrucibleMode::TrialsOfOsiris => "Trials of Osiris",
         };
 
         write!(f, "{}", out)

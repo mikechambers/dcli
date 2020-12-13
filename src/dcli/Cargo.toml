@@ -1,6 +1,6 @@
 [package]
 name = "dcli"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
 edition = "2018"
 description = "Library for the dcli collection of command line tools for Destiny 2."
@@ -9,15 +9,10 @@ repository = "https://github.com/mikechambers/dcli"
 license = "MIT"
 readme = "README.md"
 
-[profile.release]
-opt-level = 'z'
-lto = true
-codegen-units = 1
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version="0.10.8", features=["json"] }
+reqwest = { version="0.10.8"}
 serde = "1.0.117"
 serde_derive = "1.0.117"
 serde_json = "1.0.59"
@@ -27,3 +22,5 @@ chrono = "0.4.19"
 percent-encoding = "2.1.0"
 sqlx = { version ="0.4.1", features=[ "runtime-tokio-rustls", "sqlite" ] }
 futures = "0.3.8"
+static_assertions = "1.1.0"
+crossterm = "0.18.2"

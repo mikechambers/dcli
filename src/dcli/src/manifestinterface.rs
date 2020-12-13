@@ -22,16 +22,19 @@
 
 use crate::error::Error;
 
-use sqlx::{Connection, ConnectOptions, SqliteConnection};
-use sqlx::sqlite::{SqliteJournalMode, SqliteConnectOptions};
-use sqlx::Row;
 use futures::TryStreamExt;
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
+use sqlx::Row;
+use sqlx::{ConnectOptions, Connection, SqliteConnection};
 use std::str::FromStr;
 
 use std::path::PathBuf;
 
+use crate::manifest::definitions::{
+    ActivityDefinitionData, ActivityTypeDefinitionData, DestinationDefinitionData,
+    DisplayPropertiesData, PlaceDefinitionData,
+};
 use serde_derive::{Deserialize, Serialize};
-use crate::manifest::definitions::{DisplayPropertiesData, ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData, ActivityTypeDefinitionData};
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -73,10 +76,10 @@ impl ManifestInterface {
         //We use Memory which should provide better performance
         //since we never write to the DB
         let mut db = SqliteConnectOptions::from_str(&connection_string)?
-        .journal_mode(SqliteJournalMode::Memory)
-        .read_only(read_only)
-        .connect()
-        .await?;
+            .journal_mode(SqliteJournalMode::Memory)
+            .read_only(read_only)
+            .connect()
+            .await?;
 
         if cache {
             match sqlx::query("ATTACH DATABASE '?' as 'tmpDb'")
@@ -150,7 +153,6 @@ impl ManifestInterface {
                 let mut v: FindResult = serde_json::from_str(json)?;
                 v.raw_json = json.to_string();
                 out.push(v);
-
             }
         }
 
@@ -176,93 +178,101 @@ impl ManifestInterface {
 
         let mut rows = sqlx::query("SELECT name FROM sqlite_master WHERE type='table'")
             .fetch(&mut self.manifest_db);
-        
+
         while let Some(row) = rows.try_next().await? {
-            
             let name: &str = row.try_get("name")?;
-           
+
             tables.push(name.to_string());
         }
         Ok(tables)
     }
 
-    pub async fn get_activity_definition(&mut self, id:u32) -> Result<ActivityDefinitionData, Error> {
-
+    pub async fn get_activity_definition(
+        &mut self,
+        id: u32,
+    ) -> Result<ActivityDefinitionData, Error> {
         let id = convert_hash_to_id(id);
 
         /*
-        let row = sqlx::query("SELECT json FROM DestinyActivityDefinition WHERE id=?")
-            .bind(id)
-            .fetch_one(&mut self.manifest_db).await?;
+                let row = sqlx::query("SELECT json FROM DestinyActivityDefinition WHERE id=?")
+                    .bind(id)
+                    .fetch_one(&mut self.manifest_db).await?;
 
-        //TODO: check what happens if this returns nothing
+                //TODO: check what happens if this returns nothing
 
-        let json:&str = row.try_get("json")?;
+                let json:&str = row.try_get("json")?;
 
-        let data:DestinyActivityDefinitionData = serde_json::from_str(json)?;
-*/
+                let data:DestinyActivityDefinitionData = serde_json::from_str(json)?;
+        */
 
         let query = &format!("SELECT json FROM DestinyActivityDefinition WHERE id={}", id);
-        let data:ActivityDefinitionData = self.get_definition(query).await?;
+        let data: ActivityDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
     }
-    
-    pub async fn get_destination_definition(&mut self, id:u32) -> Result<DestinationDefinitionData, Error> {
 
+    pub async fn get_destination_definition(
+        &mut self,
+        id: u32,
+    ) -> Result<DestinationDefinitionData, Error> {
         let id = convert_hash_to_id(id);
 
-        let query = &format!("SELECT json FROM DestinyDestinationDefinition WHERE id={}", id);
-        let data:DestinationDefinitionData = self.get_definition(query).await?;
+        let query = &format!(
+            "SELECT json FROM DestinyDestinationDefinition WHERE id={}",
+            id
+        );
+        let data: DestinationDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
     }
 
-    pub async fn get_place_definition(&mut self, id:u32) -> Result<PlaceDefinitionData, Error> {
-
+    pub async fn get_place_definition(&mut self, id: u32) -> Result<PlaceDefinitionData, Error> {
         let id = convert_hash_to_id(id);
 
         let query = &format!("SELECT json FROM DestinyPlaceDefinition WHERE id={}", id);
-        let data:PlaceDefinitionData = self.get_definition(query).await?;
+        let data: PlaceDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
     }
-    
 
-    pub async fn get_activity_type_definition(&mut self, id:u32) -> Result<ActivityTypeDefinitionData, Error> {
-
+    pub async fn get_activity_type_definition(
+        &mut self,
+        id: u32,
+    ) -> Result<ActivityTypeDefinitionData, Error> {
         let id = convert_hash_to_id(id);
 
-        let query = &format!("SELECT json FROM DestinyActivityTypeDefinition WHERE id={}", id);
-        let data:ActivityTypeDefinitionData = self.get_definition(query).await?;
+        let query = &format!(
+            "SELECT json FROM DestinyActivityTypeDefinition WHERE id={}",
+            id
+        );
+        let data: ActivityTypeDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
     }
 
-    async fn get_definition<T:serde::de::DeserializeOwned>(&mut self, query:&str) -> Result<T, Error> {
-
-        let row = sqlx::query(query)
-            .fetch_one(&mut self.manifest_db).await?;
+    async fn get_definition<T: serde::de::DeserializeOwned>(
+        &mut self,
+        query: &str,
+    ) -> Result<T, Error> {
+        let row = sqlx::query(query).fetch_one(&mut self.manifest_db).await?;
 
         //TODO: check what happens if this returns nothing
         //will throw an error if no results returned
         //{ description: "sqlx::Error : no rows returned by a query that expected to return at least one row" }
 
-        let json:&str = row.try_get("json")?;
+        let json: &str = row.try_get("json")?;
 
-        let data:T = serde_json::from_str(json)?;
+        let data: T = serde_json::from_str(json)?;
 
         Ok(data)
     }
-
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FindResult {
-
     #[serde(skip)]
-    pub raw_json:String,
+    pub raw_json: String,
 
     #[serde(rename = "displayProperties")]
-    pub display_properties:DisplayPropertiesData,
+    pub display_properties: DisplayPropertiesData,
 }

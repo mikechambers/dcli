@@ -20,8 +20,10 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+pub mod activities;
+pub mod character;
 pub mod drs;
 pub mod gpr;
-pub mod character;
 pub mod manifest;
 pub mod stats;
+pub mod utils;

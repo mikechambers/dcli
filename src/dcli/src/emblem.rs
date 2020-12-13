@@ -20,7 +20,6 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-
 #[derive(PartialEq, Eq, Default, Debug, Clone)]
 pub struct Emblem {
     pub id: String,

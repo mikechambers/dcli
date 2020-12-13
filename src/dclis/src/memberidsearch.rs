@@ -23,7 +23,7 @@
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
 use dcli::platform::Platform;
-use dcli::response::drs::{DestinyResponseStatus, HasDestinyResponseStatus};
+use dcli::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use serde_derive::{Deserialize, Serialize};
@@ -42,35 +42,36 @@ impl MemberIdSearch {
     pub async fn retrieve_member_id_from_steam(
         &self,
         steam_id: &str,
-    ) -> Option<Result<Membership, Error>> {
+    ) -> Result<Option<Membership>, Error> {
         let url = format!(
             "https://www.bungie.net/Platform/User/GetMembershipFromHardLinkedCredential/12/{steam_id}/",
             steam_id = utf8_percent_encode(&steam_id, NON_ALPHANUMERIC),
         );
 
-        let resp = match self
+        let member = match self
             .client
             .call_and_parse::<DestinyResponseSteam>(&url)
-            .await
+            .await?
+            .response
         {
-            Ok(e) => e,
-            Err(e) => return Some(Err(e)),
+            Some(e) => e,
+            None => return Err(Error::ApiResponseMissing), //we should never get here as this will be caught earlier
         };
 
         let m = Membership {
-            id: resp.response.membership_id,
-            platform: Platform::from_id(resp.response.membership_type),
+            id: member.membership_id,
+            platform: Platform::from_id(member.membership_type),
             display_name: None,
         };
 
-        Some(Ok(m))
+        Ok(Some(m))
     }
 
     pub async fn retrieve_member_id(
         &self,
         id: &str,
         platform: Platform,
-    ) -> Option<Result<Membership, Error>> {
+    ) -> Result<Option<Membership>, Error> {
         if platform == Platform::Steam {
             return self.retrieve_member_id_from_steam(&id).await;
         }
@@ -81,18 +82,18 @@ impl MemberIdSearch {
             id = utf8_percent_encode(&id, NON_ALPHANUMERIC),
         );
 
-        let resp = match self
+        let mut results: Vec<DestinyResponseMember> = match self
             .client
             .call_and_parse::<DestinySearchResponse>(&url)
-            .await
+            .await?
+            .response
         {
-            Ok(e) => e,
-            Err(e) => return Some(Err(e)),
+            Some(e) => e,
+            None => return Err(Error::ApiResponseMissing), //we should never get here as this will be caught earlier
         };
 
-        let mut results: Vec<DestinyResponseMember> = resp.response;
         if results.is_empty() {
-            return None;
+            return Ok(None);
         }
 
         let r_member: &DestinyResponseMember = &results[0];
@@ -103,20 +104,20 @@ impl MemberIdSearch {
             display_name: results[0].display_name.take(), //this is probably not the right way to do this
         };
 
-        Some(Ok(m))
+        Ok(Some(m))
     }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 struct DestinySearchResponse {
     #[serde(rename = "Response")]
-    response: Vec<DestinyResponseMember>,
+    response: Option<Vec<DestinyResponseMember>>,
 
     #[serde(flatten)]
     status: DestinyResponseStatus,
 }
 
-impl HasDestinyResponseStatus for DestinySearchResponse {
+impl IsDestinyAPIResponse for DestinySearchResponse {
     fn get_status(&self) -> &DestinyResponseStatus {
         &self.status
     }
@@ -125,13 +126,13 @@ impl HasDestinyResponseStatus for DestinySearchResponse {
 #[derive(Serialize, Deserialize, Debug)]
 struct DestinyResponseSteam {
     #[serde(rename = "Response")]
-    response: DestinyResponseMember,
+    response: Option<DestinyResponseMember>,
 
     #[serde(flatten)]
     status: DestinyResponseStatus,
 }
 
-impl HasDestinyResponseStatus for DestinyResponseSteam {
+impl IsDestinyAPIResponse for DestinyResponseSteam {
     fn get_status(&self) -> &DestinyResponseStatus {
         &self.status
     }

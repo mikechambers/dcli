@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Simple script that just runs all of the dcli apps
+#
+# Created by Mike Chambers
+# https://www.mikechambers.com
+#
+# Released under an MIT License
+#
+# More info at:
+# https://github.com/mikechambers/dcli/
+
+# make sure you place the app in your PATH
+
+MANIFEST_DIR=~/tmp/
+MANIFEST_PATH=${MANIFEST_DIR}manifest.sqlite3
+
+echo "------------- RUNNING dclis--------------"
+dclis --name mesh --platform xbox
+
+echo "------------- RUNNING dclim--------------"
+dclim --manifest-dir $MANIFEST_DIR
+
+echo "------------- RUNNING dclic--------------"
+dclic --member-id 4611686018429783292 --platform xbox
+
+echo "------------- RUNNING dclims--------------"
+dclims --manifest-path $MANIFEST_PATH --hash 3260604718
+
+echo "------------- RUNNING dclia--------------"
+dclia --manifest-path $MANIFEST_PATH --member-id 4611686018429783292 --platform xbox
+
+echo "------------- RUNNING dclics--------------"
+dclics --member-id 4611686018429783292 --platform xbox --character-id 2305843009264966985 
+
+echo "------------- RUNNING dclitime--------------"
+dclitime
+
+echo "------------- RUNNING dcliah --------------"
+dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path $MANIFEST_PATH

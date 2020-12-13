@@ -1,6 +1,6 @@
 # dclia
 
-Command line tool for retrieving information on current activity for specified player character.
+Command line tool for retrieving current Destiny 2 activity status for players.
 
 Information includes current activity, location, and in the case of PvP modes (Crucible and Gambit), current map.
 
@@ -25,9 +25,11 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-        --manifest-path <manifest-path>    
-            Local path for the Destiny 2 manifest database file
-
+    -P, --manifest-path <manifest-path>    
+            Local path for the Destiny 2 manifest database file.
+            
+            This will normally be downloaded using the dclim tool, and stored in a file named manifest.sqlite3 (in the
+            manifest directory specified when running dclim).
     -m, --member-id <member-id>            
             Destiny 2 API member id
             
@@ -45,14 +47,13 @@ OPTIONS:
             Valid values are: xbox, playstation, stadia or steam.
 ```
 
-Valid platforms are:
-* xbox
-* playstation
-* steam
-* stadia
+| ARGUMENT | OPTIONS |
+|---|---|
+| --platform | xbox, playstation, stadia or steam |
 
-member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).
 
+
+member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
 ### Examples
@@ -61,7 +62,7 @@ Manifest can be downloaded and synced with from [dclim](https://github.com/mikec
 
 
 ```
-dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox
+$ dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox
 ```
 
 outputs:
@@ -73,19 +74,27 @@ Playing Deep Stone Crypt Raid on Castalia Macula, Europa
 #### Check for current activity with tab seperated output:
 
 ```
-dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox --out tsv
+$ dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox --output tsv
 ```
 
 outputs:
 
 ```
-activity_type_name      Strike
-activity_name   The Inverted Spire
-place_name      Nessus
-destination_name        Arcadian Valley
-description     End the Red Legion expedition that's ripped open the planet's surface.
+in_activity	true
+activity_type_name	Strike
+activity_name	The Inverted Spire
+place_name	Nessus
+destination_name	Arcadian Valley
+description	End the Red Legion expedition that's ripped open the planet's surface.
+human_status	Running The Inverted Spire Strike on Nessus
+is_crucible	false
 ```
 
+## Questions, Feature Requests, Feedback
+
+If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
+
+You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
 
 ## Compiling
 
@@ -93,10 +102,10 @@ This utility is written and compiled in [Rust](https://www.rust-lang.org/).
 
 When compiling you must have an environment variable named `DESTINY_API_KEY` which contains your [Bungie API key](https://www.bungie.net/en/Application).
 
-To compile, switch to the base directory for the program, and run:
+To compile, switch to the `src/` directory and run:
 
 ```
-cargo build --release
+$ cargo build --release
 ```
 
-which will place the build in *target/release*
+which will place the compiled tools in *src/target/release*

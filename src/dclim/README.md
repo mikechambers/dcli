@@ -1,8 +1,12 @@
 # dclim
 
-Command line tool for managing and syncing the remote Destiny 2 API manifest database.
+Command line tool for retrieving and managing the Destiny 2 manifest database.
 
-The utility will check whether a more current version of the Destiny 2 API manifest database is avaliable (comparing it to the last version which has been downloaded). If a new version is found, it will download the database, uncompress it, and save it to the directory specified when calling the utility. It will also save a file containting metadata about the current version, which is used for future checks for updates.
+When running the utility will check whether a more current version of the Destiny 2 API manifest database is avaliable (comparing it to the last version which has been downloaded). If a new version is found, it will download the database, uncompress it, and save it to the directory specified when calling the utility. It will also save a file containting metadata about the current version, which is used for future checks for updates.
+
+Manifest will be stored in the specified local directory with the file name:
+manifest.sqlite3, along with meta-data with information about the downloaded
+version. This is used to to determine whether the remote version has been updated.
 
 The utility expects that the downloaded manifest will not be moved from the directory it is downloaded to, and uses that information to determine whether a new version is avaliable. If the manifest is moved, the utility will re-download the manifest on next check.
 
@@ -16,10 +20,10 @@ USAGE:
     dclim [FLAGS] [OPTIONS] --manifest-dir <manifest-dir>
 
 FLAGS:
-    -c, --check      
+    -C, --check      
             Check whether a new manifest version is available, but do not download
 
-    -f, --force      
+    -F, --force      
             Force a download of manifest regardless of whether it has been updated
 
     -h, --help       
@@ -34,9 +38,10 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-    -m, --manifest-dir <manifest-dir>    
-            Directory where the manifest and meta-data will be stored
-
+    -D, --manifest-dir <manifest-dir>    
+            Directory where the manifest and meta-data will be stored.
+            
+            The manifest will be stored in this directory in a file named manifest.sqlite3
     -o, --output <output>                
             Format for command output
             
@@ -50,17 +55,17 @@ OPTIONS:
 
 #### Check for an updated manifest and store any new version in *~/manifest/*:
 ```
-dclim --manifest-dir ~/manifest/
+$ dclim --manifest-dir ~/manifest/
 ```
 
 #### Download remote manifest and store in *~/manifest/* directory regardless of whether remote is updated.
 ```
-dclim --manifest-dir ~/manifest/ --force
+$ dclim --manifest-dir ~/manifest/ --force
 ```
 
 #### Check status of remote manifest, but do not download. Print out additional information.
 ```
-dclim --manifest-dir ~/manifest/ --check --verbose
+$ dclim --manifest-dir ~/manifest/ --check --verbose
 ```
 
 which outputs:
@@ -77,7 +82,7 @@ Updated manifest available    89360.20.11.18.2249-6
 #### Check for an updated manifest print output in a tab seperated format (tsv)
 
 ```
-dclim --manifest-dir ~/manifest/ --output tsv
+$ dclim --manifest-dir ~/manifest/ --output tsv
 ```
 
 outputs:
@@ -90,6 +95,12 @@ version 89360.20.11.18.2249-6
 
 This shows that the local path for the manifest, and indicates that it was just updated.
 
+## Questions, Feature Requests, Feedback
+
+If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
+
+You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
+
 
 ## Compiling
 
@@ -97,10 +108,10 @@ This utility is written and compiled in [Rust](https://www.rust-lang.org/).
 
 When compiling you must have an environment variable named `DESTINY_API_KEY` which contains your [Bungie API key](https://www.bungie.net/en/Application).
 
-To compile, switch to the base directory for the program, and run:
+To compile, switch to the `src/` directory and run:
 
 ```
-cargo build --release
+$ cargo build --release
 ```
 
-which will place the build in *target/release*
+which will place the compiled tools in *src/target/release*
