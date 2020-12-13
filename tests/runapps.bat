@@ -15,7 +15,7 @@
 
 echo ------------- RUNNING dclis.exe--------------
 
-call dclis.exe --id mesh --platform xbox
+call dclis.exe --name mesh --platform xbox
 
 echo ------------- RUNNING dclim.exe--------------
 
@@ -36,3 +36,13 @@ call dclia.exe --manifest-path \tmp\manifest.sqlite3 --member-id 461168601842978
 echo ------------- RUNNING dclics.exe--------------
 
 call dclics.exe --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period week
+
+echo ------------- RUNNING dcliah.exe --------------
+
+dcliah.exe --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path \tmp\manifest.sqlite3
+
+echo ------------- RUNNING dclitime.exe ---------------
+
+call dclitime.exe
+
+
