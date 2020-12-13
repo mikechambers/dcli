@@ -45,6 +45,16 @@ use structopt::StructOpt;
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
 
+fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
+    let mode = Mode::from_str(src)?;
+
+    if !mode.is_crucible() {
+        return Err(format!("Unsupported mode specified : {}", src));
+    }
+
+    Ok(mode)
+}
+
 fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
     let moment = Moment::from_str(src)?;
 
@@ -490,8 +500,8 @@ async fn retrieve_activities_since(
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving Destiny 2 activity history.
 ///
-/// Enables control of which stats are retrieved via game mode, start time
-/// (to present) and character.
+/// Enables control of which stats are retrieved based on game mode, moment
+/// from which to retrieve them (to present) and character.
 ///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
@@ -529,46 +539,53 @@ struct Opt {
     /// Start moment from which to pull activities from
     ///
     /// Activities will be retrieved from start moment to the current time.
-    /// For example, Specifying:
-    /// --start-moment weekly_reset
+    /// For example, Specifying: --start-moment weekly
     ///
     /// will return all activities since the last weekly reset on Tuesday.
     ///
     /// Valid values include daily (last daily reset), weekend
     /// (last weekend reset on Friday), weekly (last weekly reset on Tuesday),
-    /// day (last day), week (last week), month (last month), alltime and custom.
+    /// day (last day), week (last week), month (last month), all_time and custom.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --custom-time argument.
     ///
     /// For example:
-    /// --start-moment custom --custom-time 2020-12-08T17:00:00.774187+00:00
+    /// --moment custom --custom-time 2020-12-08T17:00:00.774187+00:00
     ///
-    /// Specifying alltime retrieves all activitiy history and may take an extended
+    /// Specifying all_time retrieves all activitiy history and may take an extended
     /// amount of time to retrieve depending on the number of activities.
-    #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), short = "s", default_value = "day")]
+    #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), 
+        short = "s", default_value = "day")]
     moment: Moment,
 
     /// Activity mode to return stats for
     ///
-    /// Valid values are all (default), control, clash, mayhem, ironbanner,
-    /// private, rumble, comp, quickplay and trialsofosiris.
-    #[structopt(long = "mode", short = "a", default_value = "all_pvp")]
+    /// Supported values are all_pvp (default), control, clash, elimination,
+    /// all_mayhem, iron_banner, all_private, rumble, pvp_competitive,
+    /// pvp_quickplay and trials_of_osiris.
+    ///
+    /// Addition values available are crimsom_doubles, supremacy, survival,
+    /// countdown, all_doubles, doubles, private_matches_clash, private_matches_control,
+    /// private_matches_survival, private_matches_rumble, showdown, lockdown,
+    /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine
+    #[structopt(long = "mode", short = "M", 
+        parse(try_from_str=parse_and_validate_mode), default_value = "all_pvp")]
     mode: Mode,
 
     /// Limit the number of activity details that will be displayed.
     ///
     /// Summary information will be generated based on all activities. Ignored if
     /// --output is tsv.
-    #[structopt(long = "display-limit", short = "d", default_value = "10")]
+    #[structopt(long = "limit", short = "L", default_value = "10")]
     display_limit: i32,
 
     /// Format for command output
     ///
     /// Valid values are default (Default) and tsv.
     ///
-    /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
-    /// ending in a new line character (\n).
+    /// tsv outputs in a tab (\t) seperated format of name / value or column
+    /// pairs with lines ending in a new line character (\n).
     #[structopt(short = "o", long = "output", default_value = "default")]
     output: Output,
 
@@ -585,9 +602,8 @@ struct Opt {
     verbose: bool,
 
     ///Local path for Destiny 2 manifest database file.
-    #[structopt(short = "f", long = "manifest-path", parse(from_os_str))]
+    #[structopt(short = "P", long = "manifest-path", parse(from_os_str))]
     manifest_path: PathBuf,
-    //TODO: need to standardize on arg long / short names
 }
 #[tokio::main]
 async fn main() {

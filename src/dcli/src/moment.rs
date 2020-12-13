@@ -94,8 +94,7 @@ impl FromStr for Moment {
             "next_week" => Ok(Moment::NextWeek),
             "month" => Ok(Moment::Month),
             "next_month" => Ok(Moment::NextMonth),
-            //TODO: should this be alltime or all_time
-            "alltime" => Ok(Moment::AllTime),
+            "all_time" => Ok(Moment::AllTime),
             "custom" => Ok(Moment::Custom),
 
             _ => Err("Unknown Moment type"),

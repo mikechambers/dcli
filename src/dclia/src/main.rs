@@ -47,7 +47,7 @@ const ORBIT_PLACE_HASH: u32 = 2961497387;
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
 ///
-/// Get support, request features or just chat on the dcli Discord server:
+/// Get support,request features or just chat on the dcli Discord server:
 /// https://discord.gg/2Y8bV2Mq3p
 ///
 /// Get the latest version, download the source and log issues at:
@@ -74,7 +74,11 @@ struct Opt {
     verbose: bool,
 
     ///Local path for the Destiny 2 manifest database file.
-    #[structopt(long = "manifest-path", parse(from_os_str))]
+    ///
+    ///This will normally be downloaded using the dclim tool, and stored in a file
+    ///named manifest.sqlite3 (in the manifest directory specified when running
+    ///dclim).
+    #[structopt(short="P", long = "manifest-path", parse(from_os_str))]
     manifest_path: PathBuf,
 
     /// Format for command output
