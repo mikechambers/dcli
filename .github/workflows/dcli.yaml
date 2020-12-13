@@ -18,7 +18,7 @@ jobs:
         with:
           args: /bin/bash -c "export DESTINY_API_KEY=${{ secrets.DESTINY_API_KEY }} && rustup update && cargo build --manifest-path=src/Cargo.toml --release --target=x86_64-unknown-linux-musl"
       - name: Process and Package
-        #if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
@@ -63,7 +63,7 @@ jobs:
           command: build
           args: --manifest-path=src/Cargo.toml --release --target ${{ steps.config.outputs.TARGET_NAME }}
       - name: Process
-        #if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
@@ -109,7 +109,7 @@ jobs:
           command: build
           args: --manifest-path=src/Cargo.toml --release --target ${{ steps.config.outputs.TARGET_NAME }}
       - name: Process
-        #if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
