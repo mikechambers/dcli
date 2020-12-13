@@ -20,9 +20,9 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use crate::utils::f32_are_equal;
 use serde_derive::Serialize;
 use std::fmt;
-use crate::utils::f32_are_equal;
 
 #[derive(Serialize, Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Standing {

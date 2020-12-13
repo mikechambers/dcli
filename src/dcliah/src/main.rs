@@ -35,26 +35,15 @@ use dcli::statscontainer::ActivityStatsContainer;
 use dcli::manifestinterface::ManifestInterface;
 use std::path::PathBuf;
 
-use dcli::utils::{f32_are_equal, format_f32, repeat_str, uppercase_first_char};
+use dcli::utils::{
+    f32_are_equal, format_f32, repeat_str, uppercase_first_char, TSV_DELIM, TSV_EOL,
+};
 use dcli::{apiinterface::ApiInterface, utils::EXIT_FAILURE};
 
 use structopt::StructOpt;
 
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
-
-/*
-fn print_tsv(
-    data: ActivityStatsContainer,
-    display_limit:i32,
-    moment: Moment,
-) {
-    let mut name_values: Vec<(&str, String)> = Vec::new();
-
-    name_values.push(("member_id", member_id.to_string()));
-    print!("{}", build_tsv(name_values));
-}
-*/
 
 fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
     let moment = Moment::from_str(src)?;
@@ -85,13 +74,115 @@ async fn get_manifest(manifest_path: PathBuf) -> Result<ManifestInterface, Error
     Ok(manifest)
 }
 
+async fn print_tsv(
+    manifest_path: PathBuf,
+    data: ActivityStatsContainer,
+    mode: Mode,
+    moment: Moment,
+    start_time: DateTime<Utc>,
+) -> Result<(), Error> {
+    let mut manifest = get_manifest(manifest_path).await?;
+
+    print!(
+        "VAR{delim}START_TIME{delim}{start_time}{eol}",
+        start_time = start_time.to_rfc3339(),
+        delim = TSV_DELIM,
+        eol = TSV_EOL,
+    );
+
+    print!(
+        "VAR{delim}MOMENT{delim}{moment}{eol}",
+        moment = format!("{}", moment),
+        delim = TSV_DELIM,
+        eol = TSV_EOL,
+    );
+
+    print!(
+        "VAR{delim}MODE{delim}{mode}{eol}",
+        mode = format!("{}", mode),
+        delim = TSV_DELIM,
+        eol = TSV_EOL,
+    );
+
+    print!(
+        "DATA_HEADER{delim}MODE{delim}MAP{delim}DATE{delim}RESULT{delim}KILLS{delim}\
+        DEATHS{delim}ASSISTS{delim}OPP_DEFEATED{delim}KD{delim}KDA{delim}\
+        EFFICIENCY{eol}",
+        delim = TSV_DELIM,
+        eol = TSV_EOL,
+    );
+
+    for activity in &data.activities {
+        let map_name = match manifest
+            .get_activity_definition(activity.details.reference_id)
+            .await
+        {
+            Ok(e) => e.display_properties.name,
+            Err(_e) => "Unknown".to_string(),
+        };
+
+        print!(
+            "DATA_ROW{delim}{mode}{delim}{map}{delim}{date}{delim}{result}{delim}\
+            {kills}{delim}{deaths}{delim}{assists}{delim}{opp_defeated}{delim}\
+            {kd}{delim}{kda}{delim}{eff}{eol}",
+            mode = activity.details.mode,
+            map = map_name,
+            date = activity.period.to_rfc3339(),
+            result = activity.values.standing,
+            kills = activity.values.kills,
+            deaths = activity.values.deaths,
+            assists = activity.values.assists,
+            opp_defeated = activity.values.opponents_defeated,
+            kd = format_f32(activity.values.kills_deaths_ratio, 2),
+            kda = format_f32(activity.values.kills_deaths_assists, 2),
+            eff = format_f32(activity.values.efficiency, 2),
+            eol = TSV_EOL,
+            delim = TSV_DELIM,
+        );
+    }
+
+    print!(
+        "SUMMARY_HIGHS{delim}{delim}{delim}{delim}{result}{delim}\
+        {kills}{delim}{deaths}{delim}{assists}{delim}{opp_defeated}{delim}\
+        {kd}{delim}{kda}{delim}{eff}{eol}",
+        result = format!("{}:{}", data.wins(), data.losses()),
+        kills = data.highest_kills(),
+        deaths = data.highest_deaths(),
+        assists = data.highest_assists(),
+        opp_defeated = data.highest_opponents_defeated(),
+        kd = format_f32(data.highest_kills_deaths_ratio(), 2),
+        kda = format_f32(data.highest_kills_deaths_assists(), 2),
+        eff = format_f32(data.highest_efficiency(), 2),
+        eol = TSV_EOL,
+        delim = TSV_DELIM,
+    );
+
+    print!(
+        "SUMMARY_PER_GAME{delim}{delim}{delim}{delim}{result}{delim}\
+        {kills}{delim}{deaths}{delim}{assists}{delim}{opp_defeated}{delim}\
+        {kd}{delim}{kda}{delim}{eff}{eol}",
+        result = format_f32(data.win_percentage(), 2),
+        kills = format_f32(data.per_activity_average(data.kills()), 2),
+        deaths = format_f32(data.per_activity_average(data.deaths()), 2),
+        assists = format_f32(data.per_activity_average(data.assists()), 2),
+        opp_defeated = format_f32(data.per_activity_average(data.opponents_defeated()), 2),
+        kd = format_f32(data.kills_deaths_ratio(), 2),
+        kda = format_f32(data.kills_deaths_assists(), 2),
+        eff = format_f32(data.efficiency(), 2),
+        eol = TSV_EOL,
+        delim = TSV_DELIM,
+    );
+
+    Ok(())
+}
+
 async fn print_default(
     manifest_path: PathBuf,
     data: ActivityStatsContainer,
     display_limit: i32,
     mode: Mode,
     moment: Moment,
-    date_time: DateTime<Utc>,
+    start_time: DateTime<Utc>,
 ) -> Result<(), Error> {
     //todo: might want to look at buffering output
     //https://rust-cli.github.io/book/tutorial/output.html
@@ -108,16 +199,16 @@ async fn print_default(
     let display_count = std::cmp::min(activity_count, display_limit as usize);
     let is_limited = activity_count != display_count;
 
-    let date_time_label = if Utc::now() - date_time > Duration::days(6) {
-        date_time.format("%B %-d, %Y")
+    let start_time_label = if Utc::now() - start_time > Duration::days(6) {
+        start_time.format("%B %-d, %Y")
     } else {
-        date_time.format("%A, %B %-d, %Y")
+        start_time.format("%A, %B %-d, %Y")
     };
 
     let title = format!(
-        "{mode} activities since {date_time} ({moment})",
+        "{mode} activities since {start_time} ({moment})",
         mode = uppercase_first_char(&format!("{}", mode)),
-        date_time = date_time_label,
+        start_time = start_time_label,
         moment = moment,
     );
 
@@ -557,7 +648,24 @@ async fn main() {
             };
         }
         Output::Tsv => {
-            println!("TSV OUTPUT GOES HERE TAB TAB TAB");
+            match print_tsv(
+                opt.manifest_path,
+                container,
+                opt.mode,
+                opt.moment,
+                custom_time,
+            )
+            .await
+            {
+                Ok(_e) => {}
+                Err(e) => {
+                    print_error(
+                        "Error generatating output. (Check the --manifest-path) : ",
+                        e,
+                    );
+                    std::process::exit(EXIT_FAILURE);
+                }
+            };
         }
     }
 }

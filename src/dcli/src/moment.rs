@@ -156,9 +156,7 @@ impl MomentPeriod {
         let mut end = Utc::now();
 
         if start > end {
-            let tmp = start;
-            start = end;
-            end = tmp;
+            std::mem::swap(&mut start, &mut end);
         }
 
         MomentPeriod { moment, start, end }

@@ -314,7 +314,7 @@ impl ApiInterface {
 
         eprintln!("] : COMPLETE");
 
-        if out.len() == 0 {
+        if out.is_empty() {
             return Ok(None);
         }
 
