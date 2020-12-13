@@ -47,14 +47,13 @@ use dcli::utils::{print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL};
 /// Released under an MIT License.
 struct Opt {
     ///Local path for Destiny 2 manifest database file.
-    #[structopt(short = "m", long = "manifest-path", parse(from_os_str))]
+    #[structopt(short = "P", long = "manifest-path", parse(from_os_str))]
     manifest_path: PathBuf,
 
-    //Print out additional information for the API call
-    //#[structopt(short = "v", long = "verbose")]
-    //verbose: bool,
-    ///The hash id from the Destiny 2 API for the item to be searched for. Example : 326060471
-    #[structopt(long = "hash", required = true)]
+    ///The hash id from the Destiny 2 API for the item to be searched for.
+    ///
+    ///Example : 326060471
+    #[structopt(long = "hash", short = "h", required = true)]
     hash: u32,
 
     /// Format for command output

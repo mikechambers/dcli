@@ -84,15 +84,15 @@ struct Opt {
     /// next_weekly (upcoming Tuesday weekly reset), current_daily, next_daily,
     /// current_xur (previous Friday Xur reset), next_xur (upcoming Friday Xur reset),
     /// current_trials (previous Friday Trials reset), next_trials (upcoming Friday Trials reset)
-    #[structopt(short = "m", parse(try_from_str = parse_and_validate_moment), long = "moment", default_value = "now")]
+    #[structopt(short = "T", parse(try_from_str = parse_and_validate_moment), long = "moment", default_value = "now")]
     moment: Moment,
 
     /// Date / time format to output moment
     ///
     /// Valid values are rfc3339 (default), rfc2822 and unix (unix timestamp,
     /// number of non-leap seconds since January 1, 1970 0:00:00 UTC).
-    #[structopt(short = "f", long = "format", default_value = "rfc3339")]
-    format: DateTimeFormat,
+    #[structopt(short = "f", long = "time-format", default_value = "rfc3339")]
+    time_format: DateTimeFormat,
 
     /// Print out additional information
     ///
@@ -116,7 +116,7 @@ async fn main() {
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     let dt = opt.moment.get_date_time();
-    let date_time_str = match opt.format {
+    let date_time_str = match opt.time_format {
         DateTimeFormat::RFC3339 => dt.to_rfc3339(),
         DateTimeFormat::RFC2822 => dt.to_rfc2822(),
         DateTimeFormat::Unix => dt.timestamp().to_string(),
@@ -129,7 +129,7 @@ async fn main() {
         Output::Tsv => {
             let mut name_values: Vec<(&str, String)> = Vec::new();
             name_values.push(("date_time", date_time_str));
-            name_values.push(("format", format!("{}", opt.format)));
+            name_values.push(("format", format!("{}", opt.time_format)));
             name_values.push(("moment", format!("{}", opt.moment)));
 
             print!("{}", build_tsv(name_values));

@@ -45,10 +45,10 @@ fn is_valid_steam_id(steam_id: &str) -> bool {
 /// Command line tool for retrieving primary Destiny 2 member ids.
 ///
 /// Retrieves the primary Destiny 2 membershipId and platform for specified
-/// username or steam 64 id and platform. That may be a membershipId on a platform
-/// different that the one specified, depending on the cross save status of the
-/// account. It will return the primary membershipId that all data will be
-/// associate with.
+/// username or steam 64 id and platform. Returned data may be a membershipId
+/// on a platform different that the one specified, depending on the cross
+/// save status of the account. It will return the primary membershipId that
+/// all data will be associate with.
 ///
 /// Created by Mike Chambers.  
 /// https://www.mikechambers.com
@@ -67,12 +67,12 @@ struct Opt {
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
-    #[structopt(short = "i", long = "id", required = true)]
     /// User name or steam 64 id
     ///
     /// User name (for Xbox, Playstation or Stadia) or steam 64 id for Steam / pc :
     /// 00000000000000000 (17 digit ID) for steam.
-    id: String,
+    #[structopt(short = "n", long = "name", required = true)]
+    name: String,
 
     ///Print out additional information for the API call
     #[structopt(short = "v", long = "verbose")]
@@ -93,7 +93,7 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
-    if opt.platform == Platform::Steam && !is_valid_steam_id(&opt.id) {
+    if opt.platform == Platform::Steam && !is_valid_steam_id(&opt.name) {
         println!("Invalid steam 64 id. Must be a 17 digit Steam 64 ID.");
         return;
     }
@@ -101,7 +101,7 @@ async fn main() {
     print_verbose(
         &format!(
             "Searching for '{id}' on {platform}",
-            id = opt.id,
+            id = opt.name,
             platform = opt.platform,
         ),
         opt.verbose,
@@ -110,7 +110,7 @@ async fn main() {
     let member_search = MemberIdSearch::new(opt.verbose);
 
     let membership = match member_search
-        .retrieve_member_id(&opt.id, opt.platform)
+        .retrieve_member_id(&opt.name, opt.platform)
         .await
     {
         Ok(e) => match e {
@@ -129,7 +129,7 @@ async fn main() {
     if opt.platform != Platform::Steam {
         match membership.display_name {
             Some(ref e) => {
-                if e != &opt.id {
+                if e != &opt.name {
                     println!("Member not found");
                     return;
                 }
