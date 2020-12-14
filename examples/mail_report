@@ -31,7 +31,7 @@ CHARACTER_ID=$CHARACTER_ID
 # modes to generate a report for. options include: all, control, 
 # clash, mayhem, ironbanner, private, rumble, comp, quickplay 
 # and trialsofosiris
-declare -a MODES=("all_pvp" "pvp_quickplay" "iron_banner" "trials_of_osiris" "rumble" "pvp_competitive" )
+declare -a MODES=("all_pvp" "quickplay" "iron_banner" "trials_of_osiris" "rumble" "pvp_competitive" )
 
 REPORT_START=$(date -v-7d  +"%A, %B %-d, %Y")
 REPORT_END=$(date +"%A, %B %-d, %Y")
@@ -53,7 +53,7 @@ for mode in ${MODES[@]}; do
     if [ "${mode}" == "all_pvp" ]
     then
         PRETTY_MODE="All Matches"
-    elif [ "${mode}" == "pvp_quickplay" ]
+    elif [ "${mode}" == "quickplay" ]
     then
         PRETTY_MODE="Quickplay"
     elif [ "${mode}" == "iron_banner" ]

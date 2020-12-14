@@ -46,8 +46,8 @@ OPTIONS:
     -M, --mode <mode>                      
             Activity mode to return stats for
             
-            Supported values are all_pvp (default), control, clash, elimination, all_mayhem, iron_banner, all_private,
-            rumble, pvp_competitive, pvp_quickplay and trials_of_osiris.
+            Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, private,
+            rumble, pvp_competitive, quickplay and trials_of_osiris.
             
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
             private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown,
@@ -87,7 +87,7 @@ OPTIONS:
 | ARGUMENT | OPTIONS |
 |---|---|
 | --platform | xbox, playstation, stadia, steam |
-| --mode | all_pvp (default), control, clash, elimination, all_mayhem, iron_banner, all_private, rumble, pvp_competitive, pvp_quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
+| --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
 | --moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom |
 
 
