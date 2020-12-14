@@ -617,7 +617,10 @@ async fn main() {
         _ => opt.moment.get_date_time(),
     };
 
-    eprintln!("Retrieving activities. This may take a moment...");
+    eprintln!(
+        "Retrieving activities for {}. This may take a moment...",
+        &opt.mode
+    );
     //todo: is there any need to send a reference to an enum?
     let data = match retrieve_activities_since(
         &opt.member_id,

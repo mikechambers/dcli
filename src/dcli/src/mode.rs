@@ -324,7 +324,7 @@ impl fmt::Display for Mode {
             Mode::Breakthrough => "Breakthrough",
             Mode::BlackArmoryRun => "Black Armory Run",
             Mode::Salvage => "Salvage",
-            Mode::IronBannerSalvage => "Iron BannerS alvage",
+            Mode::IronBannerSalvage => "Iron Banner Salvage",
             Mode::PvPCompetitive => "PvP Competitive",
             Mode::PvPQuickplay => "PvP Quickplay",
             Mode::ClashQuickplay => "Clash Quickplay",
