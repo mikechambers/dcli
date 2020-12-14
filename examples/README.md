@@ -15,7 +15,7 @@ All examples in hosted in this project are released under an MIT license.
 
 ### [stats_report](stats_report)
 
-Bash script that reads crucible stat data from dclics, and outputs a summary (will speak it if running on OS X). Demonstrates how to parse TSV name / value data from dcli apps into bash variables.
+Bash script that reads crucible stat data from dclics, and outputs a summary (will speak it if running on OS X or if you have installed [espeak](http://espeak.sourceforge.net/) on Linux). Demonstrates how to parse TSV name / value data from dcli apps into bash variables.
 
 Requires a modern / updated version of bash to run on OS X. More info [here](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba).
 
@@ -40,6 +40,6 @@ Requires that a sendmail client is [configured](https://blog.travismclarke.com/p
 
 Prints out K/D for all modes for the past month:
 ```
-$ dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --period month --output tsv | grep kills_deaths_ratio | awk '{print $2}'
+$ dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --moment month --output tsv | grep kills_deaths_ratio | awk '{print $2}'
 1.5986928
 ```
