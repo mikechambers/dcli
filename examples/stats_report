@@ -11,7 +11,9 @@
 #
 # On OS X requires an updated version of bash
 # https://itnext.io/upgrading-bash-on-macos-7138bd1066ba
-
+#
+# On Linux, you need to make sure you have espeak installed.
+#
 # function for rounding floating point values
 # https://unix.stackexchange.com/a/265202
 
@@ -24,6 +26,9 @@ MEMBER_ID=$MEMBER_ID
 # can retrieve character_ids from dclic
 # (here it pulls from environment but you can also hardcode)
 CHARACTER_ID=$CHARACTER_ID
+
+#set the correct platform here
+PLATFORM=xbox
 
 round() {
     n=$(printf "%.${1}g" "$2")
@@ -38,8 +43,8 @@ round() {
 }
 
 #capture output of command into a variable / we could also pipe this in
-OUTPUT=$(dclics --member-id ${MEMBER_ID} --platform xbox --mode all \
---character-id ${CHARACTER_ID} --period month --output tsv)
+OUTPUT=$(dclics --member-id ${MEMBER_ID} --platform ${PLATFORM} --mode all_pvp \
+--character-id ${CHARACTER_ID} --moment month --output tsv)
 
 # replace tabs with '='. We could probably skip this step, but I couldnt get it
 # working below
@@ -77,7 +82,7 @@ WIN_PERCENT=$(awk "BEGIN {print ${data['activities_won']}/${data['activities_ent
 WIN_PERCENT=$(awk "BEGIN {print $WIN_PERCENT * 100}")
 WIN_PERCENT=$(round 4 ${WIN_PERCENT})
 
-DIALOG="Lets look at your crucible stats for ${data['mode']} ${data['period_human']}. \
+DIALOG="Lets look at your crucible stats for ${data['mode']} ${data['moment_human']}. \
 Over this period you played for a total of ${data['human_time_played']}. \
 You played ${data['activities_entered']} matches with ${data['activities_won']} \
 wins and ${data['activities_lost']} losses for a ${WIN_PERCENT} percent win rate. \
@@ -90,5 +95,12 @@ if command -v say &> /dev/null
 then
     #say is a command on OS X to read the input (-v to change voices)
     say $DIALOG
+elif command -v espeak &> /dev/null
+then
+	echo $DIALOG | espeak -s 125
 fi
+
+
+
+
 
