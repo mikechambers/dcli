@@ -31,7 +31,7 @@ CHARACTER_ID=$CHARACTER_ID
 # modes to generate a report for. options include: all, control, 
 # clash, mayhem, ironbanner, private, rumble, comp, quickplay 
 # and trialsofosiris
-declare -a MODES=("all" "pvp_quickplay" "iron_banner" "trials_of_osiris" "rumble" "pvp_competitive" )
+declare -a MODES=("all_pvp" "pvp_quickplay" "iron_banner" "trials_of_osiris" "rumble" "pvp_competitive" )
 
 REPORT_START=$(date -v-7d  +"%A, %B %-d, %Y")
 REPORT_END=$(date +"%A, %B %-d, %Y")
@@ -50,22 +50,22 @@ for mode in ${MODES[@]}; do
     echo "Getting data for $mode"
     
     PRETTY_MODE=""
-    if [ "${mode}" == "all" ]
+    if [ "${mode}" == "all_pvp" ]
     then
         PRETTY_MODE="All Matches"
-    elif [ "${mode}" == "quickplay" ]
+    elif [ "${mode}" == "pvp_quickplay" ]
     then
         PRETTY_MODE="Quickplay"
-    elif [ "${mode}" == "ironbanner" ]
+    elif [ "${mode}" == "iron_banner" ]
     then
         PRETTY_MODE="Iron Banner"
-    elif [ "${mode}" == "trialsofosiris" ]
+    elif [ "${mode}" == "trials_of_osiris" ]
     then
         PRETTY_MODE="Trials of Osiris"
     elif [ "${mode}" == "rumble" ]
     then
         PRETTY_MODE="Rumble"
-    elif [ "${mode}" == "comp" ]
+    elif [ "${mode}" == "pvp_competitive" ]
     then
         PRETTY_MODE="Competitive"
     fi
@@ -74,7 +74,7 @@ for mode in ${MODES[@]}; do
     OUTPUT+="************************************************************************************************************\n"
 
     #2>&1 this redirects stderr to stdout so we can capture
-    TMP_OUTPUT=$(dclics --member-id $MEMBER_ID --character-id $CHARACTER_ID --platform $PLATFORM --mode $mode --moment weekly 2>&1)
+    TMP_OUTPUT=$(dclics --member-id $MEMBER_ID --character-id $CHARACTER_ID --platform $PLATFORM --mode $mode --moment week 2>&1)
 
     if [ $? -eq 1 ] 
     then
