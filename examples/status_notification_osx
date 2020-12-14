@@ -36,7 +36,8 @@ do
     if [ "$OLD_ACTIVITY" != "$ACTIVITY" ]; then
         echo "Status has changed"
         echo $ACTIVITY
-        osascript -e "display notification \"${ACTIVITY}\" with title \"Destiny 2 Activity Changed\""
+        #note, you could get this running on linux using notify-send command
+	osascript -e "display notification \"${ACTIVITY}\" with title \"Destiny 2 Activity Changed\""
         OLD_ACTIVITY=$ACTIVITY
 
 
