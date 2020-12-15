@@ -48,26 +48,23 @@ LAST_CHECK_WAS_ERROR=0
 while :
 do
 
-	#this redirects stderr put to /dev/null
-	ACTIVITY_HISTORY=$(dcliah --member-id ${MEMBER_ID} --character-id ${CHARACTER_ID} --platform ${PLATFORM} --manifest-path "${MANIFEST_PATH}" --mode ${MODE} --moment custom --custom-time "${SESSION_START}" 2> /dev/null)
+    #this redirects stderr put to /dev/null
+    ACTIVITY_HISTORY=$(dcliah --member-id ${MEMBER_ID} --character-id ${CHARACTER_ID} --platform ${PLATFORM} --manifest-path "${MANIFEST_PATH}" --mode ${MODE} --moment custom --custom-time "${SESSION_START}" 2> /dev/null)
 
-	#check and see if an error occured.
-	if [ $? -eq 1 ] 
-    	then
-		if [ $LAST_CHECK_WAS_ERROR -eq 0 ] ; then
-        		echo -e "\nError retrieving activities. Trying again in ${CHECK_INTERVAL} seconds"
-			LAST_CHECK_WAS_ERROR=1
-		fi
-	else
-		LAST_CHECK_WAS_ERROR=0
-		clear
-		echo -e "$ACTIVITY_HISTORY"
-    	fi
+    #check and see if an error occured.
+    if [ $? -eq 1 ] 
+    then
+	if [ $LAST_CHECK_WAS_ERROR -eq 0 ] ; then
+            echo -e "\nError retrieving activities. Trying again in ${CHECK_INTERVAL} seconds"
+	    LAST_CHECK_WAS_ERROR=1
+	fi
+    else
+	LAST_CHECK_WAS_ERROR=0
+	clear
+	echo -e "$ACTIVITY_HISTORY"
+    fi
 
-	#check exit code here
-	sleep $CHECK_INTERVAL
+    #check exit code here
+    sleep $CHECK_INTERVAL
 done
-
-echo $SESSION_START
-
 
