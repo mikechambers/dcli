@@ -87,7 +87,7 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "o", long = "output", default_value = "default")]
+    #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 }
 

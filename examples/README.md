@@ -50,6 +50,6 @@ Requires that a sendmail client is [configured](https://blog.travismclarke.com/p
 
 Prints out K/D for all modes for the past month:
 ```
-$ dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --moment month --output tsv | grep kills_deaths_ratio | awk '{print $2}'
+$ dclics --member-id 4611686018429783292 --platform xbox --mode all --character-id 2305843009264966985 --moment month --output-format tsv | grep kills_deaths_ratio | awk '{print $2}'
 1.5986928
 ```

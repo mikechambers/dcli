@@ -27,7 +27,7 @@ OPTIONS:
             reset), current_daily, next_daily, current_xur (previous Friday Xur reset), next_xur (upcoming Friday Xur
             reset), current_trials (previous Friday Trials reset), next_trials (upcoming Friday Trials reset) [default:
             now]
-    -o, --output <output>              
+    -o, --output-format <output>              
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -70,7 +70,7 @@ $ dclitime --moment next_weekend --format rfc2822
 
 #### Get date / time for next week's weekly reset on Tuesday and output in tab seperated value format:
 ```
-$ dclitime --moment next_weekly --output tsv
+$ dclitime --moment next_weekly --output-format tsv
 ```
 
 which outputs:

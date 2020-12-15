@@ -31,7 +31,7 @@ do
     ACTIVITY=$(dclia --manifest-path $MANIFEST_PATH --member-id $MEMBER_ID --platform $PLATFORM)
     #note should do some error checking here in case command fails (can capture exit code)
 
-    #we could have the command above output name / value pairs via --output tsv
+    #we could have the command above output name / value pairs via --output-format tsv
     #and then filter based on type of activity (i.e. crucible, strikes, etc...)
     if [ "$OLD_ACTIVITY" != "$ACTIVITY" ]; then
         echo "Status has changed"

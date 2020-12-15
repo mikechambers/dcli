@@ -44,7 +44,7 @@ round() {
 
 #capture output of command into a variable / we could also pipe this in
 OUTPUT=$(dclics --member-id ${MEMBER_ID} --platform ${PLATFORM} --mode all_pvp \
---character-id ${CHARACTER_ID} --moment month --output tsv)
+--character-id ${CHARACTER_ID} --moment month --output-format tsv)
 
 # replace tabs with '='. We could probably skip this step, but I couldnt get it
 # working below

@@ -27,7 +27,7 @@ OPTIONS:
             Destiny 2 API member id
             
             This is not the user name, but the member id retrieved from the Destiny API.
-    -o, --output <output>          
+    -o, --output-format <output>          
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -69,7 +69,7 @@ Warlock     2305843009264966986
 #### Retrieve all character information with tab seperated output
 
 ```
-$ dclic --member-id 4611686018429783292 --platform xbox --output tsv
+$ dclic --member-id 4611686018429783292 --platform xbox --output-format tsv
 ```
 
 outputs:

@@ -56,7 +56,7 @@ OPTIONS:
             
             All ranges are up to, but not including current day, and thus some values may not return data depending on
             time of day. [default: all_time]
-    -o, --output <output>                
+    -o, --output-format <output>                
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -120,7 +120,7 @@ $ dclics --member-id 4611686018429783292 --character-id 2305843009264966985 --pl
 #### Show life time stats for comp, outputing to a tab seperated format
 
 ```
-$ dclics --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --mode pvp_competitive --moment all_time --output tsv
+$ dclics --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --mode pvp_competitive --moment all_time --output-format tsv
 ```
 
 outputs:

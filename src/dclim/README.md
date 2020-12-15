@@ -42,7 +42,7 @@ OPTIONS:
             Directory where the manifest and meta-data will be stored.
             
             The manifest will be stored in this directory in a file named manifest.sqlite3
-    -o, --output <output>                
+    -o, --output-format <output>                
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -82,7 +82,7 @@ Updated manifest available    89360.20.11.18.2249-6
 #### Check for an updated manifest print output in a tab seperated format (tsv)
 
 ```
-$ dclim --manifest-dir ~/manifest/ --output tsv
+$ dclim --manifest-dir ~/manifest/ --output-format tsv
 ```
 
 outputs:

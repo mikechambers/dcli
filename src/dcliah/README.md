@@ -35,7 +35,7 @@ OPTIONS:
     -L, --limit <display-limit>            
             Limit the number of activity details that will be displayed.
             
-            Summary information will be generated based on all activities. Ignored if --output is tsv. [default: 10]
+            Summary information will be generated based on all activities. Ignored if --output-format is tsv. [default: 10]
     -P, --manifest-path <manifest-path>    
             Local path for Destiny 2 manifest database file
 
@@ -70,7 +70,7 @@ OPTIONS:
             
             Specifying all_time retrieves all activitiy history and may take an extended amount of time to retrieve
             depending on the number of activities. [default: day]
-    -o, --output <output>                  
+    -o, --output-format <output>                  
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -151,7 +151,7 @@ $ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --pl
 #### Show all activity for past week and output to TSV format (tab seperated values)
 
 ```
-$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path /home/mesh/.config/destiny/manifest.sqlite3 --moment week --output tsv
+$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path /home/mesh/.config/destiny/manifest.sqlite3 --moment week --output-format tsv
 ```
 
 Outputs:

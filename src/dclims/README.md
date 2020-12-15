@@ -30,7 +30,7 @@ OPTIONS:
     -P, --manifest-path <manifest-path>    
             Local path for Destiny 2 manifest database file
 
-    -o, --output <output>                  
+    -o, --output-format <output>                  
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -62,7 +62,7 @@ Icon Path      https://www.bungie.net/common/destiny2_content/icons/f59ce6481de3
 #### Retrieve information for *Luna's Howl* by its API hash id and output to tab seperated format (tsv)
 
 ```
-$ dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 153979396 --output tsv
+$ dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 153979396 --output-format tsv
 ```
 
 outputs:

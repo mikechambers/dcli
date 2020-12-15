@@ -583,7 +583,7 @@ struct Opt {
     /// Limit the number of activity details that will be displayed.
     ///
     /// Summary information will be generated based on all activities. Ignored if
-    /// --output is tsv.
+    /// --output-format is tsv.
     #[structopt(long = "limit", short = "L", default_value = "10")]
     display_limit: i32,
 
@@ -593,7 +593,7 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value or column
     /// pairs with lines ending in a new line character (\n).
-    #[structopt(short = "o", long = "output", default_value = "default")]
+    #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 
     /// Destiny 2 API character id

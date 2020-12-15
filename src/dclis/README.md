@@ -35,7 +35,7 @@ OPTIONS:
             
             User name (for Xbox, Playstation or Stadia) or steam 64 id for Steam / pc : 00000000000000000 (17 digit ID)
             for steam.
-    -o, --output <output>        
+    -o, --output-format <output>        
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -90,7 +90,7 @@ When searching via steam id, Display Name will be the steam id.
 #### Search for member id for a player on xbox and output to a tab seperated format (tsv)
 
 ```
-$ dclis --name mesh --platform xbox --output tsv
+$ dclis --name mesh --platform xbox --output-format tsv
 ```
 outputs:
 
