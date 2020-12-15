@@ -46,6 +46,12 @@ Write-Output "Retrieving activity data..."
 $last_call_was_error=$false
 while ($true) {
 
+	# you could use the Destiny2.exe process detection in ths status_notifications.ps1
+	# script, and then reset the session_start everytime destiny launches.
+	# that way, you could keep this script running, and it would always and automatically
+	# reset your session to when you launch destiny.
+
+
     # assumes dcliah.exe is in your path
 	$activity = (dcliah.exe --manifest-path $manifest_path `
 		--member-id $member_id --platform $platform --character-id $character_id `
