@@ -15,6 +15,9 @@ All examples in hosted in this project are released under an MIT license.
 
 ### session
 
+* [session for Bash](session)
+* [session.ps1 for PowerShell](session.ps1)
+
 Bash script (tested on OS X and Linux) that tracks and displays Crucible activity stats per play session.
 
 To use, just start the script when you start playing, and it will update your aggregate stats for your session in realtime.
@@ -31,8 +34,8 @@ Requires a modern / updated version of bash to run on OS X. More info [here](htt
 
 ### status_notification
 
-* [status_notification](status_notification)
-* [status_notification_win.ps1](status_notification.ps1)
+* [status_notification for Bash](status_notification)
+* [status_notification.ps1 for PowerShell](status_notification.ps1)
 
 Mac OS X Bash and Windows Powershell scripts script which monitors a player's Destiny 2 status, and sends a notification with info on the new status when it changes.
 
