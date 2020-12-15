@@ -300,7 +300,7 @@ async fn print_default(
     let mut streak: i32 = 0;
     let mut last_standing: Standing = Standing::Unknown;
     //let highest_flag: &str = "^";
-    let highest_flag : &str = "\u{00B9}";
+    let highest_flag : &str = "^";
     
 
     for activity in slice.iter().rev() {

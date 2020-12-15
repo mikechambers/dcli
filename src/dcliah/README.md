@@ -124,7 +124,7 @@ Pacifica          Loss            -2      10       9      19      11    0.91    
 
 None
 --------------------------
-The Fortress      Unknown          0      12       2      14     ¹13    0.92    1.00    1.08
+The Fortress      Unknown          0      12       2      14     ^13    0.92    1.00    1.08
 
 Control Quickplay
 --------------------------
@@ -140,7 +140,7 @@ PER GAME          53.16% w             11.81    4.91   16.72    7.22    1.64    
 ============================================================================================
 MAP               W / L       STREAK   KILLS    ASTS     K+A  DEATHS     K/D    KD/A     EFF
 ```
-¹-highest overall
+^-highest overall
 
 #### Retrieve all Trials of Osiris Activities since the weekend reset (Friday)
 
