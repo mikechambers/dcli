@@ -31,7 +31,7 @@ OPTIONS:
             
             Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
             
-            Required when start-moment is set to custom, but otherwise not applicable.
+            Required when --moment is set to custom, but otherwise not applicable.
     -L, --limit <display-limit>            
             Limit the number of activity details that will be displayed.
             
@@ -55,8 +55,7 @@ OPTIONS:
     -s, --moment <moment>                  
             Start moment from which to pull activities from
             
-            Activities will be retrieved from start moment to the current time. For example, Specifying: --start-moment
-            weekly
+            Activities will be retrieved from start moment to the current time. For example, Specifying: --moment weekly
             
             will return all activities since the last weekly reset on Tuesday.
             
@@ -125,7 +124,7 @@ Pacifica          Loss            -2      10       9      19      11    0.91    
 
 None
 --------------------------
-The Fortress      Unknown          0      12       2      14     ^13    0.92    1.00    1.08
+The Fortress      Unknown          0      12       2      14     ¹13    0.92    1.00    1.08
 
 Control Quickplay
 --------------------------
@@ -141,6 +140,7 @@ PER GAME          53.16% w             11.81    4.91   16.72    7.22    1.64    
 ============================================================================================
 MAP               W / L       STREAK   KILLS    ASTS     K+A  DEATHS     K/D    KD/A     EFF
 ```
+¹-highest overall
 
 #### Retrieve all Trials of Osiris Activities since the weekend reset (Friday)
 
