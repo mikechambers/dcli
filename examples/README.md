@@ -13,7 +13,17 @@ All examples in hosted in this project are released under an MIT license.
 
 ## Examples
 
-### [stats_report](stats_report)
+### session
+
+Bash script (tested on OS X and Linux) that tracks and displays Crucible activity stats per play session.
+
+To use, just start the script when you start playing, and it will update your aggregate stats for your session in realtime.
+
+The script pulls member-id, character-id, platform and manifest-path from environment variables (see script for var names). You can also just directly edit the script and add them.
+
+Uses dclitime and dcliah.
+
+### stats_report
 
 Bash script that reads crucible stat data from dclics, and outputs a summary (will speak it if running on OS X or if you have installed [espeak](http://espeak.sourceforge.net/) on Linux). Demonstrates how to parse TSV name / value data from dcli apps into bash variables.
 
@@ -28,7 +38,7 @@ Mac OS X Bash and Windows Powershell scripts script which monitors a player's De
 
 This is particularly useful on Windows when playing Crucible, as it will display a notification as you load into the map, telling you which map you are loading into.
 
-### [mail_report](mail_report)
+### mail_report
 
 Bash script that uses [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) to generate and send an email report of weekly Crucible stats. Can be scheduled as part of a crontab job to automate sending.
 
