@@ -46,28 +46,28 @@ Write-Output "Retrieving activity data..."
 $last_call_was_error=$false
 while ($true) {
 
-	# you could use the Destiny2.exe process detection in ths status_notifications.ps1
-	# script, and then reset the session_start everytime destiny launches.
-	# that way, you could keep this script running, and it would always and automatically
-	# reset your session to when you launch destiny.
+    # you could use the Destiny2.exe process detection in ths status_notifications.ps1
+    # script, and then reset the session_start everytime destiny launches.
+    # that way, you could keep this script running, and it would always and automatically
+    # reset your session to when you launch destiny.
 
 
     # assumes dcliah.exe is in your path
-	$activity = (dcliah.exe --manifest-path $manifest_path `
-		--member-id $member_id --platform $platform --character-id $character_id `
-		--mode $mode --moment custom --custom-time $session_start 2>$null)  -join "`n"
+    $activity = (dcliah.exe --manifest-path $manifest_path `
+	--member-id $member_id --platform $platform --character-id $character_id `
+	--mode $mode --moment custom --custom-time $session_start 2>$null)  -join "`n"
 	#note, to view any errors that might occur, remove 2>$null (this will print
 	#extra output though, or change to 2>err.txt and it will write to a text file)
 	
     if($LASTEXITCODE) {
-		if(!$last_call_was_error) {
-			Write-Host ("Error retrieving activities. Trying again in {0} seconds" -f $check_interval_seconds) -ForegroundColor White -BackgroundColor Red
-			$last_call_was_error=$true
-		}
+	if(!$last_call_was_error) {
+	    Write-Host ("Error retrieving activities. Trying again in {0} seconds" -f $check_interval_seconds) -ForegroundColor White -BackgroundColor Red
+	    $last_call_was_error=$true
+	}
     } else {
-		$last_call_was_error=$false
-   		Clear-Host
-		Write-Output $activity
+	$last_call_was_error=$false
+   	Clear-Host
+	Write-Output $activity
     }
     Start-Sleep -Seconds $check_interval_seconds
 }
