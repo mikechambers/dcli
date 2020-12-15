@@ -92,11 +92,11 @@ impl Display for Error {
                 "Missing API Key. Set DESTINY_API_KEY environment variable before compiling."
             ),
             Error::ApiNotAvailableException => {
-                write!(f, "The Destiny API is currently not available. (code 5)")
+                write!(f, "The Destiny API is currently not available. Please try again later.")
             },
             Error::PrivacyException => write!(
                 f,
-                "Privacy settings for Bungie account are too restrictive. (code 5)"
+                "Privacy settings for Bungie account are too restrictive."
             ),
             Error::IoFileDoesNotExist { description } => {
                 write!(f, "Expected File does not exist: {}", description)
