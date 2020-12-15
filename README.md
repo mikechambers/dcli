@@ -63,7 +63,7 @@ export MANIFEST_PATH="/home/mesh/destiny/manifest.sqlite3"
 
 Then, I can just use `$MANIFEST_PATH` whenever I need to use it.
 
-Here are some resources showing how to set environment variables on [Mac OS X](https://apple.stackexchange.com/questions/106778/how-do-i-set-environment-variables-on-os-x), [Linux](https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/) and [Window](https://support.shotgunsoftware.com/hc/en-us/articles/114094235653-Setting-global-environment-variables-on-Windows),
+Here are some resources going over how to set environment variables on [Mac OS X](https://apple.stackexchange.com/questions/106778/how-do-i-set-environment-variables-on-os-x), [Linux](https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/) and [Window](https://support.shotgunsoftware.com/hc/en-us/articles/114094235653-Setting-global-environment-variables-on-Windows).
 
 ### Retrieve your member id, platform and character ids
 
@@ -137,7 +137,7 @@ Storing this data in enviroment variables is not required but makes it much easi
 So, lets start getting some data. Lets see whether we are playing Destiny 2, and if so, which activity:
 
 ```
-$ dclia --member-id $MEMBER_ID  --platform $PLATFORM --manifest-path $MANIFEST_PATH
+$ dclia --member-id $MEMBER_ID --platform $PLATFORM --manifest-path $MANIFEST_PATH
 ```
 
 Lets see all of our Crucible stats since the weekly reset on Tuesday:
