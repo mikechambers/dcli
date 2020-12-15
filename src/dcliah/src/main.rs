@@ -212,12 +212,10 @@ async fn print_default(
     let local = start_time.with_timezone(&Local);
     let format_str = if Utc::now() - start_time > Duration::days(6) {
         "%B %-d, %Y"
+    } else if local.day() == Local::now().day() {
+        "Today at %-I:%M %p"
     } else {
-        if local.day() == Local::now().day() {
-            "Today at %-I:%M %p"
-        } else {
-            "%A at %-I:%M %p"
-        }
+        "%A at %-I:%M %p"
     };
 
     let start_time_label = local.format(format_str);
@@ -300,8 +298,7 @@ async fn print_default(
     let mut streak: i32 = 0;
     let mut last_standing: Standing = Standing::Unknown;
     //let highest_flag: &str = "^";
-    let highest_flag : &str = "^";
-    
+    let highest_flag: &str = "^";
 
     for activity in slice.iter().rev() {
         if activity.details.mode != last_mode {
