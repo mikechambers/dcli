@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+# Tracks and displays combined crucible stats per gameplay session.
+#
+# Created by Mike Chambers
+# https://www.mikechambers.com
+#
+# Released under an MIT License
+# More info at:
+# https://github.com/mikechambers/dcli/
+
+#https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -u
+
+#pull variables from environment variables. Otherwise, you can
+#just manually set them below
+
+#can get from dclis
+MEMBER_ID=$MEMBER_ID
+
+#can get from dclis
+PLATFORM=$PLATFORM
+
+#can get from dclic
+CHARACTER_ID=$CHARACTER_ID
+
+#can get from dclim
+MANIFEST_PATH=$MANIFEST_PATH
+
+#how often we check (seconds)
+CHECK_INTERVAL=30
+
+#the mode to pull stats for
+MODE="all_pvp"
+
+#to moment to start pull stats from.
+MOMENT="day"
+#tip to track trials for the weekend MODE=trials_of_osiris and MOMENT=weekend
+
+#lets get the start time string
+SESSION_START=$(dclitime --moment ${MOMENT})
+
+
+clear
+
+LAST_CHECK_WAS_ERROR=0
+#now just loop and keep checking the stats
+while :
+do
+
+	#this redirects stderr put to /dev/null
+	ACTIVITY_HISTORY=$(dcliah --member-id ${MEMBER_ID} --character-id ${CHARACTER_ID} --platform ${PLATFORM} --manifest-path "${MANIFEST_PATH}" --mode ${MODE} --moment custom --custom-time "${SESSION_START}" 2> /dev/null)
+
+	#check and see if an error occured.
+	if [ $? -eq 1 ] 
+    	then
+		if [ $LAST_CHECK_WAS_ERROR -eq 0 ] ; then
+        		echo -e "\nError retrieving activities. Trying again in ${CHECK_INTERVAL} seconds"
+			LAST_CHECK_WAS_ERROR=1
+		fi
+	else
+		LAST_CHECK_WAS_ERROR=0
+		clear
+		echo -e "$ACTIVITY_HISTORY"
+    	fi
+
+	#check exit code here
+	sleep $CHECK_INTERVAL
+done
+
+echo $SESSION_START
+
+
