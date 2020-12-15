@@ -1,5 +1,12 @@
 # dcli Release Notes
 
+## v0.2.0 : December 14, 2020
+
+* Added dcliah
+* Added dclitime
+* Updated and standardized all tool command line arguments (see docs)
+* Added examples/session (bash and Windows Powershell)
+* Lots of fixes and optimizations
 
 ## v0.1.1 : December 3, 2020
 
