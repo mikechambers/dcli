@@ -23,7 +23,7 @@
 use dcli::moment::Moment;
 use std::str::FromStr;
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Datelike, Duration, Local, Utc};
 use dcli::error::Error;
 use dcli::mode::Mode;
 use dcli::output::Output;
@@ -209,11 +209,18 @@ async fn print_default(
     let display_count = std::cmp::min(activity_count, display_limit as usize);
     let is_limited = activity_count != display_count;
 
-    let start_time_label = if Utc::now() - start_time > Duration::days(6) {
-        start_time.format("%B %-d, %Y")
+    let local = start_time.with_timezone(&Local);
+    let format_str = if Utc::now() - start_time > Duration::days(6) {
+        "%B %-d, %Y"
     } else {
-        start_time.format("%A, %B %-d, %Y")
+        if local.day() == Local::now().day() {
+            "Today at %-I:%M %p"
+        } else {
+            "%A at %-I:%M %p"
+        }
     };
+
+    let start_time_label = local.format(format_str);
 
     let title = format!(
         "{mode} activities since {start_time} ({moment})",
