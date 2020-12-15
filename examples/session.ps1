@@ -34,7 +34,7 @@ $character_id=$env:CHARACTER_ID
 
 #for tracking trials on the weekend mode=trials_of_osiris moment=weekend
 $mode="all_pvp"
-$moment="day"
+$moment="now"
 
 $session_start = (dclitime.exe --moment $moment)
 
@@ -46,8 +46,12 @@ Write-Output "Retrieving activity data..."
 $last_call_was_error=$false
 while ($true) {
 
-    # assumes dclia is in your path
-	$activity = (dcliah.exe --manifest-path $manifest_path --member-id $member_id --platform $platform --character-id $character_id --mode $mode --moment custom --custom-time $session_start 2>null)  -join "`n"
+    # assumes dcliah.exe is in your path
+	$activity = (dcliah.exe --manifest-path $manifest_path `
+		--member-id $member_id --platform $platform --character-id $character_id `
+		--mode $mode --moment custom --custom-time $session_start 2>$null)  -join "`n"
+	#note, to view any errors that might occur, remove 2>$null (this will print
+	#extra output though, or change to 2>err.txt and it will write to a text file)
 	
     if($LASTEXITCODE) {
 		if(!$last_call_was_error) {
