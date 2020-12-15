@@ -31,8 +31,8 @@ Requires a modern / updated version of bash to run on OS X. More info [here](htt
 
 ### status_notification
 
-* [status_notification_osx](status_notification_osx)
-* [status_notification_win.ps1](status_notification_win.ps1)
+* [status_notification](status_notification)
+* [status_notification_win.ps1](status_notification.ps1)
 
 Mac OS X Bash and Windows Powershell scripts script which monitors a player's Destiny 2 status, and sends a notification with info on the new status when it changes.
 

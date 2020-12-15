@@ -12,7 +12,7 @@
 # More info at:
 # https://github.com/mikechambers/dcli/
 #
-# Requires dclia v0.1.1
+# Requires dcliah and dclitime v0.2.0
 
 
 ################ Script configuration #################
@@ -27,35 +27,37 @@ $manifest_path="/tmp/manifest.sqlite3"
 
 #you can get member_id and platform by running dclis
 $member_id=$env:MEMBER_ID
-$platform="$env:PLATFORM
+$platform=$env:PLATFORM
 
 #can get character id from dclic
 $character_id=$env:CHARACTER_ID
 
+#for tracking trials on the weekend mode=trials_of_osiris moment=weekend
 $mode="all_pvp"
-$moment="now"
+$moment="day"
 
 $session_start = (dclitime.exe --moment $moment)
 
 $check_interval_seconds=30
 
 ############# program #############
-
-$last_call_was_error=false
+Clear-Host
+Write-Output "Retrieving activity data..."
+$last_call_was_error=$false
 while ($true) {
 
     # assumes dclia is in your path
-    $activity = (dclia --manifest-path $manifest_path --member-id $member_id --platform $platform --character-id $character-id --mode $mode --moment custom --start-time $session_start) -join "`n"
-   
-    if(!$?) {
-	if(!$last_call_was_error) {
-	    Write-Ouput "\nError retrieving activities. Trying again in{0} seconds." -f $check_interval_seconds
-	    $last_call_was_error=true
-	}
+	$activity = (dcliah.exe --manifest-path $manifest_path --member-id $member_id --platform $platform --character-id $character_id --mode $mode --moment custom --custom-time $session_start 2>null)  -join "`n"
+	
+    if($LASTEXITCODE) {
+		if(!$last_call_was_error) {
+			Write-Host ("Error retrieving activities. Trying again in {0} seconds" -f $check_interval_seconds) -ForegroundColor White -BackgroundColor Red
+			$last_call_was_error=$true
+		}
     } else {
-	$last_call_was_error=false
-   	clear
-	Write-Output $activity
+		$last_call_was_error=$false
+   		Clear-Host
+		Write-Output $activity
     }
     Start-Sleep -Seconds $check_interval_seconds
 }
