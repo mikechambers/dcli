@@ -299,7 +299,9 @@ async fn print_default(
     let mut last_mode = Mode::None;
     let mut streak: i32 = 0;
     let mut last_standing: Standing = Standing::Unknown;
-    let highest_flag: &str = "^";
+    //let highest_flag: &str = "^";
+    let highest_flag : &str = "\u{00B9}";
+    
 
     for activity in slice.iter().rev() {
         if activity.details.mode != last_mode {
@@ -397,13 +399,13 @@ async fn print_default(
             map_name,
             format!("{}", activity.values.standing),
             format!("{}", streak),
-            format!("{}{}", highest_kills_flag, activity.values.kills),
-            format!("{}{}", highest_assists_flag, activity.values.assists),
-            format!("{}{}", highest_opponents_defeated_flag, activity.values.opponents_defeated),
-            format!("{}{}", highest_deaths_flag, activity.values.deaths),
-            format!("{}{}", highest_highest_kills_deaths_ratio_flag, format_f32(activity.values.kills_deaths_ratio, 2)),
-            format!("{}{}", highest_kills_deaths_assists_flag, format_f32(activity.values.kills_deaths_assists, 2)),
-            format!("{}{}", highest_efficiency_flag, format_f32(activity.values.efficiency, 2)),
+            format!("{b}{a}", b=highest_kills_flag, a=activity.values.kills),
+            format!("{b}{a}", b=highest_assists_flag, a=activity.values.assists),
+            format!("{b}{a}", b=highest_opponents_defeated_flag, a=activity.values.opponents_defeated),
+            format!("{b}{a}", b=highest_deaths_flag, a=activity.values.deaths),
+            format!("{b}{a}", b=highest_highest_kills_deaths_ratio_flag, a=format_f32(activity.values.kills_deaths_ratio, 2)),
+            format!("{b}{a}", b=highest_kills_deaths_assists_flag, a=format_f32(activity.values.kills_deaths_assists, 2)),
+            format!("{b}{a}", b=highest_efficiency_flag, a=format_f32(activity.values.efficiency, 2)),
             col_w = col_w,
             map_col_w=map_col_w,
             str_col_w=str_col_w,
@@ -450,7 +452,7 @@ async fn print_default(
     println!("{}", header);
 
     println!();
-    println!("{} - denotes highest over all", highest_flag);
+    println!("{}-highest overall", highest_flag);
     println!();
 
     manifest.close().await?;
@@ -539,14 +541,14 @@ struct Opt {
     ///
     /// Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
     ///
-    /// Required when start-moment is set to custom, but otherwise not applicable.
+    /// Required when --moment is set to custom, but otherwise not applicable.
     #[structopt(short = "t", long = "custom-time", parse(try_from_str = parse_rfc3339), required_if("start-moment", "custom"))]
     custom_time: Option<DateTime<Utc>>,
 
     /// Start moment from which to pull activities from
     ///
-    /// Activities will be retrieved from start moment to the current time.
-    /// For example, Specifying: --start-moment weekly
+    /// Activities will be retrieved from moment to the current time.
+    /// For example, Specifying: --moment weekly
     ///
     /// will return all activities since the last weekly reset on Tuesday.
     ///
