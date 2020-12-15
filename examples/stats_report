@@ -17,7 +17,6 @@
 # function for rounding floating point values
 # https://unix.stackexchange.com/a/265202
 
-
 #you can get your member id and platform from dclim
 # pull member_id from environment variable but you can just hardcode here
 MEMBER_ID=$MEMBER_ID
@@ -43,8 +42,15 @@ round() {
 }
 
 #capture output of command into a variable / we could also pipe this in
-OUTPUT=$(dclics --member-id ${MEMBER_ID} --platform ${PLATFORM} --mode all_pvp \
---character-id ${CHARACTER_ID} --moment month --output-format tsv)
+OUTPUT=$(dclics --member-id "${MEMBER_ID}" --platform "${PLATFORM}" --mode all_pvp \
+--character-id "${CHARACTER_ID}" --moment month --output-format tsv)
+
+
+if [ $? -eq 1 ]
+then
+    echo -e "$OUTPUT"
+    exit 1
+fi
 
 # replace tabs with '='. We could probably skip this step, but I couldnt get it
 # working below
@@ -55,7 +61,7 @@ OUTPUT=${OUTPUT//$'\t'/=}
 declare -A data
 
 #read through each line (split by \n)
-while read line
+while read -r line
 do
     #extract the key
     key=${line%%=*}
@@ -74,13 +80,13 @@ done < <(echo "$OUTPUT")
 #this will work with any of the dcli apps that output name / value pairs (tsv)
 
 #round numbers. Might be a better way in bash
-KD=$(round 3 ${data['kills_deaths_ratio']})
-EFFICIENCY=$(round 3 ${data['efficiency']})
+KD=$(round 3 "${data['kills_deaths_ratio']}")
+EFFICIENCY=$(round 3 "${data['efficiency']}")
 
 #figure out win percent
 WIN_PERCENT=$(awk "BEGIN {print ${data['activities_won']}/${data['activities_entered']}}")
 WIN_PERCENT=$(awk "BEGIN {print $WIN_PERCENT * 100}")
-WIN_PERCENT=$(round 4 ${WIN_PERCENT})
+WIN_PERCENT=$(round 4 "${WIN_PERCENT}")
 
 DIALOG="Lets look at your crucible stats for ${data['mode']} ${data['moment_human']}. \
 Over this period you played for a total of ${data['human_time_played']}. \
@@ -88,16 +94,16 @@ You played ${data['activities_entered']} matches with ${data['activities_won']} 
 wins and ${data['activities_lost']} losses for a ${WIN_PERCENT} percent win rate. \
 Your overall K D ratio is  ${KD} with an efficiency of ${EFFICIENCY}."
 
-echo $DIALOG
+echo "$DIALOG"
 
 #check that say command exists
 if command -v say &> /dev/null
 then
     #say is a command on OS X to read the input (-v to change voices)
-    say $DIALOG
+    say "$DIALOG"
 elif command -v espeak &> /dev/null
 then
-	echo $DIALOG | espeak -s 125
+	echo "$DIALOG" | espeak -s 125
 fi
 
 

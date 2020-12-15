@@ -36,7 +36,7 @@ CHECK_INTERVAL=30
 MODE="all_pvp"
 
 #to moment to start pull stats from.
-MOMENT="day"
+MOMENT="now"
 #tip to track trials for the weekend MODE=trials_of_osiris and MOMENT=weekend
 
 #lets get the start time string
@@ -51,7 +51,7 @@ while :
 do
 
     #this redirects stderr put to /dev/null
-    ACTIVITY_HISTORY=$(dcliah --member-id ${MEMBER_ID} --character-id ${CHARACTER_ID} --platform ${PLATFORM} --manifest-path "${MANIFEST_PATH}" --mode ${MODE} --moment custom --custom-time "${SESSION_START}" 2> /dev/null)
+    ACTIVITY_HISTORY=$(dcliah --member-id "${MEMBER_ID}" --character-id "${CHARACTER_ID}" --platform "${PLATFORM}" --manifest-path "${MANIFEST_PATH}" --mode "${MODE}" --moment custom --custom-time "${SESSION_START}" 2> /dev/null)
 
     #check and see if an error occured.
     if [ $? -eq 1 ] 

@@ -21,7 +21,7 @@ EMAIL_ADDRESS=$EMAIL
 # (here it pulls from environment but you can also hardcode)
 MEMBER_ID=$MEMBER_ID
 
-PLATFORM=xbox
+PLATFORM=$PLATFORM
 
 # character_id to retrieve stats for
 # can retrieve character_ids from dclic
@@ -33,7 +33,7 @@ CHARACTER_ID=$CHARACTER_ID
 # and trialsofosiris
 declare -a MODES=("all_pvp" "quickplay" "iron_banner" "trials_of_osiris" "rumble" "pvp_competitive" )
 
-REPORT_START=$(date -v-7d  +"%A, %B %-d, %Y")
+REPORT_START=$(date +"%A, %B %-d, %Y")
 REPORT_END=$(date +"%A, %B %-d, %Y")
 
 SUBJECT="Destiny Crucible Report for week of ${REPORT_START}"
@@ -45,7 +45,7 @@ OUTPUT+="\n"
 echo "Gathering data for report"
 
 # Iterate the string array using for loop
-for mode in ${MODES[@]}; do
+for mode in "${MODES[@]}"; do
 
     echo "Getting data for $mode"
     
@@ -74,7 +74,7 @@ for mode in ${MODES[@]}; do
     OUTPUT+="************************************************************************************************************\n"
 
     #2>&1 this redirects stderr to stdout so we can capture
-    TMP_OUTPUT=$(dclics --member-id $MEMBER_ID --character-id $CHARACTER_ID --platform $PLATFORM --mode $mode --moment week 2>&1)
+    TMP_OUTPUT=$(dclics --member-id "$MEMBER_ID" --character-id "$CHARACTER_ID" --platform "$PLATFORM" --mode "$mode" --moment week 2>&1)
 
     if [ $? -eq 1 ] 
     then
