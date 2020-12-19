@@ -29,15 +29,18 @@ use sqlx::{ConnectOptions, Connection, SqliteConnection};
 use std::str::FromStr;
 use std::path::PathBuf;
 use crate::platform::Platform;
+use crate::apiinterface::ApiInterface;
+use crate::mode::Mode;
 
 
 pub struct ActivityStoreInterface {
+    verbose:bool,
     db:SqliteConnection,
 }
 
 impl ActivityStoreInterface {
 
-    pub async fn init_with_path(store_path:&PathBuf) -> Result<ActivityStoreInterface, Error> {
+    pub async fn init_with_path(store_path:&PathBuf, verbose:bool) -> Result<ActivityStoreInterface, Error> {
 
         let path: String = format!("{}", store_path.display());
         let read_only = false;
@@ -52,33 +55,61 @@ impl ActivityStoreInterface {
 
         sqlx::query("
             BEGIN TRANSACTION;
-            CREATE TABLE IF NOT EXISTS 'main'.'activity_id_queue' (
+
+            /* found activities we havent synced details from yet */
+            CREATE TABLE IF NOT EXISTS 'main'.'activity_queue' (
+                'activity_id' 	INTEGER NOT NULL,
+                'character_rowid'	INTEGER NOT NULL,
+                PRIMARY KEY('character_rowid', 'activity_id'),
+            
+                FOREIGN KEY (character_rowid)
+                REFERENCES character (rowid)
+                ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS 'main'.'member' (
+                'id'	TEXT NOT NULL,
+                'platform_id'	INTEGER NOT NULL,
+                PRIMARY KEY('id', 'platform_id')
+            );
+            
+            /* character */
+            CREATE TABLE IF NOT EXISTS 'main'.'character' (
+                'id'	TEXT NOT NULL,
+                'member_rowid'	INTEGER NOT NULL,
+                PRIMARY KEY('id', 'member_rowid'),
+                FOREIGN KEY (member_rowid)
+                REFERENCES member (rowid)
+                ON DELETE CASCADE
+            );
+            
+            /* activity / match (doesnt have all fields yet */
+            CREATE TABLE IF NOT EXISTS 'main'.'activity' (
+                'id'	INTEGER UNIQUE NOT NULL,
+                PRIMARY KEY('id')
+            );
+            
+            CREATE TABLE IF NOT EXISTS 'main'.'character_activity_stats' (
+                'character_rowid'	INTEGER NOT NULL,
+            
+                /* we use id and not rowid since we shouldnt have dupes */
                 'activity_id'	INTEGER NOT NULL,
-                'member_id'	TEXT NOT NULL,
-                'character_id'	TEXT NOT NULL,
-                'platform_id'	INTEGER NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS 'character_result' (
-                'character_id'	INTEGER NOT NULL,
-                'activity_id'	INTEGER NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS 'character' (
-                'character_id'	INTEGER NOT NULL, //primary
-                'member_id'	INTEGER NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS 'member' (
-                'member_id'	INTEGER NOT NULL, //primary
-                'platform_id'	INTEGER NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS 'activity' (
-                'activity_id'	INTEGER NOT NULL //PRIMARY KEY
+            
+                FOREIGN KEY (activity_id)
+                REFERENCES activity (activity_id)
+                ON DELETE CASCADE,
+            
+                FOREIGN KEY (character_rowid)
+                REFERENCES character (rowid)
+                ON DELETE CASCADE,
+            
+                PRIMARY KEY('character_rowid','activity_id')
             );
             COMMIT;
         ")
             .execute(&mut db)
             .await?;
 
-        Ok(ActivityStoreInterface{db:db})
+        Ok(ActivityStoreInterface{db:db, verbose:verbose})
     }
 
     /// retrieves and stores activity details for ids in activity queue
@@ -86,7 +117,7 @@ impl ActivityStoreInterface {
 
         self.update_activity_queue(member_id, character_id, platform).await?;
 
-        self.sync_activity_queue(member_id, character_id, platform).await?;
+        //self.sync_activities(member_id, character_id, platform).await?;
 
         //return total synced?
 
@@ -94,24 +125,48 @@ impl ActivityStoreInterface {
     }
 
     /// download results from ids in queue, and return number of items synced
-    async fn sync_activity_queue(&self, member_id:&str, character_id:&str, platform:&Platform) -> Result<i32, Error> {
+    async fn sync_activities(&self, member_id:&str, character_id:&str, platform:&Platform) -> Result<i32, Error> {
+        
+        
         Ok(0)
     }
 
     //updates activity id queue with ids which have not been synced
     async fn update_activity_queue(&self, member_id:&str, character_id:&str, platform:&Platform) -> Result<(), Error> {
 
-        self.sync_activity_queue(member_id, character_id, platform).await?;
+        self.sync_activities(member_id, character_id, platform).await?;
 
-        //select max id
+        let max_id:String = "7588684064".to_string();
+
+        let api = ApiInterface::new(self.verbose);
+
+        let activities = api.retrieve_activities_since_id(
+            member_id, character_id, platform, &Mode::AllPvP, &max_id).await?;
+
+        if activities.is_none() {
+            println!("No new activities found");
+            return Ok(());
+        }
+
+        let activities = activities.unwrap();
+
+        println!("Activities found: {}", activities.len());
+
+        //select max(id) from activities where character = character  
 
         //retrieve ids until that id is found
 
-        //write ids to queue
-
-        //return number of new activities found? and total number in queue
+        //insert or ignore into member member_id
+        //select rowid from member where member_id = member_id
+        //insert or ignore into character character_id, member_id_row
+        //select character id where character_id = character_id member_id = member_id_row
+        //insert into activity queue activity id, character id
 
         Ok(())
+    }
+
+    async fn get_member_rowid(&self, member_id:&str, platform:&Platform) -> Result<i32, Error> {
+        Ok(0)
     }
 
 }

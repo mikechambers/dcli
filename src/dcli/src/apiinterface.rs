@@ -321,6 +321,79 @@ impl ApiInterface {
         Ok(Some(out))
     }
 
+    pub async fn retrieve_activities_since_id(
+        &self,
+        member_id: &str,
+        character_id: &str,
+        platform: &Platform,
+        mode: &Mode,
+        activity_id: &str,
+    ) -> Result<Option<Vec<Activity>>, Error> {
+
+        let mut out: Vec<Activity> = Vec::new();
+        let mut page = 0;
+        let count = MAX_ACTIVITIES_REQUEST_COUNT;
+
+        let activity_id_str = activity_id.to_string();
+
+        eprint!("[");
+        //TODO: if error occurs on an individual call, retry?
+        loop {
+            eprint!("#");
+            io::stderr().flush().unwrap();
+
+            // TODO: if we call more pages that there is data, it will return back with no Response
+            // property. Usually this means an error but in this case, it just means we have
+            // got all of the data. This is only an issue, if they user has a number of activities
+            // divisible by MAX_ACTIVITIES_REQUEST_COUNT.
+            // We could catch the error and see if its because the response header is missing, and if
+            // so assume we are out of data. (maybe compare to whether we have found any items).
+            // This would mean we might miss legitimate API errors though.
+            let activities = self
+                .retrieve_activities(member_id, character_id, platform, mode, count, page)
+                .await?;
+
+            if activities.is_none() {
+                break;
+            }
+
+            let t: Vec<Activity> = activities.unwrap();
+
+            let len = t.len() as i32;
+
+            if len == 0 {
+                break;
+            }
+
+            let mut should_break = false;
+            for activity in t.into_iter() {
+                if activity.details.instance_id == activity_id_str {
+                    should_break = true;
+                    break;
+                }
+
+                out.push(activity);
+            }
+
+            if should_break || len < count {
+                break;
+            }
+
+            page += 1;
+
+            //if we try to page past where there is valid data, bungie will return
+            //empty response, which we detect retrieve_activities (and returns None)
+        }
+
+        eprintln!("] : COMPLETE");
+
+        if out.is_empty() {
+            return Ok(None);
+        }
+
+        Ok(Some(out))
+    }
+
     pub async fn retrieve_activities(
         &self,
         member_id: &str,

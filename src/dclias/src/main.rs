@@ -23,6 +23,7 @@
 use dcli::output::Output;
 use dcli::utils::{build_tsv, print_error, print_verbose, EXIT_FAILURE};
 use dcli::activitystoreinterface::ActivityStoreInterface;
+use dcli::platform::Platform;
 
 use std::path::PathBuf;
 
@@ -63,6 +64,25 @@ struct Opt {
     ///The manifest will be stored in this directory in a file named manifest.sqlite3
     #[structopt(short = "S", long = "store-path", parse(from_os_str))]
     store_path: PathBuf,
+
+    /// Platform for specified id
+    ///
+    /// Valid values are: xbox, playstation, stadia or steam.
+    #[structopt(short = "p", long = "platform", required = true)]
+    platform: Platform,
+
+        /// Destiny 2 API member id
+    ///
+    /// This is not the user name, but the member id
+    /// retrieved from the Destiny API.
+    #[structopt(short = "m", long = "member-id", required = true)]
+    member_id: String,
+
+    /// Destiny 2 API character id
+    ///
+    /// Destiny 2 API character id for the character to retrieve activities for.
+    #[structopt(short = "c", long = "character-id")]
+    character_id: String,
 }
 
 #[tokio::main]
@@ -70,13 +90,22 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
-    let store:ActivityStoreInterface = match ActivityStoreInterface::init_with_path(&opt.store_path).await {
+    let store:ActivityStoreInterface = match ActivityStoreInterface::init_with_path(&opt.store_path, opt.verbose).await {
         Ok(e) => e,
         Err(e) => {
             print_error("Error initializing activity store.", e);
             std::process::exit(EXIT_FAILURE);
         },
+    };
 
+    match store.sync(&opt.member_id, &opt.character_id, &opt.platform).await {
+        Ok(e) => {
+            println!("done");
+        },
+        Err(e) => {
+            print_error("Error syncing ids.", e);
+            std::process::exit(EXIT_FAILURE);
+        },
     };
 
 
