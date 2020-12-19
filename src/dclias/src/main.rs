@@ -20,8 +20,14 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use dcli::utils::{print_error, print_verbose};
+use dcli::output::Output;
+use dcli::utils::{build_tsv, print_error, print_verbose, EXIT_FAILURE};
+use dcli::activitystoreinterface::ActivityStoreInterface;
+
+use std::path::PathBuf;
+
 use structopt::StructOpt;
+
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for downloading and syncing Crucible activity history
@@ -51,6 +57,12 @@ struct Opt {
     /// ending in a new line character (\n).
     #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
+
+    ///Directory where the manifest and meta-data will be stored.
+    ///
+    ///The manifest will be stored in this directory in a file named manifest.sqlite3
+    #[structopt(short = "S", long = "store-path", parse(from_os_str))]
+    store_path: PathBuf,
 }
 
 #[tokio::main]
@@ -58,13 +70,23 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
+    let store:ActivityStoreInterface = match ActivityStoreInterface::init_with_path(&opt.store_path).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Error initializing activity store.", e);
+            std::process::exit(EXIT_FAILURE);
+        },
+
+    };
+
+
     match opt.output {
         Output::Default => {
             println!("{}", "DEFAULT OUTPUT");
-        }
+        },
         Output::Tsv => {
             let mut name_values: Vec<(&str, String)> = Vec::new();
-            name_values.push(("status", "COMPLETE"));
+            name_values.push(("status", "COMPLETE".to_string()));
 
             print!("{}", build_tsv(name_values));
         }
