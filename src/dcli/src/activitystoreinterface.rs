@@ -28,7 +28,7 @@ use sqlx::Row;
 use sqlx::{ConnectOptions, Connection, SqliteConnection};
 use std::str::FromStr;
 use std::path::PathBuf;
-
+use crate::platform::Platform;
 
 
 pub struct ActivityStoreInterface {
@@ -51,17 +51,67 @@ impl ActivityStoreInterface {
             .await?;
 
         sqlx::query("
-        CREATE TABLE IF NOT EXISTS 'main'.'activity_id_queue' (
-            'activity_id'	INTEGER NOT NULL,
-            'member_id'	TEXT NOT NULL,
-            'character_id'	TEXT NOT NULL,
-            'platform_id'	INTEGER NOT NULL
-        );
+            BEGIN TRANSACTION;
+            CREATE TABLE IF NOT EXISTS 'main'.'activity_id_queue' (
+                'activity_id'	INTEGER NOT NULL,
+                'member_id'	TEXT NOT NULL,
+                'character_id'	TEXT NOT NULL,
+                'platform_id'	INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS 'character_result' (
+                'character_id'	INTEGER NOT NULL,
+                'activity_id'	INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS 'character' (
+                'character_id'	INTEGER NOT NULL, //primary
+                'member_id'	INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS 'member' (
+                'member_id'	INTEGER NOT NULL, //primary
+                'platform_id'	INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS 'activity' (
+                'activity_id'	INTEGER NOT NULL //PRIMARY KEY
+            );
+            COMMIT;
         ")
             .execute(&mut db)
             .await?;
 
         Ok(ActivityStoreInterface{db:db})
+    }
+
+    /// retrieves and stores activity details for ids in activity queue
+    pub async fn sync(&self, member_id:&str, character_id:&str, platform:&Platform) -> Result<(), Error> {
+
+        self.update_activity_queue(member_id, character_id, platform).await?;
+
+        self.sync_activity_queue(member_id, character_id, platform).await?;
+
+        //return total synced?
+
+        Ok(())
+    }
+
+    /// download results from ids in queue, and return number of items synced
+    async fn sync_activity_queue(&self, member_id:&str, character_id:&str, platform:&Platform) -> Result<i32, Error> {
+        Ok(0)
+    }
+
+    //updates activity id queue with ids which have not been synced
+    async fn update_activity_queue(&self, member_id:&str, character_id:&str, platform:&Platform) -> Result<(), Error> {
+
+        self.sync_activity_queue(member_id, character_id, platform).await?;
+
+        //select max id
+
+        //retrieve ids until that id is found
+
+        //write ids to queue
+
+        //return number of new activities found? and total number in queue
+
+        Ok(())
     }
 
 }
