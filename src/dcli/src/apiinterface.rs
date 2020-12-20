@@ -20,6 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use crate::apiutils::{PGCR_BASE_URL, API_BASE_URL};
 use crate::apiclient::ApiClient;
 use crate::error::Error;
 use crate::mode::Mode;
@@ -60,7 +61,8 @@ impl ApiInterface {
         platform: Platform,
     ) -> Result<Option<CharacterActivitiesData>, Error> {
         let url =
-            format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=204",
+            format!("{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=204",
+                base=API_BASE_URL,
                 platform_id = platform.to_id(),
                 member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
             );
@@ -116,7 +118,8 @@ impl ApiInterface {
         platform: Platform,
     ) -> Result<Vec<CharacterData>, Error> {
         let url =
-            format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=200",
+            format!("{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=200",
+                base=API_BASE_URL,
                 platform_id = platform.to_id(),
                 member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
             );
@@ -160,7 +163,8 @@ impl ApiInterface {
     ) -> Result<Option<PvpStatsData>, Error> {
         //"/Platform/Destiny2/1/Account/$memberId/Character/$characterId/Stats/?modes=$modesString$dateRangeString&periodType=$periodTypeId&groups=1,2,3";
         let url =
-        format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=2&groups=1,2,3",
+        format!("{base}/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=2&groups=1,2,3",
+            base=API_BASE_URL,
             platform_id = platform.to_id(),
             member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
             character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
@@ -199,7 +203,8 @@ impl ApiInterface {
 
         //
         let url =
-        format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=1&groups=1,2,3&daystart={day_start}&dayend={day_end}",
+        format!("{base}/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=1&groups=1,2,3&daystart={day_start}&dayend={day_end}",
+            base=API_BASE_URL,
             platform_id = platform.to_id(),
             member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
             character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
@@ -405,7 +410,8 @@ impl ApiInterface {
     ) -> Result<Option<Vec<Activity>>, Error> {
         //
         let url =
-        format!("https://www.bungie.net/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/Activities/?mode={mode_id}&count={count}&page={page}",
+        format!("{base}/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/Activities/?mode={mode_id}&count={count}&page={page}",
+            base=API_BASE_URL,
             platform_id = platform.to_id(),
             member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
             character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
@@ -445,5 +451,17 @@ impl ApiInterface {
         //let activities: Option<Vec<Activity>> = response.activities;
 
         Ok(activities)
+    }
+
+    pub async fn retrieve_post_game_carnage_report(instance_id:&str) -> Result<(), Error> {
+
+        //TODO: do we need to use baseurls?
+        let url =
+            format!("{base}/Platform/Destiny2/Stats/PostGameCarnageReport/{instance_id}/",
+            base=PGCR_BASE_URL, 
+            instance_id = instance_id,
+        );
+
+        Ok(())
     }
 }

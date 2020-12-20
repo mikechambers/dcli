@@ -143,7 +143,7 @@ impl ActivityStoreInterface {
 
         //let max_id:String = "7588684064".to_string();
         let max_id:String = self.get_max_activity_id(member_id, character_id, platform).await?;
-println!("MAX ID: {}", max_id);
+
         let api = ApiInterface::new(self.verbose);
 
         let result = api.retrieve_activities_since_id(
@@ -248,9 +248,7 @@ println!("MAX ID: {}", max_id);
         .await?;
 
         let activity_id:i64 = row.try_get("max_activity_id")?;
-println!("activity_id : {}", activity_id);
         Ok(activity_id.to_string())
-
     }
 
 }

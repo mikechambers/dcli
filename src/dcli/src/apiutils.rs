@@ -21,3 +21,5 @@
 */
 
 pub const RESOURCE_BASE_URL: &str = "https://www.bungie.net";
+pub const API_BASE_URL: &str = "https://www.bungie.net";
+pub const PGCR_BASE_URL: &str = "https://stats.bungie.net";
