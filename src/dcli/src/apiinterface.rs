@@ -28,6 +28,7 @@ use crate::platform::Platform;
 use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
 use crate::response::character::CharacterData;
 use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;
+use crate::response::pgcr::{PGCRResponseData, PGCRResponse};
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
@@ -453,7 +454,9 @@ impl ApiInterface {
         Ok(activities)
     }
 
-    pub async fn retrieve_post_game_carnage_report(instance_id:&str) -> Result<(), Error> {
+
+
+    pub async fn retrieve_post_game_carnage_report(&self, instance_id:&str) -> Result<Option<PGCRResponseData>, Error> {
 
         //TODO: do we need to use baseurls?
         let url =
@@ -462,6 +465,25 @@ impl ApiInterface {
             instance_id = instance_id,
         );
 
-        Ok(())
+        let response: PGCRResponse = self
+        .client
+        .call_and_parse::<PGCRResponse>(&url)
+        .await?;
+
+        
+        let data:PGCRResponseData = match response.response {
+            Some(e) => e,
+            None => {
+                if response.status.error_code == API_RESPONSE_STATUS_SUCCESS {
+                    return Ok(None);
+                } else {
+                    return Err(Error::ApiRequest {
+                        description: String::from("No response data from API Call."),
+                    });
+                }
+            }
+        };
+
+        Ok(Some(data))
     }
 }

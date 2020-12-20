@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::error::Error;
+use crate::{error::Error, response::pgcr::PGCRResponseData};
 
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
@@ -31,7 +31,6 @@ use std::path::PathBuf;
 use crate::platform::Platform;
 use crate::apiinterface::ApiInterface;
 use crate::mode::Mode;
-
 
 pub struct ActivityStoreInterface {
     verbose:bool,
@@ -132,7 +131,55 @@ impl ActivityStoreInterface {
     /// download results from ids in queue, and return number of items synced
     async fn sync_activities(&mut self, member_id:&str, character_id:&str, platform:&Platform) -> Result<i32, Error> {
         
+        let mut rows = sqlx::query("SELECT activity_id from activity_queue")
+        .fetch(&mut self.db);
+
         
+        let mut ids:Vec<String> = Vec::new();
+        while let Some(row) = rows.try_next().await? {
+            // map the row into a user-defined domain type
+            let activity_id: String = row.try_get("activity_id")?;
+
+            ids.push(activity_id);
+        }
+
+        let mut extended:Vec<PGCRResponseData> = Vec::new();
+        let mut count = 0;
+        let api = ApiInterface::new(self.verbose);
+        for id_chunks in ids.chunks(25) {
+
+            let mut f = Vec::new();
+
+            for c in id_chunks {
+                f.push(api.retrieve_post_game_carnage_report(c));
+            }
+
+            count += f.len();
+            println!("{} of {}", count, ids.len());
+
+            let results = futures::future::join_all(f).await;
+
+            //loop through. if we get results. grab those, otherwise, we ignore
+            //any errors, as that will keep the IDs in the queue to try next time
+            for r in results {
+                match r {
+                    Ok(e) => {
+                        if e.is_some() {
+                            extended.push(e.unwrap());
+                        }
+                        //TODO: what do we do if it returns None?
+                    },
+                    Err(e) => {
+                        println!("{}", e);
+                    },
+                }
+            }
+
+        }
+
+        
+        
+
         Ok(0)
     }
 
