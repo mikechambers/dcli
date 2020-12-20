@@ -2,8 +2,7 @@ use crate::mode::Mode;
 use crate::platform::Platform;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
-use crate::response::utils::{property_to_standing, property_to_value};
-use crate::standing::Standing;
+use crate::response::utils::{property_to_value, standing_default, property_to_i32_value};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 
@@ -39,14 +38,14 @@ pub struct Activity {
     pub period: DateTime<Utc>,
 
     #[serde(rename = "activityDetails")]
-    pub details: ActivityDetails,
+    pub details: DestinyHistoricalStatsActivity,
 
     //todo: can we collapse these down?
-    pub values: ActivityValues,
+    pub values: ActivityHistoricalStatsValues,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ActivityValues {
+pub struct ActivityHistoricalStatsValues {
     #[serde(deserialize_with = "property_to_value")]
     pub assists: f32,
 
@@ -60,9 +59,11 @@ pub struct ActivityValues {
     pub deaths: f32,
 
     #[serde(rename = "averageScorePerKill", deserialize_with = "property_to_value")]
+    #[serde(default)]
     pub average_score_per_kill: f32,
 
     #[serde(rename = "averageScorePerLife", deserialize_with = "property_to_value")]
+    #[serde(default)]
     pub average_score_per_life: f32,
 
     #[serde(deserialize_with = "property_to_value")]
@@ -86,11 +87,12 @@ pub struct ActivityValues {
     )]
     pub activity_duration_seconds: f32,
     //TODO: need to make this an option
-    #[serde(deserialize_with = "property_to_standing")]
-    #[serde(default)]
-    pub standing: Standing,
+    #[serde(deserialize_with = "property_to_i32_value")]
+    #[serde(default = "standing_default")]
+    pub standing: i32,
 
     #[serde(deserialize_with = "property_to_value")]
+    #[serde(default)]
     pub team: f32,
 
     #[serde(rename = "completionReason", deserialize_with = "property_to_value")]
@@ -111,7 +113,7 @@ pub struct ActivityValues {
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity.html#schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ActivityDetails {
+pub struct DestinyHistoricalStatsActivity {
     /// The unique hash identifier of the DestinyActivityDefinition that was played.
     /// (Seems to be the same as director_activity_hash)
     #[serde(rename = "referenceId")]

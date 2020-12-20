@@ -308,14 +308,15 @@ async fn print_default(
             last_mode = activity.details.mode;
         }
 
-        if activity.values.standing == last_standing {
+        let standing = Standing::from_mode(activity.values.standing, &activity.details.mode);
+        if standing == last_standing {
             streak = match last_standing {
                 Standing::Unknown => 0,
                 Standing::Victory => streak + 1,
                 Standing::Defeat => streak - 1,
             };
         } else {
-            last_standing = activity.values.standing;
+            last_standing = standing;
             streak = match last_standing {
                 Standing::Unknown => 0,
                 Standing::Victory => 1,

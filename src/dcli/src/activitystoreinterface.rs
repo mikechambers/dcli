@@ -20,12 +20,12 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::{error::Error, response::pgcr::PGCRResponseData};
+use crate::{error::Error, response::pgcr::DestinyPostGameCarnageReportData};
 
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
-use sqlx::{ConnectOptions, Connection, SqliteConnection};
+use sqlx::{ConnectOptions, SqliteConnection};
 use std::str::FromStr;
 use std::path::PathBuf;
 use crate::platform::Platform;
@@ -143,22 +143,25 @@ impl ActivityStoreInterface {
             ids.push(activity_id);
         }
 
-        let mut extended:Vec<PGCRResponseData> = Vec::new();
+        let mut extended:Vec<DestinyPostGameCarnageReportData> = Vec::new();
         let mut count = 0;
 
         //todo: could move this to top so its used across calls
         let api = ApiInterface::new(self.verbose)?;
-        for id_chunks in ids.chunks(1) {
+        for id_chunks in ids.chunks(25) {
 
             let mut f = Vec::new();
 
+            println!("-----------------------");
             for c in id_chunks {
                 f.push(api.retrieve_post_game_carnage_report(c));
+                println!("{}", c);
             }
 
             count += f.len();
             println!("{} of {}", count, ids.len());
 
+            //tokio::spawn
             let results = futures::future::join_all(f).await;
 
             //loop through. if we get results. grab those, otherwise, we ignore

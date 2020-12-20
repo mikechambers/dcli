@@ -122,26 +122,27 @@ impl ActivityStatsContainer {
             self.opponents_defeated += a.values.opponents_defeated;
             self.time_played_seconds += a.values.time_played_seconds;
 
-            match a.values.standing {
+            let standing = Standing::from_mode(a.values.standing, &a.details.mode);
+            match standing {
                 Standing::Victory => {
                     self.wins += 1.0;
-                }
+                },
                 Standing::Defeat => {
                     self.losses += 1.0;
-                }
+                },
                 Standing::Unknown => {
                     self.draws += 1.0;
-                }
+                },
             };
 
-            if a.values.standing == last_standing {
+            if standing == last_standing {
                 streak = match last_standing {
                     Standing::Unknown => 0.0,
                     Standing::Victory => streak + 1.0,
                     Standing::Defeat => streak - 1.0,
                 };
             } else {
-                last_standing = a.values.standing;
+                last_standing = standing;
                 streak = match last_standing {
                     Standing::Unknown => 0.0,
                     Standing::Victory => 1.0,

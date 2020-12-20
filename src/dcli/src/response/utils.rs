@@ -29,6 +29,25 @@ use serde_derive::Deserialize;
 //2020-10-05T18:49:25Z
 pub const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
 
+
+ pub fn property_to_i32_value<'de, D>(deserializer: D) -> Result<i32, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+    #[derive(Deserialize)]
+    struct Outer {
+        pub basic: Inner,
+    }
+
+    #[derive(Deserialize)]
+    struct Inner {
+        pub value: f32,
+    }
+
+    let helper = <Outer>::deserialize(deserializer)?;
+    Ok(helper.basic.value as i32)
+}
+
 pub fn property_to_value<'de, D, T: serde::de::Deserialize<'de>>(
     deserializer: D,
 ) -> Result<T, D::Error>
@@ -49,6 +68,7 @@ where
     Ok(helper.basic.value)
 }
 
+/*
 pub fn property_to_standing<'de, D>(deserializer: D) -> Result<Standing, D::Error>
 where
     D: serde::de::Deserializer<'de>,
@@ -66,6 +86,7 @@ where
     let helper = Outer::deserialize(deserializer)?;
     Ok(Standing::from_f32(helper.basic.value))
 }
+*/
 
 //BUG: this doesnt get called if the property is not include in the JSON
 //https://github.com/serde-rs/json/issues/734
@@ -145,4 +166,8 @@ where
     let dt = DateTime::<Utc>::from_utc(n, Utc);
 
     Ok(dt)
+}
+
+pub fn standing_default() -> i32 {
+    -1
 }

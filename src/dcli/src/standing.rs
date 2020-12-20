@@ -20,15 +20,15 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::utils::f32_are_equal;
-use serde_derive::Serialize;
+use crate::mode::Mode;
 use std::fmt;
 
-#[derive(Serialize, Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[repr(i32)]
 pub enum Standing {
     Victory = 0,
     Defeat = 1,
-    Unknown = 2,
+    Unknown = -1,
 }
 
 impl Default for Standing {
@@ -38,13 +38,21 @@ impl Default for Standing {
 }
 
 impl Standing {
-    pub fn from_f32(value: f32) -> Standing {
-        if f32_are_equal(value, 1.0) {
-            Standing::Defeat
-        } else if value == 0.0 {
-            Standing::Victory
+    pub fn from_mode(value: i32, mode:&Mode) -> Standing {
+        if value == 0 {
+            return Standing::Victory;
+        } else if value == -1 {
+            return Standing::Unknown;
+        }
+
+        if value > 0 {
+            if mode == &Mode::Rumble && value > 2 {
+                return Standing::Defeat;
+            } else {
+                return Standing::Victory;
+            }
         } else {
-            Standing::Unknown
+            return Standing::Victory;
         }
     }
 }

@@ -26,7 +26,7 @@ use std::str::FromStr;
 
 ///Destiny 2 Platforms
 #[derive(PartialEq, Clone, Copy, Debug, Deserialize_repr, Serialize_repr)]
-#[repr(u32)]
+#[repr(i32)]
 pub enum Platform {
     ///Xbox
     Xbox = 1,
