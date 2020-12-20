@@ -61,6 +61,7 @@ impl ActivityStoreInterface {
             "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "activity_id" TEXT NOT NULL,
             "character"	INTEGER NOT NULL,
+            UNIQUE(activity_id, character),
             FOREIGN KEY (character)
                REFERENCES character (id)
                ON DELETE CASCADE
@@ -69,13 +70,15 @@ impl ActivityStoreInterface {
         CREATE TABLE IF NOT EXISTS  "member" (
             "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "member_id"	TEXT NOT NULL,
-            "platform_id"	INTEGER NOT NULL
+            "platform_id"	INTEGER NOT NULL,
+            UNIQUE(member_id, platform_id)
         );
         
         CREATE TABLE IF NOT EXISTS  "character" (
             "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "character_id"	TEXT NOT NULL,
             "member"	INTEGER NOT NULL,
+            UNIQUE(character_id, member),
             FOREIGN KEY ("member")
                REFERENCES member ("id")
                ON DELETE CASCADE
@@ -94,9 +97,8 @@ impl ActivityStoreInterface {
         CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
             "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "character"	INTEGER NOT NULL,
-        
-            /* we use id and not rowid since we shouldnt have dupes */
             "activity"	INTEGER NOT NULL,
+            UNIQUE(activity, character),
         
             FOREIGN KEY (activity)
                REFERENCES activity (id)
@@ -139,43 +141,46 @@ impl ActivityStoreInterface {
 
         self.sync_activities(member_id, character_id, platform).await?;
 
-        let max_id:String = "7588684064".to_string();
-
+        //let max_id:String = "7588684064".to_string();
+        let max_id:String = self.get_max_activity_id(member_id, character_id, platform).await?;
+println!("MAX ID: {}", max_id);
         let api = ApiInterface::new(self.verbose);
 
-        let activities = api.retrieve_activities_since_id(
+        let result = api.retrieve_activities_since_id(
             member_id, character_id, platform, &Mode::AllPvP, &max_id).await?;
 
-        if activities.is_none() {
+        if result.is_none() {
             println!("No new activities found");
             return Ok(());
         }
 
-        let activities = activities.unwrap();
-
-                //INSERT INTO "main"."platform"("platform_id","name") VALUES (1,'Xbox');
-
-        //sqlx::query("DELETE FROM table").execute(&mut conn).await?;
- 
-
+        let mut activities = result.unwrap();
         println!("Activities found: {}", activities.len());
 
         let member_row_id = self.insert_member_id(&member_id, &platform).await?;
-
-println!("member_row_id : {}", member_row_id);
-
         let character_row_id = self.insert_character_id(&character_id, member_row_id).await?;
-println!("character_row_id : {}", character_row_id);
-        //select max(id) from activities where character = character  
 
-        //retrieve ids until that id is found
+        activities.reverse();
 
-        //insert or ignore into member member_id
-        //select rowid from member where member_id = member_id
-        //insert or ignore into character character_id, member_id_row
-        //select character id where character_id = character_id member_id = member_id_row
-        //insert into activity queue activity id, character id
+        // TODO: think through this
+        // Right now, we do all inserts in one transation. This gives a significant performance
+        // increse when inserting large number of activities at one (i.e. on first sync).
+        // however, it means if something goes wrong, nothing will be inserted, and if we
+        // come across some data that causes a bug inserting, then nothing would ever be inserted
+        // (until we fixed the bug). Probably shouldnt be an issue, since any weird stuff with
+        // api data should be caught by the json deserializer in apiinterface
+        sqlx::query("BEGIN TRANSACTION;").execute(&mut self.db).await?;
+        for activity in activities {
+            let instance_id = activity.details.instance_id;
 
+            sqlx::query("INSERT OR IGNORE into activity_queue ('activity_id', 'character') VALUES ($1, $2)")
+            .bind(instance_id)
+            .bind(character_row_id)
+            .execute(&mut self.db)
+            .await?;
+        }
+        sqlx::query("COMMIT;").execute(&mut self.db).await?;
+        
         Ok(())
     }
 
@@ -213,6 +218,39 @@ println!("character_row_id : {}", character_row_id);
         let rowid:i32 = row.try_get("id")?;
 
         Ok(rowid)
+    }
+
+    async fn get_max_activity_id(
+        &mut self,
+        member_id:&str,
+        character_id:&str,
+        platform:&Platform) -> Result<String, Error> {
+
+        let row = sqlx::query(
+            r#"
+            SELECT
+                MAX(CAST(activity.activity_id as INTEGER)) as max_activity_id
+            FROM
+                activity, character_activity_stats, character, member
+            WHERE
+                character_activity_stats.activity = activity.id AND 
+                character.character_id = ? AND 
+                character_activity_stats.character = character.id AND
+                member.member_id = ? AND
+                character.member = member.id AND
+                member.platform_id = ?
+            "#
+        )   
+        .bind(format!("{}", character_id))
+        .bind(format!("{}", member_id))
+        .bind(format!("{}", platform.to_id()))
+        .fetch_one(&mut self.db)
+        .await?;
+
+        let activity_id:i64 = row.try_get("max_activity_id")?;
+println!("activity_id : {}", activity_id);
+        Ok(activity_id.to_string())
+
     }
 
 }
