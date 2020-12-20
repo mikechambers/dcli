@@ -54,7 +54,7 @@ pub struct PGCRResponseData {
     #[serde(rename = "activityDetails")]
     activity_details:ActivityDetails,
 
-    entries:Vec<EntryData>,
+    entries:Vec<PlayerEntryData>,
 
     #[serde(skip_serializing, deserialize_with = "str_to_datetime")]
     pub period: DateTime<Utc>,
@@ -63,14 +63,82 @@ pub struct PGCRResponseData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct EntryData {
+pub struct PlayerEntryData {
     #[serde(rename = "characterId")]
     character_id:String,
 
 
-    //extended,
+    extended:ExtendedData,
     //player,
     //score,
     //standing,
     values:ActivityValues,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ExtendedData {
+    values:ExtendedValuesData,
+    weapons:Vec<ExtendedWeaponsDataValues>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ExtendedWeaponsData {
+    #[serde(rename = "referenceId")]
+    pub reference_id:u32, //TODO: should we make all ids u64?
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ExtendedWeaponsDataValues {
+    #[serde(rename = "uniqueWeaponKills", deserialize_with = "property_to_value")]
+    #[serde(default)]
+    pub unique_weapon_kills:f32,
+
+    #[serde(rename = "uniqueWeaponPrecisionKills", deserialize_with = "property_to_value")]
+    #[serde(default)]
+    pub unique_weapon_precision_kills:f32,
+
+    #[serde(rename = "uniqueWeaponKillsPrecisionKills", deserialize_with = "property_to_value")]
+    #[serde(default)]
+    pub unique_weapon_kills_precision_kills:f32,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ExtendedValuesData {
+
+    #[serde(rename = "allMedalsEarned", deserialize_with = "property_to_value")]
+    pub all_medals_earned: f32,
+
+    /*
+    //TODO: these properties are dynamic, need to figure out how to parse / 
+    //represent
+    pub medalAvenger:f32,
+    pub medalControlAdvantageStreak:f32,
+    pub medalControlMostAdvantage:f32,
+    pub medalDefeatHunterDodge:f32,
+    pub medalMatchMostDamage:f32,
+    pub medalMulti2x:f32,
+    pub medalPayback:f32,
+    pub medalStreak10x:f32,
+    pub medalStreak5x:f32,
+    pub medalStreakCombined:f32,
+    pub medalStreakTeam:f32,
+    pub medalWeaponHandCannon:f32,
+    pub medalWeaponSword:f32,
+    */
+
+    #[serde(rename = "precisionKills", deserialize_with = "property_to_value")]
+    pub precision_kills:f32,
+
+    #[serde(rename = "weaponKillsAbility", deserialize_with = "property_to_value")]
+    pub weapon_kills_ability:f32,
+
+    #[serde(rename = "weaponKillsGrenade", deserialize_with = "property_to_value")]
+    pub weapon_kills_grenade:f32,
+
+    #[serde(rename = "weaponKillsMelee", deserialize_with = "property_to_value")]
+    pub weapon_kills_melee:f32,
+
+    #[serde(rename = "weaponKillsSuper", deserialize_with = "property_to_value")]
+    pub weapon_kills_super:f32,
 }

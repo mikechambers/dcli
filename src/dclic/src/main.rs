@@ -36,7 +36,7 @@ async fn retrieve_characters(
     platform: Platform,
     verbose: bool,
 ) -> Result<Vec<CharacterData>, Error> {
-    let interface = ApiInterface::new(verbose);
+    let interface = ApiInterface::new(verbose)?;
 
     let characters = interface.retrieve_characters(member_id, platform).await?;
 

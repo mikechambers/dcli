@@ -302,7 +302,7 @@ async fn retrieve_all_time_stats(
     mode: &Mode,
     verbose: bool,
 ) -> Result<Option<PvpStatsData>, Error> {
-    let client: ApiInterface = ApiInterface::new(verbose);
+    let client: ApiInterface = ApiInterface::new(verbose)?;
 
     let data: PvpStatsData = match client
         .retrieve_alltime_crucible_stats(&member_id, &character_id, &platform, &mode)
@@ -325,7 +325,7 @@ async fn retrieve_aggregate_crucible_stats(
     period: &MomentPeriod,
     verbose: bool,
 ) -> Result<Option<PvpStatsData>, Error> {
-    let client: ApiInterface = ApiInterface::new(verbose);
+    let client: ApiInterface = ApiInterface::new(verbose)?;
 
     let data: Vec<DailyPvPStatsValuesData> = match client
         .retrieve_aggregate_crucible_stats(&member_id, &character_id, &platform, &mode, period)

@@ -96,7 +96,13 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
-    let client = ApiInterface::new(opt.verbose);
+    let client = match ApiInterface::new(opt.verbose) {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Error initializing API Interface", e);
+            std::process::exit(EXIT_FAILURE);
+        },
+    };
 
     let activities_data: Option<CharacterActivitiesData> = match client
         .retrieve_current_activity(opt.member_id, opt.platform)

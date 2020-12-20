@@ -484,7 +484,7 @@ async fn retrieve_activities_since(
     custom_time: &DateTime<Utc>,
     verbose: bool,
 ) -> Result<Option<ActivityStatsContainer>, Error> {
-    let client: ApiInterface = ApiInterface::new(verbose);
+    let client: ApiInterface = ApiInterface::new(verbose)?;
 
     let activities: Vec<Activity> = match client
         .retrieve_activities_since(&member_id, &character_id, &platform, &mode, &custom_time)

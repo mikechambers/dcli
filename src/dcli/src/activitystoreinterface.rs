@@ -145,8 +145,10 @@ impl ActivityStoreInterface {
 
         let mut extended:Vec<PGCRResponseData> = Vec::new();
         let mut count = 0;
-        let api = ApiInterface::new(self.verbose);
-        for id_chunks in ids.chunks(25) {
+
+        //todo: could move this to top so its used across calls
+        let api = ApiInterface::new(self.verbose)?;
+        for id_chunks in ids.chunks(1) {
 
             let mut f = Vec::new();
 
@@ -191,7 +193,7 @@ impl ActivityStoreInterface {
         //let max_id:String = "7588684064".to_string();
         let max_id:String = self.get_max_activity_id(member_id, character_id, platform).await?;
 
-        let api = ApiInterface::new(self.verbose);
+        let api = ApiInterface::new(self.verbose)?;
 
         let result = api.retrieve_activities_since_id(
             member_id, character_id, platform, &Mode::AllPvP, &max_id).await?;

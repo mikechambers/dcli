@@ -107,7 +107,13 @@ async fn main() {
         opt.verbose,
     );
 
-    let member_search = MemberIdSearch::new(opt.verbose);
+    let member_search = match MemberIdSearch::new(opt.verbose) {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Error initializing API Interface.", e);
+            std::process::exit(EXIT_FAILURE);
+        },
+    };
 
     let membership = match member_search
         .retrieve_member_id(&opt.name, opt.platform)

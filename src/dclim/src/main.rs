@@ -39,7 +39,7 @@ use std::env::current_dir;
 use std::path::PathBuf;
 
 async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> {
-    let client: ApiClient = ApiClient::new(print_url);
+    let client: ApiClient = ApiClient::new(print_url)?;
     let url = "https://www.bungie.net/Platform/Destiny2/Manifest/";
 
     let response = client.call_and_parse::<ManifestResponse>(url).await?;
@@ -95,7 +95,7 @@ fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
 
 //should this move to ApiClient?
 async fn download_manifest(url: &str, path: &PathBuf, print_url: bool) -> Result<(), Error> {
-    let client: ApiClient = ApiClient::new(print_url);
+    let client: ApiClient = ApiClient::new(print_url)?;
 
     //Download the manifest
     let mut response = client.call(url).await?;
