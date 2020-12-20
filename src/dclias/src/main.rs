@@ -90,7 +90,7 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
-    let store:ActivityStoreInterface = match ActivityStoreInterface::init_with_path(&opt.store_path, opt.verbose).await {
+    let mut store:ActivityStoreInterface = match ActivityStoreInterface::init_with_path(&opt.store_path, opt.verbose).await {
         Ok(e) => e,
         Err(e) => {
             print_error("Error initializing activity store.", e);
@@ -99,7 +99,7 @@ async fn main() {
     };
 
     match store.sync(&opt.member_id, &opt.character_id, &opt.platform).await {
-        Ok(e) => {
+        Ok(_e) => {
             println!("done");
         },
         Err(e) => {

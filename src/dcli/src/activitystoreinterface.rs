@@ -53,59 +53,62 @@ impl ActivityStoreInterface {
             .connect()
             .await?;
 
-        sqlx::query("
-            BEGIN TRANSACTION;
+        sqlx::query(r#"
+        BEGIN TRANSACTION;
 
-            /* found activities we havent synced details from yet */
-            CREATE TABLE IF NOT EXISTS 'main'.'activity_queue' (
-                'activity_id' 	INTEGER NOT NULL,
-                'character_rowid'	INTEGER NOT NULL,
-                PRIMARY KEY('character_rowid', 'activity_id'),
+        /* found activities we havent synced details from yet */
+        CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
+            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+            "activity_id" TEXT NOT NULL,
+            "character"	INTEGER NOT NULL,
+            FOREIGN KEY (character)
+               REFERENCES character (id)
+               ON DELETE CASCADE
+        );
+        
+        CREATE TABLE IF NOT EXISTS  "member" (
+            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+            "member_id"	TEXT NOT NULL,
+            "platform_id"	INTEGER NOT NULL
+        );
+        
+        CREATE TABLE IF NOT EXISTS  "character" (
+            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+            "character_id"	TEXT NOT NULL,
+            "member"	INTEGER NOT NULL,
+            FOREIGN KEY ("member")
+               REFERENCES member ("id")
+               ON DELETE CASCADE
+        );
+        
+        
+        CREATE TABLE IF NOT EXISTS "main"."activity" (
+            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+            "activity_id"	INTEGER UNIQUE NOT NULL,
+            "period" TEXT NOT NULL,
+            "mode" INTEGER NOT NULL,
+            "platform" INTEGER NOT NULL,
+            "director_activity_hash" INTEGER NOT NULL
+        );
+        
+        CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
+            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+            "character"	INTEGER NOT NULL,
+        
+            /* we use id and not rowid since we shouldnt have dupes */
+            "activity"	INTEGER NOT NULL,
+        
+            FOREIGN KEY (activity)
+               REFERENCES activity (id)
+               ON DELETE CASCADE,
+        
+            FOREIGN KEY (character)
+               REFERENCES character (id)
+               ON DELETE CASCADE
+        );
+        COMMIT;
             
-                FOREIGN KEY (character_rowid)
-                REFERENCES character (rowid)
-                ON DELETE CASCADE
-            );
-            CREATE TABLE IF NOT EXISTS 'main'.'member' (
-                'id'	TEXT NOT NULL,
-                'platform_id'	INTEGER NOT NULL,
-                PRIMARY KEY('id', 'platform_id')
-            );
-            
-            /* character */
-            CREATE TABLE IF NOT EXISTS 'main'.'character' (
-                'id'	TEXT NOT NULL,
-                'member_rowid'	INTEGER NOT NULL,
-                PRIMARY KEY('id', 'member_rowid'),
-                FOREIGN KEY (member_rowid)
-                REFERENCES member (rowid)
-                ON DELETE CASCADE
-            );
-            
-            /* activity / match (doesnt have all fields yet */
-            CREATE TABLE IF NOT EXISTS 'main'.'activity' (
-                'id'	INTEGER UNIQUE NOT NULL,
-                PRIMARY KEY('id')
-            );
-            
-            CREATE TABLE IF NOT EXISTS 'main'.'character_activity_stats' (
-                'character_rowid'	INTEGER NOT NULL,
-            
-                /* we use id and not rowid since we shouldnt have dupes */
-                'activity_id'	INTEGER NOT NULL,
-            
-                FOREIGN KEY (activity_id)
-                REFERENCES activity (activity_id)
-                ON DELETE CASCADE,
-            
-                FOREIGN KEY (character_rowid)
-                REFERENCES character (rowid)
-                ON DELETE CASCADE,
-            
-                PRIMARY KEY('character_rowid','activity_id')
-            );
-            COMMIT;
-        ")
+            "#)
             .execute(&mut db)
             .await?;
 
@@ -113,7 +116,7 @@ impl ActivityStoreInterface {
     }
 
     /// retrieves and stores activity details for ids in activity queue
-    pub async fn sync(&self, member_id:&str, character_id:&str, platform:&Platform) -> Result<(), Error> {
+    pub async fn sync(&mut self, member_id:&str, character_id:&str, platform:&Platform) -> Result<(), Error> {
 
         self.update_activity_queue(member_id, character_id, platform).await?;
 
@@ -125,14 +128,14 @@ impl ActivityStoreInterface {
     }
 
     /// download results from ids in queue, and return number of items synced
-    async fn sync_activities(&self, member_id:&str, character_id:&str, platform:&Platform) -> Result<i32, Error> {
+    async fn sync_activities(&mut self, member_id:&str, character_id:&str, platform:&Platform) -> Result<i32, Error> {
         
         
         Ok(0)
     }
 
     //updates activity id queue with ids which have not been synced
-    async fn update_activity_queue(&self, member_id:&str, character_id:&str, platform:&Platform) -> Result<(), Error> {
+    async fn update_activity_queue(&mut self, member_id:&str, character_id:&str, platform:&Platform) -> Result<(), Error> {
 
         self.sync_activities(member_id, character_id, platform).await?;
 
@@ -150,8 +153,19 @@ impl ActivityStoreInterface {
 
         let activities = activities.unwrap();
 
+                //INSERT INTO "main"."platform"("platform_id","name") VALUES (1,'Xbox');
+
+        //sqlx::query("DELETE FROM table").execute(&mut conn).await?;
+ 
+
         println!("Activities found: {}", activities.len());
 
+        let member_row_id = self.insert_member_id(&member_id, &platform).await?;
+
+println!("member_row_id : {}", member_row_id);
+
+        let character_row_id = self.insert_character_id(&character_id, member_row_id).await?;
+println!("character_row_id : {}", character_row_id);
         //select max(id) from activities where character = character  
 
         //retrieve ids until that id is found
@@ -165,8 +179,40 @@ impl ActivityStoreInterface {
         Ok(())
     }
 
-    async fn get_member_rowid(&self, member_id:&str, platform:&Platform) -> Result<i32, Error> {
-        Ok(0)
+    async fn insert_member_id(&mut self, member_id:&str, platform:&Platform) -> Result<i32, Error> {
+        sqlx::query("INSERT OR IGNORE into member ('member_id', 'platform_id') VALUES ($1, $2)")
+        .bind(format!("{}", member_id))
+        .bind(format!("{}", platform.to_id()))
+        .execute(&mut self.db)
+        .await?;
+
+        let row = sqlx::query("SELECT id from member where member_id=? and platform_id=?")
+        .bind(format!("{}", member_id))
+        .bind(format!("{}", platform.to_id()))
+        .fetch_one(&mut self.db)
+        .await?;
+
+        let rowid:i32 = row.try_get("id")?;
+
+        Ok(rowid)
+    }
+
+    async fn insert_character_id(&mut self, character_id:&str, member_rowid:i32)  -> Result<i32, Error> {
+        sqlx::query("INSERT OR IGNORE into character ('character_id', 'member') VALUES ($1, $2)")
+        .bind(format!("{}", character_id))
+        .bind(member_rowid)
+        .execute(&mut self.db)
+        .await?;
+
+        let row = sqlx::query("SELECT id from character where character_id=? and member=?")
+        .bind(format!("{}", character_id))
+        .bind(format!("{}", member_rowid))
+        .fetch_one(&mut self.db)
+        .await?;
+
+        let rowid:i32 = row.try_get("id")?;
+
+        Ok(rowid)
     }
 
 }
