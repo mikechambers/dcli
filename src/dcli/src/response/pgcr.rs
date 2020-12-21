@@ -52,12 +52,12 @@ impl IsDestinyAPIResponse for PGCRResponse {
 pub struct DestinyPostGameCarnageReportData {
     
     #[serde(rename = "startingPhaseIndex")]
-    starting_phase_index:i32,
+    pub starting_phase_index:i32,
 
     #[serde(rename = "activityDetails")]
-    activity_details:DestinyHistoricalStatsActivity,
+    pub activity_details:DestinyHistoricalStatsActivity,
 
-    entries:Vec<DestinyPostGameCarnageReportEntry>,
+    pub entries:Vec<DestinyPostGameCarnageReportEntry>,
 
     #[serde(skip_serializing, deserialize_with = "str_to_datetime")]
     pub period: DateTime<Utc>,
@@ -65,94 +65,107 @@ pub struct DestinyPostGameCarnageReportData {
     //teams,
 }
 
+impl DestinyPostGameCarnageReportData {
+
+    pub fn get_entry_for_character(&self, character_id:&str) ->Option<DestinyPostGameCarnageReportEntry> {
+
+        for e in self.entries.iter() {
+            if &e.character_id == character_id {
+                return Some(e.clone());
+            }
+        }
+
+        None
+    }
+}
+
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportEntry.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportEntry
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyPostGameCarnageReportEntry {
 
     #[serde(rename = "characterId")]
-    character_id:String,
+    pub character_id:String,
 
-    extended:DestinyPostGameCarnageReportExtendedData,
+    pub extended:DestinyPostGameCarnageReportExtendedData,
 
-    player:DestinyPlayer,
+    pub player:DestinyPlayer,
 
     #[serde(deserialize_with = "property_to_value")]
-    score:f32,
+    pub score:f32,
 
     #[serde(default="standing_default")]
-    standing:i32,
+    pub standing:i32,
 
-    values:ActivityHistoricalStatsValues,
+    pub values:ActivityHistoricalStatsValues,
 }
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPlayer.html#schema_Destiny-HistoricalStats-DestinyPlayer
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyPlayer {
 
     #[serde(rename = "destinyUserInfo")]
-    user_info:UserInfoCard,
+    pub user_info:UserInfoCard,
 
     #[serde(rename = "characterClass")]
     #[serde(default)]
-    character_class: String,
+    pub character_class: String,
 
     #[serde(rename = "classHash")]
-    class_hash: u32,
+    pub class_hash: u32,
 
     #[serde(rename = "raceHash")]
-    race_hash: u32,
+    pub race_hash: u32,
 
     #[serde(rename = "genderHash")]
-    gender_hash: u32,
+    pub gender_hash: u32,
 
     #[serde(rename = "characterLevel")]
-    character_level: i32,
+    pub character_level: i32,
 
     #[serde(rename = "lightLevel")]
-    light_level: i32,
+    pub light_level: i32,
 
     #[serde(rename = "emblemHash")]
-    emblem_hash: u32,
+    pub emblem_hash: u32,
 }
 
 //https://bungie-net.github.io/multi/schema_User-UserInfoCard.html#schema_User-UserInfoCard
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserInfoCard {
 
     #[serde(rename = "iconPath")]
     #[serde(default)]
-    icon_path: String,
+    pub icon_path: String,
 
     #[serde(rename = "crossSaveOverride")]
-    cross_save_override: i32,
-
+    pub cross_save_override: i32,
 
     #[serde(rename = "applicableMembershipTypes")]
-    applicable_membership_types: Option<Vec<i32>>,
+    pub applicable_membership_types: Option<Vec<i32>>,
 
     #[serde(rename = "isPublic")]
-    is_public: bool,
+    pub is_public: bool,
 
     #[serde(rename = "membershipType")]
-    membership_type: i32,
+    pub membership_type: i32,
 
     #[serde(rename = "membershipId")]
-    membership_id: String,
+    pub membership_id: String,
 
     #[serde(rename = "displayName")]
     #[serde(default)]
-    display_name: String,
+    pub display_name: String,
 }
 
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyPostGameCarnageReportExtendedData {
-    values:ExtendedActivityHistoricalStatsValues,
-    weapons:Option<Vec<DestinyHistoricalWeaponStats>>,
+    pub values:ExtendedActivityHistoricalStatsValues,
+    pub weapons:Option<Vec<DestinyHistoricalWeaponStats>>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyHistoricalWeaponStats {
 
     //maps to manifest DestinyInventoryItemDefinition
@@ -173,7 +186,7 @@ pub struct DestinyHistoricalWeaponStats {
 }
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExtendedActivityHistoricalStatsValues {
 
     #[serde(rename = "allMedalsEarned", deserialize_with = "property_to_value")]

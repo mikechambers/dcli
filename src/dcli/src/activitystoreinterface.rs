@@ -32,6 +32,8 @@ use crate::platform::Platform;
 use crate::apiinterface::ApiInterface;
 use crate::mode::Mode;
 
+const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
+
 pub struct ActivityStoreInterface {
     verbose:bool,
     db:SqliteConnection,
@@ -52,64 +54,7 @@ impl ActivityStoreInterface {
             .connect()
             .await?;
 
-        sqlx::query(r#"
-        BEGIN TRANSACTION;
-
-        /* found activities we havent synced details from yet */
-        CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
-            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-            "activity_id" TEXT NOT NULL,
-            "character"	INTEGER NOT NULL,
-            UNIQUE(activity_id, character),
-            FOREIGN KEY (character)
-               REFERENCES character (id)
-               ON DELETE CASCADE
-        );
-        
-        CREATE TABLE IF NOT EXISTS  "member" (
-            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-            "member_id"	TEXT NOT NULL,
-            "platform_id"	INTEGER NOT NULL,
-            UNIQUE(member_id, platform_id)
-        );
-        
-        CREATE TABLE IF NOT EXISTS  "character" (
-            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-            "character_id"	TEXT NOT NULL,
-            "member"	INTEGER NOT NULL,
-            UNIQUE(character_id, member),
-            FOREIGN KEY ("member")
-               REFERENCES member ("id")
-               ON DELETE CASCADE
-        );
-        
-        
-        CREATE TABLE IF NOT EXISTS "main"."activity" (
-            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-            "activity_id"	INTEGER UNIQUE NOT NULL,
-            "period" TEXT NOT NULL,
-            "mode" INTEGER NOT NULL,
-            "platform" INTEGER NOT NULL,
-            "director_activity_hash" INTEGER NOT NULL
-        );
-        
-        CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
-            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-            "character"	INTEGER NOT NULL,
-            "activity"	INTEGER NOT NULL,
-            UNIQUE(activity, character),
-        
-            FOREIGN KEY (activity)
-               REFERENCES activity (id)
-               ON DELETE CASCADE,
-        
-            FOREIGN KEY (character)
-               REFERENCES character (id)
-               ON DELETE CASCADE
-        );
-        COMMIT;
-            
-            "#)
+        sqlx::query(ACTIVITY_STORE_SCHEMA)
             .execute(&mut db)
             .await?;
 
@@ -118,10 +63,9 @@ impl ActivityStoreInterface {
 
     /// retrieves and stores activity details for ids in activity queue
     pub async fn sync(&mut self, member_id:&str, character_id:&str, platform:&Platform) -> Result<(), Error> {
-
+println!("sync");
         self.update_activity_queue(member_id, character_id, platform).await?;
-
-        //self.sync_activities(member_id, character_id, platform).await?;
+        self.sync_activities(member_id, character_id, platform).await?;
 
         //return total synced?
 
@@ -130,18 +74,22 @@ impl ActivityStoreInterface {
 
     /// download results from ids in queue, and return number of items synced
     async fn sync_activities(&mut self, member_id:&str, character_id:&str, platform:&Platform) -> Result<i32, Error> {
-        
-        let mut rows = sqlx::query("SELECT activity_id from activity_queue")
-        .fetch(&mut self.db);
-
-        
+println!("sync_activities");
         let mut ids:Vec<String> = Vec::new();
-        while let Some(row) = rows.try_next().await? {
-            // map the row into a user-defined domain type
-            let activity_id: String = row.try_get("activity_id")?;
 
-            ids.push(activity_id);
-        }
+        //This is to scope rows, and the mutable borrow of self
+        {
+            //TODO : NEED TO FILTER BY CHARACTER
+            let mut rows = sqlx::query(
+                "SELECT activity_id from activity_queue")
+            .fetch(&mut self.db);
+            while let Some(row) = rows.try_next().await? {
+                // map the row into a user-defined domain type
+                let activity_id: String = row.try_get("activity_id")?;
+
+                ids.push(activity_id);
+            }
+        };
 
         let mut extended:Vec<DestinyPostGameCarnageReportData> = Vec::new();
         let mut count = 0;
@@ -155,7 +103,6 @@ impl ActivityStoreInterface {
             println!("-----------------------");
             for c in id_chunks {
                 f.push(api.retrieve_post_game_carnage_report(c));
-                println!("{}", c);
             }
 
             count += f.len();
@@ -170,7 +117,16 @@ impl ActivityStoreInterface {
                 match r {
                     Ok(e) => {
                         if e.is_some() {
-                            extended.push(e.unwrap());
+
+                            match self.insert_character_activity_stats(&e.unwrap(), member_id, character_id, platform).await {
+                                Ok(_e) => {},
+                                Err(e) => {
+                                    println!("Error inserting stats");
+                                    println!("{}", e);
+                                },
+                            }
+
+                            //extended.push(e.unwrap());
                         }
                         //TODO: what do we do if it returns None?
                     },
@@ -182,20 +138,18 @@ impl ActivityStoreInterface {
 
         }
 
-        
-        
-
         Ok(0)
     }
 
     //updates activity id queue with ids which have not been synced
     async fn update_activity_queue(&mut self, member_id:&str, character_id:&str, platform:&Platform) -> Result<(), Error> {
 
+println!("update_activity_queue");
         self.sync_activities(member_id, character_id, platform).await?;
 
         //let max_id:String = "7588684064".to_string();
         let max_id:String = self.get_max_activity_id(member_id, character_id, platform).await?;
-
+println!("max_id {} : ", max_id);
         let api = ApiInterface::new(self.verbose)?;
 
         let result = api.retrieve_activities_since_id(
@@ -225,7 +179,7 @@ impl ActivityStoreInterface {
         for activity in activities {
             let instance_id = activity.details.instance_id;
 
-            sqlx::query("INSERT OR IGNORE into activity_queue ('activity_id', 'character') VALUES ($1, $2)")
+            sqlx::query("INSERT into activity_queue ('activity_id', 'character') VALUES (?, ?)")
             .bind(instance_id)
             .bind(character_row_id)
             .execute(&mut self.db)
@@ -235,6 +189,95 @@ impl ActivityStoreInterface {
         
         Ok(())
     }
+
+    async fn insert_character_activity_stats(
+        &mut self,
+        data:&DestinyPostGameCarnageReportData,
+        member_id:&str, character_id:&str,
+        platform:&Platform) -> Result<(), Error> {
+
+        sqlx::query(
+            "INSERT OR IGNORE INTO 'main'.'activity'('activity_id','period','mode','platform','director_activity_hash') VALUES (?,?,?,?,?)")
+        .bind(format!("{}", data.activity_details.instance_id)) //activity_id
+        .bind(format!("{}", data.period)) //period
+        .bind(format!("{}", data.activity_details.mode.to_id())) //mode
+        .bind(format!("{}", data.activity_details.membership_type.to_id())) //platform
+        .bind(format!("{}", data.activity_details.director_activity_hash)) //director_activity_hash
+        .execute(&mut self.db)
+        .await?;
+
+        let row = sqlx::query("SELECT id from activity where activity_id=?")
+        .bind(format!("{}", data.activity_details.instance_id))
+        .fetch_one(&mut self.db)
+        .await?;
+
+        let activity_rowid:i32 = row.try_get("id")?;
+
+        let row = sqlx::query(
+            r#"
+                select character.id as id from character, member where character_id = ? and 
+                character.member = member.id and member.member_id = ? and member.platform_id = ?
+        "#)
+        .bind(format!("{}", character_id))
+        .bind(format!("{}", member_id))
+        .bind(format!("{}", platform.to_id()))
+        .fetch_one(&mut self.db)
+        .await?;
+
+        let character_rowid:i32 = row.try_get("id")?;
+
+        //TODO: need to handle not finding character
+        let char_data = data.get_entry_for_character(&character_id).unwrap();
+
+        sqlx::query(r#"
+            INSERT INTO 'main'.'character_activity_stats'
+            (
+                'character', 'activity', 'assists', 'score', 'kills', 'deaths', 
+                'average_score_per_kill', 'average_score_per_life', 'completed', 
+                'opponents_defeated', 'activity_duration_seconds', 'standing', 
+                'team', 'completion_reason', 'start_seconds', 'time_played_seconds', 
+                'player_count', 'team_score', 'precision_kills', 'weapon_kills_ability', 
+                'weapon_kills_grenade', 'weapon_kills_melee', 'weapon_kills_super')
+            VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "#)
+        .bind(format!("{}", character_rowid)) //character
+        .bind(format!("{}", activity_rowid)) //activity
+        .bind(format!("{}", char_data.values.assists)) //assists
+        .bind(format!("{}", char_data.values.score)) //score
+        .bind(format!("{}", char_data.values.kills)) //kiis
+        .bind(format!("{}", char_data.values.deaths)) //deaths
+        .bind(format!("{}", char_data.values.average_score_per_kill)) //average_score_per_kill
+        .bind(format!("{}", char_data.values.average_score_per_life))//average_score_per_life
+        .bind(format!("{}", char_data.values.completed)) //completed
+        .bind(format!("{}", char_data.values.opponents_defeated)) //opponents_defeated
+        .bind(format!("{}", char_data.values.activity_duration_seconds)) //activity_duration_seconds
+        .bind(format!("{}", char_data.values.standing)) //standing
+        .bind(format!("{}", char_data.values.team)) //team
+        .bind(format!("{}", char_data.values.completion_reason)) //completion_reason
+        .bind(format!("{}", char_data.values.start_seconds)) //start_seconds
+        .bind(format!("{}", char_data.values.time_played_seconds)) //time_played_seconds
+        .bind(format!("{}", char_data.values.player_count)) //player_count
+        .bind(format!("{}", char_data.values.team_score)) //team_score
+        .bind(format!("{}", char_data.extended.values.precision_kills)) //precision_kills
+        .bind(format!("{}", char_data.extended.values.weapon_kills_ability)) //weapon_kills_ability
+        .bind(format!("{}", char_data.extended.values.weapon_kills_grenade)) //weapon_kills_grenade
+        .bind(format!("{}", char_data.extended.values.weapon_kills_melee)) //weapon_kills_melee
+        .bind(format!("{}", char_data.extended.values.weapon_kills_super)) //weapon_kills_super
+        .execute(&mut self.db)
+        .await?;
+
+        sqlx::query(r#"
+            DELETE FROM "main"."activity_queue" WHERE character = ? and activity_id = ?
+        "#)
+        .bind(format!("{}", character_rowid))
+        .bind(format!("{}", data.activity_details.instance_id))
+        .execute(&mut self.db)
+        .await?;
+
+        Ok(())
+    }
+    
 
     async fn insert_member_id(&mut self, member_id:&str, platform:&Platform) -> Result<i32, Error> {
         sqlx::query("INSERT OR IGNORE into member ('member_id', 'platform_id') VALUES ($1, $2)")

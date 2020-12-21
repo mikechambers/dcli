@@ -44,7 +44,7 @@ pub struct Activity {
     pub values: ActivityHistoricalStatsValues,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub struct ActivityHistoricalStatsValues {
     #[serde(deserialize_with = "property_to_value")]
     pub assists: f32,

@@ -466,18 +466,10 @@ impl ApiInterface {
             instance_id = instance_id,
         );
 
-        let response: PGCRResponse = match self
+        let response: PGCRResponse = self
         .client
         .call_and_parse::<PGCRResponse>(&url)
-        .await {
-            Ok(e) => e,
-            Err(e) => {
-                println!("{}", url);
-                println!("{}", e);
-                assert!(false);
-                return Err(Error::ParameterParseFailure);
-            },
-        };
+        .await?;
 
         
         let data:DestinyPostGameCarnageReportData = match response.response {
