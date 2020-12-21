@@ -20,16 +20,16 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::apiutils::{PGCR_BASE_URL, API_BASE_URL};
 use crate::apiclient::ApiClient;
+use crate::apiutils::{API_BASE_URL, PGCR_BASE_URL};
 use crate::error::Error;
 use crate::mode::Mode;
 use crate::platform::Platform;
 use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
 use crate::response::character::CharacterData;
 use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;
-use crate::response::pgcr::{DestinyPostGameCarnageReportData, PGCRResponse};
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
+use crate::response::pgcr::{DestinyPostGameCarnageReportData, PGCRResponse};
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
 };
@@ -48,9 +48,7 @@ pub struct ApiInterface {
 impl ApiInterface {
     pub fn new(print_url: bool) -> Result<ApiInterface, Error> {
         let client = ApiClient::new(print_url)?;
-        Ok(ApiInterface {
-            client: client,
-        })
+        Ok(ApiInterface { client: client })
 
         //Have an option on to take a manifest, if manifest is avaliable it will use it
         //some methods may require it and will throw errors if its not set
@@ -62,12 +60,12 @@ impl ApiInterface {
         member_id: String,
         platform: Platform,
     ) -> Result<Option<CharacterActivitiesData>, Error> {
-        let url =
-            format!("{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=204",
-                base=API_BASE_URL,
-                platform_id = platform.to_id(),
-                member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
-            );
+        let url = format!(
+            "{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=204",
+            base = API_BASE_URL,
+            platform_id = platform.to_id(),
+            member_id = utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
+        );
 
         let profile: GetProfileResponse = self
             .client
@@ -119,12 +117,12 @@ impl ApiInterface {
         member_id: String,
         platform: Platform,
     ) -> Result<Vec<CharacterData>, Error> {
-        let url =
-            format!("{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=200",
-                base=API_BASE_URL,
-                platform_id = platform.to_id(),
-                member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
-            );
+        let url = format!(
+            "{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=200",
+            base = API_BASE_URL,
+            platform_id = platform.to_id(),
+            member_id = utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
+        );
 
         let profile: GetProfileResponse = self
             .client
@@ -336,7 +334,6 @@ impl ApiInterface {
         mode: &Mode,
         activity_id: &str,
     ) -> Result<Option<Vec<Activity>>, Error> {
-
         let mut out: Vec<Activity> = Vec::new();
         let mut page = 0;
         let count = MAX_ACTIVITIES_REQUEST_COUNT;
@@ -455,24 +452,20 @@ impl ApiInterface {
         Ok(activities)
     }
 
-
-
-    pub async fn retrieve_post_game_carnage_report(&self, instance_id:&str) -> Result<Option<DestinyPostGameCarnageReportData>, Error> {
-
+    pub async fn retrieve_post_game_carnage_report(
+        &self,
+        instance_id: &str,
+    ) -> Result<Option<DestinyPostGameCarnageReportData>, Error> {
         //TODO: do we need to use baseurls?
-        let url =
-            format!("{base}/Platform/Destiny2/Stats/PostGameCarnageReport/{instance_id}/",
-            base=PGCR_BASE_URL, 
+        let url = format!(
+            "{base}/Platform/Destiny2/Stats/PostGameCarnageReport/{instance_id}/",
+            base = PGCR_BASE_URL,
             instance_id = instance_id,
         );
 
-        let response: PGCRResponse = self
-        .client
-        .call_and_parse::<PGCRResponse>(&url)
-        .await?;
+        let response: PGCRResponse = self.client.call_and_parse::<PGCRResponse>(&url).await?;
 
-        
-        let data:DestinyPostGameCarnageReportData = match response.response {
+        let data: DestinyPostGameCarnageReportData = match response.response {
             Some(e) => e,
             None => {
                 if response.status.error_code == API_RESPONSE_STATUS_SUCCESS {

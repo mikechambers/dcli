@@ -2,7 +2,7 @@ use crate::mode::Mode;
 use crate::platform::Platform;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
-use crate::response::utils::{property_to_value, standing_default, property_to_i32_value};
+use crate::response::utils::{property_to_i32_value, property_to_value, standing_default};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 

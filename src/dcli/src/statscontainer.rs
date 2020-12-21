@@ -126,13 +126,13 @@ impl ActivityStatsContainer {
             match standing {
                 Standing::Victory => {
                     self.wins += 1.0;
-                },
+                }
                 Standing::Defeat => {
                     self.losses += 1.0;
-                },
+                }
                 Standing::Unknown => {
                     self.draws += 1.0;
-                },
+                }
             };
 
             if standing == last_standing {

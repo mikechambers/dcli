@@ -25,6 +25,6 @@ pub mod character;
 pub mod drs;
 pub mod gpr;
 pub mod manifest;
+pub mod pgcr;
 pub mod stats;
 pub mod utils;
-pub mod pgcr;

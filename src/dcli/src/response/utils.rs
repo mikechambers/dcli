@@ -29,11 +29,10 @@ use serde_derive::Deserialize;
 //2020-10-05T18:49:25Z
 pub const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
 
-
- pub fn property_to_i32_value<'de, D>(deserializer: D) -> Result<i32, D::Error>
-    where
-        D: serde::de::Deserializer<'de>,
-    {
+pub fn property_to_i32_value<'de, D>(deserializer: D) -> Result<i32, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+{
     #[derive(Deserialize)]
     struct Outer {
         pub basic: Inner,

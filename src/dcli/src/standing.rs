@@ -38,7 +38,7 @@ impl Default for Standing {
 }
 
 impl Standing {
-    pub fn from_mode(value: i32, mode:&Mode) -> Standing {
+    pub fn from_mode(value: i32, mode: &Mode) -> Standing {
         if value == 0 {
             return Standing::Victory;
         } else if value == -1 {

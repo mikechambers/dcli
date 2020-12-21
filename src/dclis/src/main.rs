@@ -112,7 +112,7 @@ async fn main() {
         Err(e) => {
             print_error("Error initializing API Interface.", e);
             std::process::exit(EXIT_FAILURE);
-        },
+        }
     };
 
     let membership = match member_search

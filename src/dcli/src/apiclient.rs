@@ -23,8 +23,8 @@
 use crate::error::Error;
 use crate::response::drs::{check_destiny_response_status, IsDestinyAPIResponse};
 use crate::utils::print_verbose;
-use reqwest::{Url, Client};
-use reqwest::header::{CONNECTION, HeaderMap, HeaderValue};
+use reqwest::header::{HeaderMap, HeaderValue, CONNECTION};
+use reqwest::{Client, Url};
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
 const API_TIMEOUT: u64 = 10; //seconds
@@ -34,21 +34,23 @@ static_assertions::const_assert!(!DESTINY_API_KEY.is_empty());
 
 pub struct ApiClient {
     pub verbose: bool,
-    client:Client,
+    client: Client,
 }
 
 impl ApiClient {
     pub fn new(verbose: bool) -> Result<ApiClient, Error> {
-
         let mut headers = HeaderMap::new();
         headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
-        headers.insert("Keep-Alive", HeaderValue::from_static("timeout=10, max=1000"));
+        headers.insert(
+            "Keep-Alive",
+            HeaderValue::from_static("timeout=10, max=1000"),
+        );
         headers.insert("X-API-Key", HeaderValue::from_static(DESTINY_API_KEY));
 
         let client = Client::builder()
-        .default_headers(headers)
-        .timeout(std::time::Duration::from_secs(API_TIMEOUT))
-        .build()?;
+            .default_headers(headers)
+            .timeout(std::time::Duration::from_secs(API_TIMEOUT))
+            .build()?;
 
         Ok(ApiClient { client, verbose })
     }
@@ -58,7 +60,8 @@ impl ApiClient {
 
         print_verbose(&format!("{}", url), self.verbose);
 
-        let response = self.client
+        let response = self
+            .client
             .get(url)
             //.header("X-API-Key", DESTINY_API_KEY)
             .send()
@@ -75,7 +78,7 @@ impl ApiClient {
             Ok(e) => {
                 //println!("{:?}", e.headers());
                 e.text().await?
-            },
+            }
             Err(e) => return Err(e),
         };
 

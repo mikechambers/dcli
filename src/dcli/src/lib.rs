@@ -20,6 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+pub mod activitystoreinterface;
 pub mod apiclient;
 pub mod apiinterface;
 pub mod apiutils;
@@ -36,4 +37,3 @@ pub mod response;
 pub mod standing;
 pub mod statscontainer;
 pub mod utils;
-pub mod activitystoreinterface;
