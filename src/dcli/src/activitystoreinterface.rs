@@ -350,6 +350,23 @@ impl ActivityStoreInterface {
         .execute(&mut self.db)
         .await?;
 
+        for (key, value) in medal_hash {
+            sqlx::query(
+                r#"
+                INSERT INTO "main"."medal_result"
+                (
+                    "reference_id", "value", "character_activity_stats"
+                )
+                select ?, ?, id from character_activity_stats where rowid = 
+                (SELECT max(rowid) from character_activity_stats);
+                "#,
+            )
+            .bind(format!("{}", key)) //reference_id
+            .bind(format!("{}", value.basic.value)) //unique_weapon_kills
+            .execute(&mut self.db)
+            .await?;
+        }
+
         if char_data.extended.weapons.is_some() {
             let weapons = char_data.extended.weapons.unwrap();
             for w in weapons {

@@ -53,6 +53,19 @@
                ON DELETE CASCADE
         );
 
+        CREATE TABLE IF NOT EXISTS "main"."medal_result" (
+            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+            "reference_id"                      INTEGER NOT NULL,
+            "value"                             REAL NOT NULL,
+            "character_activity_stats"          INTEGER NOT NULL,
+            
+            UNIQUE(character_activity_stats, reference_id),
+
+            FOREIGN KEY (character_activity_stats)
+               REFERENCES character_activity_stats (id)
+               ON DELETE CASCADE
+        );
+
         CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
             "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "character"                 INTEGER NOT NULL,
