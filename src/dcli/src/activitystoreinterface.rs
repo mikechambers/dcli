@@ -20,7 +20,10 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::{error::Error, response::pgcr::{DestinyPostGameCarnageReportData, DestinyHistoricalStatsValue}};
+use crate::{
+    error::Error,
+    response::pgcr::{DestinyHistoricalStatsValue, DestinyPostGameCarnageReportData},
+};
 
 use crate::apiinterface::ApiInterface;
 use crate::mode::Mode;
@@ -29,9 +32,9 @@ use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::collections::HashMap;
 
 const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 const PCGR_REQUEST_CHUNK_AMOUNT: usize = 25;
@@ -59,8 +62,10 @@ impl ActivityStoreInterface {
 
         //figure out whether the db schema has bee setup
         let rows = sqlx::query(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='activity_queue'"
-        ).fetch_all(&mut db).await?;
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='activity_queue'",
+        )
+        .fetch_all(&mut db)
+        .await?;
 
         if rows.is_empty() {
             sqlx::query(ACTIVITY_STORE_SCHEMA).execute(&mut db).await?;
@@ -264,8 +269,9 @@ impl ActivityStoreInterface {
         character_id: &str,
         platform: &Platform,
     ) -> Result<(), Error> {
-        sqlx::query(
-            "INSERT OR IGNORE INTO 'main'.'activity'('activity_id','period','mode','platform','director_activity_hash') VALUES (?,?,?,?,?)")
+        sqlx::query(r#"
+            INSERT OR IGNORE INTO "main"."activity"("activity_id","period","mode","platform","director_activity_hash") VALUES (?,?,?,?,?)
+        "#)
         .bind(format!("{}", data.activity_details.instance_id)) //activity_id
         .bind(format!("{}", data.period)) //period
         .bind(format!("{}", data.activity_details.mode.to_id())) //mode
@@ -281,49 +287,50 @@ impl ActivityStoreInterface {
         //TODO: need to handle not finding character
         let char_data = data.get_entry_for_character(&character_id).unwrap();
 
-        let mut medal_hash:HashMap<String, DestinyHistoricalStatsValue> = char_data.extended.values;
+        let mut medal_hash: HashMap<String, DestinyHistoricalStatsValue> =
+            char_data.extended.values;
 
-        let precision_kills:f32 = match medal_hash.remove("precisionKills") {
+        let precision_kills: f32 = match medal_hash.remove("precisionKills") {
             Some(e) => e.basic.value,
             None => -1.0,
         };
 
-        let weapon_kills_ability:f32 = match medal_hash.remove("weaponKillsAbility") {
+        let weapon_kills_ability: f32 = match medal_hash.remove("weaponKillsAbility") {
             Some(e) => e.basic.value,
             None => -1.0,
         };
 
-        let weapon_kills_grenade:f32 = match medal_hash.remove("weaponKillsGrenade") {
+        let weapon_kills_grenade: f32 = match medal_hash.remove("weaponKillsGrenade") {
             Some(e) => e.basic.value,
             None => -1.0,
         };
 
-        let weapon_kills_melee:f32 = match medal_hash.remove("weaponKillsMelee") {
+        let weapon_kills_melee: f32 = match medal_hash.remove("weaponKillsMelee") {
             Some(e) => e.basic.value,
             None => -1.0,
         };
 
-        let weapon_kills_super:f32 = match medal_hash.remove("weaponKillsSuper") {
+        let weapon_kills_super: f32 = match medal_hash.remove("weaponKillsSuper") {
             Some(e) => e.basic.value,
             None => -1.0,
         };
 
-        let all_medals_earned:f32 = match medal_hash.remove("allMedalsEarned") {
+        let all_medals_earned: f32 = match medal_hash.remove("allMedalsEarned") {
             Some(e) => e.basic.value,
             None => -1.0,
         };
 
         sqlx::query(
             r#"
-            INSERT INTO 'main'.'character_activity_stats'
+            INSERT INTO "main"."character_activity_stats"
             (
-                'character', 'assists', 'score', 'kills', 'deaths', 
-                'average_score_per_kill', 'average_score_per_life', 'completed', 
-                'opponents_defeated', 'activity_duration_seconds', 'standing', 
-                'team', 'completion_reason', 'start_seconds', 'time_played_seconds', 
-                'player_count', 'team_score', 'precision_kills', 'weapon_kills_ability', 
-                'weapon_kills_grenade', 'weapon_kills_melee', 'weapon_kills_super', 
-                'all_medals_earned', 'activity'
+                "character", "assists", "score", "kills", "deaths", 
+                "average_score_per_kill", "average_score_per_life", "completed", 
+                "opponents_defeated", "activity_duration_seconds", "standing", 
+                "team", "completion_reason", "start_seconds", "time_played_seconds", 
+                "player_count", "team_score", "precision_kills", "weapon_kills_ability", 
+                "weapon_kills_grenade", "weapon_kills_melee", "weapon_kills_super", 
+                "all_medals_earned", "activity"
             )
             SELECT
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
@@ -417,7 +424,7 @@ impl ActivityStoreInterface {
     ) -> Result<i32, Error> {
         let row = sqlx::query(
             r#"
-                select character.id as id from character, member where character_id = ? and 
+                select character.id as id from "character", "member" where character_id = ? and 
                 character.member = member.id and member.member_id = ? and member.platform_id = ?
         "#,
         )
@@ -437,17 +444,25 @@ impl ActivityStoreInterface {
         member_id: &str,
         platform: &Platform,
     ) -> Result<i32, Error> {
-        sqlx::query("INSERT OR IGNORE into member ('member_id', 'platform_id') VALUES ($1, $2)")
-            .bind(format!("{}", member_id))
-            .bind(format!("{}", platform.to_id()))
-            .execute(&mut self.db)
-            .await?;
+        sqlx::query(
+            r#"
+            INSERT OR IGNORE into "member" ("member_id", "platform_id") VALUES (?, ?)
+        "#,
+        )
+        .bind(format!("{}", member_id))
+        .bind(format!("{}", platform.to_id()))
+        .execute(&mut self.db)
+        .await?;
 
-        let row = sqlx::query("SELECT id from member where member_id=? and platform_id=?")
-            .bind(format!("{}", member_id))
-            .bind(format!("{}", platform.to_id()))
-            .fetch_one(&mut self.db)
-            .await?;
+        let row = sqlx::query(
+            r#"
+            SELECT id from "member" where member_id=? and platform_id=?
+        "#,
+        )
+        .bind(format!("{}", member_id))
+        .bind(format!("{}", platform.to_id()))
+        .fetch_one(&mut self.db)
+        .await?;
 
         let rowid: i32 = row.try_get("id")?;
 
@@ -459,17 +474,25 @@ impl ActivityStoreInterface {
         character_id: &str,
         member_rowid: i32,
     ) -> Result<i32, Error> {
-        sqlx::query("INSERT OR IGNORE into character ('character_id', 'member') VALUES ($1, $2)")
-            .bind(format!("{}", character_id))
-            .bind(member_rowid)
-            .execute(&mut self.db)
-            .await?;
+        sqlx::query(
+            r#"
+            INSERT OR IGNORE into "character" ("character_id", "member") VALUES (?, ?)
+        "#,
+        )
+        .bind(format!("{}", character_id))
+        .bind(member_rowid)
+        .execute(&mut self.db)
+        .await?;
 
-        let row = sqlx::query("SELECT id from character where character_id=? and member=?")
-            .bind(format!("{}", character_id))
-            .bind(format!("{}", member_rowid))
-            .fetch_one(&mut self.db)
-            .await?;
+        let row = sqlx::query(
+            r#"
+            SELECT id from "character" where character_id=? and member=?
+        "#,
+        )
+        .bind(format!("{}", character_id))
+        .bind(format!("{}", member_rowid))
+        .fetch_one(&mut self.db)
+        .await?;
 
         let rowid: i32 = row.try_get("id")?;
 
@@ -487,7 +510,7 @@ impl ActivityStoreInterface {
             SELECT
                 MAX(CAST(activity.activity_id as INTEGER)) as max_activity_id
             FROM
-                activity, character_activity_stats, character, member
+                "activity", "character_activity_stats", "character", "member"
             WHERE
                 character_activity_stats.activity = activity.id AND 
                 character.character_id = ? AND 
@@ -495,7 +518,7 @@ impl ActivityStoreInterface {
                 member.member_id = ? AND
                 character.member = member.id AND
                 member.platform_id = ?
-            "#,
+        "#,
         )
         .bind(format!("{}", character_id))
         .bind(format!("{}", member_id))

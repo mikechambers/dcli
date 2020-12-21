@@ -162,14 +162,13 @@ pub struct DestinyPostGameCarnageReportExtendedData {
 use std::collections::HashMap;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyHistoricalStatsValue {
-    pub basic:DestinyHistoricalStatsValuePair,
+    pub basic: DestinyHistoricalStatsValuePair,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyHistoricalStatsValuePair {
-    pub value:f32,
+    pub value: f32,
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyHistoricalWeaponStats {
