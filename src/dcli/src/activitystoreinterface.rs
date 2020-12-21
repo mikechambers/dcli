@@ -57,7 +57,14 @@ impl ActivityStoreInterface {
             .connect()
             .await?;
 
-        sqlx::query(ACTIVITY_STORE_SCHEMA).execute(&mut db).await?;
+        //figure out whether the db schema has bee setup
+        let rows = sqlx::query(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='activity_queue'"
+        ).fetch_all(&mut db).await?;
+
+        if rows.is_empty() {
+            sqlx::query(ACTIVITY_STORE_SCHEMA).execute(&mut db).await?;
+        }
 
         Ok(ActivityStoreInterface {
             db: db,
