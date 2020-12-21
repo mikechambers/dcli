@@ -79,6 +79,7 @@
             "weapon_kills_grenade"      REAL NOT NULL,
             "weapon_kills_melee"        REAL NOT NULL,
             "weapon_kills_super"        REAL NOT NULL,
+            "all_medals_earned"         REAL NOT NULL,
 
             UNIQUE(activity, character),
         

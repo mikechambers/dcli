@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::{error::Error, response::pgcr::DestinyPostGameCarnageReportData};
+use crate::{error::Error, response::pgcr::{DestinyPostGameCarnageReportData, DestinyHistoricalStatsValue}};
 
 use crate::apiinterface::ApiInterface;
 use crate::mode::Mode;
@@ -31,6 +31,7 @@ use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::collections::HashMap;
 
 const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 const PCGR_REQUEST_CHUNK_AMOUNT: usize = 25;
@@ -273,6 +274,38 @@ impl ActivityStoreInterface {
         //TODO: need to handle not finding character
         let char_data = data.get_entry_for_character(&character_id).unwrap();
 
+        let mut medal_hash:HashMap<String, DestinyHistoricalStatsValue> = char_data.extended.values;
+
+        let precision_kills:f32 = match medal_hash.remove("precisionKills") {
+            Some(e) => e.basic.value,
+            None => -1.0,
+        };
+
+        let weapon_kills_ability:f32 = match medal_hash.remove("weaponKillsAbility") {
+            Some(e) => e.basic.value,
+            None => -1.0,
+        };
+
+        let weapon_kills_grenade:f32 = match medal_hash.remove("weaponKillsGrenade") {
+            Some(e) => e.basic.value,
+            None => -1.0,
+        };
+
+        let weapon_kills_melee:f32 = match medal_hash.remove("weaponKillsMelee") {
+            Some(e) => e.basic.value,
+            None => -1.0,
+        };
+
+        let weapon_kills_super:f32 = match medal_hash.remove("weaponKillsSuper") {
+            Some(e) => e.basic.value,
+            None => -1.0,
+        };
+
+        let all_medals_earned:f32 = match medal_hash.remove("allMedalsEarned") {
+            Some(e) => e.basic.value,
+            None => -1.0,
+        };
+
         sqlx::query(
             r#"
             INSERT INTO 'main'.'character_activity_stats'
@@ -282,10 +315,11 @@ impl ActivityStoreInterface {
                 'opponents_defeated', 'activity_duration_seconds', 'standing', 
                 'team', 'completion_reason', 'start_seconds', 'time_played_seconds', 
                 'player_count', 'team_score', 'precision_kills', 'weapon_kills_ability', 
-                'weapon_kills_grenade', 'weapon_kills_melee', 'weapon_kills_super', 'activity'
+                'weapon_kills_grenade', 'weapon_kills_melee', 'weapon_kills_super', 
+                'all_medals_earned', 'activity'
             )
             SELECT
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 id from activity where activity_id = ?
             "#,
         )
@@ -306,17 +340,12 @@ impl ActivityStoreInterface {
         .bind(format!("{}", char_data.values.time_played_seconds)) //time_played_seconds
         .bind(format!("{}", char_data.values.player_count)) //player_count
         .bind(format!("{}", char_data.values.team_score)) //team_score
-        .bind(format!("{}", char_data.extended.values.precision_kills)) //precision_kills
-        .bind(format!(
-            "{}",
-            char_data.extended.values.weapon_kills_ability
-        )) //weapon_kills_ability
-        .bind(format!(
-            "{}",
-            char_data.extended.values.weapon_kills_grenade
-        )) //weapon_kills_grenade
-        .bind(format!("{}", char_data.extended.values.weapon_kills_melee)) //weapon_kills_melee
-        .bind(format!("{}", char_data.extended.values.weapon_kills_super)) //weapon_kills_super
+        .bind(format!("{}", precision_kills)) //precision_kills
+        .bind(format!("{}", weapon_kills_ability)) //weapon_kills_ability
+        .bind(format!("{}", weapon_kills_grenade)) //weapon_kills_grenade
+        .bind(format!("{}", weapon_kills_melee)) //weapon_kills_melee
+        .bind(format!("{}", weapon_kills_super)) //weapon_kills_super
+        .bind(format!("{}", all_medals_earned)) //weapon_kills_super
         .bind(format!("{}", data.activity_details.instance_id)) //activity
         .execute(&mut self.db)
         .await?;

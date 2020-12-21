@@ -155,9 +155,21 @@ pub struct UserInfoCard {
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyPostGameCarnageReportExtendedData {
-    pub values: ExtendedActivityHistoricalStatsValues,
+    pub values: HashMap<String, DestinyHistoricalStatsValue>,
     pub weapons: Option<Vec<DestinyHistoricalWeaponStats>>,
 }
+
+use std::collections::HashMap;
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DestinyHistoricalStatsValue {
+    pub basic:DestinyHistoricalStatsValuePair,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DestinyHistoricalStatsValuePair {
+    pub value:f32,
+}
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyHistoricalWeaponStats {
@@ -189,6 +201,7 @@ pub struct DestinyHistoricalWeaponsStatsValues {
     pub unique_weapon_kills_precision_kills: f32,
 }
 
+/*
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExtendedActivityHistoricalStatsValues {
     #[serde(rename = "allMedalsEarned", deserialize_with = "property_to_value")]
@@ -227,3 +240,4 @@ pub struct ExtendedActivityHistoricalStatsValues {
     #[serde(rename = "weaponKillsSuper", deserialize_with = "property_to_value")]
     pub weapon_kills_super: f32,
 }
+*/
