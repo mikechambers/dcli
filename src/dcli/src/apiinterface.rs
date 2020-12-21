@@ -20,6 +20,11 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use std::io::{self, Write};
+
+use chrono::{DateTime, Utc};
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+
 use crate::apiclient::ApiClient;
 use crate::apiutils::{API_BASE_URL, PGCR_BASE_URL};
 use crate::error::Error;
@@ -33,13 +38,7 @@ use crate::response::pgcr::{DestinyPostGameCarnageReportData, PGCRResponse};
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
 };
-
 use crate::utils::Period;
-
-use chrono::{DateTime, Utc};
-use std::io::{self, Write};
-
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 pub struct ApiInterface {
     client: ApiClient,

@@ -20,9 +20,10 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::fmt;
 use std::str::FromStr;
+
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 ///Destiny 2 Platforms
 #[derive(PartialEq, Clone, Copy, Debug, Deserialize_repr, Serialize_repr)]

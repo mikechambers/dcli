@@ -22,14 +22,12 @@
 
 mod datetimeformat;
 
+use std::str::FromStr;
+
 use datetimeformat::DateTimeFormat;
 use dcli::moment::Moment;
 use dcli::output::Output;
-
-use std::str::FromStr;
-
 use dcli::utils::{build_tsv, print_verbose};
-
 use structopt::StructOpt;
 
 //we do a custom parse / validation here so we can reuse Moment enum

@@ -20,8 +20,9 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::mode::Mode;
 use std::fmt;
+
+use crate::mode::Mode;
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 #[repr(i32)]

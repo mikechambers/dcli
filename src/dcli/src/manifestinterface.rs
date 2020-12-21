@@ -20,21 +20,20 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::error::Error;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 use futures::TryStreamExt;
+use serde_derive::{Deserialize, Serialize};
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
 use sqlx::{ConnectOptions, Connection, SqliteConnection};
-use std::str::FromStr;
 
-use std::path::PathBuf;
-
+use crate::error::Error;
 use crate::manifest::definitions::{
     ActivityDefinitionData, ActivityTypeDefinitionData, DestinationDefinitionData,
     DisplayPropertiesData, PlaceDefinitionData,
 };
-use serde_derive::{Deserialize, Serialize};
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {

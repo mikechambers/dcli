@@ -20,15 +20,17 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use std::ops;
+
+use chrono::{DateTime, Utc};
+use serde_derive::{Deserialize, Serialize};
+
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
 use crate::response::utils::{property_to_option_float, property_to_value};
 use crate::utils::{
     calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
 };
-use chrono::{DateTime, Utc};
-use serde_derive::{Deserialize, Serialize};
-use std::ops;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AllTimePvPStatsResponse {

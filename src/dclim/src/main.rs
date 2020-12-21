@@ -22,6 +22,10 @@
 
 mod manifest_info;
 
+use std::env::current_dir;
+use std::fs;
+use std::path::PathBuf;
+
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
 use dcli::output::Output;
@@ -30,13 +34,7 @@ use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{build_tsv, print_error, print_verbose};
 use manifest_info::ManifestInfo;
 use structopt::StructOpt;
-
 use tokio::prelude::*;
-
-use std::fs;
-
-use std::env::current_dir;
-use std::path::PathBuf;
 
 async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> {
     let client: ApiClient = ApiClient::new(print_url)?;

@@ -20,23 +20,21 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use structopt::StructOpt;
+use std::path::PathBuf;
 
 use dcli::apiinterface::ApiInterface;
+use dcli::manifest::definitions::{
+    ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData,
+};
 //use dcli::error::Error;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::mode::Mode;
 use dcli::output::Output;
 use dcli::platform::Platform;
+use dcli::response::gpr::CharacterActivitiesData;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{build_tsv, print_error, print_verbose};
-
-use dcli::manifest::definitions::{
-    ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData,
-};
-use dcli::response::gpr::CharacterActivitiesData;
-
-use std::path::PathBuf;
+use structopt::StructOpt;
 
 const ORBIT_PLACE_HASH: u32 = 2961497387;
 

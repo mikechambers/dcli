@@ -20,13 +20,12 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use crate::response::activities::Activity;
+use crate::standing::Standing;
 use crate::utils::{
     calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
     calculate_per_activity_average,
 };
-
-use crate::response::activities::Activity;
-use crate::standing::Standing;
 
 #[derive(Default)]
 pub struct ActivityStatsContainer {

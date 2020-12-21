@@ -20,11 +20,12 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use reqwest::header::{HeaderMap, HeaderValue, CONNECTION};
+use reqwest::{Client, Url};
+
 use crate::error::Error;
 use crate::response::drs::{check_destiny_response_status, IsDestinyAPIResponse};
 use crate::utils::print_verbose;
-use reqwest::header::{HeaderMap, HeaderValue, CONNECTION};
-use reqwest::{Client, Url};
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
 const API_TIMEOUT: u64 = 10; //seconds

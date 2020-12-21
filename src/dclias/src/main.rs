@@ -20,13 +20,12 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use std::path::PathBuf;
+
 use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::utils::{build_tsv, print_error, print_verbose, EXIT_FAILURE};
-
-use std::path::PathBuf;
-
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]

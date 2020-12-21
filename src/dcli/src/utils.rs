@@ -20,14 +20,15 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::error::Error;
-use chrono::{DateTime, Datelike, Duration, TimeZone, Timelike, Utc};
 use std::env;
 use std::ffi::OsStr;
+use std::io::{stdout, Write};
 use std::path::Path;
 
+use chrono::{DateTime, Datelike, Duration, TimeZone, Timelike, Utc};
 use crossterm::{execute, terminal};
-use std::io::{stdout, Write};
+
+use crate::error::Error;
 
 //use chrono::prelude::*;
 

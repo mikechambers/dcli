@@ -20,10 +20,11 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use std::ops;
+
 use crate::utils::{
     calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
 };
-use std::ops;
 
 #[derive(Default, Debug)]
 pub struct CrucibleStats {

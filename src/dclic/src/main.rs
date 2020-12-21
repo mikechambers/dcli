@@ -20,8 +20,6 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use structopt::StructOpt;
-
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
 use dcli::output::Output;
@@ -29,6 +27,7 @@ use dcli::platform::Platform;
 use dcli::response::character::CharacterData;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose, repeat_str, TSV_DELIM, TSV_EOL};
+use structopt::StructOpt;
 
 //todo: could move this to apiclient
 async fn retrieve_characters(

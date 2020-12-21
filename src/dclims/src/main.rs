@@ -21,12 +21,12 @@
 */
 
 use std::path::PathBuf;
-use structopt::StructOpt;
 
 use dcli::error::Error;
 use dcli::manifestinterface::{FindResult, ManifestInterface};
 use dcli::output::Output;
 use dcli::utils::{print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL};
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]

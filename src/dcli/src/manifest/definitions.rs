@@ -1,5 +1,6 @@
-use crate::response::utils::prepend_base_url_option;
 use serde_derive::{Deserialize, Serialize};
+
+use crate::response::utils::prepend_base_url_option;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DisplayPropertiesData {

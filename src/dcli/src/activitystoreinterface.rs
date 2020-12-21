@@ -20,21 +20,22 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::{
-    error::Error,
-    response::pgcr::{DestinyHistoricalStatsValue, DestinyPostGameCarnageReportData},
-};
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::str::FromStr;
 
-use crate::apiinterface::ApiInterface;
-use crate::mode::Mode;
-use crate::platform::Platform;
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::str::FromStr;
+
+use crate::apiinterface::ApiInterface;
+use crate::mode::Mode;
+use crate::platform::Platform;
+use crate::{
+    error::Error,
+    response::pgcr::{DestinyHistoricalStatsValue, DestinyPostGameCarnageReportData},
+};
 
 const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 const PCGR_REQUEST_CHUNK_AMOUNT: usize = 25;

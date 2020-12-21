@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use structopt::StructOpt;
+use std::str::FromStr;
 
 use dcli::apiinterface::ApiInterface;
 use dcli::error::Error;
@@ -29,11 +29,9 @@ use dcli::moment::{Moment, MomentPeriod};
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::stats::{DailyPvPStatsValuesData, PvpStatsData};
-
-use std::str::FromStr;
-
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{build_tsv, format_f32, human_duration, print_error, print_verbose, repeat_str};
+use structopt::StructOpt;
 
 fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
     let moment = Moment::from_str(src)?;

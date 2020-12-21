@@ -20,8 +20,9 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::error::Error;
 use serde_derive::{Deserialize, Serialize};
+
+use crate::error::Error;
 
 pub const API_RESPONSE_STATUS_SUCCESS: u32 = 1;
 

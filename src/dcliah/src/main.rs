@@ -20,30 +20,26 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use dcli::moment::Moment;
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use chrono::{DateTime, Datelike, Duration, Local, Utc};
 use dcli::error::Error;
+use dcli::manifestinterface::ManifestInterface;
 use dcli::mode::Mode;
+use dcli::moment::Moment;
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::activities::Activity;
 use dcli::standing::Standing;
 use dcli::statscontainer::ActivityStatsContainer;
-
-use dcli::manifestinterface::ManifestInterface;
-use std::path::PathBuf;
-
 use dcli::utils::{
     f32_are_equal, format_f32, repeat_str, uppercase_first_char, TSV_DELIM, TSV_EOL,
 };
-use dcli::{apiinterface::ApiInterface, utils::EXIT_FAILURE};
-
-use structopt::StructOpt;
-
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
+use dcli::{apiinterface::ApiInterface, utils::EXIT_FAILURE};
+use structopt::StructOpt;
 
 fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
     let mode = Mode::from_str(src)?;

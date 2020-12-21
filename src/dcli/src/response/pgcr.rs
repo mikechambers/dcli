@@ -20,13 +20,13 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use chrono::{DateTime, Utc};
+use serde_derive::{Deserialize, Serialize};
+
 use crate::response::activities::{ActivityHistoricalStatsValues, DestinyHistoricalStatsActivity};
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
 use crate::response::utils::{property_to_value, standing_default};
-
-use chrono::{DateTime, Utc};
-use serde_derive::{Deserialize, Serialize};
 
 pub const MAX_ACTIVITIES_REQUEST_COUNT: i32 = 250;
 

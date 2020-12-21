@@ -20,15 +20,15 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::mode::Mode;
-use crate::response::character::CharacterData;
-use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
-
-use crate::response::utils::str_to_datetime;
-use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
+use serde_derive::{Deserialize, Serialize};
+
+use crate::mode::Mode;
+use crate::response::character::CharacterData;
+use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
+use crate::response::utils::str_to_datetime;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetProfileResponse {

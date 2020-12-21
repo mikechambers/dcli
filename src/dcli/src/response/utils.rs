@@ -20,10 +20,11 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::apiutils::RESOURCE_BASE_URL;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::Deserialize;
 use serde_derive::Deserialize;
+
+use crate::apiutils::RESOURCE_BASE_URL;
 
 //2020-10-05T18:49:25Z
 pub const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";

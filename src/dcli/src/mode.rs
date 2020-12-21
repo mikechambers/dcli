@@ -20,9 +20,10 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::fmt;
 use std::str::FromStr;
+
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType.html#schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType
 #[derive(PartialEq, Clone, Copy, Debug, Serialize_repr, Deserialize_repr)]
