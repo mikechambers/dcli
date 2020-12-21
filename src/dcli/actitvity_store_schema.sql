@@ -28,7 +28,6 @@
                ON DELETE CASCADE
         );
         
-        
         CREATE TABLE IF NOT EXISTS "main"."activity" (
             "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "activity_id"	INTEGER UNIQUE NOT NULL,

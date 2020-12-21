@@ -165,6 +165,11 @@ pub struct DestinyHistoricalWeaponStats {
     #[serde(rename = "referenceId")]
     pub reference_id: u32, //TODO: should we make all ids u64?
 
+    pub values: DestinyHistoricalWeaponsStatsValues,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DestinyHistoricalWeaponsStatsValues {
     #[serde(rename = "uniqueWeaponKills", deserialize_with = "property_to_value")]
     #[serde(default)]
     pub unique_weapon_kills: f32,
