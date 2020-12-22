@@ -85,7 +85,11 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "O", long = "output-format", default_value = "default")]
+    #[structopt(
+        short = "O",
+        long = "output-format",
+        default_value = "default"
+    )]
     output: Output,
 }
 
@@ -128,13 +132,14 @@ async fn main() {
         }
     };
 
-    let mut manifest = match ManifestInterface::new(opt.manifest_path, false).await {
-        Ok(e) => e,
-        Err(e) => {
-            print_error("Manifest Error", e);
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+    let mut manifest =
+        match ManifestInterface::new(opt.manifest_path, false).await {
+            Ok(e) => e,
+            Err(e) => {
+                print_error("Manifest Error", e);
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
 
     print_verbose(
         &format!(
@@ -207,7 +212,9 @@ async fn main() {
 
     //lets find out the mode / activity type name
     print_verbose("Determining activity mode", opt.verbose);
-    let activity_type_name: String = match activity_data_a.current_activity_mode_type {
+    let activity_type_name: String = match activity_data_a
+        .current_activity_mode_type
+    {
         // if its set in the API data, we use that
         // this is due to this bug:
         // https://github.com/Bungie-net/api/issues/1341
@@ -225,13 +232,18 @@ async fn main() {
             );
             //otherwise, we go into the manifest to find it
             match manifest
-                .get_activity_type_definition(activity_data_m.activity_type_hash)
+                .get_activity_type_definition(
+                    activity_data_m.activity_type_hash,
+                )
                 .await
             {
                 Ok(e) => e.display_properties.name,
                 Err(e) => {
                     print_verbose(
-                        &format!("Activity Mode not found in Manifest : {:?}", e),
+                        &format!(
+                            "Activity Mode not found in Manifest : {:?}",
+                            e
+                        ),
                         opt.verbose,
                     );
                     //Todo: this either means an error, unknown activity, or they are in orbit

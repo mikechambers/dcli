@@ -55,7 +55,11 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "O", long = "output-format", default_value = "default")]
+    #[structopt(
+        short = "O",
+        long = "output-format",
+        default_value = "default"
+    )]
     output: Output,
 
     ///Directory where the manifest and meta-data will be stored.
@@ -90,7 +94,12 @@ async fn main() {
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     let mut store: ActivityStoreInterface =
-        match ActivityStoreInterface::init_with_path(&opt.store_path, opt.verbose).await {
+        match ActivityStoreInterface::init_with_path(
+            &opt.store_path,
+            opt.verbose,
+        )
+        .await
+        {
             Ok(e) => e,
             Err(e) => {
                 print_error("Error initializing activity store.", e);

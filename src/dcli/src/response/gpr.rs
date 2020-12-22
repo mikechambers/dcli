@@ -83,7 +83,8 @@ pub struct CharacterActivitiesData {
     #[serde(rename = "currentActivityModeHash")]
     pub current_activity_mode_hash: u32, //these both point to the same data (0 if not active)
 
-    #[serde(rename = "currentActivityModeType")] //todo: could default this to none / 0
+    #[serde(rename = "currentActivityModeType")]
+    //todo: could default this to none / 0
     pub current_activity_mode_type: Option<Mode>, // (0 if not active)
 
     #[serde(rename = "currentPlaylistActivityHash")]

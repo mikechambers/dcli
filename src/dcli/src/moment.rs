@@ -27,8 +27,8 @@ use chrono::prelude::*;
 use chrono::{DateTime, Duration, Utc};
 
 use crate::utils::{
-    get_destiny2_launch_date, get_last_daily_reset, get_last_friday_reset, get_last_weekly_reset,
-    Period,
+    get_destiny2_launch_date, get_last_daily_reset, get_last_friday_reset,
+    get_last_weekly_reset, Period,
 };
 
 #[derive(PartialEq, Debug, Copy, Clone)]

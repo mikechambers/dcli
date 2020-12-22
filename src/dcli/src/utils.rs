@@ -92,7 +92,10 @@ pub fn print_error(msg: &str, error: Error) {
     eprintln!("       https://github.com/mikechambers/dcli/issues");
 }
 
-pub fn calculate_per_activity_average(value: f32, total_activities: f32) -> f32 {
+pub fn calculate_per_activity_average(
+    value: f32,
+    total_activities: f32,
+) -> f32 {
     if total_activities == 0.0 {
         return 0.0;
     }
@@ -117,7 +120,11 @@ pub fn calculate_kills_deaths_ratio(kills: f32, deaths: f32) -> f32 {
     }
 }
 
-pub fn calculate_kills_deaths_assists(kills: f32, deaths: f32, assists: f32) -> f32 {
+pub fn calculate_kills_deaths_assists(
+    kills: f32,
+    deaths: f32,
+    assists: f32,
+) -> f32 {
     let t = kills + (assists / 2.0);
     if deaths > 0.0 {
         t / deaths
@@ -224,7 +231,10 @@ pub fn get_last_daily_reset() -> DateTime<Utc> {
     find_previous_moment(past_reset, DAY_IN_SECONDS)
 }
 
-fn find_previous_moment(past_reset: DateTime<Utc>, interval: i64) -> DateTime<Utc> {
+fn find_previous_moment(
+    past_reset: DateTime<Utc>,
+    interval: i64,
+) -> DateTime<Utc> {
     let now: DateTime<Utc> = Utc::now();
 
     //get total seconds between now and the past reset

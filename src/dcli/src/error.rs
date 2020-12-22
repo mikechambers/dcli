@@ -57,6 +57,7 @@ pub enum Error {
     ManifestNotSet,
     ManifestItemNotFound { description: String },
     MaxActivitiesRequestCountExceeded,
+    CharacterDataNotFound,
 }
 
 impl Display for Error {
@@ -126,6 +127,12 @@ impl Display for Error {
                 "The maximum number of activities ({}) requested was exceeded.",
                 MAX_ACTIVITIES_REQUEST_COUNT
             ),
+            Error::CharacterDataNotFound => write!(
+                f,
+                "Could not find entry in activity data for specified character."
+            ),
+
+            
         }
     }
 }

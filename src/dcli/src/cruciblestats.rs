@@ -23,7 +23,8 @@
 use std::ops;
 
 use crate::utils::{
-    calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
+    calculate_efficiency, calculate_kills_deaths_assists,
+    calculate_kills_deaths_ratio,
 };
 
 #[derive(Default, Debug)]
@@ -58,7 +59,9 @@ impl ops::Add<CrucibleStats> for CrucibleStats {
         //but we will keep it here for completeness sake and in case the API is
         //ever updated
         let best_single_game_kills: Option<f32>;
-        if _cs.best_single_game_kills.is_none() || self.best_single_game_kills.is_none() {
+        if _cs.best_single_game_kills.is_none()
+            || self.best_single_game_kills.is_none()
+        {
             if _cs.best_single_game_kills.is_none() {
                 best_single_game_kills = self.best_single_game_kills;
             } else {
@@ -72,7 +75,8 @@ impl ops::Add<CrucibleStats> for CrucibleStats {
         }
 
         let kills = self.kills + _cs.kills;
-        let total_kill_distance = self.total_kill_distance + _cs.total_kill_distance;
+        let total_kill_distance =
+            self.total_kill_distance + _cs.total_kill_distance;
         let assists = self.assists + _cs.assists;
         let deaths = self.deaths + _cs.deaths;
 
@@ -85,7 +89,8 @@ impl ops::Add<CrucibleStats> for CrucibleStats {
 
         //todo : add activities_lost
         CrucibleStats {
-            activities_entered: self.activities_entered + _cs.activities_entered,
+            activities_entered: self.activities_entered
+                + _cs.activities_entered,
             activities_won: self.activities_won + _cs.activities_won,
             activities_lost: self.activities_lost + _cs.activities_lost,
             assists,
@@ -96,10 +101,13 @@ impl ops::Add<CrucibleStats> for CrucibleStats {
             deaths,
             average_lifespan,
             total_lifespan,
-            opponents_defeated: self.opponents_defeated + _cs.opponents_defeated,
+            opponents_defeated: self.opponents_defeated
+                + _cs.opponents_defeated,
             efficiency: calculate_efficiency(kills, deaths, assists),
             kills_deaths_ratio: calculate_kills_deaths_ratio(kills, deaths),
-            kills_deaths_assists: calculate_kills_deaths_assists(kills, deaths, assists),
+            kills_deaths_assists: calculate_kills_deaths_assists(
+                kills, deaths, assists,
+            ),
             suicides: self.suicides + _cs.suicides,
             best_single_game_kills,
             precision_kills: self.precision_kills + _cs.precision_kills,

@@ -25,7 +25,9 @@ use std::path::PathBuf;
 use dcli::error::Error;
 use dcli::manifestinterface::{FindResult, ManifestInterface};
 use dcli::output::Output;
-use dcli::utils::{print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL};
+use dcli::utils::{
+    print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL,
+};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -62,7 +64,11 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of columns with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "O", long = "output-format", default_value = "default")]
+    #[structopt(
+        short = "O",
+        long = "output-format",
+        default_value = "default"
+    )]
     output: Output,
 
     ///Print out additional information
@@ -88,14 +94,14 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
-    let results: Vec<FindResult> = match search_manifest_by_hash(opt.hash, opt.manifest_path).await
-    {
-        Ok(e) => e,
-        Err(e) => {
-            print_error("Error searching manifest.", e);
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+    let results: Vec<FindResult> =
+        match search_manifest_by_hash(opt.hash, opt.manifest_path).await {
+            Ok(e) => e,
+            Err(e) => {
+                print_error("Error searching manifest.", e);
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
 
     match opt.output {
         Output::Default => {
@@ -128,7 +134,8 @@ fn print_default(results: Vec<FindResult>) {
             .description
             .as_ref()
             .unwrap_or(&default);
-        let icon_path = r.display_properties.icon_path.as_ref().unwrap_or(&default);
+        let icon_path =
+            r.display_properties.icon_path.as_ref().unwrap_or(&default);
 
         println!(
             "{:<0col_w$}{}",
@@ -161,7 +168,8 @@ fn print_tsv(results: Vec<FindResult>) {
             .description
             .as_ref()
             .unwrap_or(&default);
-        let icon_path = r.display_properties.icon_path.as_ref().unwrap_or(&default);
+        let icon_path =
+            r.display_properties.icon_path.as_ref().unwrap_or(&default);
 
         print!(
             "{i}{delim}{n}{delim}{d}{delim}{hi}{delim}{ip}{eol}",

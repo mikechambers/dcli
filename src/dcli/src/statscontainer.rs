@@ -23,8 +23,8 @@
 use crate::response::activities::Activity;
 use crate::standing::Standing;
 use crate::utils::{
-    calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
-    calculate_per_activity_average,
+    calculate_efficiency, calculate_kills_deaths_assists,
+    calculate_kills_deaths_ratio, calculate_per_activity_average,
 };
 
 #[derive(Default)]
@@ -57,7 +57,9 @@ pub struct ActivityStatsContainer {
 }
 
 impl ActivityStatsContainer {
-    pub fn with_activities(activities: Vec<Activity>) -> ActivityStatsContainer {
+    pub fn with_activities(
+        activities: Vec<Activity>,
+    ) -> ActivityStatsContainer {
         let mut a = ActivityStatsContainer {
             activities,
             assists: 0.0,
@@ -109,7 +111,8 @@ impl ActivityStatsContainer {
                 .highest_opponents_defeated
                 .max(a.values.opponents_defeated);
 
-            self.highest_efficiency = self.highest_efficiency.max(a.values.efficiency);
+            self.highest_efficiency =
+                self.highest_efficiency.max(a.values.efficiency);
             self.highest_kills_deaths_ratio = self
                 .highest_kills_deaths_ratio
                 .max(a.values.kills_deaths_ratio);
@@ -121,7 +124,8 @@ impl ActivityStatsContainer {
             self.opponents_defeated += a.values.opponents_defeated;
             self.time_played_seconds += a.values.time_played_seconds;
 
-            let standing = Standing::from_mode(a.values.standing, &a.details.mode);
+            let standing =
+                Standing::from_mode(a.values.standing, &a.details.mode);
             match standing {
                 Standing::Victory => {
                     self.wins += 1.0;
@@ -153,10 +157,15 @@ impl ActivityStatsContainer {
             self.longest_win_streak = self.longest_win_streak.max(streak);
         }
 
-        self.kills_deaths_assists =
-            calculate_kills_deaths_assists(self.kills, self.deaths, self.assists);
-        self.kills_deaths_ratio = calculate_kills_deaths_ratio(self.kills, self.deaths);
-        self.efficiency = calculate_efficiency(self.kills, self.deaths, self.assists);
+        self.kills_deaths_assists = calculate_kills_deaths_assists(
+            self.kills,
+            self.deaths,
+            self.assists,
+        );
+        self.kills_deaths_ratio =
+            calculate_kills_deaths_ratio(self.kills, self.deaths);
+        self.efficiency =
+            calculate_efficiency(self.kills, self.deaths, self.assists);
     }
 
     pub fn longest_win_streak(&self) -> f32 {

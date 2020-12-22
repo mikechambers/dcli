@@ -25,7 +25,10 @@ pub struct ActivityDefinitionData {
     pub display_properties: DisplayPropertiesData,
 
     #[serde(default)]
-    #[serde(rename = "pgcrImage", deserialize_with = "prepend_base_url_option")]
+    #[serde(
+        rename = "pgcrImage",
+        deserialize_with = "prepend_base_url_option"
+    )]
     pub pgcr_image: Option<String>,
 
     #[serde(rename = "destinationHash")]

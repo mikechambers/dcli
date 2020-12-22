@@ -5,7 +5,9 @@ use crate::mode::Mode;
 use crate::platform::Platform;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
-use crate::response::utils::{property_to_i32_value, property_to_value, standing_default};
+use crate::response::utils::{
+    property_to_i32_value, property_to_value, standing_default,
+};
 
 pub const MAX_ACTIVITIES_REQUEST_COUNT: i32 = 250;
 
@@ -59,27 +61,42 @@ pub struct ActivityHistoricalStatsValues {
     #[serde(deserialize_with = "property_to_value")]
     pub deaths: f32,
 
-    #[serde(rename = "averageScorePerKill", deserialize_with = "property_to_value")]
+    #[serde(
+        rename = "averageScorePerKill",
+        deserialize_with = "property_to_value"
+    )]
     #[serde(default)]
     pub average_score_per_kill: f32,
 
-    #[serde(rename = "averageScorePerLife", deserialize_with = "property_to_value")]
+    #[serde(
+        rename = "averageScorePerLife",
+        deserialize_with = "property_to_value"
+    )]
     #[serde(default)]
     pub average_score_per_life: f32,
 
     #[serde(deserialize_with = "property_to_value")]
     pub completed: f32,
 
-    #[serde(rename = "opponentsDefeated", deserialize_with = "property_to_value")]
+    #[serde(
+        rename = "opponentsDefeated",
+        deserialize_with = "property_to_value"
+    )]
     pub opponents_defeated: f32,
 
     #[serde(deserialize_with = "property_to_value")]
     pub efficiency: f32,
 
-    #[serde(rename = "killsDeathsRatio", deserialize_with = "property_to_value")]
+    #[serde(
+        rename = "killsDeathsRatio",
+        deserialize_with = "property_to_value"
+    )]
     pub kills_deaths_ratio: f32,
 
-    #[serde(rename = "killsDeathsAssists", deserialize_with = "property_to_value")]
+    #[serde(
+        rename = "killsDeathsAssists",
+        deserialize_with = "property_to_value"
+    )]
     pub kills_deaths_assists: f32,
 
     #[serde(
@@ -96,13 +113,19 @@ pub struct ActivityHistoricalStatsValues {
     #[serde(default)]
     pub team: f32,
 
-    #[serde(rename = "completionReason", deserialize_with = "property_to_value")]
+    #[serde(
+        rename = "completionReason",
+        deserialize_with = "property_to_value"
+    )]
     pub completion_reason: f32,
 
     #[serde(rename = "startSeconds", deserialize_with = "property_to_value")]
     pub start_seconds: f32,
 
-    #[serde(rename = "timePlayedSeconds", deserialize_with = "property_to_value")]
+    #[serde(
+        rename = "timePlayedSeconds",
+        deserialize_with = "property_to_value"
+    )]
     pub time_played_seconds: f32,
 
     #[serde(rename = "playerCount", deserialize_with = "property_to_value")]
