@@ -30,7 +30,8 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
-/// Command line tool for downloading and syncing Crucible activity history
+/// Command line tool for downloading and syncing Destiny 2 Crucible activity
+/// history to a sqlite3 database file.
 ///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
@@ -58,12 +59,11 @@ struct Opt {
     #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 
-    /// Optional directory where activity sqlite database will be loaded from
-    /// and store.
+    /// Directory where activity sqlite3 database will be stored. (optional)
     ///
     /// By default data will be loaded from and stored in the appropriate system
-    /// local storage directory. Data will be stored in sqlite database file
-    /// named dcli.sqlite
+    /// local storage directory. Data will be stored in a sqlite3 database file
+    /// named dcli.sqlite3
     #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
     data_dir: Option<PathBuf>,
 

@@ -271,7 +271,7 @@ impl ApiInterface {
         eprint!("[");
         //TODO: if error occurs on an individual call, retry?
         loop {
-            eprint!("#");
+            eprint!(".");
             io::stderr().flush().unwrap();
 
             // TODO: if we call more pages that there is data, it will return back with no Response
