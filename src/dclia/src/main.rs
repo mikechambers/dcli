@@ -33,7 +33,7 @@ use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::response::gpr::CharacterActivitiesData;
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{build_tsv, print_error, print_verbose};
+use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose};
 use structopt::StructOpt;
 
 const ORBIT_PLACE_HASH: u32 = 2961497387;
@@ -71,13 +71,13 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    ///Local path for the Destiny 2 manifest database file.
+    /// Directory where Destiny 2 manifest database file is stored. (optional)
     ///
-    ///This will normally be downloaded using the dclim tool, and stored in a file
-    ///named manifest.sqlite3 (in the manifest directory specified when running
-    ///dclim).
-    #[structopt(short = "P", long = "manifest-path", parse(from_os_str))]
-    manifest_path: PathBuf,
+    /// This will normally be downloaded using the dclim tool, and stored in a file
+    /// named manifest.sqlite3 (in the manifest directory specified when running
+    /// dclim).
+    #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
+    data_dir: Option<PathBuf>,
 
     /// Format for command output
     ///
@@ -85,11 +85,7 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(
-        short = "O",
-        long = "output-format",
-        default_value = "default"
-    )]
+    #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 }
 
@@ -97,6 +93,14 @@ struct Opt {
 async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
+
+    let data_dir = match determine_data_dir(opt.data_dir) {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Error initializing manifest directory.", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     let client = match ApiInterface::new(opt.verbose) {
         Ok(e) => e,
@@ -132,14 +136,13 @@ async fn main() {
         }
     };
 
-    let mut manifest =
-        match ManifestInterface::new(opt.manifest_path, false).await {
-            Ok(e) => e,
-            Err(e) => {
-                print_error("Manifest Error", e);
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let mut manifest = match ManifestInterface::new(data_dir, false).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Manifest Error", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     print_verbose(
         &format!(
@@ -212,9 +215,7 @@ async fn main() {
 
     //lets find out the mode / activity type name
     print_verbose("Determining activity mode", opt.verbose);
-    let activity_type_name: String = match activity_data_a
-        .current_activity_mode_type
-    {
+    let activity_type_name: String = match activity_data_a.current_activity_mode_type {
         // if its set in the API data, we use that
         // this is due to this bug:
         // https://github.com/Bungie-net/api/issues/1341
@@ -232,18 +233,13 @@ async fn main() {
             );
             //otherwise, we go into the manifest to find it
             match manifest
-                .get_activity_type_definition(
-                    activity_data_m.activity_type_hash,
-                )
+                .get_activity_type_definition(activity_data_m.activity_type_hash)
                 .await
             {
                 Ok(e) => e.display_properties.name,
                 Err(e) => {
                     print_verbose(
-                        &format!(
-                            "Activity Mode not found in Manifest : {:?}",
-                            e
-                        ),
+                        &format!("Activity Mode not found in Manifest : {:?}", e),
                         opt.verbose,
                     );
                     //Todo: this either means an error, unknown activity, or they are in orbit

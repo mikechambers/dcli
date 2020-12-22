@@ -6,6 +6,8 @@ Information includes current activity, location, and in the case of PvP modes (C
 
 The API updates pretty quickly, and can be used to see check the activity and / or map while you are loading in.
 
+App expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim). You can specify a custom path to the manifest using the --data-dir argument.
+
 
 ## USAGE
 ```
@@ -25,8 +27,8 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-    -P, --manifest-path <manifest-path>    
-            Local path for the Destiny 2 manifest database file.
+    -D, --data-dir <data-dir>       
+            Directory where Destiny 2 manifest database file is stored. (optional)
             
             This will normally be downloaded using the dclim tool, and stored in a file named manifest.sqlite3 (in the
             manifest directory specified when running dclim).
@@ -62,7 +64,7 @@ Manifest can be downloaded and synced with from [dclim](https://github.com/mikec
 
 
 ```
-$ dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox
+$ dclia --member-id 4611686018429783292 --platform xbox
 ```
 
 outputs:
@@ -71,10 +73,10 @@ outputs:
 Playing Deep Stone Crypt Raid on Castalia Macula, Europa
 ```
 
-#### Check for current activity with tab seperated output:
+#### Check for current activity custom manifest path with tab seperated output:
 
 ```
-$ dclia --manifest-path ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox --output-format tsv
+$ dclia --data-dir ~/tmp/manifest.sqlite3 --member-id 4611686018429783292 --platform xbox --output-format tsv
 ```
 
 outputs:
