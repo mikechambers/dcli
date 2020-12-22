@@ -25,7 +25,7 @@ use std::path::PathBuf;
 use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::output::Output;
 use dcli::platform::Platform;
-use dcli::utils::{build_tsv, print_error, print_verbose, EXIT_FAILURE};
+use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -55,18 +55,17 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(
-        short = "O",
-        long = "output-format",
-        default_value = "default"
-    )]
+    #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 
-    ///Directory where the manifest and meta-data will be stored.
+    /// Optional directory where activity sqlite database will be loaded from
+    /// and store.
     ///
-    ///The manifest will be stored in this directory in a file named manifest.sqlite3
-    #[structopt(short = "S", long = "store-path", parse(from_os_str))]
-    store_path: PathBuf,
+    /// By default data will be loaded from and stored in the appropriate system
+    /// local storage directory. Data will be stored in sqlite database file
+    /// named dcli.sqlite
+    #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
+    data_dir: Option<PathBuf>,
 
     /// Platform for specified id
     ///
@@ -93,13 +92,16 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
+    let data_dir = match determine_data_dir(opt.data_dir) {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Error initializing storage directory store.", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
     let mut store: ActivityStoreInterface =
-        match ActivityStoreInterface::init_with_path(
-            &opt.store_path,
-            opt.verbose,
-        )
-        .await
-        {
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
             Ok(e) => e,
             Err(e) => {
                 print_error("Error initializing activity store.", e);
@@ -111,9 +113,7 @@ async fn main() {
         .sync(&opt.member_id, &opt.character_id, &opt.platform)
         .await
     {
-        Ok(_e) => {
-            println!("done");
-        }
+        Ok(_e) => {}
         Err(e) => {
             print_error("Error syncing ids.", e);
             std::process::exit(EXIT_FAILURE);
@@ -122,7 +122,8 @@ async fn main() {
 
     match opt.output {
         Output::Default => {
-            println!("{}", "DEFAULT OUTPUT");
+            println!("Sync complete. Database stored at:");
+            println!("{}", store.get_storage_path());
         }
         Output::Tsv => {
             let mut name_values: Vec<(&str, String)> = Vec::new();

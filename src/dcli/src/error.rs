@@ -58,6 +58,7 @@ pub enum Error {
     ManifestItemNotFound { description: String },
     MaxActivitiesRequestCountExceeded,
     CharacterDataNotFound,
+    SystemDirectoryNotFound,
 }
 
 impl Display for Error {
@@ -131,6 +132,10 @@ impl Display for Error {
                 f,
                 "Could not find entry in activity data for specified character."
             ),
+            Error::SystemDirectoryNotFound  => {
+                write!(f, "Could not locate system directory.")
+            },
+            
 
             
         }
