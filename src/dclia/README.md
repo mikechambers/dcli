@@ -6,7 +6,7 @@ Information includes current activity, location, and in the case of PvP modes (C
 
 The API updates pretty quickly, and can be used to see check the activity and / or map while you are loading in.
 
-App expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim). You can specify a custom path to the manifest using the --data-dir argument.
+The too expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim). You can specify a custom path to the manifest using the --data-dir argument.
 
 
 ## USAGE

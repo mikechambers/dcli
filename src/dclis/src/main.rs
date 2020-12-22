@@ -24,9 +24,7 @@ mod memberidsearch;
 
 use dcli::output::Output;
 use dcli::platform::Platform;
-use dcli::utils::{
-    print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL,
-};
+use dcli::utils::{print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL};
 use memberidsearch::MemberIdSearch;
 use memberidsearch::Membership;
 use structopt::StructOpt;
@@ -85,11 +83,7 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of columns with lines
     /// ending in a new line character (\n).
-    #[structopt(
-        short = "O",
-        long = "output-format",
-        default_value = "default"
-    )]
+    #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 }
 
@@ -165,8 +159,7 @@ async fn main() {
 fn print_tsv(member: &Membership) {
     let default = &"".to_string();
 
-    //todo: clippy is complaining about this but not 100% sure why
-    let n = member.display_name.as_ref().unwrap_or_else(|| default);
+    let n = member.display_name.as_ref().unwrap_or(default);
 
     print!(
         "{d}{delim}{i}{delim}{p}{delim}{pi}{eol}",
@@ -181,8 +174,7 @@ fn print_tsv(member: &Membership) {
 
 fn print_default(member: &Membership) {
     let default = &"".to_string();
-    //todo: clippy is complaining about this but not 100% sure why
-    let n = member.display_name.as_ref().unwrap_or_else(|| default);
+    let n = member.display_name.as_ref().unwrap_or(default);
 
     let col_w = 15;
     println!("{:<0col_w$}{}", "Display Name", n, col_w = col_w);

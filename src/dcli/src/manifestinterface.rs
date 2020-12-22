@@ -31,8 +31,8 @@ use sqlx::{ConnectOptions, Connection, SqliteConnection};
 
 use crate::error::Error;
 use crate::manifest::definitions::{
-    ActivityDefinitionData, ActivityTypeDefinitionData, DestinationDefinitionData,
-    DisplayPropertiesData, PlaceDefinitionData,
+    ActivityDefinitionData, ActivityTypeDefinitionData,
+    DestinationDefinitionData, DisplayPropertiesData, PlaceDefinitionData,
 };
 
 pub const MANIFEST_FILE_NAME: &str = "manifest.sqlite3";
@@ -53,7 +53,10 @@ pub struct ManifestInterface {
 }
 
 impl ManifestInterface {
-    pub async fn new(manifest_dir: PathBuf, cache: bool) -> Result<ManifestInterface, Error> {
+    pub async fn new(
+        manifest_dir: PathBuf,
+        cache: bool,
+    ) -> Result<ManifestInterface, Error> {
         let manifest_path = manifest_dir.join(MANIFEST_FILE_NAME);
 
         if !manifest_path.exists() {
@@ -99,7 +102,8 @@ impl ManifestInterface {
 
             //TODO: Need to impliment this to dynamically pull table names
             //"SELECT name FROM sqlite_master WHERE type='table'"
-            let table_name: String = "DestinyInventoryItemDefinition".to_string();
+            let table_name: String =
+                "DestinyInventoryItemDefinition".to_string();
             //todo: do we need to pass table_name twice?
             match sqlx::query("CREATE TABLE ? AS SELECT * FROM tmpDb.?")
                 .bind(table_name)
@@ -147,7 +151,8 @@ impl ManifestInterface {
             //for some reason sqlx doesnt let you bind table names
             let q = format!("SELECT json FROM {} WHERE id=?", table);
 
-            let mut rows = sqlx::query(&q).bind(id).fetch(&mut self.manifest_db);
+            let mut rows =
+                sqlx::query(&q).bind(id).fetch(&mut self.manifest_db);
 
             while let Some(row) = rows.try_next().await? {
                 // map the row into a user-defined domain type
@@ -162,7 +167,9 @@ impl ManifestInterface {
         Ok(out)
     }
 
-    pub async fn get_tables_with_id_column(&mut self) -> Result<Vec<String>, Error> {
+    pub async fn get_tables_with_id_column(
+        &mut self,
+    ) -> Result<Vec<String>, Error> {
         let mut tables: Vec<String> = Vec::new();
 
         //select all of the tables which have an id column
@@ -179,8 +186,9 @@ impl ManifestInterface {
     pub async fn get_tables(&mut self) -> Result<Vec<String>, Error> {
         let mut tables: Vec<String> = Vec::new();
 
-        let mut rows = sqlx::query("SELECT name FROM sqlite_master WHERE type='table'")
-            .fetch(&mut self.manifest_db);
+        let mut rows =
+            sqlx::query("SELECT name FROM sqlite_master WHERE type='table'")
+                .fetch(&mut self.manifest_db);
 
         while let Some(row) = rows.try_next().await? {
             let name: &str = row.try_get("name")?;
@@ -208,7 +216,10 @@ impl ManifestInterface {
                 let data:DestinyActivityDefinitionData = serde_json::from_str(json)?;
         */
 
-        let query = &format!("SELECT json FROM DestinyActivityDefinition WHERE id={}", id);
+        let query = &format!(
+            "SELECT json FROM DestinyActivityDefinition WHERE id={}",
+            id
+        );
         let data: ActivityDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
@@ -224,15 +235,20 @@ impl ManifestInterface {
             "SELECT json FROM DestinyDestinationDefinition WHERE id={}",
             id
         );
-        let data: DestinationDefinitionData = self.get_definition(query).await?;
+        let data: DestinationDefinitionData =
+            self.get_definition(query).await?;
 
         Ok(data)
     }
 
-    pub async fn get_place_definition(&mut self, id: u32) -> Result<PlaceDefinitionData, Error> {
+    pub async fn get_place_definition(
+        &mut self,
+        id: u32,
+    ) -> Result<PlaceDefinitionData, Error> {
         let id = convert_hash_to_id(id);
 
-        let query = &format!("SELECT json FROM DestinyPlaceDefinition WHERE id={}", id);
+        let query =
+            &format!("SELECT json FROM DestinyPlaceDefinition WHERE id={}", id);
         let data: PlaceDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
@@ -248,7 +264,8 @@ impl ManifestInterface {
             "SELECT json FROM DestinyActivityTypeDefinition WHERE id={}",
             id
         );
-        let data: ActivityTypeDefinitionData = self.get_definition(query).await?;
+        let data: ActivityTypeDefinitionData =
+            self.get_definition(query).await?;
 
         Ok(data)
     }

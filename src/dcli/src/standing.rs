@@ -48,12 +48,12 @@ impl Standing {
 
         if value > 0 {
             if mode == &Mode::Rumble && value > 2 {
-                return Standing::Defeat;
+                Standing::Defeat
             } else {
-                return Standing::Victory;
+                Standing::Victory
             }
         } else {
-            return Standing::Victory;
+            Standing::Victory
         }
     }
 }

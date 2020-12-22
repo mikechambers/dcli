@@ -263,7 +263,7 @@ struct Opt {
     /// All ranges are up to, but not including current day, and thus some values
     /// may not return data depending on time of day.
     #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment),
-    default_value = "all_time")]
+    short="T", default_value = "all_time")]
     moment: Moment,
 
     /// Activity mode to return stats for

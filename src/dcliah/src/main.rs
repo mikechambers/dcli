@@ -34,8 +34,8 @@ use dcli::response::activities::Activity;
 use dcli::standing::Standing;
 use dcli::statscontainer::ActivityStatsContainer;
 use dcli::utils::{
-    f32_are_equal, format_f32, repeat_str, uppercase_first_char, TSV_DELIM,
-    TSV_EOL,
+    determine_data_dir, f32_are_equal, format_f32, repeat_str,
+    uppercase_first_char, TSV_DELIM, TSV_EOL,
 };
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
@@ -84,13 +84,13 @@ async fn get_manifest(
 }
 
 async fn print_tsv(
-    manifest_path: PathBuf,
+    manifest_dir: PathBuf,
     data: ActivityStatsContainer,
     mode: Mode,
     moment: Moment,
     start_time: DateTime<Utc>,
 ) -> Result<(), Error> {
-    let mut manifest = get_manifest(manifest_path).await?;
+    let mut manifest = get_manifest(manifest_dir).await?;
 
     print!(
         "VAR{delim}START_TIME{delim}{start_time}{eol}",
@@ -187,7 +187,7 @@ async fn print_tsv(
 }
 
 async fn print_default(
-    manifest_path: PathBuf,
+    manifest_dir: PathBuf,
     data: ActivityStatsContainer,
     display_limit: i32,
     mode: Mode,
@@ -204,7 +204,7 @@ async fn print_default(
         return Ok(());
     }
 
-    let mut manifest = get_manifest(manifest_path).await?;
+    let mut manifest = get_manifest(manifest_dir).await?;
 
     let display_count = std::cmp::min(activity_count, display_limit as usize);
     let is_limited = activity_count != display_count;
@@ -576,7 +576,7 @@ struct Opt {
     /// Specifying all_time retrieves all activitiy history and may take an extended
     /// amount of time to retrieve depending on the number of activities.
     #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), 
-        short = "s", default_value = "day")]
+        short = "T", default_value = "day")]
     moment: Moment,
 
     /// Activity mode to return stats for
@@ -625,14 +625,26 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    ///Local path for Destiny 2 manifest database file.
-    #[structopt(short = "P", long = "manifest-path", parse(from_os_str))]
-    manifest_path: PathBuf,
+    /// Directory where Destiny 2 manifest database file is stored. (optional)
+    ///
+    /// This will normally be downloaded using the dclim tool, and stored in a file
+    /// named manifest.sqlite3 (in the manifest directory specified when running
+    /// dclim).
+    #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
+    data_dir: Option<PathBuf>,
 }
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
+
+    let data_dir = match determine_data_dir(opt.data_dir) {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Error initializing manifest directory.", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     let custom_time = match opt.moment {
         Moment::Custom => {
@@ -674,7 +686,7 @@ async fn main() {
     match opt.output {
         Output::Default => {
             match print_default(
-                opt.manifest_path,
+                data_dir,
                 container,
                 opt.display_limit,
                 opt.mode,
@@ -692,7 +704,7 @@ async fn main() {
         }
         Output::Tsv => {
             match print_tsv(
-                opt.manifest_path,
+                data_dir,
                 container,
                 opt.mode,
                 opt.moment,

@@ -288,9 +288,9 @@ impl ActivityStoreInterface {
             ._insert_character_activity_stats(data, character_row_id, character_id)
             .await
         {
-            Ok(e) => {
+            Ok(_e) => {
                 sqlx::query("COMMIT;").execute(&mut self.db).await?;
-                Ok(e)
+                Ok(())
             }
             Err(e) => {
                 sqlx::query("ROLLBACK;").execute(&mut self.db).await?;
@@ -308,7 +308,7 @@ impl ActivityStoreInterface {
         sqlx::query(r#"
             INSERT OR IGNORE INTO "main"."activity"("activity_id","period","mode","platform","director_activity_hash") VALUES (?,?,?,?,?)
         "#)
-        .bind(format!("{}", data.activity_details.instance_id)) //activity_id
+        .bind(data.activity_details.instance_id.clone()) //activity_id
         .bind(format!("{}", data.period)) //period
         .bind(format!("{}", data.activity_details.mode.to_id())) //mode
         .bind(format!("{}", data.activity_details.membership_type.to_id())) //platform
@@ -393,7 +393,7 @@ impl ActivityStoreInterface {
         .bind(format!("{}", weapon_kills_melee)) //weapon_kills_melee
         .bind(format!("{}", weapon_kills_super)) //weapon_kills_super
         .bind(format!("{}", all_medals_earned)) //weapon_kills_super
-        .bind(format!("{}", data.activity_details.instance_id)) //activity
+        .bind(data.activity_details.instance_id.clone()) //activity
         .execute(&mut self.db)
         .await?;
 
@@ -408,8 +408,8 @@ impl ActivityStoreInterface {
                 (SELECT max(rowid) from character_activity_stats);
                 "#,
             )
-            .bind(format!("{}", key)) //reference_id
-            .bind(format!("{}", value.basic.value)) //unique_weapon_kills
+            .bind(key) //reference_id
+            .bind(value.basic.value) //unique_weapon_kills
             .execute(&mut self.db)
             .await?;
         }
@@ -443,7 +443,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(format!("{}", character_row_id))
-        .bind(format!("{}", data.activity_details.instance_id))
+        .bind(data.activity_details.instance_id.clone())
         .execute(&mut self.db)
         .await?;
 
@@ -485,7 +485,7 @@ impl ActivityStoreInterface {
             INSERT OR IGNORE into "member" ("member_id", "platform_id") VALUES (?, ?)
         "#,
         )
-        .bind(format!("{}", member_id))
+        .bind(member_id.to_string())
         .bind(format!("{}", platform.to_id()))
         .execute(&mut self.db)
         .await?;
@@ -495,7 +495,7 @@ impl ActivityStoreInterface {
             SELECT id from "member" where member_id=? and platform_id=?
         "#,
         )
-        .bind(format!("{}", member_id))
+        .bind(member_id.to_string())
         .bind(format!("{}", platform.to_id()))
         .fetch_one(&mut self.db)
         .await?;
@@ -515,7 +515,7 @@ impl ActivityStoreInterface {
             INSERT OR IGNORE into "character" ("character_id", "member") VALUES (?, ?)
         "#,
         )
-        .bind(format!("{}", character_id))
+        .bind(character_id.to_string())
         .bind(member_rowid)
         .execute(&mut self.db)
         .await?;
@@ -525,7 +525,7 @@ impl ActivityStoreInterface {
             SELECT id from "character" where character_id=? and member=?
         "#,
         )
-        .bind(format!("{}", character_id))
+        .bind(character_id.to_string())
         .bind(format!("{}", member_rowid))
         .fetch_one(&mut self.db)
         .await?;

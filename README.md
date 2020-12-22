@@ -25,9 +25,9 @@ Just download, place them in your path and run from the command line (use --help
 | [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) | Manages and syncs the remote Destiny 2 API manifest database |
 | [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) | Searches the Destiny 2 manifest by hash ids (from API calls) |
 | [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) | Retrieves primary platform and membership ids for Destiny 2 players |
+| [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file. |
 | [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments |
 | [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) | Library used across all of the dcli apps |
-    
     
 Each tool page contains additional tool specific information and usage examples.
 
@@ -45,25 +45,9 @@ If you are running on Mac, make sure to [read this article](https://github.com/m
 The first thing you should do is to download the manifest using dclim. This is required to use some of the other apis.
 
 ```
-$ dclim --manifest-dir /home/mesh/destiny
+$ dclim
 ```
-Make sure to place it in a directory where it wont get deleted.
-
-This will download and save the manifest to `/home/mesh/destiny/manifest.sqlite3`. Remember this path as we will use it in other API calls.
-
-### (Optional) Save data in environment variables
-
-One useful trick, is to store some of the data you need to reuse, such as the manifest path, in environment variables.
-
-For example, on Linux / Mac OS X, I have this placed in my `.profile` file:
-
-```
-export MANIFEST_PATH="/home/mesh/destiny/manifest.sqlite3"
-```
-
-Then, I can just use `$MANIFEST_PATH` whenever I need to use it.
-
-Here are some resources going over how to set environment variables on [Mac OS X](https://apple.stackexchange.com/questions/106778/how-do-i-set-environment-variables-on-os-x), [Linux](https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/) and [Windows](https://support.shotgunsoftware.com/hc/en-us/articles/114094235653-Setting-global-environment-variables-on-Windows).
+This will download and save the manifest to the system specific local app data directory.
 
 ### Retrieve your member id, platform and character ids
 
@@ -111,11 +95,22 @@ Titan       2305843009264966984
 Hunter      2305843009264966985     LAST ACTIVE
 ```
 
-Lets store the id for the last active character in an environment variable (if you like, you could store all of them by class name).
+
+### (Optional) Save data in environment variables
+
+One useful trick, is to store some of the data you need to reuse, such as the manifest path, in environment variables.
+
+For example, on Linux / Mac OS X, I have this placed in my `.profile` file:
 
 ```
+export MEMBER_ID=4611686018429783292
 export CHARACTER_ID=2305843009264966985
 ```
+
+Then, I can just use `$MEMBER_ID` whenever I need to use it.
+
+Here are some resources going over how to set environment variables on [Mac OS X](https://apple.stackexchange.com/questions/106778/how-do-i-set-environment-variables-on-os-x), [Linux](https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/) and [Windows](https://support.shotgunsoftware.com/hc/en-us/articles/114094235653-Setting-global-environment-variables-on-Windows).
+
 
 At this point, we have all of our data setup, and can access it via environment variables like so:
 
@@ -137,13 +132,13 @@ Storing this data in enviroment variables is not required but makes it much easi
 So, lets start getting some data. Lets see whether we are playing Destiny 2, and if so, which activity:
 
 ```
-$ dclia --member-id $MEMBER_ID --platform $PLATFORM --manifest-path $MANIFEST_PATH
+$ dclia --member-id $MEMBER_ID --platform $PLATFORM
 ```
 
 Lets see all of our Crucible stats since the weekly reset on Tuesday:
 
 ```
-$ dcliah --member-id $MEMBER_ID --character-id $CHARACTER_ID --platform $PLATFORM --manifest-path $MANIFEST_PATH --mode all_pvp --moment weekly
+$ dcliah --member-id $MEMBER_ID --character-id $CHARACTER_ID --platform $PLATFORM --mode all_pvp --moment weekly
 ```
 
 Lets view our historical Crucible stats across all of our characters for all time:

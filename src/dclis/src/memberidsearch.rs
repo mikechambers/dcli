@@ -35,7 +35,7 @@ impl MemberIdSearch {
     pub fn new(print_url: bool) -> Result<MemberIdSearch, Error> {
         let client = ApiClient::new(print_url)?;
 
-        Ok(MemberIdSearch { client: client })
+        Ok(MemberIdSearch { client })
     }
 
     pub async fn retrieve_member_id_from_steam(

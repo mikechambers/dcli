@@ -26,7 +26,8 @@ use dcli::error::Error;
 use dcli::manifestinterface::{FindResult, ManifestInterface};
 use dcli::output::Output;
 use dcli::utils::{
-    print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL,
+    determine_data_dir, print_error, print_verbose, EXIT_FAILURE, TSV_DELIM,
+    TSV_EOL,
 };
 use structopt::StructOpt;
 
@@ -48,9 +49,13 @@ use structopt::StructOpt;
 ///
 /// Released under an MIT License.
 struct Opt {
-    ///Local path for Destiny 2 manifest database file.
-    #[structopt(short = "P", long = "manifest-path", parse(from_os_str))]
-    manifest_path: PathBuf,
+    /// Directory where Destiny 2 manifest database file is stored. (optional)
+    ///
+    /// This will normally be downloaded using the dclim tool, and stored in a file
+    /// named manifest.sqlite3 (in the manifest directory specified when running
+    /// dclim).
+    #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
+    data_dir: Option<PathBuf>,
 
     ///The hash id from the Destiny 2 API for the item to be searched for.
     ///
@@ -81,9 +86,9 @@ struct Opt {
 //TODO: can we make has and path reference?
 async fn search_manifest_by_hash(
     hash: u32,
-    manifest_path: PathBuf,
+    manifest_dir: PathBuf,
 ) -> Result<Vec<FindResult>, Error> {
-    let mut manifest = ManifestInterface::new(manifest_path, false).await?;
+    let mut manifest = ManifestInterface::new(manifest_dir, false).await?;
     let out = manifest.find(hash).await?;
 
     Ok(out)
@@ -94,8 +99,16 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
+    let data_dir = match determine_data_dir(opt.data_dir) {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Error initializing manifest directory.", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
     let results: Vec<FindResult> =
-        match search_manifest_by_hash(opt.hash, opt.manifest_path).await {
+        match search_manifest_by_hash(opt.hash, data_dir).await {
             Ok(e) => e,
             Err(e) => {
                 print_error("Error searching manifest.", e);

@@ -23,9 +23,7 @@
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 
-use crate::response::activities::{
-    ActivityHistoricalStatsValues, DestinyHistoricalStatsActivity,
-};
+use crate::response::activities::{ActivityHistoricalStatsValues, DestinyHistoricalStatsActivity};
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
 use crate::response::utils::{property_to_value, standing_default};
@@ -70,7 +68,7 @@ impl DestinyPostGameCarnageReportData {
         character_id: &str,
     ) -> Option<DestinyPostGameCarnageReportEntry> {
         for e in self.entries.iter() {
-            if &e.character_id == character_id {
+            if e.character_id == character_id {
                 return Some(e.clone());
             }
         }
@@ -183,10 +181,7 @@ pub struct DestinyHistoricalWeaponStats {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyHistoricalWeaponsStatsValues {
-    #[serde(
-        rename = "uniqueWeaponKills",
-        deserialize_with = "property_to_value"
-    )]
+    #[serde(rename = "uniqueWeaponKills", deserialize_with = "property_to_value")]
     #[serde(default)]
     pub unique_weapon_kills: f32,
 

@@ -2,10 +2,12 @@
 
 Command line tool for retrieving Destiny 2 activity history.
 
+The too expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim). You can specify a custom path to the manifest using the --data-dir argument.
+
 ## USAGE
 ```
 USAGE:
-    dcliah [FLAGS] [OPTIONS] --character-id <character-id> --manifest-path <manifest-path> --member-id <member-id> --platform <platform>
+    dcliah [FLAGS] [OPTIONS] --character-id <character-id> --member-id <member-id> --platform <platform>
 
 FLAGS:
     -h, --help       
@@ -20,11 +22,11 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-    -c, --character-id <character-id>      
+    -c, --character-id <character-id>    
             Destiny 2 API character id
             
             Destiny 2 API character id for the character to retrieve activities for.
-    -t, --custom-time <custom-time>        
+    -t, --custom-time <custom-time>      
             Custom start time in RFC 3339 date / time format
             
             Must be a valid date in the past.
@@ -32,30 +34,33 @@ OPTIONS:
             Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
             
             Required when --moment is set to custom, but otherwise not applicable.
-    -L, --limit <display-limit>            
+    -D, --data-dir <data-dir>            
+            Directory where Destiny 2 manifest database file is stored. (optional)
+            
+            This will normally be downloaded using the dclim tool, and stored in a file named manifest.sqlite3 (in the
+            manifest directory specified when running dclim).
+    -L, --limit <display-limit>          
             Limit the number of activity details that will be displayed.
             
-            Summary information will be generated based on all activities. Ignored if --output-format is tsv. [default: 10]
-    -P, --manifest-path <manifest-path>    
-            Local path for Destiny 2 manifest database file
-
-    -m, --member-id <member-id>            
+            Summary information will be generated based on all activities. Ignored if --output-format is tsv. [default:
+            10]
+    -m, --member-id <member-id>          
             Destiny 2 API member id
             
             This is not the user name, but the member id retrieved from the Destiny API.
-    -M, --mode <mode>                      
+    -M, --mode <mode>                    
             Activity mode to return stats for
             
-            Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, private,
-            rumble, pvp_competitive, quickplay and trials_of_osiris.
+            Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, private, rumble,
+            pvp_competitive, quickplay and trials_of_osiris.
             
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
             private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown,
             lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
-    -s, --moment <moment>                  
+    -s, --moment <moment>                
             Start moment from which to pull activities from
             
-            Activities will be retrieved from start moment to the current time. For example, Specifying: --moment weekly
+            Activities will be retrieved from moment to the current time. For example, Specifying: --moment weekly
             
             will return all activities since the last weekly reset on Tuesday.
             
@@ -69,14 +74,14 @@ OPTIONS:
             
             Specifying all_time retrieves all activitiy history and may take an extended amount of time to retrieve
             depending on the number of activities. [default: day]
-    -o, --output-format <output>                  
+    -O, --output-format <output>         
             Format for command output
             
             Valid values are default (Default) and tsv.
             
             tsv outputs in a tab (\t) seperated format of name / value or column pairs with lines ending in a new line
             character (\n). [default: default]
-    -p, --platform <platform>              
+    -p, --platform <platform>            
             Platform for specified id
             
             Valid values are: xbox, playstation, stadia or steam.
@@ -99,7 +104,7 @@ Manifest can be downloaded and synced with from [dclim](https://github.com/mikec
 #### Retrieve all activities for past month
 
 ```
-$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path /home/mesh/.config/destiny/manifest.sqlite3 --moment month
+$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --moment month
 ```
 
 Output:
@@ -139,19 +144,20 @@ HIGHS             42-36        9W 5L      22      15      29      13    7.00    
 PER GAME          53.16% w             11.81    4.91   16.72    7.22    1.64    1.98    2.32
 ============================================================================================
 MAP               W / L       STREAK   KILLS    ASTS     K+A  DEATHS     K/D    KD/A     EFF
-```
+
 ^-highest overall
+```
 
 #### Retrieve all Trials of Osiris Activities since the weekend reset (Friday)
 
 ```
-$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path /home/mesh/.config/destiny/manifest.sqlite3 --moment weekend --mode trials_of_osiris
+$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --moment weekend --mode trials_of_osiris
 ```
 
-#### Show all activity for past week and output to TSV format (tab seperated values)
+#### Show all activity for past week and output to TSV format (tab seperated values) with a custom manifest file
 
 ```
-$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --manifest-path /home/mesh/.config/destiny/manifest.sqlite3 --moment week --output-format tsv
+$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --data-dir /home/mesh/.config/dcli/manifest.sqlite3 --moment week --output-format tsv
 ```
 
 Outputs:
