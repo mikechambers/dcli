@@ -4,7 +4,7 @@ Command line tool for retrieving and managing the Destiny 2 manifest database.
 
 When running the utility will check whether a more current version of the Destiny 2 API manifest database is avaliable (comparing it to the last version which has been downloaded). If a new version is found, it will download the database, uncompress it, and save it to the directory specified when calling the utility. It will also save a file containting metadata about the current version, which is used for future checks for updates.
 
-Manifest will be stored in the specified local directory with the file name:
+Manifest is stored in the system specific local app data directory with the file name:
 manifest.sqlite3, along with meta-data with information about the downloaded
 version. This is used to to determine whether the remote version has been updated.
 
@@ -17,7 +17,7 @@ The manifest is a [Sqlite 3](https://www.sqlite.org/index.html) database.
 ## USAGE
 ```
 USAGE:
-    dclim [FLAGS] [OPTIONS] --manifest-dir <manifest-dir>
+    dclim [FLAGS] [OPTIONS]
 
 FLAGS:
     -C, --check      
@@ -38,11 +38,12 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-    -D, --manifest-dir <manifest-dir>    
-            Directory where the manifest and meta-data will be stored.
+    -D, --data-dir <data-dir>       
+            Directory where manifest will be stored. (optional)
             
-            The manifest will be stored in this directory in a file named manifest.sqlite3
-    -o, --output-format <output>                
+            By default data will be loaded from and stored in the appropriate system local storage directory. Manifest
+            will be stored in a sqlite3 database file named manifest.sqlite3
+    -O, --output-format <output>    
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -55,17 +56,29 @@ OPTIONS:
 
 #### Check for an updated manifest and store any new version in *~/manifest/*:
 ```
-$ dclim --manifest-dir ~/manifest/
+$ dclim
+```
+
+which outputs:
+
+```
+Remote Manifest version       90085.20.12.12.2003-4
+Remote Manifest url           https://www.bungie.net/common/destiny2_content/sqlite/en/world_sql_content_4538153d085eb7c87e59c58aefc70fb1.content
+Local Manifest version        90085.20.12.12.2003-4
+Local Manifest url            https://www.bungie.net/common/destiny2_content/sqlite/en/world_sql_content_4538153d085eb7c87e59c58aefc70fb1.content
+Downloading manifest. This may take a bit of time.
+Manifest info saved.
+/home/mesh/tmp/tmp2/manifest.sqlite3
 ```
 
 #### Download remote manifest and store in *~/manifest/* directory regardless of whether remote is updated.
 ```
-$ dclim --manifest-dir ~/manifest/ --force
+$ dclim --data-dir ~/manifest/ --force
 ```
 
 #### Check status of remote manifest, but do not download. Print out additional information.
 ```
-$ dclim --manifest-dir ~/manifest/ --check --verbose
+$ dclim --check --verbose
 ```
 
 which outputs:
