@@ -121,10 +121,7 @@ fn print_tsv(
     name_values.push(("suicides", format!("{}", data.suicides)));
     name_values.push(("precision_kills", format!("{}", data.precision_kills)));
 
-    let best_single_game_kills = match data.best_single_game_kills {
-        Some(e) => e,
-        None => -1.0,
-    };
+    let best_single_game_kills = data.best_single_game_kills.unwrap_or(0.0);
 
     name_values.push((
         "best_single_game_kills",

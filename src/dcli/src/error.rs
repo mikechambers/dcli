@@ -116,11 +116,14 @@ impl Display for Error {
             ),
             Error::RequestTimedOut => write!(
                 f,
-                "The API request took too long. Check your network connection and try again. (The API servers may be slow right now)."
+                "The API request took too long. Check your network connection and\
+                 try again. (The API servers may be slow right now)."
             ),
             Error::Request => write!(
                 f,
-                "There was an error during the API request. This often means that we could not reach the Destiny servers. Check the network connection and try again (The API servers might not be available.)."
+                "There was an error during the API request. This often means \
+                that we could not reach the Destiny servers. Check the network \
+                connection and try again (The API servers might not be available.)."
             ),
 
             Error::MaxActivitiesRequestCountExceeded => write!(

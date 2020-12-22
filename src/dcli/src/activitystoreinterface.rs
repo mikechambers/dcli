@@ -34,12 +34,15 @@ use crate::mode::Mode;
 use crate::platform::Platform;
 use crate::{
     error::Error,
-    response::pgcr::{DestinyHistoricalStatsValue, DestinyPostGameCarnageReportData},
+    response::pgcr::{
+        DestinyHistoricalStatsValue, DestinyPostGameCarnageReportData,
+    },
 };
 
 const STORE_FILE_NAME: &str = "dcli.sqlite3";
 
-const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
+const ACTIVITY_STORE_SCHEMA: &str =
+    include_str!("../actitvity_store_schema.sql");
 
 //numer of simultaneous requests we make to server when retrieving activity history
 const PGCR_REQUEST_CHUNK_AMOUNT: usize = 50;
@@ -94,7 +97,8 @@ impl ActivityStoreInterface {
         character_id: &str,
         platform: &Platform,
     ) -> Result<(), Error> {
-        let member_row_id = self.insert_member_id(&member_id, &platform).await?;
+        let member_row_id =
+            self.insert_member_id(&member_id, &platform).await?;
         let character_row_id = self
             .insert_character_id(&character_id, member_row_id)
             .await?;
@@ -103,8 +107,13 @@ impl ActivityStoreInterface {
         //however, passing the db ids, lets us optimize a lot of the sql, and avoid
         //some extra calls to the DB
         self.sync_activities(character_row_id, character_id).await?;
-        self.update_activity_queue(character_row_id, member_id, character_id, platform)
-            .await?;
+        self.update_activity_queue(
+            character_row_id,
+            member_id,
+            character_id,
+            platform,
+        )
+        .await?;
         self.sync_activities(character_row_id, character_id).await?;
 
         Ok(())
@@ -201,7 +210,9 @@ impl ActivityStoreInterface {
                             }
                             None => {
                                 eprintln!();
-                                eprintln!("PGCR returned empty response. Ignoring.");
+                                eprintln!(
+                                    "PGCR returned empty response. Ignoring."
+                                );
                                 //TODO: should not get here, as none means either an API error
                                 //occured or there is no data associated with the ID (which is
                                 //an api data error).
@@ -211,7 +222,10 @@ impl ActivityStoreInterface {
                         }
                     }
                     Err(e) => {
-                        eprintln!("Error retrieving activity details from api : {}", e);
+                        eprintln!(
+                            "Error retrieving activity details from api : {}",
+                            e
+                        );
                     }
                 }
             }
@@ -235,9 +249,17 @@ impl ActivityStoreInterface {
         let api = ApiInterface::new(self.verbose)?;
 
         eprintln!("Checking for new activities.");
-        eprintln!("This may take a moment depending on the number of activities.");
+        eprintln!(
+            "This may take a moment depending on the number of activities."
+        );
         let result = api
-            .retrieve_activities_since_id(member_id, character_id, platform, &Mode::AllPvP, &max_id)
+            .retrieve_activities_since_id(
+                member_id,
+                character_id,
+                platform,
+                &Mode::AllPvP,
+                &max_id,
+            )
             .await?;
 
         if result.is_none() {
@@ -285,7 +307,11 @@ impl ActivityStoreInterface {
             .await?;
 
         match self
-            ._insert_character_activity_stats(data, character_row_id, character_id)
+            ._insert_character_activity_stats(
+                data,
+                character_row_id,
+                character_id,
+            )
             .await
         {
             Ok(_e) => {
@@ -328,27 +354,32 @@ impl ActivityStoreInterface {
             None => 0.0,
         };
 
-        let weapon_kills_ability: f32 = match medal_hash.remove("weaponKillsAbility") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
+        let weapon_kills_ability: f32 =
+            match medal_hash.remove("weaponKillsAbility") {
+                Some(e) => e.basic.value,
+                None => 0.0,
+            };
 
-        let weapon_kills_grenade: f32 = match medal_hash.remove("weaponKillsGrenade") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
+        let weapon_kills_grenade: f32 =
+            match medal_hash.remove("weaponKillsGrenade") {
+                Some(e) => e.basic.value,
+                None => 0.0,
+            };
 
-        let weapon_kills_melee: f32 = match medal_hash.remove("weaponKillsMelee") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
+        let weapon_kills_melee: f32 =
+            match medal_hash.remove("weaponKillsMelee") {
+                Some(e) => e.basic.value,
+                None => 0.0,
+            };
 
-        let weapon_kills_super: f32 = match medal_hash.remove("weaponKillsSuper") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
+        let weapon_kills_super: f32 =
+            match medal_hash.remove("weaponKillsSuper") {
+                Some(e) => e.basic.value,
+                None => 0.0,
+            };
 
-        let all_medals_earned: f32 = match medal_hash.remove("allMedalsEarned") {
+        let all_medals_earned: f32 = match medal_hash.remove("allMedalsEarned")
+        {
             Some(e) => e.basic.value,
             None => 0.0,
         };
@@ -535,7 +566,10 @@ impl ActivityStoreInterface {
         Ok(rowid)
     }
 
-    async fn get_max_activity_id(&mut self, character_row_id: i32) -> Result<String, Error> {
+    async fn get_max_activity_id(
+        &mut self,
+        character_row_id: i32,
+    ) -> Result<String, Error> {
         let row = sqlx::query(
             r#"
             SELECT

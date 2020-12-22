@@ -24,13 +24,12 @@ use std::env;
 use std::ffi::OsStr;
 use std::io::{stdout, Write};
 use std::path::Path;
+use std::path::PathBuf;
 
 use chrono::{DateTime, Datelike, Duration, TimeZone, Timelike, Utc};
 use crossterm::{execute, terminal};
 
 use crate::error::Error;
-
-use std::path::PathBuf;
 
 //use chrono::prelude::*;
 
