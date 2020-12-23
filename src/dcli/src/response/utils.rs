@@ -145,6 +145,25 @@ where
     })
 }
 
+pub fn string_to_i64<'de, D>(deserializer: D) -> Result<i64, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+
+    let out = match s.parse::<i64>() {
+        Ok(e) => e,
+        Err(e) => {
+            return Err(serde::de::Error::custom(&format!(
+                "Could not parse string to i64 : {}",
+                e
+            )))
+        }
+    };
+
+    Ok(out)
+}
+
 //str_to_datetime
 pub fn str_to_datetime<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
 where

@@ -62,7 +62,7 @@ impl Platform {
         *self as u32
     }
 
-    pub fn from_id(id: u64) -> Platform {
+    pub fn from_id(id: u32) -> Platform {
         match id {
             1 => Platform::Xbox,
             2 => Platform::Playstation,

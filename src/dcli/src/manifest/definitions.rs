@@ -2,7 +2,7 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::response::utils::prepend_base_url_option;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DisplayPropertiesData {
     pub description: Option<String>,
     pub name: String,
@@ -16,7 +16,7 @@ pub struct DisplayPropertiesData {
     pub has_icon: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ActivityDefinitionData {
     #[serde(rename = "hash")]
     pub id: u32,
@@ -25,10 +25,7 @@ pub struct ActivityDefinitionData {
     pub display_properties: DisplayPropertiesData,
 
     #[serde(default)]
-    #[serde(
-        rename = "pgcrImage",
-        deserialize_with = "prepend_base_url_option"
-    )]
+    #[serde(rename = "pgcrImage", deserialize_with = "prepend_base_url_option")]
     pub pgcr_image: Option<String>,
 
     #[serde(rename = "destinationHash")]

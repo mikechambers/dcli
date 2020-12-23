@@ -31,10 +31,10 @@ use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 
-use crate::apiinterface::ApiInterface;
-use crate::crucible::PlayerCruciblePerformances;
+use crate::crucible::{ActivityDetail, PlayerCruciblePerformances};
 use crate::mode::Mode;
 use crate::platform::Platform;
+use crate::{apiinterface::ApiInterface, manifestinterface::ManifestInterface};
 use crate::{
     error::Error,
     response::pgcr::{DestinyHistoricalStatsValue, DestinyPostGameCarnageReportData},
@@ -118,7 +118,7 @@ impl ActivityStoreInterface {
         character_row_id: i32,
         character_id: &str,
     ) -> Result<(), Error> {
-        let mut ids: Vec<String> = Vec::new();
+        let mut ids: Vec<i64> = Vec::new();
 
         //This is to scope rows, so the mutable borrow of self goes out of scope
         {
@@ -131,7 +131,7 @@ impl ActivityStoreInterface {
             .fetch(&mut self.db);
 
             while let Some(row) = rows.try_next().await? {
-                let activity_id: String = row.try_get("activity_id")?;
+                let activity_id: i64 = row.try_get("activity_id")?;
                 ids.push(activity_id);
             }
         };
@@ -158,7 +158,7 @@ impl ActivityStoreInterface {
 
             for c in id_chunks {
                 //this is saving the future, call hasnt been made yet
-                f.push(api.retrieve_post_game_carnage_report(c));
+                f.push(api.retrieve_post_game_carnage_report(*c));
             }
 
             //count += f.len();
@@ -213,6 +213,7 @@ impl ActivityStoreInterface {
                         }
                     }
                     Err(e) => {
+                        eprintln!();
                         eprintln!("Error retrieving activity details from api : {}", e);
                     }
                 }
@@ -232,14 +233,14 @@ impl ActivityStoreInterface {
         character_id: &str,
         platform: &Platform,
     ) -> Result<(), Error> {
-        let max_id: String = self.get_max_activity_id(character_row_id).await?;
+        let max_id: i64 = self.get_max_activity_id(character_row_id).await?;
 
         let api = ApiInterface::new(self.verbose)?;
 
         eprintln!("Checking for new activities.");
         eprintln!("This may take a moment depending on the number of activities.");
         let result = api
-            .retrieve_activities_since_id(member_id, character_id, platform, &Mode::AllPvP, &max_id)
+            .retrieve_activities_since_id(member_id, character_id, platform, &Mode::AllPvP, max_id)
             .await?;
 
         if result.is_none() {
@@ -307,14 +308,19 @@ impl ActivityStoreInterface {
         character_row_id: i32,
         character_id: &str,
     ) -> Result<(), Error> {
-        sqlx::query(r#"
-            INSERT OR IGNORE INTO "main"."activity"("activity_id","period","mode","platform","director_activity_hash") VALUES (?,?,?,?,?)
-        "#)
-        .bind(data.activity_details.instance_id.clone()) //activity_id
-        .bind(format!("{}", data.period)) //period
+        sqlx::query(
+            r#"
+            INSERT OR IGNORE INTO "main"."activity"
+                ("activity_id","period","mode","platform","director_activity_hash", "reference_id") 
+            VALUES (?,?,?,?,?, ?)
+        "#,
+        )
+        .bind(data.activity_details.instance_id) //activity_id
+        .bind(format!("{}", data.period.to_rfc3339())) //period
         .bind(format!("{}", data.activity_details.mode.to_id())) //mode
         .bind(format!("{}", data.activity_details.membership_type.to_id())) //platform
         .bind(format!("{}", data.activity_details.director_activity_hash)) //director_activity_hash
+        .bind(format!("{}", data.activity_details.reference_id)) //reference_id
         .execute(&mut self.db)
         .await?;
 
@@ -331,7 +337,7 @@ impl ActivityStoreInterface {
                 "#,
             )
             .bind(mode.to_id().to_string())
-            .bind(data.activity_details.instance_id.clone())
+            .bind(data.activity_details.instance_id)
             .execute(&mut self.db)
             .await?;
         }
@@ -413,7 +419,7 @@ impl ActivityStoreInterface {
         .bind(format!("{}", weapon_kills_melee)) //weapon_kills_melee
         .bind(format!("{}", weapon_kills_super)) //weapon_kills_super
         .bind(format!("{}", all_medals_earned)) //weapon_kills_super
-        .bind(data.activity_details.instance_id.clone()) //activity
+        .bind(data.activity_details.instance_id) //activity
         .execute(&mut self.db)
         .await?;
 
@@ -463,7 +469,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(format!("{}", character_row_id))
-        .bind(data.activity_details.instance_id.clone())
+        .bind(data.activity_details.instance_id)
         .execute(&mut self.db)
         .await?;
 
@@ -553,11 +559,11 @@ impl ActivityStoreInterface {
         Ok(rowid)
     }
 
-    async fn get_max_activity_id(&mut self, character_row_id: i32) -> Result<String, Error> {
+    async fn get_max_activity_id(&mut self, character_row_id: i32) -> Result<i64, Error> {
         let row = sqlx::query(
             r#"
             SELECT
-                MAX(CAST(activity.activity_id as INTEGER)) as max_activity_id
+                MAX(activity.activity_id) as max_activity_id
             FROM
                 "activity", "character_activity_stats", "character", "member"
             WHERE
@@ -570,7 +576,7 @@ impl ActivityStoreInterface {
         .await?;
 
         let activity_id: i64 = row.try_get("max_activity_id")?;
-        Ok(activity_id.to_string())
+        Ok(activity_id)
     }
 
     pub async fn retrieve_activities_since(
@@ -580,21 +586,53 @@ impl ActivityStoreInterface {
         platform: &Platform,
         mode: &Mode,
         start_time: &DateTime<Utc>,
+        manifest: &mut ManifestInterface,
     ) -> Result<Option<PlayerCruciblePerformances>, Error> {
         let character_index = self
             .get_character_row_id(member_id, character_id, platform)
             .await?;
 
-        let query = sqlx::query(
+        let rows = sqlx::query(
             r#"
-            select * from activity, character_activity_stats, modes where activity.period > ? and character_activity_stats.character = ? and character_activity_stats.activity = activity.id and modes.activity = activity.id and modes.mode = ?
+            select *, activity.id as activity_row_id, activity.mode as primary_mode from activity, character_activity_stats, modes where activity.period > ? and character_activity_stats.character = ? and character_activity_stats.activity = activity.id and modes.activity = activity.id and modes.mode = ?
         "#,
         )
         .bind(start_time.to_string())
         .bind(character_index.to_string())
-        .bind(mode.to_id().to_string());
+        .bind(mode.to_id().to_string())
+        .fetch_all(&mut self.db).await?;
 
-        let rows = query.fetch_all(&mut self.db).await?;
+        //get_activity_definition
+
+        for row in &rows {
+            let activity_row_id: i32 = row.try_get("activity_row_id")?;
+            let activity_id: i64 = row.try_get("activity_id")?;
+
+            let mode_id: i32 = row.try_get("primary_mode")?;
+            let platform_id: i32 = row.try_get("platform")?;
+
+            let period: String = row.try_get("period")?;
+            let period = DateTime::parse_from_rfc3339(&period)?;
+            let period = period.with_timezone(&Utc);
+
+            let director_activity_hash: i64 = row.try_get("director_activity_hash")?;
+            let director_activity_hash: u32 = director_activity_hash as u32;
+
+            let reference_id: i64 = row.try_get("reference_id")?;
+            let reference_id: u32 = reference_id as u32;
+
+            let activity_definition = manifest.get_activity_definition(reference_id).await?;
+
+            let activity_detail = ActivityDetail {
+                id: activity_id,
+                period,
+                map_name: activity_definition.display_properties.name,
+                mode: Mode::from_id(mode_id as u32)?,
+                platform: Platform::from_id(platform_id as u32),
+                director_activity_hash,
+                reference_id,
+            };
+        }
 
         println!(
             "retrieve_activities_since results returned : {}",

@@ -22,10 +22,10 @@
 
 use std::path::PathBuf;
 
-use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::output::Output;
 use dcli::platform::Platform;
 use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE};
+use dcli::{activitystoreinterface::ActivityStoreInterface, manifestinterface::ManifestInterface};
 use structopt::StructOpt;
 
 use dcli::mode::Mode;
@@ -119,6 +119,13 @@ async fn main() {
         Ok(_e) => {
             let mode = Mode::AllPvP;
             let start_time = Moment::Week.get_date_time();
+            let mut manifest = match ManifestInterface::new(&data_dir, false).await {
+                Ok(e) => e,
+                Err(e) => {
+                    print_error("Cant create manifest.", e);
+                    std::process::exit(EXIT_FAILURE);
+                }
+            };
             match store
                 .retrieve_activities_since(
                     &opt.member_id,
@@ -126,6 +133,7 @@ async fn main() {
                     &opt.platform,
                     &mode,
                     &start_time,
+                    &mut manifest,
                 )
                 .await
             {

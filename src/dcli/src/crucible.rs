@@ -93,10 +93,13 @@ pub struct PlayerCruciblePerformances {
     pub aggregate: CrucibleStats,
 }
 
+#[derive(Debug)]
 pub struct ActivityDetail {
-    id: String,
-    period: DateTime<Utc>,
-    mode: Mode,
-    platform: Platform,
-    director_activity_hash: String,
+    pub id: i64,
+    pub period: DateTime<Utc>,
+    pub map_name: String,
+    pub mode: Mode,
+    pub platform: Platform,
+    pub director_activity_hash: u32,
+    pub reference_id: u32,
 }

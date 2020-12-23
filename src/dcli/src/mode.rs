@@ -23,6 +23,7 @@
 use std::fmt;
 use std::str::FromStr;
 
+use crate::error::Error;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType.html#schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType
@@ -109,6 +110,89 @@ pub enum Mode {
 }
 
 impl Mode {
+    pub fn from_id(id: u32) -> Result<Mode, Error> {
+        match id {
+            0 => Ok(Mode::None),
+            2 => Ok(Mode::Story),
+            3 => Ok(Mode::Strike),
+            4 => Ok(Mode::Raid),
+            5 => Ok(Mode::AllPvP),
+            6 => Ok(Mode::Patrol),
+            7 => Ok(Mode::AllPvE),
+            9 => Ok(Mode::Reserved9),
+            10 => Ok(Mode::Control),
+            11 => Ok(Mode::Reserved11),
+            12 => Ok(Mode::Clash),
+            13 => Ok(Mode::Reserved13),
+            15 => Ok(Mode::CrimsonDoubles),
+            16 => Ok(Mode::Nightfall),
+            17 => Ok(Mode::HeroicNightfall),
+            18 => Ok(Mode::AllStrikes),
+            19 => Ok(Mode::IronBanner),
+            20 => Ok(Mode::Reserved20),
+            21 => Ok(Mode::Reserved21),
+            22 => Ok(Mode::Reserved22),
+            24 => Ok(Mode::Reserved24),
+            25 => Ok(Mode::AllMayhem),
+            26 => Ok(Mode::Reserved26),
+            27 => Ok(Mode::Reserved27),
+            28 => Ok(Mode::Reserved28),
+            29 => Ok(Mode::Reserved29),
+            30 => Ok(Mode::Reserved30),
+            31 => Ok(Mode::Supremacy),
+            32 => Ok(Mode::PrivateMatchesAll),
+            37 => Ok(Mode::Survival),
+            38 => Ok(Mode::Countdown),
+            39 => Ok(Mode::TrialsOfTheNine),
+            40 => Ok(Mode::Social),
+            41 => Ok(Mode::TrialsCountdown),
+            42 => Ok(Mode::TrialsSurvival),
+            43 => Ok(Mode::IronBannerControl),
+            44 => Ok(Mode::IronBannerClash),
+            45 => Ok(Mode::IronBannerSupremacy),
+            46 => Ok(Mode::ScoredNightfall),
+            47 => Ok(Mode::ScoredHeroicNightfall),
+            48 => Ok(Mode::Rumble),
+            49 => Ok(Mode::AllDoubles),
+            50 => Ok(Mode::Doubles),
+            51 => Ok(Mode::PrivateMatchesClash),
+            52 => Ok(Mode::PrivateMatchesControl),
+            53 => Ok(Mode::PrivateMatchesSupremacy),
+            54 => Ok(Mode::PrivateMatchesCountdown),
+            55 => Ok(Mode::PrivateMatchesSurvival),
+            56 => Ok(Mode::PrivateMatchesMayhem),
+            57 => Ok(Mode::PrivateMatchesRumble),
+            58 => Ok(Mode::HeroicAdventure),
+            59 => Ok(Mode::Showdown),
+            60 => Ok(Mode::Lockdown),
+            61 => Ok(Mode::Scorched),
+            62 => Ok(Mode::ScorchedTeam),
+            63 => Ok(Mode::Gambit),
+            64 => Ok(Mode::AllPvECompetitive),
+            65 => Ok(Mode::Breakthrough),
+            66 => Ok(Mode::BlackArmoryRun),
+            67 => Ok(Mode::Salvage),
+            68 => Ok(Mode::IronBannerSalvage),
+            69 => Ok(Mode::PvPCompetitive),
+            70 => Ok(Mode::PvPQuickplay),
+            71 => Ok(Mode::ClashQuickplay),
+            72 => Ok(Mode::ClashCompetitive),
+            73 => Ok(Mode::ControlQuickplay),
+            74 => Ok(Mode::ControlCompetitive),
+            75 => Ok(Mode::GambitPrime),
+            76 => Ok(Mode::Reckoning),
+            77 => Ok(Mode::Menagerie),
+            78 => Ok(Mode::VexOffensive),
+            79 => Ok(Mode::NightmareHunt),
+            80 => Ok(Mode::Elimination),
+            81 => Ok(Mode::Momentum),
+            82 => Ok(Mode::Dungeon),
+            83 => Ok(Mode::Sundial),
+            84 => Ok(Mode::TrialsOfOsiris),
+            _ => Err(Error::UnknownEnumValue),
+        }
+    }
+
     pub fn to_id(&self) -> u32 {
         *self as u32
     }

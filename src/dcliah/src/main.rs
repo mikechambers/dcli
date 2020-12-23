@@ -34,8 +34,8 @@ use dcli::response::activities::Activity;
 use dcli::standing::Standing;
 use dcli::statscontainer::ActivityStatsContainer;
 use dcli::utils::{
-    determine_data_dir, f32_are_equal, format_f32, repeat_str,
-    uppercase_first_char, TSV_DELIM, TSV_EOL,
+    determine_data_dir, f32_are_equal, format_f32, repeat_str, uppercase_first_char, TSV_DELIM,
+    TSV_EOL,
 };
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
@@ -74,11 +74,9 @@ fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
     Ok(moment)
 }
 
-async fn get_manifest(
-    manifest_path: PathBuf,
-) -> Result<ManifestInterface, Error> {
+async fn get_manifest(manifest_path: PathBuf) -> Result<ManifestInterface, Error> {
     //TODO: may need to make this mutable
-    let manifest = ManifestInterface::new(manifest_path, false).await?;
+    let manifest = ManifestInterface::new(&manifest_path, false).await?;
 
     Ok(manifest)
 }
@@ -174,8 +172,7 @@ async fn print_tsv(
         kills = format_f32(data.per_activity_average(data.kills()), 2),
         deaths = format_f32(data.per_activity_average(data.deaths()), 2),
         assists = format_f32(data.per_activity_average(data.assists()), 2),
-        opp_defeated =
-            format_f32(data.per_activity_average(data.opponents_defeated()), 2),
+        opp_defeated = format_f32(data.per_activity_average(data.opponents_defeated()), 2),
         kd = format_f32(data.kills_deaths_ratio(), 2),
         kda = format_f32(data.kills_deaths_assists(), 2),
         eff = format_f32(data.efficiency(), 2),
@@ -308,10 +305,7 @@ async fn print_default(
             last_mode = activity.details.mode;
         }
 
-        let standing = Standing::from_mode(
-            activity.values.standing,
-            &activity.details.mode,
-        );
+        let standing = Standing::from_mode(activity.values.standing, &activity.details.mode);
         if standing == last_standing {
             streak = match last_standing {
                 Standing::Unknown => 0,
@@ -342,26 +336,24 @@ async fn print_default(
             map_name.push_str("..")
         }
 
-        let highest_kills_flag =
-            if f32_are_equal(activity.values.kills, data.highest_kills()) {
-                highest_flag
-            } else {
-                ""
-            };
+        let highest_kills_flag = if f32_are_equal(activity.values.kills, data.highest_kills()) {
+            highest_flag
+        } else {
+            ""
+        };
 
-        let highest_assists_flag =
-            if f32_are_equal(activity.values.assists, data.highest_assists()) {
-                highest_flag
-            } else {
-                ""
-            };
+        let highest_assists_flag = if f32_are_equal(activity.values.assists, data.highest_assists())
+        {
+            highest_flag
+        } else {
+            ""
+        };
 
-        let highest_deaths_flag =
-            if f32_are_equal(activity.values.deaths, data.highest_deaths()) {
-                highest_flag
-            } else {
-                ""
-            };
+        let highest_deaths_flag = if f32_are_equal(activity.values.deaths, data.highest_deaths()) {
+            highest_flag
+        } else {
+            ""
+        };
 
         let highest_opponents_defeated_flag = if f32_are_equal(
             activity.values.opponents_defeated,
@@ -372,14 +364,12 @@ async fn print_default(
             ""
         };
 
-        let highest_efficiency_flag = if f32_are_equal(
-            activity.values.efficiency,
-            data.highest_efficiency(),
-        ) {
-            highest_flag
-        } else {
-            ""
-        };
+        let highest_efficiency_flag =
+            if f32_are_equal(activity.values.efficiency, data.highest_efficiency()) {
+                highest_flag
+            } else {
+                ""
+            };
 
         let highest_highest_kills_deaths_ratio_flag = if f32_are_equal(
             activity.values.kills_deaths_ratio,
@@ -495,13 +485,7 @@ async fn retrieve_activities_since(
     let client: ApiInterface = ApiInterface::new(verbose)?;
 
     let activities: Vec<Activity> = match client
-        .retrieve_activities_since(
-            &member_id,
-            &character_id,
-            &platform,
-            &mode,
-            &custom_time,
-        )
+        .retrieve_activities_since(&member_id, &character_id, &platform, &mode, &custom_time)
         .await?
     {
         Some(e) => e,
@@ -606,11 +590,7 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value or column
     /// pairs with lines ending in a new line character (\n).
-    #[structopt(
-        short = "O",
-        long = "output-format",
-        default_value = "default"
-    )]
+    #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 
     /// Destiny 2 API character id
@@ -703,15 +683,7 @@ async fn main() {
             };
         }
         Output::Tsv => {
-            match print_tsv(
-                data_dir,
-                container,
-                opt.mode,
-                opt.moment,
-                custom_time,
-            )
-            .await
-            {
+            match print_tsv(data_dir, container, opt.mode, opt.moment, custom_time).await {
                 Ok(_e) => {}
                 Err(e) => {
                     print_error(

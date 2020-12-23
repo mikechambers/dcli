@@ -59,6 +59,8 @@ pub enum Error {
     MaxActivitiesRequestCountExceeded,
     CharacterDataNotFound,
     SystemDirectoryNotFound,
+    ChronoParse { description: String },
+    UnknownEnumValue,
 }
 
 impl Display for Error {
@@ -138,9 +140,13 @@ impl Display for Error {
             Error::SystemDirectoryNotFound  => {
                 write!(f, "Could not locate system directory.")
             },
-            
+            Error::ChronoParse { description } => {
+                write!(f, "Error parsing String to date / time : {}", description)
+            },
+            Error::UnknownEnumValue  => {
+                write!(f, "Could not convert value to enum.")
+            },
 
-            
         }
     }
 }
@@ -197,6 +203,14 @@ impl From<sqlx::Error> for Error {
     fn from(err: sqlx::Error) -> Error {
         Error::Database {
             description: format!("sqlx::Error : {:#?}", err),
+        }
+    }
+}
+
+impl From<chrono::format::ParseError> for Error {
+    fn from(err: chrono::format::ParseError) -> Error {
+        Error::ChronoParse {
+            description: format!("chrono::format::ParseError : {:#?}", err),
         }
     }
 }

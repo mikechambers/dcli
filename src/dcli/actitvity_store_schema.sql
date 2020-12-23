@@ -3,7 +3,7 @@
         /* found activities we havent synced details from yet */
         CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
             "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-            "activity_id" TEXT NOT NULL,
+            "activity_id" INTEGER NOT NULL,
             "character"	INTEGER NOT NULL,
             UNIQUE(activity_id, character),
             FOREIGN KEY (character)
@@ -19,9 +19,9 @@
         );
         
         CREATE TABLE IF NOT EXISTS  "character" (
-            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+            "id"	        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "character_id"	TEXT NOT NULL,
-            "member"	INTEGER NOT NULL,
+            "member"	    INTEGER NOT NULL,
             UNIQUE(character_id, member),
             FOREIGN KEY ("member")
                REFERENCES member ("id")
@@ -29,12 +29,13 @@
         );
         
         CREATE TABLE IF NOT EXISTS "main"."activity" (
-            "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+            "id"	        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "activity_id"	INTEGER UNIQUE NOT NULL,
-            "period" TEXT NOT NULL,
-            "mode" INTEGER NOT NULL,
-            "platform" INTEGER NOT NULL,
-            "director_activity_hash" INTEGER NOT NULL
+            "period"        TEXT NOT NULL,
+            "mode"          INTEGER NOT NULL,
+            "platform"      INTEGER NOT NULL,
+            "director_activity_hash" INTEGER NOT NULL,
+            "reference_id"  INTEGER NOT NULL
         );
 
         CREATE TABLE IF NOT EXISTS "main"."modes" (

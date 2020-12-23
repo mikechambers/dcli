@@ -59,7 +59,7 @@ impl MemberIdSearch {
 
         let m = Membership {
             id: member.membership_id,
-            platform: Platform::from_id(member.membership_type),
+            platform: Platform::from_id(member.membership_type as u32),
             display_name: None,
         };
 
@@ -99,7 +99,7 @@ impl MemberIdSearch {
 
         let m = Membership {
             id: String::from(r_member.membership_id.as_str()),
-            platform: Platform::from_id(r_member.membership_type),
+            platform: Platform::from_id(r_member.membership_type as u32),
             display_name: results[0].display_name.take(), //this is probably not the right way to do this
         };
 

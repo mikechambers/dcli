@@ -331,13 +331,11 @@ impl ApiInterface {
         character_id: &str,
         platform: &Platform,
         mode: &Mode,
-        activity_id: &str,
+        activity_id: i64,
     ) -> Result<Option<Vec<Activity>>, Error> {
         let mut out: Vec<Activity> = Vec::new();
         let mut page = 0;
         let count = MAX_ACTIVITIES_REQUEST_COUNT;
-
-        let activity_id_str = activity_id.to_string();
 
         eprint!("[");
         //TODO: if error occurs on an individual call, retry?
@@ -370,7 +368,7 @@ impl ApiInterface {
 
             let mut should_break = false;
             for activity in t.into_iter() {
-                if activity.details.instance_id == activity_id_str {
+                if activity.details.instance_id == activity_id {
                     should_break = true;
                     break;
                 }
@@ -453,7 +451,7 @@ impl ApiInterface {
 
     pub async fn retrieve_post_game_carnage_report(
         &self,
-        instance_id: &str,
+        instance_id: i64,
     ) -> Result<Option<DestinyPostGameCarnageReportData>, Error> {
         //TODO: do we need to use baseurls?
         let url = format!(
