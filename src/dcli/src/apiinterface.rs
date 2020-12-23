@@ -27,9 +27,9 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 use crate::apiclient::ApiClient;
 use crate::apiutils::{API_BASE_URL, PGCR_BASE_URL};
+use crate::enums::mode::Mode;
+use crate::enums::platform::Platform;
 use crate::error::Error;
-use crate::mode::Mode;
-use crate::platform::Platform;
 use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
 use crate::response::character::CharacterData;
 use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;

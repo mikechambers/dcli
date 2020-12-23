@@ -24,14 +24,14 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use chrono::{DateTime, Datelike, Duration, Local, Utc};
+use dcli::enums::mode::Mode;
+use dcli::enums::moment::Moment;
+use dcli::enums::platform::Platform;
+use dcli::enums::standing::Standing;
 use dcli::error::Error;
 use dcli::manifestinterface::ManifestInterface;
-use dcli::mode::Mode;
-use dcli::moment::Moment;
 use dcli::output::Output;
-use dcli::platform::Platform;
 use dcli::response::activities::Activity;
-use dcli::standing::Standing;
 use dcli::statscontainer::ActivityStatsContainer;
 use dcli::utils::{
     determine_data_dir, f32_are_equal, format_f32, repeat_str, uppercase_first_char, TSV_DELIM,

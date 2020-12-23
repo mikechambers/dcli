@@ -20,9 +20,9 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::itemtype::{ItemSubType, ItemType};
-use crate::mode::Mode;
-use crate::platform::Platform;
+use crate::enums::itemtype::{ItemSubType, ItemType};
+use crate::enums::mode::Mode;
+use crate::enums::platform::Platform;
 use chrono::{DateTime, Utc};
 
 pub struct CruciblePlayerPerformance {

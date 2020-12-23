@@ -27,10 +27,10 @@ use dcli::manifest::definitions::{
     ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData,
 };
 //use dcli::error::Error;
+use dcli::enums::mode::Mode;
+use dcli::enums::platform::Platform;
 use dcli::manifestinterface::ManifestInterface;
-use dcli::mode::Mode;
 use dcli::output::Output;
-use dcli::platform::Platform;
 use dcli::response::gpr::CharacterActivitiesData;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose};

@@ -21,8 +21,8 @@
 */
 
 use dcli::apiclient::ApiClient;
+use dcli::enums::platform::Platform;
 use dcli::error::Error;
-use dcli::platform::Platform;
 use dcli::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use serde_derive::{Deserialize, Serialize};

@@ -21,9 +21,9 @@
 */
 
 use dcli::apiinterface::ApiInterface;
+use dcli::enums::platform::Platform;
 use dcli::error::Error;
 use dcli::output::Output;
-use dcli::platform::Platform;
 use dcli::response::character::CharacterData;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose, repeat_str, TSV_DELIM, TSV_EOL};
@@ -85,11 +85,7 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(
-        short = "O",
-        long = "output-format",
-        default_value = "default"
-    )]
+    #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 }
 
@@ -99,9 +95,7 @@ async fn main() {
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     let chars: Vec<CharacterData> =
-        match retrieve_characters(opt.member_id, opt.platform, opt.verbose)
-            .await
-        {
+        match retrieve_characters(opt.member_id, opt.platform, opt.verbose).await {
             Ok(e) => e,
             Err(e) => {
                 print_error("Error retrieving characters from API.", e);

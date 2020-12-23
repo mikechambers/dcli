@@ -22,14 +22,14 @@
 
 use std::path::PathBuf;
 
+use dcli::enums::platform::Platform;
 use dcli::output::Output;
-use dcli::platform::Platform;
 use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE};
 use dcli::{activitystoreinterface::ActivityStoreInterface, manifestinterface::ManifestInterface};
 use structopt::StructOpt;
 
-use dcli::mode::Mode;
-use dcli::moment::Moment;
+use dcli::enums::mode::Mode;
+use dcli::enums::moment::Moment;
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]

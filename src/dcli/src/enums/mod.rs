@@ -20,52 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use std::fmt;
-
-use crate::mode::Mode;
-
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
-#[repr(i32)]
-pub enum Standing {
-    Victory = 0,
-    Defeat = 1,
-    Unknown = -1,
-}
-
-impl Default for Standing {
-    fn default() -> Self {
-        Standing::Unknown
-    }
-}
-
-impl Standing {
-    pub fn from_mode(value: i32, mode: &Mode) -> Standing {
-        if value == 0 {
-            return Standing::Victory;
-        } else if value == -1 {
-            return Standing::Unknown;
-        }
-
-        if value > 0 {
-            if mode == &Mode::Rumble && value > 2 {
-                Standing::Defeat
-            } else {
-                Standing::Victory
-            }
-        } else {
-            Standing::Victory
-        }
-    }
-}
-
-impl fmt::Display for Standing {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let out = match self {
-            Standing::Victory => "Win",
-            Standing::Defeat => "Loss",
-            Standing::Unknown => "Unknown",
-        };
-
-        write!(f, "{}", out)
-    }
-}
+pub mod itemtype;
+pub mod mode;
+pub mod moment;
+pub mod platform;
+pub mod standing;

@@ -20,18 +20,52 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod activitystoreinterface;
-pub mod apiclient;
-pub mod apiinterface;
-pub mod apiutils;
-pub mod crucible;
-pub mod cruciblestats;
-pub mod emblem;
-pub mod enums;
-pub mod error;
-pub mod manifest;
-pub mod manifestinterface;
-pub mod output;
-pub mod response;
-pub mod statscontainer;
-pub mod utils;
+use std::fmt;
+
+use crate::enums::mode::Mode;
+
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[repr(i32)]
+pub enum Standing {
+    Victory = 0,
+    Defeat = 1,
+    Unknown = -1,
+}
+
+impl Default for Standing {
+    fn default() -> Self {
+        Standing::Unknown
+    }
+}
+
+impl Standing {
+    pub fn from_mode(value: i32, mode: &Mode) -> Standing {
+        if value == 0 {
+            return Standing::Victory;
+        } else if value == -1 {
+            return Standing::Unknown;
+        }
+
+        if value > 0 {
+            if mode == &Mode::Rumble && value > 2 {
+                Standing::Defeat
+            } else {
+                Standing::Victory
+            }
+        } else {
+            Standing::Victory
+        }
+    }
+}
+
+impl fmt::Display for Standing {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let out = match self {
+            Standing::Victory => "Win",
+            Standing::Defeat => "Loss",
+            Standing::Unknown => "Unknown",
+        };
+
+        write!(f, "{}", out)
+    }
+}

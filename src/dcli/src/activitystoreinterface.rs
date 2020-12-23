@@ -32,8 +32,8 @@ use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 
 use crate::crucible::{ActivityDetail, Item, MedalStat, PlayerCruciblePerformances, WeaponStat};
-use crate::mode::Mode;
-use crate::platform::Platform;
+use crate::enums::mode::Mode;
+use crate::enums::platform::Platform;
 use crate::{apiinterface::ApiInterface, manifestinterface::ManifestInterface};
 use crate::{
     error::Error,

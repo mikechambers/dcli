@@ -25,7 +25,7 @@ mod datetimeformat;
 use std::str::FromStr;
 
 use datetimeformat::DateTimeFormat;
-use dcli::moment::Moment;
+use dcli::enums::moment::Moment;
 use dcli::output::Output;
 use dcli::utils::{build_tsv, print_verbose};
 use structopt::StructOpt;
@@ -104,11 +104,7 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(
-        short = "O",
-        long = "output-format",
-        default_value = "default"
-    )]
+    #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 }
 

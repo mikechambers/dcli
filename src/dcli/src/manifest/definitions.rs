@@ -1,6 +1,6 @@
 use serde_derive::{Deserialize, Serialize};
 
-use crate::itemtype::{ItemSubType, ItemType};
+use crate::enums::itemtype::{ItemSubType, ItemType};
 use crate::response::utils::prepend_base_url_option;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
