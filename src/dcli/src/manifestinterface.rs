@@ -33,7 +33,7 @@ use std::collections::HashMap;
 use crate::error::Error;
 use crate::manifest::definitions::{
     ActivityDefinitionData, ActivityTypeDefinitionData, DestinationDefinitionData,
-    DisplayPropertiesData, PlaceDefinitionData,
+    DisplayPropertiesData, InventoryItemDefinitionData, PlaceDefinitionData,
 };
 
 pub const MANIFEST_FILE_NAME: &str = "manifest.sqlite3";
@@ -51,7 +51,8 @@ pub fn convert_hash_to_id(hash: u32) -> i64 {
 
 pub struct ManifestInterface {
     manifest_db: SqliteConnection,
-    destinyActivityDefinitionCache: HashMap<i64, ActivityDefinitionData>,
+    activity_definition_cache: HashMap<i64, ActivityDefinitionData>,
+    inventory_item_definition_cache: HashMap<i64, InventoryItemDefinitionData>,
 }
 
 impl ManifestInterface {
@@ -86,6 +87,7 @@ impl ManifestInterface {
             .connect()
             .await?;
 
+        /*
         if cache {
             match sqlx::query("ATTACH DATABASE '?' as 'tmpDb'")
                 .bind(path)
@@ -99,9 +101,10 @@ impl ManifestInterface {
                 }
             };
 
+
             //TODO: Need to impliment this to dynamically pull table names
             //"SELECT name FROM sqlite_master WHERE type='table'"
-            let table_name: String = "DestinyInventoryItemDefinition".to_string();
+            let table_name: String = "InventoryItemDefinition".to_string();
             //todo: do we need to pass table_name twice?
             match sqlx::query("CREATE TABLE ? AS SELECT * FROM tmpDb.?")
                 .bind(table_name)
@@ -121,12 +124,14 @@ impl ManifestInterface {
                     db.close().await?;
                     return Err(Error::from(e));
                 }
-            };
+            }
         }
+        */
 
         Ok(ManifestInterface {
             manifest_db: db,
-            destinyActivityDefinitionCache: HashMap::new(),
+            activity_definition_cache: HashMap::new(),
+            inventory_item_definition_cache: HashMap::new(),
         })
     }
 
@@ -201,8 +206,8 @@ impl ManifestInterface {
     ) -> Result<ActivityDefinitionData, Error> {
         let id = convert_hash_to_id(id);
 
-        if self.destinyActivityDefinitionCache.contains_key(&id) {
-            let out = self.destinyActivityDefinitionCache.get(&id).unwrap();
+        if self.activity_definition_cache.contains_key(&id) {
+            let out = self.activity_definition_cache.get(&id).unwrap();
 
             return Ok(out.clone());
         }
@@ -210,7 +215,32 @@ impl ManifestInterface {
         let query = &format!("SELECT json FROM DestinyActivityDefinition WHERE id={}", id);
         let data: ActivityDefinitionData = self.get_definition(query).await?;
 
-        self.destinyActivityDefinitionCache.insert(id, data.clone());
+        self.activity_definition_cache.insert(id, data.clone());
+
+        Ok(data)
+    }
+
+    //might be able to make this generic
+    pub async fn get_iventory_item_definition(
+        &mut self,
+        id: u32,
+    ) -> Result<InventoryItemDefinitionData, Error> {
+        let id = convert_hash_to_id(id);
+
+        if self.inventory_item_definition_cache.contains_key(&id) {
+            let out = self.inventory_item_definition_cache.get(&id).unwrap();
+
+            return Ok(out.clone());
+        }
+
+        let query = &format!(
+            "SELECT json FROM DestinyInventoryItemDefinition WHERE id={}",
+            id
+        );
+        let data: InventoryItemDefinitionData = self.get_definition(query).await?;
+
+        self.inventory_item_definition_cache
+            .insert(id, data.clone());
 
         Ok(data)
     }

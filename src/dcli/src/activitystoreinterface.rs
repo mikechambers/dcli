@@ -31,7 +31,7 @@ use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 
-use crate::crucible::{ActivityDetail, PlayerCruciblePerformances};
+use crate::crucible::{ActivityDetail, Item, MedalStat, PlayerCruciblePerformances, WeaponStat};
 use crate::mode::Mode;
 use crate::platform::Platform;
 use crate::{apiinterface::ApiInterface, manifestinterface::ManifestInterface};
@@ -302,6 +302,17 @@ impl ActivityStoreInterface {
         }
     }
 
+    fn get_medal_hash_value(
+        &self,
+        property: &str,
+        medal_hash: &mut HashMap<String, DestinyHistoricalStatsValue>,
+    ) -> u32 {
+        match medal_hash.remove(property) {
+            Some(e) => e.basic.value as u32,
+            None => 0,
+        }
+    }
+
     async fn _insert_character_activity_stats(
         &mut self,
         data: &DestinyPostGameCarnageReportData,
@@ -349,35 +360,16 @@ impl ActivityStoreInterface {
         let mut medal_hash: HashMap<String, DestinyHistoricalStatsValue> =
             char_data.extended.values;
 
-        let precision_kills: f32 = match medal_hash.remove("precisionKills") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
-
-        let weapon_kills_ability: f32 = match medal_hash.remove("weaponKillsAbility") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
-
-        let weapon_kills_grenade: f32 = match medal_hash.remove("weaponKillsGrenade") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
-
-        let weapon_kills_melee: f32 = match medal_hash.remove("weaponKillsMelee") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
-
-        let weapon_kills_super: f32 = match medal_hash.remove("weaponKillsSuper") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
-
-        let all_medals_earned: f32 = match medal_hash.remove("allMedalsEarned") {
-            Some(e) => e.basic.value,
-            None => 0.0,
-        };
+        let precision_kills: u32 = self.get_medal_hash_value("precisionKills", &mut medal_hash);
+        let weapon_kills_ability: u32 =
+            self.get_medal_hash_value("weaponKillsAbility", &mut medal_hash);
+        let weapon_kills_grenade: u32 =
+            self.get_medal_hash_value("weaponKillsGrenade", &mut medal_hash);
+        let weapon_kills_melee: u32 =
+            self.get_medal_hash_value("weaponKillsMelee", &mut medal_hash);
+        let weapon_kills_super: u32 =
+            self.get_medal_hash_value("weaponKillsSuper", &mut medal_hash);
+        let all_medals_earned: u32 = self.get_medal_hash_value("allMedalsEarned", &mut medal_hash);
 
         sqlx::query(
             r#"
@@ -396,23 +388,30 @@ impl ActivityStoreInterface {
                 id from activity where activity_id = ?
             "#,
         )
-        .bind(format!("{}", character_row_id)) //character
-        .bind(format!("{}", char_data.values.assists)) //assists
-        .bind(format!("{}", char_data.values.score)) //score
-        .bind(format!("{}", char_data.values.kills)) //kiis
-        .bind(format!("{}", char_data.values.deaths)) //deaths
+        //we for through format, as otherwise we have to cast to i32, and while
+        //shouldnt be an issue, there is a chance we could lose precision when
+        //converting some of the IDS. so we just do this to be consistent.
+        //TODO: should think about losing data when pulling out of DB
+        .bind(format!("{}", character_row_id as u32)) //character
+        .bind(format!("{}", char_data.values.assists as u32)) //assists
+        .bind(format!("{}", char_data.values.score as u32)) //score
+        .bind(format!("{}", char_data.values.kills as u32)) //kiis
+        .bind(format!("{}", char_data.values.deaths as u32)) //deaths
         .bind(format!("{}", char_data.values.average_score_per_kill)) //average_score_per_kill
         .bind(format!("{}", char_data.values.average_score_per_life)) //average_score_per_life
-        .bind(format!("{}", char_data.values.completed)) //completed
-        .bind(format!("{}", char_data.values.opponents_defeated)) //opponents_defeated
-        .bind(format!("{}", char_data.values.activity_duration_seconds)) //activity_duration_seconds
-        .bind(format!("{}", char_data.values.standing)) //standing
-        .bind(format!("{}", char_data.values.team)) //team
-        .bind(format!("{}", char_data.values.completion_reason)) //completion_reason
-        .bind(format!("{}", char_data.values.start_seconds)) //start_seconds
-        .bind(format!("{}", char_data.values.time_played_seconds)) //time_played_seconds
-        .bind(format!("{}", char_data.values.player_count)) //player_count
-        .bind(format!("{}", char_data.values.team_score)) //team_score
+        .bind(format!("{}", char_data.values.completed as u32)) //completed
+        .bind(format!("{}", char_data.values.opponents_defeated as u32)) //opponents_defeated
+        .bind(format!(
+            "{}",
+            char_data.values.activity_duration_seconds as u32
+        )) //activity_duration_seconds
+        .bind(format!("{}", char_data.values.standing as u32)) //standing
+        .bind(format!("{}", char_data.values.team as u32)) //team
+        .bind(format!("{}", char_data.values.completion_reason as u32)) //completion_reason
+        .bind(format!("{}", char_data.values.start_seconds as u32)) //start_seconds
+        .bind(format!("{}", char_data.values.time_played_seconds as u32)) //time_played_seconds
+        .bind(format!("{}", char_data.values.player_count as u32)) //player_count
+        .bind(format!("{}", char_data.values.team_score as u32)) //team_score
         .bind(format!("{}", precision_kills)) //precision_kills
         .bind(format!("{}", weapon_kills_ability)) //weapon_kills_ability
         .bind(format!("{}", weapon_kills_grenade)) //weapon_kills_grenade
@@ -428,14 +427,14 @@ impl ActivityStoreInterface {
                 r#"
                 INSERT INTO "main"."medal_result"
                 (
-                    "reference_id", "value", "character_activity_stats"
+                    "reference_id", "count", "character_activity_stats"
                 )
                 select ?, ?, id from character_activity_stats where rowid = 
                 (SELECT max(rowid) from character_activity_stats);
                 "#,
             )
             .bind(key) //reference_id
-            .bind(value.basic.value) //unique_weapon_kills
+            .bind(format!("{}", value.basic.value as u32)) //unique_weapon_kills
             .execute(&mut self.db)
             .await?;
         }
@@ -448,15 +447,15 @@ impl ActivityStoreInterface {
                     r#"
                     INSERT INTO "main"."weapon_result"
                     (
-                        "reference_id", "unique_weapon_kills", "unique_weapon_precision_kills", "unique_weapon_kills_precision_kills", "character_activity_stats"
+                        "reference_id", "kills", "precision_kills", "kills_precision_kills_ratio", "character_activity_stats"
                     )
                     select ?, ?, ?, ?, id from character_activity_stats where rowid = 
                     (SELECT max(rowid) from character_activity_stats);
                     "#,
                 )
                 .bind(format!("{}", w.reference_id)) //reference_id
-                .bind(format!("{}", w.values.unique_weapon_kills)) //unique_weapon_kills
-                .bind(format!("{}", w.values.unique_weapon_precision_kills)) //unique_weapon_precision_kills
+                .bind(format!("{}", w.values.unique_weapon_kills as u32)) //unique_weapon_kills
+                .bind(format!("{}", w.values.unique_weapon_precision_kills as u32)) //unique_weapon_precision_kills
                 .bind(format!("{}", w.values.unique_weapon_kills_precision_kills)) //unique_weapon_kills_precision_kills
                 .execute(&mut self.db)
                 .await?;
@@ -592,9 +591,9 @@ impl ActivityStoreInterface {
             .get_character_row_id(member_id, character_id, platform)
             .await?;
 
-        let rows = sqlx::query(
+        let activity_rows = sqlx::query(
             r#"
-            select *, activity.id as activity_row_id, activity.mode as primary_mode from activity, character_activity_stats, modes where activity.period > ? and character_activity_stats.character = ? and character_activity_stats.activity = activity.id and modes.activity = activity.id and modes.mode = ?
+            select *, activity.id as activity_index, activity.mode as primary_mode from activity, character_activity_stats, modes where activity.period > ? and character_activity_stats.character = ? and character_activity_stats.activity = activity.id and modes.activity = activity.id and modes.mode = ?
         "#,
         )
         .bind(start_time.to_string())
@@ -604,21 +603,21 @@ impl ActivityStoreInterface {
 
         //get_activity_definition
 
-        for row in &rows {
-            let activity_row_id: i32 = row.try_get("activity_row_id")?;
-            let activity_id: i64 = row.try_get("activity_id")?;
+        for activity_row in &activity_rows {
+            let activity_index: i32 = activity_row.try_get("activity_index")?;
+            let activity_id: i64 = activity_row.try_get("activity_id")?;
 
-            let mode_id: i32 = row.try_get("primary_mode")?;
-            let platform_id: i32 = row.try_get("platform")?;
+            let mode_id: i32 = activity_row.try_get("primary_mode")?;
+            let platform_id: i32 = activity_row.try_get("platform")?;
 
-            let period: String = row.try_get("period")?;
+            let period: String = activity_row.try_get("period")?;
             let period = DateTime::parse_from_rfc3339(&period)?;
             let period = period.with_timezone(&Utc);
 
-            let director_activity_hash: i64 = row.try_get("director_activity_hash")?;
+            let director_activity_hash: i64 = activity_row.try_get("director_activity_hash")?;
             let director_activity_hash: u32 = director_activity_hash as u32;
 
-            let reference_id: i64 = row.try_get("reference_id")?;
+            let reference_id: i64 = activity_row.try_get("reference_id")?;
             let reference_id: u32 = reference_id as u32;
 
             let activity_definition = manifest.get_activity_definition(reference_id).await?;
@@ -632,11 +631,96 @@ impl ActivityStoreInterface {
                 director_activity_hash,
                 reference_id,
             };
+
+            //TODO: We dont need to make this call. all data is in call above
+            let char_activity_row = sqlx::query(
+                r#"
+                select * from character_activity_stats where character = ? and activity = ?
+            "#,
+            )
+            .bind(character_index)
+            .bind(activity_index)
+            .fetch_one(&mut self.db)
+            .await?;
+
+            let assists: i32 = char_activity_row.try_get("assists")?;
+            let score: i32 = char_activity_row.try_get("score")?;
+            let kills: i32 = char_activity_row.try_get("kills")?;
+            let deaths: i32 = char_activity_row.try_get("deaths")?;
+            let average_score_per_kill: f32 =
+                char_activity_row.try_get("average_score_per_kill")?;
+            let average_score_per_life: f32 =
+                char_activity_row.try_get("average_score_per_life")?;
+            let completed: i32 = char_activity_row.try_get("completed")?;
+            let opponents_defeated: i32 = char_activity_row.try_get("opponents_defeated")?;
+            let activity_duration_seconds: i32 =
+                char_activity_row.try_get("activity_duration_seconds")?;
+            let standing: i32 = char_activity_row.try_get("standing")?;
+            let team: i32 = char_activity_row.try_get("team")?;
+            let completion_reason: i32 = char_activity_row.try_get("completion_reason")?;
+            let start_seconds: i32 = char_activity_row.try_get("start_seconds")?;
+            let time_played_seconds: i32 = char_activity_row.try_get("time_played_seconds")?;
+            let player_count: i32 = char_activity_row.try_get("player_count")?;
+            let team_score: i32 = char_activity_row.try_get("team_score")?;
+            let precision_kills: i32 = char_activity_row.try_get("precision_kills")?;
+            let weapon_kills_ability: i32 = char_activity_row.try_get("weapon_kills_ability")?;
+            let weapon_kills_grenade: i32 = char_activity_row.try_get("weapon_kills_grenade")?;
+            let weapon_kills_melee: i32 = char_activity_row.try_get("weapon_kills_melee")?;
+            let weapon_kills_super: i32 = char_activity_row.try_get("weapon_kills_super")?;
+            let all_medals_earned: i32 = char_activity_row.try_get("all_medals_earned")?;
+
+            let character_activity_stats_index: i64 = char_activity_row.try_get("id")?;
+
+            let weapon_rows = sqlx::query(
+                r#"
+                select * from weapon_result where character_activity_stats = ?
+            "#,
+            )
+            .bind(character_activity_stats_index)
+            .fetch_all(&mut self.db)
+            .await?;
+
+            let mut weapon_results: Vec<WeaponStat> = Vec::new();
+            for weapon_row in &weapon_rows {
+                let reference_id: i64 = weapon_row.try_get("reference_id")?;
+                let reference_id = reference_id as u32;
+
+                let kills: i32 = weapon_row.try_get("kills")?;
+                let precision_kills: i32 = weapon_row.try_get("precision_kills")?;
+                let precision_kills_percent: f32 =
+                    weapon_row.try_get("kills_precision_kills_ratio")?;
+
+                let item_definition = manifest.get_iventory_item_definition(reference_id).await?;
+
+                let name: String = item_definition
+                    .display_properties
+                    .description
+                    .unwrap_or("".to_string());
+
+                let item: Item = Item {
+                    id: reference_id,
+                    name: item_definition.display_properties.name,
+                    description: name,
+                    item_type: item_definition.item_type,
+                    item_sub_type: item_definition.item_sub_type,
+                };
+
+                let ws = WeaponStat {
+                    weapon: item,
+                    kills: kills as u32,
+                    precision_kills: precision_kills as u32,
+                    precision_kills_percent,
+                };
+
+                weapon_results.push(ws);
+            }
+
+            println!("{:#?}", weapon_results[0]);
         }
 
         println!(
             "retrieve_activities_since results returned : {}",
-            rows.len()
+            activity_rows.len()
         );
 
         Ok(None)

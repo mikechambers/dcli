@@ -28,6 +28,7 @@ pub mod crucible;
 pub mod cruciblestats;
 pub mod emblem;
 pub mod error;
+pub mod itemtype;
 pub mod manifest;
 pub mod manifestinterface;
 pub mod mode;

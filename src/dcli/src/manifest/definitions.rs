@@ -1,5 +1,6 @@
 use serde_derive::{Deserialize, Serialize};
 
+use crate::itemtype::{ItemSubType, ItemType};
 use crate::response::utils::prepend_base_url_option;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -14,6 +15,27 @@ pub struct DisplayPropertiesData {
 
     #[serde(rename = "hasIcon")]
     pub has_icon: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct InventoryItemDefinitionData {
+    #[serde(rename = "hash")]
+    pub id: u32,
+
+    #[serde(rename = "displayProperties")]
+    pub display_properties: DisplayPropertiesData,
+
+    #[serde(rename = "itemTypeDisplayName")]
+    pub item_type_display_name: String,
+
+    #[serde(rename = "itemTypeAndTierDisplayName")]
+    pub item_type_and_tier_display_name: String,
+
+    #[serde(rename = "itemType")]
+    pub item_type: ItemType,
+
+    #[serde(rename = "itemSubType")]
+    pub item_sub_type: ItemSubType,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

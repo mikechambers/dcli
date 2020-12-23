@@ -20,6 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use crate::itemtype::{ItemSubType, ItemType};
 use crate::mode::Mode;
 use crate::platform::Platform;
 use chrono::{DateTime, Utc};
@@ -73,19 +74,27 @@ pub struct Player {
     platform: String,
 }
 
+#[derive(Debug)]
 pub struct WeaponStat {
-    id: String,
-    name: String,
-    description: String,
+    pub weapon: Item,
     pub kills: u32,
     pub precision_kills: u32,
     pub precision_kills_percent: f32,
 }
 
+#[derive(Debug)]
+pub struct Item {
+    pub id: u32,
+    pub name: String,
+    pub description: String,
+    pub item_type: ItemType,
+    pub item_sub_type: ItemSubType,
+}
+
 pub struct MedalStat {
-    id: u32,
-    name: String,
-    count: u32,
+    pub id: u32,
+    pub name: String,
+    pub count: u32,
 }
 
 pub struct PlayerCruciblePerformances {
