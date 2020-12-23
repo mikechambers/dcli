@@ -593,13 +593,26 @@ impl ActivityStoreInterface {
 
         let activity_rows = sqlx::query(
             r#"
-            select *, activity.id as activity_index, activity.mode as primary_mode from activity, character_activity_stats, modes where activity.period > ? and character_activity_stats.character = ? and character_activity_stats.activity = activity.id and modes.activity = activity.id and modes.mode = ?
+            SELECT
+                *,
+                activity.id as activity_index, 
+                activity.mode as activity_mode,
+                character_activity_stats.id as character_activity_stats_index
+            FROM 
+                activity, character_activity_stats, modes 
+            WHERE 
+                activity.period > ? and 
+                character_activity_stats.character = ? and 
+                character_activity_stats.activity = activity.id and 
+                modes.activity = activity.id and 
+                modes.mode = ?
         "#,
         )
         .bind(start_time.to_string())
         .bind(character_index.to_string())
         .bind(mode.to_id().to_string())
-        .fetch_all(&mut self.db).await?;
+        .fetch_all(&mut self.db)
+        .await?;
 
         //get_activity_definition
 
@@ -607,7 +620,7 @@ impl ActivityStoreInterface {
             let activity_index: i32 = activity_row.try_get("activity_index")?;
             let activity_id: i64 = activity_row.try_get("activity_id")?;
 
-            let mode_id: i32 = activity_row.try_get("primary_mode")?;
+            let mode_id: i32 = activity_row.try_get("activity_mode")?;
             let platform_id: i32 = activity_row.try_get("platform")?;
 
             let period: String = activity_row.try_get("period")?;
@@ -632,44 +645,32 @@ impl ActivityStoreInterface {
                 reference_id,
             };
 
-            //TODO: We dont need to make this call. all data is in call above
-            let char_activity_row = sqlx::query(
-                r#"
-                select * from character_activity_stats where character = ? and activity = ?
-            "#,
-            )
-            .bind(character_index)
-            .bind(activity_index)
-            .fetch_one(&mut self.db)
-            .await?;
-
-            let assists: i32 = char_activity_row.try_get("assists")?;
-            let score: i32 = char_activity_row.try_get("score")?;
-            let kills: i32 = char_activity_row.try_get("kills")?;
-            let deaths: i32 = char_activity_row.try_get("deaths")?;
-            let average_score_per_kill: f32 =
-                char_activity_row.try_get("average_score_per_kill")?;
-            let average_score_per_life: f32 =
-                char_activity_row.try_get("average_score_per_life")?;
-            let completed: i32 = char_activity_row.try_get("completed")?;
-            let opponents_defeated: i32 = char_activity_row.try_get("opponents_defeated")?;
+            let assists: i32 = activity_row.try_get("assists")?;
+            let score: i32 = activity_row.try_get("score")?;
+            let kills: i32 = activity_row.try_get("kills")?;
+            let deaths: i32 = activity_row.try_get("deaths")?;
+            let average_score_per_kill: f32 = activity_row.try_get("average_score_per_kill")?;
+            let average_score_per_life: f32 = activity_row.try_get("average_score_per_life")?;
+            let completed: i32 = activity_row.try_get("completed")?;
+            let opponents_defeated: i32 = activity_row.try_get("opponents_defeated")?;
             let activity_duration_seconds: i32 =
-                char_activity_row.try_get("activity_duration_seconds")?;
-            let standing: i32 = char_activity_row.try_get("standing")?;
-            let team: i32 = char_activity_row.try_get("team")?;
-            let completion_reason: i32 = char_activity_row.try_get("completion_reason")?;
-            let start_seconds: i32 = char_activity_row.try_get("start_seconds")?;
-            let time_played_seconds: i32 = char_activity_row.try_get("time_played_seconds")?;
-            let player_count: i32 = char_activity_row.try_get("player_count")?;
-            let team_score: i32 = char_activity_row.try_get("team_score")?;
-            let precision_kills: i32 = char_activity_row.try_get("precision_kills")?;
-            let weapon_kills_ability: i32 = char_activity_row.try_get("weapon_kills_ability")?;
-            let weapon_kills_grenade: i32 = char_activity_row.try_get("weapon_kills_grenade")?;
-            let weapon_kills_melee: i32 = char_activity_row.try_get("weapon_kills_melee")?;
-            let weapon_kills_super: i32 = char_activity_row.try_get("weapon_kills_super")?;
-            let all_medals_earned: i32 = char_activity_row.try_get("all_medals_earned")?;
+                activity_row.try_get("activity_duration_seconds")?;
+            let standing: i32 = activity_row.try_get("standing")?;
+            let team: i32 = activity_row.try_get("team")?;
+            let completion_reason: i32 = activity_row.try_get("completion_reason")?;
+            let start_seconds: i32 = activity_row.try_get("start_seconds")?;
+            let time_played_seconds: i32 = activity_row.try_get("time_played_seconds")?;
+            let player_count: i32 = activity_row.try_get("player_count")?;
+            let team_score: i32 = activity_row.try_get("team_score")?;
+            let precision_kills: i32 = activity_row.try_get("precision_kills")?;
+            let weapon_kills_ability: i32 = activity_row.try_get("weapon_kills_ability")?;
+            let weapon_kills_grenade: i32 = activity_row.try_get("weapon_kills_grenade")?;
+            let weapon_kills_melee: i32 = activity_row.try_get("weapon_kills_melee")?;
+            let weapon_kills_super: i32 = activity_row.try_get("weapon_kills_super")?;
+            let all_medals_earned: i32 = activity_row.try_get("all_medals_earned")?;
 
-            let character_activity_stats_index: i64 = char_activity_row.try_get("id")?;
+            let character_activity_stats_index: i64 =
+                activity_row.try_get("character_activity_stats_index")?;
 
             let weapon_rows = sqlx::query(
                 r#"
@@ -713,6 +714,26 @@ impl ActivityStoreInterface {
                 };
 
                 weapon_results.push(ws);
+            }
+
+            let medal_rows = sqlx::query(
+                r#"
+                select * from medal_result where character_activity_stats = ?
+            "#,
+            )
+            .bind(character_activity_stats_index)
+            .fetch_all(&mut self.db)
+            .await?;
+
+            let mut medal_results: Vec<WeaponStat> = Vec::new();
+            for medal_row in &medal_rows {
+                let reference_id: String = medal_row.try_get("reference_id")?;
+
+                let count: i32 = medal_row.try_get("count")?;
+                let count: u32 = count as u32;
+
+                println!("{}", reference_id);
+                //let item_definition = manifest.get_iventory_item_definition(reference_id).await?;
             }
 
             println!("{:#?}", weapon_results[0]);

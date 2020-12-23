@@ -92,9 +92,16 @@ pub struct Item {
 }
 
 pub struct MedalStat {
-    pub id: u32,
-    pub name: String,
+    pub medal: Medal,
     pub count: u32,
+}
+
+pub struct Medal {
+    pub id: String,
+    pub icon_image_path: String,
+    pub weight: i32,
+    pub name: String,
+    pub description: String,
 }
 
 pub struct PlayerCruciblePerformances {
