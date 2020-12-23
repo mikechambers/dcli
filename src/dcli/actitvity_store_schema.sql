@@ -36,6 +36,17 @@
             "platform" INTEGER NOT NULL,
             "director_activity_hash" INTEGER NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS "main"."modes" (
+            "id"	    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+            "mode"	    INTEGER NOT NULL,
+            "activity"  INTEGER NOT NULL,
+            UNIQUE(mode, activity),
+
+            FOREIGN KEY (activity)
+               REFERENCES activity (id)
+               ON DELETE CASCADE
+        );
         
         CREATE TABLE IF NOT EXISTS "main"."weapon_result" (
             "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,

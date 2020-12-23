@@ -30,16 +30,13 @@ use crate::apiutils::{API_BASE_URL, PGCR_BASE_URL};
 use crate::error::Error;
 use crate::mode::Mode;
 use crate::platform::Platform;
-use crate::response::activities::{
-    ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT,
-};
+use crate::response::activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT};
 use crate::response::character::CharacterData;
 use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::pgcr::{DestinyPostGameCarnageReportData, PGCRResponse};
 use crate::response::stats::{
-    AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData,
-    PvpStatsData,
+    AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData, PvpStatsData,
 };
 use crate::utils::Period;
 
@@ -135,9 +132,7 @@ impl ApiInterface {
             Some(e) => e,
             None => {
                 return Err(Error::ApiRequest {
-                    description: String::from(
-                        "No response data from API Call.",
-                    ),
+                    description: String::from("No response data from API Call."),
                 })
             }
         };
@@ -287,14 +282,7 @@ impl ApiInterface {
             // so assume we are out of data. (maybe compare to whether we have found any items).
             // This would mean we might miss legitimate API errors though.
             let activities = self
-                .retrieve_activities(
-                    member_id,
-                    character_id,
-                    platform,
-                    mode,
-                    count,
-                    page,
-                )
+                .retrieve_activities(member_id, character_id, platform, mode, count, page)
                 .await?;
 
             if activities.is_none() {
@@ -354,7 +342,7 @@ impl ApiInterface {
         eprint!("[");
         //TODO: if error occurs on an individual call, retry?
         loop {
-            eprint!("#");
+            eprint!(".");
             io::stderr().flush().unwrap();
 
             // TODO: if we call more pages that there is data, it will return back with no Response
@@ -365,14 +353,7 @@ impl ApiInterface {
             // so assume we are out of data. (maybe compare to whether we have found any items).
             // This would mean we might miss legitimate API errors though.
             let activities = self
-                .retrieve_activities(
-                    member_id,
-                    character_id,
-                    platform,
-                    mode,
-                    count,
-                    page,
-                )
+                .retrieve_activities(member_id, character_id, platform, mode, count, page)
                 .await?;
 
             if activities.is_none() {
@@ -458,9 +439,7 @@ impl ApiInterface {
                     return Ok(None);
                 } else {
                     return Err(Error::ApiRequest {
-                        description: String::from(
-                            "No response data from API Call.",
-                        ),
+                        description: String::from("No response data from API Call."),
                     });
                 }
             }
@@ -483,8 +462,7 @@ impl ApiInterface {
             instance_id = instance_id,
         );
 
-        let response: PGCRResponse =
-            self.client.call_and_parse::<PGCRResponse>(&url).await?;
+        let response: PGCRResponse = self.client.call_and_parse::<PGCRResponse>(&url).await?;
 
         let data: DestinyPostGameCarnageReportData = match response.response {
             Some(e) => e,
@@ -493,9 +471,7 @@ impl ApiInterface {
                     return Ok(None);
                 } else {
                     return Err(Error::ApiRequest {
-                        description: String::from(
-                            "No response data from API Call.",
-                        ),
+                        description: String::from("No response data from API Call."),
                     });
                 }
             }

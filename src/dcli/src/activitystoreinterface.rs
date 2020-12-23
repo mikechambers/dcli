@@ -24,12 +24,15 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use chrono::{DateTime, Utc};
+
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 
 use crate::apiinterface::ApiInterface;
+use crate::crucible::PlayerCruciblePerformances;
 use crate::mode::Mode;
 use crate::platform::Platform;
 use crate::{
@@ -38,11 +41,10 @@ use crate::{
 };
 
 const STORE_FILE_NAME: &str = "dcli.sqlite3";
-
 const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 
 //numer of simultaneous requests we make to server when retrieving activity history
-const PGCR_REQUEST_CHUNK_AMOUNT: usize = 50;
+const PGCR_REQUEST_CHUNK_AMOUNT: usize = 25;
 
 pub struct ActivityStoreInterface {
     verbose: bool,
@@ -316,6 +318,24 @@ impl ActivityStoreInterface {
         .execute(&mut self.db)
         .await?;
 
+        for mode in &data.activity_details.modes {
+            sqlx::query(
+                r#"
+                INSERT INTO "main"."modes"
+                (
+                    "mode", "activity"
+                )
+                SELECT
+                    ?,
+                    id from activity where activity_id = ?
+                "#,
+            )
+            .bind(mode.to_id().to_string())
+            .bind(data.activity_details.instance_id.clone())
+            .execute(&mut self.db)
+            .await?;
+        }
+
         let char_data = data
             .get_entry_for_character(&character_id)
             .ok_or(Error::CharacterDataNotFound)?;
@@ -450,7 +470,6 @@ impl ActivityStoreInterface {
         Ok(())
     }
 
-    /*
     async fn get_character_row_id(
         &mut self,
         member_id: &str,
@@ -473,7 +492,6 @@ impl ActivityStoreInterface {
 
         Ok(character_rowid)
     }
-    */
 
     async fn insert_member_id(
         &mut self,
@@ -553,5 +571,36 @@ impl ActivityStoreInterface {
 
         let activity_id: i64 = row.try_get("max_activity_id")?;
         Ok(activity_id.to_string())
+    }
+
+    pub async fn retrieve_activities_since(
+        &mut self,
+        member_id: &str,
+        character_id: &str,
+        platform: &Platform,
+        mode: &Mode,
+        start_time: &DateTime<Utc>,
+    ) -> Result<Option<PlayerCruciblePerformances>, Error> {
+        let character_index = self
+            .get_character_row_id(member_id, character_id, platform)
+            .await?;
+
+        let query = sqlx::query(
+            r#"
+            select * from activity, character_activity_stats, modes where activity.period > ? and character_activity_stats.character = ? and character_activity_stats.activity = activity.id and modes.activity = activity.id and modes.mode = ?
+        "#,
+        )
+        .bind(start_time.to_string())
+        .bind(character_index.to_string())
+        .bind(mode.to_id().to_string());
+
+        let rows = query.fetch_all(&mut self.db).await?;
+
+        println!(
+            "retrieve_activities_since results returned : {}",
+            rows.len()
+        );
+
+        Ok(None)
     }
 }

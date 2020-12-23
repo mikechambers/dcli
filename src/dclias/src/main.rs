@@ -28,6 +28,9 @@ use dcli::platform::Platform;
 use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE};
 use structopt::StructOpt;
 
+use dcli::mode::Mode;
+use dcli::moment::Moment;
+
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for downloading and syncing Destiny 2 Crucible activity
@@ -113,7 +116,26 @@ async fn main() {
         .sync(&opt.member_id, &opt.character_id, &opt.platform)
         .await
     {
-        Ok(_e) => {}
+        Ok(_e) => {
+            let mode = Mode::AllPvP;
+            let start_time = Moment::Week.get_date_time();
+            match store
+                .retrieve_activities_since(
+                    &opt.member_id,
+                    &opt.character_id,
+                    &opt.platform,
+                    &mode,
+                    &start_time,
+                )
+                .await
+            {
+                Ok(_e) => {}
+                Err(e) => {
+                    print_error("Error retrieve_activities_since.", e);
+                    std::process::exit(EXIT_FAILURE);
+                }
+            }
+        }
         Err(e) => {
             print_error("Error syncing ids.", e);
             std::process::exit(EXIT_FAILURE);
