@@ -21,6 +21,7 @@
 */
 
 use crate::enums::itemtype::{ItemSubType, ItemType};
+use crate::enums::medaltier::MedalTier;
 use crate::enums::mode::Mode;
 use crate::enums::platform::Platform;
 use chrono::{DateTime, Utc};
@@ -91,15 +92,17 @@ pub struct Item {
     pub item_sub_type: ItemSubType,
 }
 
+#[derive(Debug)]
 pub struct MedalStat {
     pub medal: Medal,
     pub count: u32,
 }
 
+#[derive(Debug)]
 pub struct Medal {
     pub id: String,
-    pub icon_image_path: String,
-    pub weight: i32,
+    pub icon_image_path: Option<String>,
+    pub tier: MedalTier,
     pub name: String,
     pub description: String,
 }

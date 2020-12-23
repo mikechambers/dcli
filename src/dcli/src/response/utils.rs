@@ -21,8 +21,8 @@
 */
 
 use chrono::{DateTime, NaiveDateTime, Utc};
-use serde::Deserialize;
-use serde_derive::Deserialize;
+use serde::{Deserialize, Serialize};
+//use serde_derive::Deserialize;
 
 use crate::apiutils::RESOURCE_BASE_URL;
 

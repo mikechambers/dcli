@@ -1,6 +1,7 @@
 use serde_derive::{Deserialize, Serialize};
 
 use crate::enums::itemtype::{ItemSubType, ItemType};
+use crate::enums::medaltier::MedalTier;
 use crate::response::utils::prepend_base_url_option;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -70,6 +71,26 @@ pub struct DestinationDefinitionData {
 
     #[serde(rename = "placeHash")]
     pub place_hash: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HistoricalStatsDefinition {
+    #[serde(rename = "statId")]
+    pub id: String,
+
+    #[serde(rename = "statName")]
+    pub name: String,
+
+    #[serde(default, rename = "statDescription")]
+    pub description: String,
+
+    #[serde(rename = "iconImage")]
+    pub icon_image_path: Option<String>,
+
+    pub weight: i32,
+
+    #[serde(rename = "medalTierHash")]
+    pub medal_tier: Option<MedalTier>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

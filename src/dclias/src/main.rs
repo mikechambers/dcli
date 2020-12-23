@@ -118,7 +118,7 @@ async fn main() {
     {
         Ok(_e) => {
             let mode = Mode::AllPvP;
-            let start_time = Moment::Week.get_date_time();
+            let start_time = Moment::AllTime.get_date_time();
             let mut manifest = match ManifestInterface::new(&data_dir, false).await {
                 Ok(e) => e,
                 Err(e) => {

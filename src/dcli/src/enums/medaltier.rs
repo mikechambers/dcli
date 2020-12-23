@@ -20,9 +20,31 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod itemtype;
-pub mod medaltier;
-pub mod mode;
-pub mod moment;
-pub mod platform;
-pub mod standing;
+use serde_repr::{Deserialize_repr, Serialize_repr};
+
+#[derive(PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
+#[repr(u32)]
+pub enum MedalTier {
+    Tier1 = 802673300,
+    Tier2 = 802673303,
+    Tier3 = 802673302,
+    Tier4 = 802673297,
+    Tier5 = 802673296,
+    Tier6 = 802673299,
+    Tier7 = 802673298,
+    Unknown = 0,
+}
+impl MedalTier {
+    pub fn get_order(&self) -> u32 {
+        match self {
+            Tier1 => 700,
+            Tier2 => 600,
+            Tier3 => 500,
+            Tier4 => 400,
+            Tier5 => 300,
+            Tier6 => 200,
+            Tier7 => 100,
+            Unknown => 0,
+        }
+    }
+}

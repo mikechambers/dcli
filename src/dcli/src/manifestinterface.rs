@@ -33,7 +33,8 @@ use std::collections::HashMap;
 use crate::error::Error;
 use crate::manifest::definitions::{
     ActivityDefinitionData, ActivityTypeDefinitionData, DestinationDefinitionData,
-    DisplayPropertiesData, InventoryItemDefinitionData, PlaceDefinitionData,
+    DisplayPropertiesData, HistoricalStatsDefinition, InventoryItemDefinitionData,
+    PlaceDefinitionData,
 };
 
 pub const MANIFEST_FILE_NAME: &str = "manifest.sqlite3";
@@ -53,6 +54,7 @@ pub struct ManifestInterface {
     manifest_db: SqliteConnection,
     activity_definition_cache: HashMap<i64, ActivityDefinitionData>,
     inventory_item_definition_cache: HashMap<i64, InventoryItemDefinitionData>,
+    historical_stats_definition_cache: HashMap<String, HistoricalStatsDefinition>,
 }
 
 impl ManifestInterface {
@@ -132,6 +134,7 @@ impl ManifestInterface {
             manifest_db: db,
             activity_definition_cache: HashMap::new(),
             inventory_item_definition_cache: HashMap::new(),
+            historical_stats_definition_cache: HashMap::new(),
         })
     }
 
@@ -212,7 +215,10 @@ impl ManifestInterface {
             return Ok(out.clone());
         }
 
-        let query = &format!("SELECT json FROM DestinyActivityDefinition WHERE id={}", id);
+        let query = &format!(
+            "SELECT json FROM DestinyActivityDefinition WHERE id = {}",
+            id
+        );
         let data: ActivityDefinitionData = self.get_definition(query).await?;
 
         self.activity_definition_cache.insert(id, data.clone());
@@ -234,13 +240,37 @@ impl ManifestInterface {
         }
 
         let query = &format!(
-            "SELECT json FROM DestinyInventoryItemDefinition WHERE id={}",
+            "SELECT json FROM DestinyInventoryItemDefinition WHERE id = {}",
             id
         );
         let data: InventoryItemDefinitionData = self.get_definition(query).await?;
 
         self.inventory_item_definition_cache
             .insert(id, data.clone());
+
+        Ok(data)
+    }
+
+    pub async fn get_historical_stats_definition(
+        &mut self,
+        id: &str,
+    ) -> Result<HistoricalStatsDefinition, Error> {
+        let key = id.clone().to_string();
+        if self.historical_stats_definition_cache.contains_key(&key) {
+            let out = self.historical_stats_definition_cache.get(&key).unwrap();
+
+            return Ok(out.clone());
+        }
+
+        let query = &format!(
+            "SELECT json FROM DestinyHistoricalStatsDefinition WHERE key = '{}'",
+            key
+        );
+
+        let data: HistoricalStatsDefinition = self.get_definition(query).await?;
+
+        self.historical_stats_definition_cache
+            .insert(key, data.clone());
 
         Ok(data)
     }
@@ -252,7 +282,7 @@ impl ManifestInterface {
         let id = convert_hash_to_id(id);
 
         let query = &format!(
-            "SELECT json FROM DestinyDestinationDefinition WHERE id={}",
+            "SELECT json FROM DestinyDestinationDefinition WHERE id = {}",
             id
         );
         let data: DestinationDefinitionData = self.get_definition(query).await?;
@@ -263,7 +293,7 @@ impl ManifestInterface {
     pub async fn get_place_definition(&mut self, id: u32) -> Result<PlaceDefinitionData, Error> {
         let id = convert_hash_to_id(id);
 
-        let query = &format!("SELECT json FROM DestinyPlaceDefinition WHERE id={}", id);
+        let query = &format!("SELECT json FROM DestinyPlaceDefinition WHERE id = {}", id);
         let data: PlaceDefinitionData = self.get_definition(query).await?;
 
         Ok(data)
@@ -276,7 +306,7 @@ impl ManifestInterface {
         let id = convert_hash_to_id(id);
 
         let query = &format!(
-            "SELECT json FROM DestinyActivityTypeDefinition WHERE id={}",
+            "SELECT json FROM DestinyActivityTypeDefinition WHERE id = {}",
             id
         );
         let data: ActivityTypeDefinitionData = self.get_definition(query).await?;

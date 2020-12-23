@@ -31,7 +31,10 @@ use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 
-use crate::crucible::{ActivityDetail, Item, MedalStat, PlayerCruciblePerformances, WeaponStat};
+use crate::crucible::{
+    ActivityDetail, Item, Medal, MedalStat, PlayerCruciblePerformances, WeaponStat,
+};
+use crate::enums::medaltier::MedalTier;
 use crate::enums::mode::Mode;
 use crate::enums::platform::Platform;
 use crate::{apiinterface::ApiInterface, manifestinterface::ManifestInterface};
@@ -725,18 +728,34 @@ impl ActivityStoreInterface {
             .fetch_all(&mut self.db)
             .await?;
 
-            let mut medal_results: Vec<WeaponStat> = Vec::new();
+            let mut medal_stats: Vec<MedalStat> = Vec::new();
             for medal_row in &medal_rows {
                 let reference_id: String = medal_row.try_get("reference_id")?;
 
                 let count: i32 = medal_row.try_get("count")?;
                 let count: u32 = count as u32;
 
-                println!("{}", reference_id);
-                //let item_definition = manifest.get_iventory_item_definition(reference_id).await?;
+                let medal_definition = manifest
+                    .get_historical_stats_definition(&reference_id)
+                    .await?;
+
+                if medal_definition.medal_tier.is_none() {
+                    println!("{}", medal_definition.id);
+                }
+
+                let medal = Medal {
+                    id: medal_definition.id,
+                    icon_image_path: medal_definition.icon_image_path,
+                    tier: medal_definition.medal_tier.unwrap_or(MedalTier::Unknown),
+                    name: medal_definition.name,
+                    description: medal_definition.description,
+                };
+
+                let medal_stat = MedalStat { medal, count };
+                medal_stats.push(medal_stat);
             }
 
-            println!("{:#?}", weapon_results[0]);
+            //println!("{:#?}", medal_stats[0]);
         }
 
         println!(
