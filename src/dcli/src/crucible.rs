@@ -87,7 +87,7 @@ pub struct Player {
     pub platform: Platform,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WeaponStat {
     pub weapon: Item,
     pub kills: u32,
@@ -95,7 +95,7 @@ pub struct WeaponStat {
     pub precision_kills_percent: f32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Item {
     pub id: u32,
     pub name: String,
@@ -161,6 +161,7 @@ impl PlayerCruciblePerformances {
         out.total_activities = performances.len() as u32;
 
         let mut medal_hash: HashMap<String, MedalStat> = HashMap::new();
+        let mut weapon_hash: HashMap<u32, WeaponStat> = HashMap::new();
 
         for p in performances {
             out.assists += p.stats.assists;
@@ -239,15 +240,33 @@ impl PlayerCruciblePerformances {
                         continue;
                     }
 
-                    if let Some(ms) = medal_hash.get_mut(key) {
-                        //some medals come through with a count of zero
-                        let a = if m.count == 0 { 1 } else { m.count };
-
-                        ms.count += a;
-                    }
+                    let mut ms = medal_hash.get_mut(key).unwrap();
+                    //some medals come through with a count of zero
+                    let a = if m.count == 0 { 1 } else { m.count };
+                    ms.count += a;
 
                     //let ms = medal_hash.get_mut(&k);
                     //ms.count += m.count;
+                }
+
+                for w in &e.weapons {
+                    let key = &w.weapon.id;
+
+                    if !weapon_hash.contains_key(key) {
+                        weapon_hash.insert(*key, w.clone());
+                        continue;
+                    }
+
+                    let ws = weapon_hash.get_mut(key).unwrap();
+                    ws.kills += w.kills;
+                    ws.precision_kills += w.precision_kills;
+                    ws.precision_kills_percent = {
+                        if ws.kills == 0 {
+                            0.0
+                        } else {
+                            (ws.precision_kills as f32 / ws.kills as f32) * 100.0
+                        }
+                    };
                 }
             }
         }
@@ -256,9 +275,12 @@ impl PlayerCruciblePerformances {
         let mut medals: Vec<MedalStat> = medal_hash.into_iter().map(|(_id, m)| m).collect();
         medals.sort_by(|a, b| b.count.cmp(&a.count));
 
-        println!("{:#?}", medals[0]);
-        println!("{:#?}", medals.last());
-        println!("{}", medals.len());
+        let mut weapons: Vec<WeaponStat> = weapon_hash.into_iter().map(|(_id, w)| w).collect();
+        weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
+
+        println!("{:#?}", weapons[0]);
+        println!("{:#?}", weapons.last().unwrap());
+        println!("{}", weapons.len());
 
         if out.total_activities > 0 {
             out.win_rate = (out.wins as f32 / out.total_activities as f32) * 100.0;
