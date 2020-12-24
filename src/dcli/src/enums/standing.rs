@@ -24,12 +24,14 @@ use std::fmt;
 
 use crate::enums::mode::Mode;
 
+pub const STANDING_UNKNOWN_MAGIC_NUMBER: u32 = 2325;
+
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-#[repr(i32)]
+#[repr(u32)]
 pub enum Standing {
     Victory = 0,
     Defeat = 1,
-    Unknown = -1,
+    Unknown = STANDING_UNKNOWN_MAGIC_NUMBER,
 }
 
 impl Default for Standing {
@@ -39,10 +41,10 @@ impl Default for Standing {
 }
 
 impl Standing {
-    pub fn from_mode(value: i32, mode: &Mode) -> Standing {
+    pub fn from_mode(value: u32, mode: &Mode) -> Standing {
         if value == 0 {
             return Standing::Victory;
-        } else if value == -1 {
+        } else if value == STANDING_UNKNOWN_MAGIC_NUMBER {
             return Standing::Unknown;
         }
 

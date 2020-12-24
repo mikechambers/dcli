@@ -32,7 +32,8 @@ use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 
 use crate::crucible::{
-    ActivityDetail, Item, Medal, MedalStat, PlayerCruciblePerformances, WeaponStat,
+    ActivityDetail, CruciblePlayerPerformance, CrucibleStats, ExtendedCrucibleStats, Item, Medal,
+    MedalStat, Player, PlayerCruciblePerformances, WeaponStat,
 };
 use crate::enums::medaltier::MedalTier;
 use crate::enums::mode::Mode;
@@ -41,6 +42,7 @@ use crate::{apiinterface::ApiInterface, manifestinterface::ManifestInterface};
 use crate::{
     error::Error,
     response::pgcr::{DestinyHistoricalStatsValue, DestinyPostGameCarnageReportData},
+    utils::{calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio},
 };
 
 const STORE_FILE_NAME: &str = "dcli.sqlite3";
@@ -194,7 +196,7 @@ impl ActivityStoreInterface {
                                     )
                                     .await
                                 {
-                                    Ok(_e) => {}
+                                    Ok(_e) => (),
                                     Err(e) => {
                                         eprintln!();
                                         eprintln!(
@@ -619,8 +621,9 @@ impl ActivityStoreInterface {
 
         //get_activity_definition
 
+        let mut performances: Vec<CruciblePlayerPerformance> = Vec::new();
         for activity_row in &activity_rows {
-            let activity_index: i32 = activity_row.try_get("activity_index")?;
+            //let activity_index: i32 = activity_row.try_get("activity_index")?;
             let activity_id: i64 = activity_row.try_get("activity_id")?;
 
             let mode_id: i32 = activity_row.try_get("activity_mode")?;
@@ -649,28 +652,67 @@ impl ActivityStoreInterface {
             };
 
             let assists: i32 = activity_row.try_get("assists")?;
+            let assists: u32 = assists as u32;
+
             let score: i32 = activity_row.try_get("score")?;
+            let score: u32 = score as u32;
+
             let kills: i32 = activity_row.try_get("kills")?;
+            let kills: u32 = kills as u32;
+
             let deaths: i32 = activity_row.try_get("deaths")?;
+            let deaths: u32 = deaths as u32;
+
             let average_score_per_kill: f32 = activity_row.try_get("average_score_per_kill")?;
             let average_score_per_life: f32 = activity_row.try_get("average_score_per_life")?;
             let completed: i32 = activity_row.try_get("completed")?;
+            let completed: u32 = completed as u32;
+
             let opponents_defeated: i32 = activity_row.try_get("opponents_defeated")?;
+            let opponents_defeated: u32 = opponents_defeated as u32;
+
             let activity_duration_seconds: i32 =
                 activity_row.try_get("activity_duration_seconds")?;
+            let activity_duration_seconds: u32 = activity_duration_seconds as u32;
+
             let standing: i32 = activity_row.try_get("standing")?;
+            let standing: u32 = standing as u32;
+
             let team: i32 = activity_row.try_get("team")?;
+            let team: u32 = team as u32;
+
             let completion_reason: i32 = activity_row.try_get("completion_reason")?;
+            let completion_reason: u32 = completion_reason as u32;
+
             let start_seconds: i32 = activity_row.try_get("start_seconds")?;
+            let start_seconds: u32 = start_seconds as u32;
+
             let time_played_seconds: i32 = activity_row.try_get("time_played_seconds")?;
+            let time_played_seconds: u32 = time_played_seconds as u32;
+
             let player_count: i32 = activity_row.try_get("player_count")?;
+            let player_count: u32 = player_count as u32;
+
             let team_score: i32 = activity_row.try_get("team_score")?;
+            let team_score: u32 = team_score as u32;
+
             let precision_kills: i32 = activity_row.try_get("precision_kills")?;
+            let precision_kills: u32 = precision_kills as u32;
+
             let weapon_kills_ability: i32 = activity_row.try_get("weapon_kills_ability")?;
+            let weapon_kills_ability: u32 = weapon_kills_ability as u32;
+
             let weapon_kills_grenade: i32 = activity_row.try_get("weapon_kills_grenade")?;
+            let weapon_kills_grenade: u32 = weapon_kills_grenade as u32;
+
             let weapon_kills_melee: i32 = activity_row.try_get("weapon_kills_melee")?;
+            let weapon_kills_melee: u32 = weapon_kills_melee as u32;
+
             let weapon_kills_super: i32 = activity_row.try_get("weapon_kills_super")?;
+            let weapon_kills_super: u32 = weapon_kills_super as u32;
+
             let all_medals_earned: i32 = activity_row.try_get("all_medals_earned")?;
+            let all_medals_earned: u32 = all_medals_earned as u32;
 
             let character_activity_stats_index: i64 =
                 activity_row.try_get("character_activity_stats_index")?;
@@ -684,7 +726,7 @@ impl ActivityStoreInterface {
             .fetch_all(&mut self.db)
             .await?;
 
-            let mut weapon_results: Vec<WeaponStat> = Vec::new();
+            let mut weapon_stats: Vec<WeaponStat> = Vec::new();
             for weapon_row in &weapon_rows {
                 let reference_id: i64 = weapon_row.try_get("reference_id")?;
                 let reference_id = reference_id as u32;
@@ -716,7 +758,7 @@ impl ActivityStoreInterface {
                     precision_kills_percent,
                 };
 
-                weapon_results.push(ws);
+                weapon_stats.push(ws);
             }
 
             let medal_rows = sqlx::query(
@@ -739,10 +781,6 @@ impl ActivityStoreInterface {
                     .get_historical_stats_definition(&reference_id)
                     .await?;
 
-                if medal_definition.medal_tier.is_none() {
-                    println!("{}", medal_definition.id);
-                }
-
                 let medal = Medal {
                     id: medal_definition.id,
                     icon_image_path: medal_definition.icon_image_path,
@@ -755,8 +793,57 @@ impl ActivityStoreInterface {
                 medal_stats.push(medal_stat);
             }
 
-            //println!("{:#?}", medal_stats[0]);
+            let player = Player {
+                member_id: member_id.to_string().clone(),
+                character_id: character_id.to_string().clone(),
+                platform: *platform,
+            };
+
+            let extended = ExtendedCrucibleStats {
+                precision_kills,
+                weapon_kills_ability,
+                weapon_kills_grenade,
+                weapon_kills_melee,
+                weapon_kills_super,
+                all_medals_earned,
+
+                weapons: weapon_stats,
+                medals: medal_stats,
+            };
+
+            let stats = CrucibleStats {
+                assists,
+                score,
+                kills,
+                deaths,
+                average_score_per_kill,
+                average_score_per_life,
+                completed,
+                opponents_defeated,
+                efficiency: calculate_efficiency(kills, deaths, assists),
+                kills_deaths_ratio: calculate_kills_deaths_ratio(kills, deaths),
+                kills_deaths_assists: calculate_kills_deaths_assists(kills, deaths, assists),
+                activity_duration_seconds,
+                standing,
+                team,
+                completion_reason,
+                start_seconds,
+                time_played_seconds,
+                player_count,
+                team_score,
+                extended: Some(extended),
+            };
+
+            let player_performance = CruciblePlayerPerformance {
+                player,
+                activity_detail,
+                stats,
+            };
+
+            performances.push(player_performance);
         }
+
+        println!("{:#?}", performances[0]);
 
         println!(
             "retrieve_activities_since results returned : {}",

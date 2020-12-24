@@ -83,7 +83,7 @@ impl ManifestInterface {
         //as it can causes errors when opening a DB in readonly mode
         //We use Memory which should provide better performance
         //since we never write to the DB
-        let mut db = SqliteConnectOptions::from_str(&connection_string)?
+        let db = SqliteConnectOptions::from_str(&connection_string)?
             .journal_mode(SqliteJournalMode::Memory)
             .read_only(read_only)
             .connect()

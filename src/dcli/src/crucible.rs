@@ -26,15 +26,17 @@ use crate::enums::mode::Mode;
 use crate::enums::platform::Platform;
 use chrono::{DateTime, Utc};
 
+#[derive(Debug)]
 pub struct CruciblePlayerPerformance {
-    player: Player,
-    activity_detail: ActivityDetail,
+    pub player: Player,
+    pub activity_detail: ActivityDetail,
 
-    stats: CrucibleStats,
+    pub stats: CrucibleStats,
 }
 
+#[derive(Debug)]
 pub struct CrucibleStats {
-    pub assists: f32,
+    pub assists: u32,
     pub score: u32,
     pub kills: u32,
     pub deaths: u32,
@@ -46,7 +48,7 @@ pub struct CrucibleStats {
     pub kills_deaths_ratio: f32,
     pub kills_deaths_assists: f32,
     pub activity_duration_seconds: u32,
-    pub standing: i32,
+    pub standing: u32,
     pub team: u32,
     pub completion_reason: u32,
     pub start_seconds: u32,
@@ -54,9 +56,10 @@ pub struct CrucibleStats {
     pub player_count: u32,
     pub team_score: u32,
 
-    extended: Option<ExtendedCrucibleStats>,
+    pub extended: Option<ExtendedCrucibleStats>,
 }
 
+#[derive(Debug)]
 pub struct ExtendedCrucibleStats {
     pub precision_kills: u32,
     pub weapon_kills_ability: u32,
@@ -65,14 +68,15 @@ pub struct ExtendedCrucibleStats {
     pub weapon_kills_super: u32,
     pub all_medals_earned: u32,
 
-    weapons: Vec<WeaponStat>,
-    medals: Vec<MedalStat>,
+    pub weapons: Vec<WeaponStat>,
+    pub medals: Vec<MedalStat>,
 }
 
+#[derive(Debug)]
 pub struct Player {
-    member_id: String,
-    character_id: String,
-    platform: String,
+    pub member_id: String,
+    pub character_id: String,
+    pub platform: Platform,
 }
 
 #[derive(Debug)]
@@ -107,6 +111,7 @@ pub struct Medal {
     pub description: String,
 }
 
+#[derive(Debug)]
 pub struct PlayerCruciblePerformances {
     pub performances: Vec<CruciblePlayerPerformance>,
     pub aggregate: CrucibleStats,

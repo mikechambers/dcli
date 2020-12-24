@@ -37,14 +37,14 @@ pub enum MedalTier {
 impl MedalTier {
     pub fn get_order(&self) -> u32 {
         match self {
-            Tier1 => 700,
-            Tier2 => 600,
-            Tier3 => 500,
-            Tier4 => 400,
-            Tier5 => 300,
-            Tier6 => 200,
-            Tier7 => 100,
-            Unknown => 0,
+            MedalTier::Tier1 => 700,
+            MedalTier::Tier2 => 600,
+            MedalTier::Tier3 => 500,
+            MedalTier::Tier4 => 400,
+            MedalTier::Tier5 => 300,
+            MedalTier::Tier6 => 200,
+            MedalTier::Tier7 => 100,
+            MedalTier::Unknown => 0,
         }
     }
 }

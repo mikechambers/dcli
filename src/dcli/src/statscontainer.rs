@@ -90,7 +90,7 @@ impl ActivityStatsContainer {
     }
 
     pub fn per_activity_average(&self, value: f32) -> f32 {
-        calculate_per_activity_average(value, self.activities.len() as f32)
+        calculate_per_activity_average(value as u32, self.activities.len() as u32)
     }
 
     fn update(&mut self) {
@@ -153,10 +153,15 @@ impl ActivityStatsContainer {
             self.longest_win_streak = self.longest_win_streak.max(streak);
         }
 
-        self.kills_deaths_assists =
-            calculate_kills_deaths_assists(self.kills, self.deaths, self.assists);
-        self.kills_deaths_ratio = calculate_kills_deaths_ratio(self.kills, self.deaths);
-        self.efficiency = calculate_efficiency(self.kills, self.deaths, self.assists);
+        self.kills_deaths_assists = calculate_kills_deaths_assists(
+            self.kills as u32,
+            self.deaths as u32,
+            self.assists as u32,
+        );
+        self.kills_deaths_ratio =
+            calculate_kills_deaths_ratio(self.kills as u32, self.deaths as u32);
+        self.efficiency =
+            calculate_efficiency(self.kills as u32, self.deaths as u32, self.assists as u32);
     }
 
     pub fn longest_win_streak(&self) -> f32 {

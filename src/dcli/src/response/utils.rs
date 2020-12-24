@@ -21,10 +21,11 @@
 */
 
 use chrono::{DateTime, NaiveDateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 //use serde_derive::Deserialize;
 
 use crate::apiutils::RESOURCE_BASE_URL;
+use crate::enums::standing::STANDING_UNKNOWN_MAGIC_NUMBER;
 
 //2020-10-05T18:49:25Z
 pub const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
@@ -45,6 +46,24 @@ where
 
     let helper = <Outer>::deserialize(deserializer)?;
     Ok(helper.basic.value as i32)
+}
+
+pub fn property_to_u32_value<'de, D>(deserializer: D) -> Result<u32, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    struct Outer {
+        pub basic: Inner,
+    }
+
+    #[derive(Deserialize)]
+    struct Inner {
+        pub value: f32,
+    }
+
+    let helper = <Outer>::deserialize(deserializer)?;
+    Ok(helper.basic.value as u32)
 }
 
 pub fn property_to_value<'de, D, T: serde::de::Deserialize<'de>>(
@@ -186,6 +205,6 @@ where
     Ok(dt)
 }
 
-pub fn standing_default() -> i32 {
-    -1
+pub fn standing_default() -> u32 {
+    STANDING_UNKNOWN_MAGIC_NUMBER
 }

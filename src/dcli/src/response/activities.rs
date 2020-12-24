@@ -6,7 +6,7 @@ use crate::enums::platform::Platform;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
 use crate::response::utils::{
-    property_to_i32_value, property_to_value, standing_default, string_to_i64,
+    property_to_u32_value, property_to_value, standing_default, string_to_i64,
 };
 
 pub const MAX_ACTIVITIES_REQUEST_COUNT: i32 = 250;
@@ -90,9 +90,9 @@ pub struct ActivityHistoricalStatsValues {
     )]
     pub activity_duration_seconds: f32,
     //TODO: need to make this an option
-    #[serde(deserialize_with = "property_to_i32_value")]
+    #[serde(deserialize_with = "property_to_u32_value")]
     #[serde(default = "standing_default")]
-    pub standing: i32,
+    pub standing: u32,
 
     #[serde(deserialize_with = "property_to_value")]
     #[serde(default)]

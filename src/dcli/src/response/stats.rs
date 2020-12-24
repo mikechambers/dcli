@@ -29,8 +29,7 @@ use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
 use crate::response::utils::{property_to_option_float, property_to_value};
 use crate::utils::{
-    calculate_efficiency, calculate_kills_deaths_assists,
-    calculate_kills_deaths_ratio,
+    calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
 };
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -74,10 +73,7 @@ pub struct AllTimePvPStatsData {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Copy)]
 pub struct PvpStatsData {
-    #[serde(
-        rename = "activitiesEntered",
-        deserialize_with = "property_to_value"
-    )]
+    #[serde(rename = "activitiesEntered", deserialize_with = "property_to_value")]
     pub activities_entered: f32,
 
     #[serde(rename = "activitiesWon", deserialize_with = "property_to_value")]
@@ -89,16 +85,10 @@ pub struct PvpStatsData {
     #[serde(deserialize_with = "property_to_value")]
     pub kills: f32,
 
-    #[serde(
-        rename = "averageKillDistance",
-        deserialize_with = "property_to_value"
-    )]
+    #[serde(rename = "averageKillDistance", deserialize_with = "property_to_value")]
     pub average_kill_distance: f32,
 
-    #[serde(
-        rename = "totalKillDistance",
-        deserialize_with = "property_to_value"
-    )]
+    #[serde(rename = "totalKillDistance", deserialize_with = "property_to_value")]
     pub total_kill_distance: f32,
 
     #[serde(rename = "secondsPlayed", deserialize_with = "property_to_value")]
@@ -107,10 +97,7 @@ pub struct PvpStatsData {
     #[serde(deserialize_with = "property_to_value")]
     pub deaths: f32,
 
-    #[serde(
-        rename = "averageLifespan",
-        deserialize_with = "property_to_value"
-    )]
+    #[serde(rename = "averageLifespan", deserialize_with = "property_to_value")]
     pub average_lifespan: f32,
 
     //TODO: this doesnt get called if the property is not include in the JSON
@@ -125,25 +112,16 @@ pub struct PvpStatsData {
     #[serde(default)]
     pub best_single_game_kills: Option<f32>,
 
-    #[serde(
-        rename = "opponentsDefeated",
-        deserialize_with = "property_to_value"
-    )]
+    #[serde(rename = "opponentsDefeated", deserialize_with = "property_to_value")]
     pub opponents_defeated: f32,
 
     #[serde(deserialize_with = "property_to_value")]
     pub efficiency: f32,
 
-    #[serde(
-        rename = "killsDeathsRatio",
-        deserialize_with = "property_to_value"
-    )]
+    #[serde(rename = "killsDeathsRatio", deserialize_with = "property_to_value")]
     pub kills_deaths_ratio: f32,
 
-    #[serde(
-        rename = "killsDeathsAssists",
-        deserialize_with = "property_to_value"
-    )]
+    #[serde(rename = "killsDeathsAssists", deserialize_with = "property_to_value")]
     pub kills_deaths_assists: f32,
 
     #[serde(rename = "precisionKills", deserialize_with = "property_to_value")]
@@ -173,9 +151,7 @@ impl ops::Add<PvpStatsData> for PvpStatsData {
         //but we will keep it here for completeness sake and in case the API is
         //ever updated
         let best_single_game_kills: Option<f32>;
-        if _cs.best_single_game_kills.is_none()
-            || self.best_single_game_kills.is_none()
-        {
+        if _cs.best_single_game_kills.is_none() || self.best_single_game_kills.is_none() {
             if _cs.best_single_game_kills.is_none() {
                 best_single_game_kills = self.best_single_game_kills;
             } else {
@@ -189,13 +165,11 @@ impl ops::Add<PvpStatsData> for PvpStatsData {
         }
 
         let kills = self.kills + _cs.kills;
-        let total_kill_distance =
-            self.total_kill_distance + _cs.total_kill_distance;
+        let total_kill_distance = self.total_kill_distance + _cs.total_kill_distance;
         let assists = self.assists + _cs.assists;
         let deaths = self.deaths + _cs.deaths;
 
-        let total_lifespan =
-            self.get_total_lifespan() + _cs.get_total_lifespan();
+        let total_lifespan = self.get_total_lifespan() + _cs.get_total_lifespan();
 
         //this doesnt completely work, since there are times where a lifespan
         //does not end in death (i.e. end of game)
@@ -204,8 +178,7 @@ impl ops::Add<PvpStatsData> for PvpStatsData {
 
         //todo : add activities_lost
         PvpStatsData {
-            activities_entered: self.activities_entered
-                + _cs.activities_entered,
+            activities_entered: self.activities_entered + _cs.activities_entered,
             activities_won: self.activities_won + _cs.activities_won,
             //activities_lost: self.activities_lost + _cs.activities_lost,
             assists,
@@ -216,12 +189,13 @@ impl ops::Add<PvpStatsData> for PvpStatsData {
             deaths,
             average_lifespan,
             //total_lifespan,
-            opponents_defeated: self.opponents_defeated
-                + _cs.opponents_defeated,
-            efficiency: calculate_efficiency(kills, deaths, assists),
-            kills_deaths_ratio: calculate_kills_deaths_ratio(kills, deaths),
+            opponents_defeated: self.opponents_defeated + _cs.opponents_defeated,
+            efficiency: calculate_efficiency(kills as u32, deaths as u32, assists as u32),
+            kills_deaths_ratio: calculate_kills_deaths_ratio(kills as u32, deaths as u32),
             kills_deaths_assists: calculate_kills_deaths_assists(
-                kills, deaths, assists,
+                kills as u32,
+                deaths as u32,
+                assists as u32,
             ),
             suicides: self.suicides + _cs.suicides,
             best_single_game_kills,
