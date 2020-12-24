@@ -41,6 +41,16 @@ impl Default for Standing {
 }
 
 impl Standing {
+    pub fn from_value(value: u32) -> Standing {
+        if value == 0 {
+            Standing::Victory
+        } else if value == 1 {
+            Standing::Defeat
+        } else {
+            Standing::Unknown
+        }
+    }
+
     pub fn from_mode(value: u32, mode: &Mode) -> Standing {
         if value == 0 {
             return Standing::Victory;

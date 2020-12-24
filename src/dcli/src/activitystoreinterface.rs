@@ -26,6 +26,7 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 
+use crate::enums::standing::Standing;
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
@@ -677,6 +678,7 @@ impl ActivityStoreInterface {
 
             let standing: i32 = activity_row.try_get("standing")?;
             let standing: u32 = standing as u32;
+            let standing: Standing = Standing::from_value(standing);
 
             let team: i32 = activity_row.try_get("team")?;
             let team: u32 = team as u32;
@@ -843,12 +845,9 @@ impl ActivityStoreInterface {
             performances.push(player_performance);
         }
 
-        println!("{:#?}", performances[0]);
-
-        println!(
-            "retrieve_activities_since results returned : {}",
-            activity_rows.len()
-        );
+        println!("HI");
+        let p = PlayerCruciblePerformances::with_performances(performances);
+        //println!("{:#?}", performances[0]);
 
         Ok(None)
     }
