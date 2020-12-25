@@ -80,7 +80,7 @@ pub struct ExtendedCrucibleStats {
     pub medals: Vec<MedalStat>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Player {
     pub member_id: String,
     pub character_id: String,
@@ -277,10 +277,6 @@ impl PlayerCruciblePerformances {
 
         let mut weapons: Vec<WeaponStat> = weapon_hash.into_iter().map(|(_id, w)| w).collect();
         weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
-
-        println!("{:#?}", weapons[0]);
-        println!("{:#?}", weapons.last().unwrap());
-        println!("{}", weapons.len());
 
         if out.total_activities > 0 {
             out.win_rate = (out.wins as f32 / out.total_activities as f32) * 100.0;

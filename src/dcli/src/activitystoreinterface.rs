@@ -597,6 +597,7 @@ impl ActivityStoreInterface {
             .get_character_row_id(member_id, character_id, platform)
             .await?;
 
+        //this is running about 550ms
         let activity_rows = sqlx::query(
             r#"
             SELECT
@@ -620,9 +621,19 @@ impl ActivityStoreInterface {
         .fetch_all(&mut self.db)
         .await?;
 
-        //get_activity_definition
+        if activity_rows.is_empty() {
+            return Ok(None);
+        }
 
-        let mut performances: Vec<CruciblePlayerPerformance> = Vec::new();
+        let player_template = Player {
+            member_id: member_id.to_string().clone(),
+            character_id: character_id.to_string().clone(),
+            platform: *platform,
+        };
+
+        let mut performances: Vec<CruciblePlayerPerformance> =
+            Vec::with_capacity(activity_rows.len());
+
         for activity_row in &activity_rows {
             //let activity_index: i32 = activity_row.try_get("activity_index")?;
             let activity_id: i64 = activity_row.try_get("activity_id")?;
@@ -728,7 +739,7 @@ impl ActivityStoreInterface {
             .fetch_all(&mut self.db)
             .await?;
 
-            let mut weapon_stats: Vec<WeaponStat> = Vec::new();
+            let mut weapon_stats: Vec<WeaponStat> = Vec::with_capacity(weapon_rows.len());
             for weapon_row in &weapon_rows {
                 let reference_id: i64 = weapon_row.try_get("reference_id")?;
                 let reference_id = reference_id as u32;
@@ -772,7 +783,7 @@ impl ActivityStoreInterface {
             .fetch_all(&mut self.db)
             .await?;
 
-            let mut medal_stats: Vec<MedalStat> = Vec::new();
+            let mut medal_stats: Vec<MedalStat> = Vec::with_capacity(medal_rows.len());
             for medal_row in &medal_rows {
                 let reference_id: String = medal_row.try_get("reference_id")?;
 
@@ -795,11 +806,7 @@ impl ActivityStoreInterface {
                 medal_stats.push(medal_stat);
             }
 
-            let player = Player {
-                member_id: member_id.to_string().clone(),
-                character_id: character_id.to_string().clone(),
-                platform: *platform,
-            };
+            let player = player_template.clone();
 
             let extended = ExtendedCrucibleStats {
                 precision_kills,
@@ -844,11 +851,11 @@ impl ActivityStoreInterface {
 
             performances.push(player_performance);
         }
-
-        println!("HI");
+        //let now = std::time::Instant::now();
         let p = PlayerCruciblePerformances::with_performances(performances);
-        //println!("{:#?}", performances[0]);
+        //println!("{}", now.elapsed().as_millis());
 
-        Ok(None)
+        //TODO: return none if no results
+        Ok(Some(p))
     }
 }

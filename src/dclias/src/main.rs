@@ -126,6 +126,8 @@ async fn main() {
                     std::process::exit(EXIT_FAILURE);
                 }
             };
+            println!("START : retrieve_activities_since");
+            let now = std::time::Instant::now();
             match store
                 .retrieve_activities_since(
                     &opt.member_id,
@@ -137,7 +139,12 @@ async fn main() {
                 )
                 .await
             {
-                Ok(_e) => {}
+                Ok(_e) => {
+                    println!(
+                        "END retrieve_activities_since {}",
+                        now.elapsed().as_millis()
+                    );
+                }
                 Err(e) => {
                     print_error("Error retrieve_activities_since.", e);
                     std::process::exit(EXIT_FAILURE);
