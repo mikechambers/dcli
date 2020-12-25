@@ -601,23 +601,25 @@ impl ActivityStoreInterface {
         let activity_rows = sqlx::query(
             r#"
             SELECT
-                *,
-                activity.id as activity_index, 
-                activity.mode as activity_mode,
-                character_activity_stats.id as character_activity_stats_index
-            FROM 
-                activity, character_activity_stats, modes 
-            WHERE 
-                activity.period > ? and 
-                character_activity_stats.character = ? and 
-                character_activity_stats.activity = activity.id and 
-                modes.activity = activity.id and 
-                modes.mode = ?
+            *,
+            activity.mode as activity_mode,
+            character_activity_stats.id as character_activity_stats_index  
+            FROM
+                character_activity_stats
+            
+            INNER JOIN
+                activity ON character_activity_stats.activity = activity.id,
+                modes ON modes.activity = activity.id
+                
+            WHERE
+                activity.period > ? AND
+                modes.mode = ? AND
+                character_activity_stats.character = ? 
         "#,
         )
         .bind(start_time.to_string())
-        .bind(character_index.to_string())
         .bind(mode.to_id().to_string())
+        .bind(character_index.to_string())
         .fetch_all(&mut self.db)
         .await?;
 
@@ -636,19 +638,20 @@ impl ActivityStoreInterface {
 
         for activity_row in &activity_rows {
             //let activity_index: i32 = activity_row.try_get("activity_index")?;
-            let activity_id: i64 = activity_row.try_get("activity_id")?;
+            let activity_id: i64 = activity_row.try_get_unchecked("activity_id")?;
 
-            let mode_id: i32 = activity_row.try_get("activity_mode")?;
-            let platform_id: i32 = activity_row.try_get("platform")?;
+            let mode_id: i32 = activity_row.try_get_unchecked("activity_mode")?;
+            let platform_id: i32 = activity_row.try_get_unchecked("platform")?;
 
-            let period: String = activity_row.try_get("period")?;
+            let period: String = activity_row.try_get_unchecked("period")?;
             let period = DateTime::parse_from_rfc3339(&period)?;
             let period = period.with_timezone(&Utc);
 
-            let director_activity_hash: i64 = activity_row.try_get("director_activity_hash")?;
+            let director_activity_hash: i64 =
+                activity_row.try_get_unchecked("director_activity_hash")?;
             let director_activity_hash: u32 = director_activity_hash as u32;
 
-            let reference_id: i64 = activity_row.try_get("reference_id")?;
+            let reference_id: i64 = activity_row.try_get_unchecked("reference_id")?;
             let reference_id: u32 = reference_id as u32;
 
             let activity_definition = manifest.get_activity_definition(reference_id).await?;
@@ -663,68 +666,72 @@ impl ActivityStoreInterface {
                 reference_id,
             };
 
-            let assists: i32 = activity_row.try_get("assists")?;
+            let assists: i32 = activity_row.try_get_unchecked("assists")?;
             let assists: u32 = assists as u32;
 
-            let score: i32 = activity_row.try_get("score")?;
+            let score: i32 = activity_row.try_get_unchecked("score")?;
             let score: u32 = score as u32;
 
-            let kills: i32 = activity_row.try_get("kills")?;
+            let kills: i32 = activity_row.try_get_unchecked("kills")?;
             let kills: u32 = kills as u32;
 
-            let deaths: i32 = activity_row.try_get("deaths")?;
+            let deaths: i32 = activity_row.try_get_unchecked("deaths")?;
             let deaths: u32 = deaths as u32;
 
-            let average_score_per_kill: f32 = activity_row.try_get("average_score_per_kill")?;
-            let average_score_per_life: f32 = activity_row.try_get("average_score_per_life")?;
-            let completed: i32 = activity_row.try_get("completed")?;
+            let average_score_per_kill: f32 =
+                activity_row.try_get_unchecked("average_score_per_kill")?;
+            let average_score_per_life: f32 =
+                activity_row.try_get_unchecked("average_score_per_life")?;
+            let completed: i32 = activity_row.try_get_unchecked("completed")?;
             let completed: u32 = completed as u32;
 
-            let opponents_defeated: i32 = activity_row.try_get("opponents_defeated")?;
+            let opponents_defeated: i32 = activity_row.try_get_unchecked("opponents_defeated")?;
             let opponents_defeated: u32 = opponents_defeated as u32;
 
             let activity_duration_seconds: i32 =
-                activity_row.try_get("activity_duration_seconds")?;
+                activity_row.try_get_unchecked("activity_duration_seconds")?;
             let activity_duration_seconds: u32 = activity_duration_seconds as u32;
 
-            let standing: i32 = activity_row.try_get("standing")?;
+            let standing: i32 = activity_row.try_get_unchecked("standing")?;
             let standing: u32 = standing as u32;
             let standing: Standing = Standing::from_value(standing);
 
-            let team: i32 = activity_row.try_get("team")?;
+            let team: i32 = activity_row.try_get_unchecked("team")?;
             let team: u32 = team as u32;
 
-            let completion_reason: i32 = activity_row.try_get("completion_reason")?;
+            let completion_reason: i32 = activity_row.try_get_unchecked("completion_reason")?;
             let completion_reason: u32 = completion_reason as u32;
 
-            let start_seconds: i32 = activity_row.try_get("start_seconds")?;
+            let start_seconds: i32 = activity_row.try_get_unchecked("start_seconds")?;
             let start_seconds: u32 = start_seconds as u32;
 
-            let time_played_seconds: i32 = activity_row.try_get("time_played_seconds")?;
+            let time_played_seconds: i32 = activity_row.try_get_unchecked("time_played_seconds")?;
             let time_played_seconds: u32 = time_played_seconds as u32;
 
-            let player_count: i32 = activity_row.try_get("player_count")?;
+            let player_count: i32 = activity_row.try_get_unchecked("player_count")?;
             let player_count: u32 = player_count as u32;
 
-            let team_score: i32 = activity_row.try_get("team_score")?;
+            let team_score: i32 = activity_row.try_get_unchecked("team_score")?;
             let team_score: u32 = team_score as u32;
 
-            let precision_kills: i32 = activity_row.try_get("precision_kills")?;
+            let precision_kills: i32 = activity_row.try_get_unchecked("precision_kills")?;
             let precision_kills: u32 = precision_kills as u32;
 
-            let weapon_kills_ability: i32 = activity_row.try_get("weapon_kills_ability")?;
+            let weapon_kills_ability: i32 =
+                activity_row.try_get_unchecked("weapon_kills_ability")?;
             let weapon_kills_ability: u32 = weapon_kills_ability as u32;
 
-            let weapon_kills_grenade: i32 = activity_row.try_get("weapon_kills_grenade")?;
+            let weapon_kills_grenade: i32 =
+                activity_row.try_get_unchecked("weapon_kills_grenade")?;
             let weapon_kills_grenade: u32 = weapon_kills_grenade as u32;
 
-            let weapon_kills_melee: i32 = activity_row.try_get("weapon_kills_melee")?;
+            let weapon_kills_melee: i32 = activity_row.try_get_unchecked("weapon_kills_melee")?;
             let weapon_kills_melee: u32 = weapon_kills_melee as u32;
 
-            let weapon_kills_super: i32 = activity_row.try_get("weapon_kills_super")?;
+            let weapon_kills_super: i32 = activity_row.try_get_unchecked("weapon_kills_super")?;
             let weapon_kills_super: u32 = weapon_kills_super as u32;
 
-            let all_medals_earned: i32 = activity_row.try_get("all_medals_earned")?;
+            let all_medals_earned: i32 = activity_row.try_get_unchecked("all_medals_earned")?;
             let all_medals_earned: u32 = all_medals_earned as u32;
 
             let character_activity_stats_index: i64 =
@@ -741,11 +748,11 @@ impl ActivityStoreInterface {
 
             let mut weapon_stats: Vec<WeaponStat> = Vec::with_capacity(weapon_rows.len());
             for weapon_row in &weapon_rows {
-                let reference_id: i64 = weapon_row.try_get("reference_id")?;
+                let reference_id: i64 = weapon_row.try_get_unchecked("reference_id")?;
                 let reference_id = reference_id as u32;
 
-                let kills: i32 = weapon_row.try_get("kills")?;
-                let precision_kills: i32 = weapon_row.try_get("precision_kills")?;
+                let kills: i32 = weapon_row.try_get_unchecked("kills")?;
+                let precision_kills: i32 = weapon_row.try_get_unchecked("precision_kills")?;
                 let precision_kills_percent: f32 =
                     weapon_row.try_get("kills_precision_kills_ratio")?;
 
@@ -785,9 +792,9 @@ impl ActivityStoreInterface {
 
             let mut medal_stats: Vec<MedalStat> = Vec::with_capacity(medal_rows.len());
             for medal_row in &medal_rows {
-                let reference_id: String = medal_row.try_get("reference_id")?;
+                let reference_id: String = medal_row.try_get_unchecked("reference_id")?;
 
-                let count: i32 = medal_row.try_get("count")?;
+                let count: i32 = medal_row.try_get_unchecked("count")?;
                 let count: u32 = count as u32;
 
                 let medal_definition = manifest
@@ -851,8 +858,10 @@ impl ActivityStoreInterface {
 
             performances.push(player_performance);
         }
+
         //let now = std::time::Instant::now();
         let p = PlayerCruciblePerformances::with_performances(performances);
+
         //println!("{}", now.elapsed().as_millis());
 
         //TODO: return none if no results

@@ -324,7 +324,7 @@ impl ManifestInterface {
         //will throw an error if no results returned
         //{ description: "sqlx::Error : no rows returned by a query that expected to return at least one row" }
 
-        let json: &str = row.try_get("json")?;
+        let json: &str = row.try_get_unchecked("json")?;
 
         let data: T = serde_json::from_str(json)?;
 
