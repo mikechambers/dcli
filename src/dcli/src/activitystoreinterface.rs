@@ -50,7 +50,7 @@ const STORE_FILE_NAME: &str = "dcli.sqlite3";
 const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 
 //numer of simultaneous requests we make to server when retrieving activity history
-const PGCR_REQUEST_CHUNK_AMOUNT: usize = 50;
+const PGCR_REQUEST_CHUNK_AMOUNT: usize = 40;
 
 pub struct ActivityStoreInterface {
     verbose: bool,
@@ -166,8 +166,13 @@ impl ActivityStoreInterface {
         let mut total_synced = 0;
 
         let s = if ids.len() == 1 { "y" } else { "ies" };
-        eprintln!("Retrieving details for {} activit{}.", ids.len(), s);
-        eprintln!("This may take a few minutes depending on the number of activities.");
+        eprintln!();
+        eprintln!(
+            "{}",
+            format!("Retrieving details for {} activit{}", ids.len(), s).to_uppercase()
+        );
+        eprintln!("------------------------------------------------");
+        eprintln!("This may take a few minutes depending on the number of activities");
         eprintln!(
             "Each dot represents {} activities",
             PGCR_REQUEST_CHUNK_AMOUNT
@@ -233,6 +238,12 @@ impl ActivityStoreInterface {
         }
 
         eprintln!("]");
+        eprintln!(
+            "{} of {} synced ({}%)",
+            total_synced,
+            total_available,
+            ((total_synced as f32 / total_available as f32) * 100.0).floor()
+        );
 
         Ok(SyncResult {
             total_synced,
@@ -252,7 +263,12 @@ impl ActivityStoreInterface {
 
         let api = ApiInterface::new(self.verbose)?;
 
-        eprintln!("Checking for new activities.");
+        eprintln!();
+        eprintln!(
+            "{}",
+            "Checking for new activities".to_string().to_uppercase()
+        );
+        eprintln!("------------------------------------------------");
         eprintln!("This may take a moment depending on the number of activities.");
         let result = api
             .retrieve_activities_since_id(member_id, character_id, platform, &Mode::AllPvP, max_id)
@@ -266,7 +282,7 @@ impl ActivityStoreInterface {
         }
 
         let mut activities = result.unwrap();
-        eprintln!("{} new activities found.", activities.len());
+        eprintln!("{} new activities found", activities.len());
 
         //reverse them so we add the oldest first
         activities.reverse();
@@ -363,7 +379,7 @@ impl ActivityStoreInterface {
         for mode in &data.activity_details.modes {
             sqlx::query(
                 r#"
-                INSERT INTO "main"."modes"
+                INSERT OR IGNORE INTO "main"."modes"
                 (
                     "mode", "activity"
                 )

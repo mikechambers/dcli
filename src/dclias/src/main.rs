@@ -143,7 +143,9 @@ fn print_tsv(results: &SyncResult, store: &ActivityStoreInterface) {
 }
 
 fn print_default(results: &SyncResult, store: &ActivityStoreInterface) {
-    println!("Activity sync complete");
+    println!();
+    println!("{}", "Activity sync complete".to_string().to_uppercase());
+    println!("------------------------------------------------");
 
     let s = if results.total_synced == 1 {
         "y"
