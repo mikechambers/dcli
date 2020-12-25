@@ -163,6 +163,7 @@ impl PlayerCruciblePerformances {
         let mut medal_hash: HashMap<String, MedalStat> = HashMap::new();
         let mut weapon_hash: HashMap<u32, WeaponStat> = HashMap::new();
 
+        let mut has_extended = false;
         for p in performances {
             out.assists += p.stats.assists;
             out.score += p.stats.score;
@@ -198,6 +199,7 @@ impl PlayerCruciblePerformances {
             };
 
             if p.stats.extended.is_some() {
+                has_extended = true;
                 let e = p.stats.extended.unwrap();
                 extended.weapon_kills_ability += e.weapon_kills_ability;
                 extended.weapon_kills_grenade += e.weapon_kills_grenade;
@@ -271,12 +273,21 @@ impl PlayerCruciblePerformances {
             }
         }
 
-        //move the values of the the hash
-        let mut medals: Vec<MedalStat> = medal_hash.into_iter().map(|(_id, m)| m).collect();
-        medals.sort_by(|a, b| b.count.cmp(&a.count));
+        if has_extended {
+            let mut medals: Vec<MedalStat> = medal_hash.into_iter().map(|(_id, m)| m).collect();
 
-        let mut weapons: Vec<WeaponStat> = weapon_hash.into_iter().map(|(_id, w)| w).collect();
-        weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
+            medals.sort_by(|a, b| b.count.cmp(&a.count));
+
+            let mut weapons: Vec<WeaponStat> = weapon_hash.into_iter().map(|(_id, w)| w).collect();
+            weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
+
+            extended.medals = medals;
+            extended.weapons = weapons;
+
+            out.extended = Some(extended);
+        } else {
+            out.extended = None;
+        }
 
         if out.total_activities > 0 {
             out.win_rate = (out.wins as f32 / out.total_activities as f32) * 100.0;

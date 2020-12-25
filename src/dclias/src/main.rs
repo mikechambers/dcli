@@ -112,11 +112,11 @@ async fn main() {
             }
         };
 
-    match store
+    let results = match store
         .sync(&opt.member_id, &opt.character_id, &opt.platform)
         .await
     {
-        Ok(_e) => {
+        Ok(e) => {
             let mode = Mode::AllPvP;
             let start_time = Moment::AllTime.get_date_time();
             let mut manifest = match ManifestInterface::new(&data_dir, false).await {
@@ -149,13 +149,16 @@ async fn main() {
                     print_error("Error retrieve_activities_since.", e);
                     std::process::exit(EXIT_FAILURE);
                 }
-            }
+            };
+            e
         }
         Err(e) => {
             print_error("Error syncing ids.", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
+
+    println!("{:#?}", results);
 
     match opt.output {
         Output::Default => {

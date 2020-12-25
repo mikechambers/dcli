@@ -101,21 +101,26 @@ impl ActivityStoreInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
-    ) -> Result<(), Error> {
+    ) -> Result<SyncResult, Error> {
         let member_row_id = self.insert_member_id(&member_id, &platform).await?;
         let character_row_id = self
             .insert_character_id(&character_id, member_row_id)
             .await?;
 
+        //TODO: collection, total new activities found, activities left over?
+        //total activities synced, total activities (do we know this?)
+
         //these calls could be a little more general purpose by taking api ids and not db ids.
         //however, passing the db ids, lets us optimize a lot of the sql, and avoid
         //some extra calls to the DB
-        self.sync_activities(character_row_id, character_id).await?;
+        let a = self.sync_activities(character_row_id, character_id).await?;
         self.update_activity_queue(character_row_id, member_id, character_id, platform)
             .await?;
-        self.sync_activities(character_row_id, character_id).await?;
+        let c = self.sync_activities(character_row_id, character_id).await?;
 
-        Ok(())
+        let out = a + c;
+
+        Ok(out)
     }
 
     /// download results from ids in queue, and return number of items synced
@@ -123,7 +128,7 @@ impl ActivityStoreInterface {
         &mut self,
         character_row_id: i32,
         character_id: &str,
-    ) -> Result<(), Error> {
+    ) -> Result<SyncResult, Error> {
         let mut ids: Vec<i64> = Vec::new();
 
         //This is to scope rows, so the mutable borrow of self goes out of scope
@@ -143,13 +148,18 @@ impl ActivityStoreInterface {
         };
 
         if ids.is_empty() {
-            //eprintln!("No activity details need to be retrieved.");
-            return Ok(());
+            return Ok(SyncResult {
+                total_available: 0,
+                total_synced: 0,
+            });
         }
 
         //let mut count = 0;
 
         let api = ApiInterface::new(self.verbose)?;
+
+        let total_available = ids.len() as u32;
+        let mut total_synced = 0;
 
         let s = if ids.len() == 1 { "y" } else { "ies" };
         eprintln!("Retrieving details for {} activit{}.", ids.len(), s);
@@ -167,17 +177,7 @@ impl ActivityStoreInterface {
                 f.push(api.retrieve_post_game_carnage_report(*c));
             }
 
-            //count += f.len();
-
             eprint!(".");
-            /*
-            eprintln!(
-                "{} of {} ({}%)",
-                count,
-                ids.len(),
-                ((count as f32 / ids.len() as f32) * 100.0).floor()
-            );
-            */
 
             //TODO: look into using threading for this
             let results = futures::future::join_all(f).await;
@@ -197,11 +197,13 @@ impl ActivityStoreInterface {
                                     )
                                     .await
                                 {
-                                    Ok(_e) => (),
+                                    Ok(_e) => {
+                                        total_synced += 1;
+                                    }
                                     Err(e) => {
                                         eprintln!();
                                         eprintln!(
-                                        "Error inserting data into character activity stats table : {}",
+                                        "Error inserting data into character activity stats table. Skipping. : {}",
                                         e,
                                     );
                                     }
@@ -228,7 +230,10 @@ impl ActivityStoreInterface {
 
         eprintln!("]");
 
-        Ok(())
+        Ok(SyncResult {
+            total_synced,
+            total_available,
+        })
     }
 
     //updates activity id queue with ids which have not been synced
@@ -308,6 +313,7 @@ impl ActivityStoreInterface {
         }
     }
 
+    //todo: this doesnt need to be an instance fn, not sure if it matters
     fn get_medal_hash_value(
         &self,
         property: &str,
@@ -644,7 +650,6 @@ impl ActivityStoreInterface {
             .parse_performance_rows(manifest, &activity_rows, &player_template)
             .await?;
 
-        //TODO: return none if no results
         Ok(Some(p))
     }
 
@@ -893,5 +898,22 @@ impl ActivityStoreInterface {
         };
 
         Ok(player_performance)
+    }
+}
+
+#[derive(Debug)]
+pub struct SyncResult {
+    pub total_available: u32,
+    pub total_synced: u32,
+}
+
+impl std::ops::Add<SyncResult> for SyncResult {
+    type Output = SyncResult;
+
+    fn add(self, sr: SyncResult) -> SyncResult {
+        SyncResult {
+            total_available: self.total_available + sr.total_available,
+            total_synced: self.total_synced + sr.total_synced,
+        }
     }
 }
