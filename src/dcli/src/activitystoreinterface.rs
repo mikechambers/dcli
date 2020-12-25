@@ -50,7 +50,7 @@ const STORE_FILE_NAME: &str = "dcli.sqlite3";
 const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 
 //numer of simultaneous requests we make to server when retrieving activity history
-const PGCR_REQUEST_CHUNK_AMOUNT: usize = 25;
+const PGCR_REQUEST_CHUNK_AMOUNT: usize = 50;
 
 pub struct ActivityStoreInterface {
     verbose: bool,
@@ -114,11 +114,15 @@ impl ActivityStoreInterface {
         //however, passing the db ids, lets us optimize a lot of the sql, and avoid
         //some extra calls to the DB
         let a = self.sync_activities(character_row_id, character_id).await?;
-        self.update_activity_queue(character_row_id, member_id, character_id, platform)
+        let b = self
+            .update_activity_queue(character_row_id, member_id, character_id, platform)
             .await?;
         let c = self.sync_activities(character_row_id, character_id).await?;
 
-        let out = a + c;
+        let out = SyncResult {
+            total_synced: a.total_synced + c.total_synced,
+            total_available: b.total_available - c.total_synced,
+        };
 
         Ok(out)
     }
@@ -243,7 +247,7 @@ impl ActivityStoreInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
-    ) -> Result<(), Error> {
+    ) -> Result<SyncResult, Error> {
         let max_id: i64 = self.get_max_activity_id(character_row_id).await?;
 
         let api = ApiInterface::new(self.verbose)?;
@@ -255,7 +259,10 @@ impl ActivityStoreInterface {
             .await?;
 
         if result.is_none() {
-            return Ok(());
+            return Ok(SyncResult {
+                total_available: 0,
+                total_synced: 0,
+            });
         }
 
         let mut activities = result.unwrap();
@@ -274,6 +281,9 @@ impl ActivityStoreInterface {
         sqlx::query("BEGIN TRANSACTION;")
             .execute(&mut self.db)
             .await?;
+
+        let total = activities.len() as u32;
+
         for activity in activities {
             let instance_id = activity.details.instance_id;
 
@@ -285,7 +295,10 @@ impl ActivityStoreInterface {
         }
         sqlx::query("COMMIT;").execute(&mut self.db).await?;
 
-        Ok(())
+        Ok(SyncResult {
+            total_available: total,
+            total_synced: total,
+        })
     }
 
     async fn insert_character_activity_stats(

@@ -22,14 +22,13 @@
 
 use std::path::PathBuf;
 
+use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::enums::platform::Platform;
 use dcli::output::Output;
 use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE};
-use dcli::{activitystoreinterface::ActivityStoreInterface, manifestinterface::ManifestInterface};
 use structopt::StructOpt;
 
-use dcli::enums::mode::Mode;
-use dcli::enums::moment::Moment;
+use dcli::activitystoreinterface::SyncResult;
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
@@ -116,60 +115,57 @@ async fn main() {
         .sync(&opt.member_id, &opt.character_id, &opt.platform)
         .await
     {
-        Ok(e) => {
-            let mode = Mode::AllPvP;
-            let start_time = Moment::AllTime.get_date_time();
-            let mut manifest = match ManifestInterface::new(&data_dir, false).await {
-                Ok(e) => e,
-                Err(e) => {
-                    print_error("Cant create manifest.", e);
-                    std::process::exit(EXIT_FAILURE);
-                }
-            };
-            println!("START : retrieve_activities_since");
-            let now = std::time::Instant::now();
-            match store
-                .retrieve_activities_since(
-                    &opt.member_id,
-                    &opt.character_id,
-                    &opt.platform,
-                    &mode,
-                    &start_time,
-                    &mut manifest,
-                )
-                .await
-            {
-                Ok(_e) => {
-                    println!(
-                        "END retrieve_activities_since {}",
-                        now.elapsed().as_millis()
-                    );
-                }
-                Err(e) => {
-                    print_error("Error retrieve_activities_since.", e);
-                    std::process::exit(EXIT_FAILURE);
-                }
-            };
-            e
-        }
+        Ok(e) => e,
         Err(e) => {
             print_error("Error syncing ids.", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
 
-    println!("{:#?}", results);
-
     match opt.output {
         Output::Default => {
-            println!("Sync complete. Database stored at:");
-            println!("{}", store.get_storage_path());
+            print_default(&results, &store);
         }
         Output::Tsv => {
-            let mut name_values: Vec<(&str, String)> = Vec::new();
-            name_values.push(("status", "COMPLETE".to_string()));
-
-            print!("{}", build_tsv(name_values));
+            print_tsv(&results, &store);
         }
     }
+}
+
+fn print_tsv(results: &SyncResult, store: &ActivityStoreInterface) {
+    let mut name_values: Vec<(&str, String)> = Vec::new();
+
+    name_values.push(("total_synced", results.total_synced.to_string()));
+    name_values.push(("total_available", results.total_available.to_string()));
+    name_values.push(("path", store.get_storage_path()));
+
+    print!("{}", build_tsv(name_values));
+}
+
+fn print_default(results: &SyncResult, store: &ActivityStoreInterface) {
+    println!("Activity sync complete");
+
+    let s = if results.total_synced == 1 {
+        "y"
+    } else {
+        "ies"
+    };
+
+    println!("{} new activit{} synced", results.total_synced, s);
+
+    let total_available = results.total_available;
+    let queue_str = if total_available == 1 {
+        format!("1 activity in queue. Activity will be synced the next time app is run.")
+    } else if total_available == 0 {
+        format!("No activities in queue")
+    } else {
+        format!(
+            "{} activies in queue. Activities will be synced the next time app is run",
+            results.total_available
+        )
+    };
+
+    println!("{}", queue_str);
+
+    println!("Database stored at: {}", store.get_storage_path());
 }
