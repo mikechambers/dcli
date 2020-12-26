@@ -24,7 +24,9 @@ mod memberidsearch;
 
 use dcli::enums::platform::Platform;
 use dcli::output::Output;
-use dcli::utils::{print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL};
+use dcli::utils::{
+    print_error, print_verbose, EXIT_FAILURE, TSV_DELIM, TSV_EOL,
+};
 use memberidsearch::MemberIdSearch;
 use memberidsearch::Membership;
 use structopt::StructOpt;
@@ -83,7 +85,11 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of columns with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "O", long = "output-format", default_value = "default")]
+    #[structopt(
+        short = "O",
+        long = "output-format",
+        default_value = "default"
+    )]
     output: Output,
 }
 

@@ -157,9 +157,9 @@ fn print_default(results: &SyncResult, store: &ActivityStoreInterface) {
 
     let total_available = results.total_available;
     let queue_str = if total_available == 1 {
-        format!("1 activity in queue. Activity will be synced the next time app is run.")
+        "1 activity in queue. Activity will be synced the next time app is run.".to_string()
     } else if total_available == 0 {
-        format!("No activities in queue")
+        "No activities in queue".to_string()
     } else {
         format!(
             "{} activies in queue. Activities will be synced the next time app is run",

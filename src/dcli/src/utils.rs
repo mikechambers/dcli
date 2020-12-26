@@ -192,7 +192,7 @@ pub fn human_duration(seconds: u32) -> String {
     //build final string from remaining pieces
     for token in t {
         builder.push_str(&token);
-        builder.push_str(" ");
+        builder.push(' ');
     }
 
     builder.trim().to_string()

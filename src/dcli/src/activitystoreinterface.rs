@@ -368,7 +368,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(data.activity_details.instance_id) //activity_id
-        .bind(format!("{}", data.period.to_rfc3339())) //period
+        .bind(data.period.to_rfc3339().to_string()) //period
         .bind(format!("{}", data.activity_details.mode.to_id())) //mode
         .bind(format!("{}", data.activity_details.membership_type.to_id())) //platform
         .bind(format!("{}", data.activity_details.director_activity_hash)) //director_activity_hash
@@ -528,8 +528,8 @@ impl ActivityStoreInterface {
                 character.member = member.id and member.member_id = ? and member.platform_id = ?
         "#,
         )
-        .bind(format!("{}", character_id))
-        .bind(format!("{}", member_id))
+        .bind(character_id.to_string())
+        .bind(member_id.to_string())
         .bind(format!("{}", platform.to_id()))
         .fetch_one(&mut self.db)
         .await?;
@@ -670,8 +670,8 @@ impl ActivityStoreInterface {
         }
 
         let player_template = Player {
-            member_id: member_id.to_string().clone(),
-            character_id: character_id.to_string().clone(),
+            member_id: member_id.to_string(),
+            character_id: character_id.to_string(),
             platform: *platform,
         };
 
@@ -685,7 +685,7 @@ impl ActivityStoreInterface {
     async fn parse_performance_rows(
         &mut self,
         manifest: &mut ManifestInterface,
-        activity_rows: &Vec<sqlx::sqlite::SqliteRow>,
+        activity_rows: &[sqlx::sqlite::SqliteRow],
         player_template: &Player,
     ) -> Result<CruciblePlayerPerformances, Error> {
         let mut performances: Vec<CruciblePlayerPerformance> =
@@ -831,7 +831,7 @@ impl ActivityStoreInterface {
             let name: String = item_definition
                 .display_properties
                 .description
-                .unwrap_or("".to_string());
+                .unwrap_or_else(|| "".to_string());
 
             let item: Item = Item {
                 id: reference_id,

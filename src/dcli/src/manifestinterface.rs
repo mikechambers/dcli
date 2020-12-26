@@ -255,10 +255,10 @@ impl ManifestInterface {
         &mut self,
         id: &str,
     ) -> Result<HistoricalStatsDefinition, Error> {
-        let key = id.clone().to_string();
-        if self.historical_stats_definition_cache.contains_key(&key) {
-            let out = self.historical_stats_definition_cache.get(&key).unwrap();
-
+        //let key = &(*id).clone().to_string();
+        let key = id;
+        if self.historical_stats_definition_cache.contains_key(key) {
+            let out = self.historical_stats_definition_cache.get(key).unwrap();
             return Ok(out.clone());
         }
 
@@ -270,7 +270,7 @@ impl ManifestInterface {
         let data: HistoricalStatsDefinition = self.get_definition(query).await?;
 
         self.historical_stats_definition_cache
-            .insert(key, data.clone());
+            .insert(key.to_string(), data.clone());
 
         Ok(data)
     }

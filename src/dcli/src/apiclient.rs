@@ -24,7 +24,9 @@ use reqwest::header::{HeaderMap, HeaderValue, CONNECTION};
 use reqwest::{Client, Url};
 
 use crate::error::Error;
-use crate::response::drs::{check_destiny_response_status, IsDestinyAPIResponse};
+use crate::response::drs::{
+    check_destiny_response_status, IsDestinyAPIResponse,
+};
 use crate::utils::print_verbose;
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
@@ -71,7 +73,9 @@ impl ApiClient {
         Ok(response)
     }
 
-    pub async fn call_and_parse<T: serde::de::DeserializeOwned + IsDestinyAPIResponse>(
+    pub async fn call_and_parse<
+        T: serde::de::DeserializeOwned + IsDestinyAPIResponse,
+    >(
         &self,
         url: &str,
     ) -> Result<T, Error> {

@@ -104,7 +104,9 @@ pub struct CharacterStatsData {
 }
 
 /****************CharacterGender *******************/
-#[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
+#[derive(
+    PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug,
+)]
 #[repr(u32)]
 pub enum CharacterGender {
     Masculine = 0,
@@ -137,7 +139,9 @@ impl fmt::Display for CharacterGender {
 }
 
 /****************CharacterClass *******************/
-#[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
+#[derive(
+    PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug,
+)]
 #[repr(u32)]
 pub enum CharacterClass {
     Titan = 0,
@@ -180,7 +184,9 @@ impl fmt::Display for CharacterClass {
 
 /*************************** CharacterRace *************************/
 
-#[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
+#[derive(
+    PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug,
+)]
 #[repr(u32)]
 pub enum CharacterRace {
     Human = 0,
