@@ -27,25 +27,20 @@ use chrono::{DateTime, Datelike, Duration, Local, Utc};
 use dcli::enums::moment::Moment;
 use dcli::enums::platform::Platform;
 use dcli::enums::standing::Standing;
-use dcli::error::Error;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::output::Output;
-use dcli::response::activities::Activity;
-use dcli::statscontainer::ActivityStatsContainer;
 use dcli::{
     crucible::{CruciblePlayerPerformance, CruciblePlayerPerformances},
     enums::mode::Mode,
+    utils::calculate_ratio,
 };
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{
-    determine_data_dir, f32_are_equal, format_f32, repeat_str, uppercase_first_char, TSV_DELIM,
-    TSV_EOL,
-};
+use dcli::utils::{determine_data_dir, format_f32, repeat_str, uppercase_first_char};
 //use dcli::utils::EXIT_FAILURE;
+use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
-use dcli::{apiinterface::ApiInterface, utils::EXIT_FAILURE};
 use structopt::StructOpt;
 
 fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
@@ -80,12 +75,6 @@ fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
     Ok(moment)
 }
 
-async fn get_manifest(manifest_path: &PathBuf) -> Result<ManifestInterface, Error> {
-    //TODO: may need to make this mutable
-    let manifest = ManifestInterface::new(manifest_path, false).await?;
-
-    Ok(manifest)
-}
 /*
 async fn print_tsv(
     manifest_dir: &PathBuf,
@@ -191,10 +180,11 @@ async fn print_tsv(
 */
 fn print_default(
     data: &CruciblePlayerPerformances,
-    display_limit: &u32,
+    activity_limit: &u32,
     mode: &Mode,
     moment: &Moment,
     start_time: &DateTime<Utc>,
+    weapon_count: &u32,
 ) {
     //todo: might want to look at buffering output
     //https://rust-cli.github.io/book/tutorial/output.html
@@ -202,7 +192,7 @@ fn print_default(
     let performances = data.get_performances();
     let activity_count = performances.len();
 
-    let display_count = std::cmp::min(activity_count, *display_limit as usize);
+    let display_count = std::cmp::min(activity_count, *activity_limit as usize);
     let is_limited = activity_count != display_count;
 
     let local = start_time.with_timezone(&Local);
@@ -257,9 +247,9 @@ fn print_default(
 
     //TODO: maybe format this to yellow background
     let header = format!(
-        "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
         "MAP",
-        "W / L",
+        "W/L",
         "STREAK",
         "KILLS",
         "ASTS",
@@ -268,6 +258,8 @@ fn print_default(
         "K/D",
         "KD/A",
         "EFF",
+        "SUPERS",
+        "GREN",
         col_w = col_w,
         map_col_w = map_col_w,
         str_col_w=str_col_w,
@@ -278,14 +270,14 @@ fn print_default(
 
     let slice: &[CruciblePlayerPerformance] = if is_limited {
         println!(
-            "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-            "...", "...", "...", "...", "...", "...", "...","...","...","...",
+            "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...",
             col_w = col_w,
             map_col_w = map_col_w,
             str_col_w=str_col_w,
         );
 
-        &performances[..*display_limit as usize]
+        &performances[..*activity_limit as usize]
     } else {
         &performances[..]
     };
@@ -293,8 +285,6 @@ fn print_default(
     let mut last_mode = Mode::None;
     let mut streak: i32 = 0;
     let mut last_standing: Standing = Standing::Unknown;
-    //let highest_flag: &str = "^";
-    let highest_flag: &str = "^";
 
     for activity in slice.iter().rev() {
         if activity.activity_detail.mode != last_mode {
@@ -328,72 +318,34 @@ fn print_default(
             map_name.push_str("..")
         }
 
-        let highest_kills_flag = if activity.stats.kills == data.highest_kills {
-            highest_flag
-        } else {
-            ""
-        };
-
-        let highest_assists_flag = if activity.stats.assists == data.highest_assists {
-            highest_flag
-        } else {
-            ""
-        };
-
-        let highest_deaths_flag = if activity.stats.deaths == data.highest_deaths {
-            highest_flag
-        } else {
-            ""
-        };
-
-        let highest_opponents_defeated_flag =
-            if activity.stats.opponents_defeated == data.highest_opponents_defeated {
-                highest_flag
-            } else {
-                ""
-            };
-
-        let highest_efficiency_flag = if activity.stats.efficiency == data.highest_efficiency {
-            highest_flag
-        } else {
-            ""
-        };
-
-        let highest_highest_kills_deaths_ratio_flag =
-            if activity.stats.kills_deaths_ratio == data.kills_deaths_ratio {
-                highest_flag
-            } else {
-                ""
-            };
-
-        let highest_kills_deaths_assists_flag =
-            if activity.stats.kills_deaths_assists == data.highest_kills_deaths_assists {
-                highest_flag
-            } else {
-                ""
-            };
+        let extended = activity.stats.extended.as_ref().unwrap();
+        let supers = extended.weapon_kills_super;
+        let grenades = extended.weapon_kills_grenade;
 
         println!(
-            "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             map_name,
             format!("{}", activity.stats.standing),
             format!("{}", streak),
-            format!("{b}{a}", b=highest_kills_flag, a=activity.stats.kills),
-            format!("{b}{a}", b=highest_assists_flag, a=activity.stats.assists),
-            format!("{b}{a}", b=highest_opponents_defeated_flag, a=activity.stats.opponents_defeated),
-            format!("{b}{a}", b=highest_deaths_flag, a=activity.stats.deaths),
-            format!("{b}{a}", b=highest_highest_kills_deaths_ratio_flag, a=format_f32(activity.stats.kills_deaths_ratio, 2)),
-            format!("{b}{a}", b=highest_kills_deaths_assists_flag, a=format_f32(activity.stats.kills_deaths_assists, 2)),
-            format!("{b}{a}", b=highest_efficiency_flag, a=format_f32(activity.stats.efficiency, 2)),
+            format!("{a}", a=activity.stats.kills),
+            format!("{a}", a=activity.stats.assists),
+            format!("{a}", a=activity.stats.opponents_defeated),
+            format!("{a}", a=activity.stats.deaths),
+            format!("{a}", a=format_f32(activity.stats.kills_deaths_ratio, 2)),
+            format!("{a}", a=format_f32(activity.stats.kills_deaths_assists, 2)),
+            format!("{a}", a=format_f32(activity.stats.efficiency, 2)),
+            supers.to_string(),
+            grenades.to_string(),
             col_w = col_w,
             map_col_w=map_col_w,
             str_col_w=str_col_w,
         );
     }
 
+    let extended = data.extended.as_ref().unwrap();
     println!("{}", repeat_str(&"-", header.chars().count()));
 
-    println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "HIGHS",
     format!("{}-{}", data.wins, data.losses),
     format!("{}W {}L", data.longest_win_streak, data.longest_loss_streak),
@@ -405,13 +357,15 @@ fn print_default(
     format_f32(data.highest_kills_deaths_ratio, 2),
     format_f32(data.highest_kills_deaths_assists, 2),
     format_f32(data.highest_efficiency, 2),
+    format!("{}", extended.highest_weapon_kills_super),
+    format!("{}", extended.highest_weapon_kills_grenade),
 
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
     );
 
-    println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "PER GAME",
     format!("{}% w", format_f32(data.win_rate, 2)),
     "",
@@ -422,6 +376,8 @@ fn print_default(
     format_f32(data.kills_deaths_ratio, 2),
     format_f32(data.kills_deaths_assists, 2),
     format_f32(data.efficiency, 2),
+    format_f32(data.stat_per_game(extended.weapon_kills_super), 2),
+    format_f32(data.stat_per_game(extended.weapon_kills_grenade), 2),
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
@@ -431,7 +387,42 @@ fn print_default(
     println!("{}", header);
 
     println!();
-    println!("{}-highest overall", highest_flag);
+    println!();
+
+    let wep_col = map_col_w + col_w;
+    let wep_header_str = format!(
+        "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
+        "WEAPON",
+        "KILLS",
+        "GAMES",
+        "K/G",
+        "PREC",
+        "%",
+        "TYPE",
+        col_w = col_w,
+        map_col_w = wep_col,
+    );
+    let wep_divider = repeat_str(&"=", wep_header_str.chars().count());
+
+    println!("{}", wep_header_str);
+    println!("{}", wep_divider);
+
+    let max_weps = std::cmp::min(*weapon_count as usize, extended.weapons.len());
+
+    for w in &extended.weapons[..max_weps] {
+        println!(
+            "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
+            w.weapon.name,
+            w.kills.to_string(),
+            w.activity_count.to_string(),
+            format_f32(calculate_ratio(w.kills, w.activity_count), 2),
+            w.precision_kills.to_string(),
+            format_f32(w.precision_kills_percent, 2),
+            format!("{}", w.weapon.item_sub_type),
+            col_w = col_w,
+            map_col_w = wep_col,
+        );
+    }
     println!();
 }
 
@@ -454,33 +445,6 @@ fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
 
     Ok(d)
 }
-
-async fn retrieve_activities_since(
-    member_id: &str,
-    character_id: &str,
-    platform: &Platform,
-    mode: &Mode,
-    custom_time: &DateTime<Utc>,
-    verbose: bool,
-) -> Result<Option<ActivityStatsContainer>, Error> {
-    let client: ApiInterface = ApiInterface::new(verbose)?;
-
-    let activities: Vec<Activity> = match client
-        .retrieve_activities_since(&member_id, &character_id, &platform, &mode, &custom_time)
-        .await?
-    {
-        Some(e) => e,
-        None => {
-            return Ok(None);
-        }
-    };
-
-    //TODO: check if we get back and empty vector
-    let container = ActivityStatsContainer::with_activities(activities);
-
-    Ok(Some(container))
-}
-
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving Destiny 2 activity history.
@@ -562,8 +526,12 @@ struct Opt {
     ///
     /// Summary information will be generated based on all activities. Ignored if
     /// --output-format is tsv.
-    #[structopt(long = "limit", short = "L", default_value = "10")]
-    display_limit: u32,
+    #[structopt(long = "activity-limit", short = "L", default_value = "10")]
+    activity_limit: u32,
+
+    /// The number of weapons to display details for.
+    #[structopt(long = "weapon-count", short = "w", default_value = "5")]
+    weapon_count: u32,
 
     /// Format for command output
     ///
@@ -712,10 +680,11 @@ async fn main() {
         Output::Default => {
             print_default(
                 &data,
-                &opt.display_limit,
+                &opt.activity_limit,
                 &opt.mode,
                 &opt.moment,
                 &start_time,
+                &opt.weapon_count,
             );
         }
         Output::Tsv => {

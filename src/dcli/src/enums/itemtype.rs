@@ -88,3 +88,31 @@ pub enum ItemSubType {
     Bow = 31,
     DummyRepeatableBounty = 32,
 }
+
+impl std::fmt::Display for ItemSubType {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let out = match self {
+            ItemSubType::AutoRifle => "Auto Rifle".to_string(),
+            ItemSubType::Machinegun => "Machine Gun".to_string(),
+            ItemSubType::HandCannon => "Hand Cannon".to_string(),
+            ItemSubType::RocketLauncher => "Rocket Launcher".to_string(),
+            ItemSubType::FusionRifle => "Fusion Rifle".to_string(),
+            ItemSubType::SniperRifle => "Sniper Rifle".to_string(),
+            ItemSubType::PulseRifle => "Pulse Rifle".to_string(),
+            ItemSubType::ScoutRifle => "Scount Rifle".to_string(),
+            ItemSubType::FusionRifleLine => "Linear Fusion Rifle".to_string(),
+            ItemSubType::GrenadeLauncher => "Grenade Launcher".to_string(),
+            ItemSubType::SubmachineGun => "Submachine Gun".to_string(),
+            ItemSubType::TraceRifle => "Trace Rifle".to_string(),
+            ItemSubType::HelmetArmor => "Helmet".to_string(),
+            ItemSubType::GauntletsArmor => "Gauntlets".to_string(),
+            ItemSubType::ChestArmor => "Chest".to_string(),
+            ItemSubType::LegArmor => "Legs".to_string(),
+            ItemSubType::ClassArmor => "Class Armor".to_string(),
+            _ => format!("{:?}", self),
+        };
+
+        write!(f, "{}", out)
+    }
+}

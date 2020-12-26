@@ -253,3 +253,19 @@ pub fn determine_data_dir(dir: Option<PathBuf>) -> Result<PathBuf, Error> {
 
     Ok(path)
 }
+
+pub fn calculate_ratio(a: u32, b: u32) -> f32 {
+    if b == 0 {
+        return 0.0;
+    }
+
+    a as f32 / b as f32
+}
+
+pub fn calculate_percent(value: u32, total: u32) -> f32 {
+    if total == 0 {
+        return 0.0;
+    }
+
+    (value as f32 / total as f32) * 100.0
+}

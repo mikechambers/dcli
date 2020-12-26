@@ -93,6 +93,7 @@ pub struct WeaponStat {
     pub kills: u32,
     pub precision_kills: u32,
     pub precision_kills_percent: f32,
+    pub activity_count: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -292,6 +293,7 @@ impl CruciblePlayerPerformances {
                     }
 
                     let ws = weapon_hash.get_mut(key).unwrap();
+                    ws.activity_count += 1;
                     ws.kills += w.kills;
                     ws.precision_kills += w.precision_kills;
                     ws.precision_kills_percent = {

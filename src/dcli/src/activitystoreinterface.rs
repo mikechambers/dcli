@@ -846,6 +846,7 @@ impl ActivityStoreInterface {
                 kills: kills as u32,
                 precision_kills: precision_kills as u32,
                 precision_kills_percent,
+                activity_count: 1,
             };
 
             weapon_stats.push(ws);
