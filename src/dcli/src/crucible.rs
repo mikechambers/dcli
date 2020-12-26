@@ -148,6 +148,9 @@ pub struct CruciblePlayerPerformances {
     pub highest_kills_deaths_ratio: f32,
     pub highest_kills_deaths_assists: f32,
 
+    pub longest_win_streak: u32,
+    pub longest_loss_streak: u32,
+
     pub extended: Option<ExtendedCruciblePlayerPerformances>,
 }
 
@@ -167,6 +170,11 @@ impl CruciblePlayerPerformances {
 
         let mut medal_hash: HashMap<String, MedalStat> = HashMap::new();
         let mut weapon_hash: HashMap<u32, WeaponStat> = HashMap::new();
+
+        let mut streak: i32 = 0;
+        let mut longest_win_streak: u32 = 0;
+        let mut longest_loss_streak: u32 = 0;
+        let mut last_standing = Standing::Unknown;
 
         let mut has_extended = false;
         for p in &out.performances {
@@ -196,12 +204,31 @@ impl CruciblePlayerPerformances {
             match p.stats.standing {
                 Standing::Victory => {
                     out.wins += 1;
+
+                    if last_standing == Standing::Victory {
+                        streak += 1;
+                    } else {
+                        streak = 1;
+                    }
                 }
                 Standing::Defeat => {
                     out.losses += 1;
+                    if last_standing == Standing::Defeat {
+                        streak -= 1;
+                    } else {
+                        streak = -1;
+                    }
                 }
                 Standing::Unknown => (),
             };
+
+            if streak > 0 {
+                longest_win_streak = std::cmp::max(longest_win_streak, streak as u32);
+            } else if streak < 0 {
+                longest_loss_streak = std::cmp::max(longest_loss_streak, streak.abs() as u32);
+            }
+
+            last_standing = p.stats.standing;
 
             if p.stats.extended.is_some() {
                 has_extended = true;
@@ -277,6 +304,9 @@ impl CruciblePlayerPerformances {
                 }
             }
         }
+
+        out.longest_win_streak = longest_win_streak;
+        out.longest_loss_streak = longest_loss_streak;
 
         if has_extended {
             let mut medals: Vec<MedalStat> = medal_hash.into_iter().map(|(_id, m)| m).collect();

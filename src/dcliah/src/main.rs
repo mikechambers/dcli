@@ -251,7 +251,7 @@ fn print_default(
     }
     println!();
 
-    let col_w = 8;
+    let col_w = 10;
     let map_col_w = 18;
     let str_col_w = 10;
 
@@ -396,8 +396,7 @@ fn print_default(
     println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "HIGHS",
     format!("{}-{}", data.wins, data.losses),
-    //format!("{}W {}L", data.longest_win_streak(), data.longest_loss_streak()),
-    format!("{}", "TMP"),
+    format!("{}W {}L", data.longest_win_streak, data.longest_loss_streak),
     format!("{}", data.highest_kills),
     format!("{}", data.highest_assists),
     format!("{}", data.highest_opponents_defeated),
