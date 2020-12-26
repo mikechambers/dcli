@@ -33,8 +33,8 @@ use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 
 use crate::crucible::{
-    ActivityDetail, CruciblePlayerPerformance, CrucibleStats, ExtendedCrucibleStats, Item, Medal,
-    MedalStat, Player, PlayerCruciblePerformances, WeaponStat,
+    ActivityDetail, CruciblePlayerPerformance, CruciblePlayerPerformances, CrucibleStats,
+    ExtendedCrucibleStats, Item, Medal, MedalStat, Player, WeaponStat,
 };
 use crate::enums::medaltier::MedalTier;
 use crate::enums::mode::Mode;
@@ -627,12 +627,12 @@ impl ActivityStoreInterface {
         mode: &Mode,
         start_time: &DateTime<Utc>,
         manifest: &mut ManifestInterface,
-    ) -> Result<Option<PlayerCruciblePerformances>, Error> {
+    ) -> Result<Option<CruciblePlayerPerformances>, Error> {
         let character_index = self
             .get_character_row_id(member_id, character_id, platform)
             .await?;
 
-        let now = std::time::Instant::now();
+        //let now = std::time::Instant::now();
 
         //this is running about 550ms
         let activity_rows = sqlx::query(
@@ -653,7 +653,7 @@ impl ActivityStoreInterface {
                 modes.mode = ? AND
                 character_activity_stats.character = ?
             ORDER BY
-                activity.period
+                activity.period DESC
 
         "#,
         )
@@ -663,7 +663,7 @@ impl ActivityStoreInterface {
         .fetch_all(&mut self.db)
         .await?;
 
-        println!("END query {}", now.elapsed().as_millis());
+        //println!("END query {}", now.elapsed().as_millis());
 
         if activity_rows.is_empty() {
             return Ok(None);
@@ -687,7 +687,7 @@ impl ActivityStoreInterface {
         manifest: &mut ManifestInterface,
         activity_rows: &Vec<sqlx::sqlite::SqliteRow>,
         player_template: &Player,
-    ) -> Result<PlayerCruciblePerformances, Error> {
+    ) -> Result<CruciblePlayerPerformances, Error> {
         let mut performances: Vec<CruciblePlayerPerformance> =
             Vec::with_capacity(activity_rows.len());
 
@@ -699,7 +699,7 @@ impl ActivityStoreInterface {
             performances.push(player_performance);
         }
         //performances.sort_by(|a, b| a.activity_detail.period.cmp(&b.activity_detail.period));
-        let p = PlayerCruciblePerformances::with_performances(performances);
+        let p = CruciblePlayerPerformances::with_performances(performances);
 
         Ok(p)
     }

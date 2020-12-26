@@ -120,7 +120,7 @@ pub struct Medal {
 }
 
 #[derive(Debug, Default)]
-pub struct PlayerCruciblePerformances {
+pub struct CruciblePlayerPerformances {
     performances: Vec<CruciblePlayerPerformance>,
 
     pub total_activities: u32,
@@ -148,23 +148,28 @@ pub struct PlayerCruciblePerformances {
     pub highest_kills_deaths_ratio: f32,
     pub highest_kills_deaths_assists: f32,
 
-    pub extended: Option<ExtendedPlayerCruciblePerformances>,
+    pub extended: Option<ExtendedCruciblePlayerPerformances>,
 }
 
-impl PlayerCruciblePerformances {
+impl CruciblePlayerPerformances {
+    pub fn get_performances(&self) -> &Vec<CruciblePlayerPerformance> {
+        &self.performances
+    }
+
     pub fn with_performances(
         performances: Vec<CruciblePlayerPerformance>,
-    ) -> PlayerCruciblePerformances {
-        let mut out = PlayerCruciblePerformances::default();
-        let mut extended = ExtendedPlayerCruciblePerformances::default();
+    ) -> CruciblePlayerPerformances {
+        let mut out = CruciblePlayerPerformances::default();
+        let mut extended = ExtendedCruciblePlayerPerformances::default();
 
         out.total_activities = performances.len() as u32;
+        out.performances = performances;
 
         let mut medal_hash: HashMap<String, MedalStat> = HashMap::new();
         let mut weapon_hash: HashMap<u32, WeaponStat> = HashMap::new();
 
         let mut has_extended = false;
-        for p in performances {
+        for p in &out.performances {
             out.assists += p.stats.assists;
             out.score += p.stats.score;
             out.kills += p.stats.kills;
@@ -200,7 +205,7 @@ impl PlayerCruciblePerformances {
 
             if p.stats.extended.is_some() {
                 has_extended = true;
-                let e = p.stats.extended.unwrap();
+                let e = p.stats.extended.as_ref().unwrap();
                 extended.weapon_kills_ability += e.weapon_kills_ability;
                 extended.weapon_kills_grenade += e.weapon_kills_grenade;
                 extended.weapon_kills_melee += e.weapon_kills_melee;
@@ -311,7 +316,7 @@ impl PlayerCruciblePerformances {
 }
 
 #[derive(Debug, Default)]
-pub struct ExtendedPlayerCruciblePerformances {
+pub struct ExtendedCruciblePlayerPerformances {
     pub precision_kills: u32,
     pub weapon_kills_ability: u32,
     pub weapon_kills_grenade: u32,

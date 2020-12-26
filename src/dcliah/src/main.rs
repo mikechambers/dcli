@@ -24,7 +24,6 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use chrono::{DateTime, Datelike, Duration, Local, Utc};
-use dcli::enums::mode::Mode;
 use dcli::enums::moment::Moment;
 use dcli::enums::platform::Platform;
 use dcli::enums::standing::Standing;
@@ -33,6 +32,13 @@ use dcli::manifestinterface::ManifestInterface;
 use dcli::output::Output;
 use dcli::response::activities::Activity;
 use dcli::statscontainer::ActivityStatsContainer;
+use dcli::{
+    crucible::{CruciblePlayerPerformance, CruciblePlayerPerformances},
+    enums::mode::Mode,
+};
+
+use dcli::activitystoreinterface::ActivityStoreInterface;
+
 use dcli::utils::{
     determine_data_dir, f32_are_equal, format_f32, repeat_str, uppercase_first_char, TSV_DELIM,
     TSV_EOL,
@@ -74,15 +80,15 @@ fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
     Ok(moment)
 }
 
-async fn get_manifest(manifest_path: PathBuf) -> Result<ManifestInterface, Error> {
+async fn get_manifest(manifest_path: &PathBuf) -> Result<ManifestInterface, Error> {
     //TODO: may need to make this mutable
-    let manifest = ManifestInterface::new(&manifest_path, false).await?;
+    let manifest = ManifestInterface::new(manifest_path, false).await?;
 
     Ok(manifest)
 }
-
+/*
 async fn print_tsv(
-    manifest_dir: PathBuf,
+    manifest_dir: &PathBuf,
     data: ActivityStatsContainer,
     mode: Mode,
     moment: Moment,
@@ -169,10 +175,10 @@ async fn print_tsv(
         {kills}{delim}{deaths}{delim}{assists}{delim}{opp_defeated}{delim}\
         {kd}{delim}{kda}{delim}{eff}{eol}",
         result = format_f32(data.win_percentage(), 2),
-        kills = format_f32(data.per_activity_average(data.kills()), 2),
-        deaths = format_f32(data.per_activity_average(data.deaths()), 2),
-        assists = format_f32(data.per_activity_average(data.assists()), 2),
-        opp_defeated = format_f32(data.per_activity_average(data.opponents_defeated()), 2),
+        kills = format_f32(data.stat_per_game(data.kills()), 2),
+        deaths = format_f32(data.stat_per_game(data.deaths()), 2),
+        assists = format_f32(data.stat_per_game(data.assists()), 2),
+        opp_defeated = format_f32(data.stat_per_game(data.opponents_defeated()), 2),
         kd = format_f32(data.kills_deaths_ratio(), 2),
         kda = format_f32(data.kills_deaths_assists(), 2),
         eff = format_f32(data.efficiency(), 2),
@@ -182,32 +188,25 @@ async fn print_tsv(
 
     Ok(())
 }
-
-async fn print_default(
-    manifest_dir: PathBuf,
-    data: ActivityStatsContainer,
-    display_limit: i32,
-    mode: Mode,
-    moment: Moment,
-    start_time: DateTime<Utc>,
-) -> Result<(), Error> {
+*/
+fn print_default(
+    data: &CruciblePlayerPerformances,
+    display_limit: &u32,
+    mode: &Mode,
+    moment: &Moment,
+    start_time: &DateTime<Utc>,
+) {
     //todo: might want to look at buffering output
     //https://rust-cli.github.io/book/tutorial/output.html
 
-    let activity_count = data.activities.len();
+    let performances = data.get_performances();
+    let activity_count = performances.len();
 
-    if activity_count == 0 {
-        println!("No activities found.");
-        return Ok(());
-    }
-
-    let mut manifest = get_manifest(manifest_dir).await?;
-
-    let display_count = std::cmp::min(activity_count, display_limit as usize);
+    let display_count = std::cmp::min(activity_count, *display_limit as usize);
     let is_limited = activity_count != display_count;
 
     let local = start_time.with_timezone(&Local);
-    let format_str = if Utc::now() - start_time > Duration::days(6) {
+    let format_str = if Utc::now() - *start_time > Duration::days(6) {
         "%B %-d, %Y"
     } else if local.day() == Local::now().day() {
         "Today at %-I:%M %p"
@@ -277,7 +276,7 @@ async fn print_default(
     let header_divider = repeat_str(&"=", header.chars().count());
     println!("{}", header_divider);
 
-    let slice: &[Activity] = if is_limited {
+    let slice: &[CruciblePlayerPerformance] = if is_limited {
         println!(
             "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             "...", "...", "...", "...", "...", "...", "...","...","...","...",
@@ -286,9 +285,9 @@ async fn print_default(
             str_col_w=str_col_w,
         );
 
-        &data.activities[..display_limit as usize]
+        &performances[..*display_limit as usize]
     } else {
-        &data.activities[..]
+        &performances[..]
     };
 
     let mut last_mode = Mode::None;
@@ -298,14 +297,14 @@ async fn print_default(
     let highest_flag: &str = "^";
 
     for activity in slice.iter().rev() {
-        if activity.details.mode != last_mode {
+        if activity.activity_detail.mode != last_mode {
             println!();
-            println!("{}", activity.details.mode);
+            println!("{}", activity.activity_detail.mode);
             println!("{}", repeat_str(&"-", col_w + map_col_w));
-            last_mode = activity.details.mode;
+            last_mode = activity.activity_detail.mode;
         }
 
-        let standing = Standing::from_mode(activity.values.standing, &activity.details.mode);
+        let standing = activity.stats.standing;
         if standing == last_standing {
             streak = match last_standing {
                 Standing::Unknown => 0,
@@ -321,14 +320,7 @@ async fn print_default(
             };
         }
 
-        //todo: we can get better mode name from director_activity_hash i.e. Control as opposed to Control Quickplay
-        let mut map_name = match manifest
-            .get_activity_definition(activity.details.reference_id)
-            .await
-        {
-            Ok(e) => e.display_properties.name,
-            Err(_e) => "Unknown".to_string(),
-        };
+        let mut map_name = activity.activity_detail.map_name.clone();
 
         //todo: move this into reusable util function
         if map_name.chars().count() > map_col_w - 1 {
@@ -336,71 +328,63 @@ async fn print_default(
             map_name.push_str("..")
         }
 
-        let highest_kills_flag = if f32_are_equal(activity.values.kills, data.highest_kills()) {
+        let highest_kills_flag = if activity.stats.kills == data.highest_kills {
             highest_flag
         } else {
             ""
         };
 
-        let highest_assists_flag = if f32_are_equal(activity.values.assists, data.highest_assists())
-        {
+        let highest_assists_flag = if activity.stats.assists == data.highest_assists {
             highest_flag
         } else {
             ""
         };
 
-        let highest_deaths_flag = if f32_are_equal(activity.values.deaths, data.highest_deaths()) {
+        let highest_deaths_flag = if activity.stats.deaths == data.highest_deaths {
             highest_flag
         } else {
             ""
         };
 
-        let highest_opponents_defeated_flag = if f32_are_equal(
-            activity.values.opponents_defeated,
-            data.highest_opponents_defeated(),
-        ) {
-            highest_flag
-        } else {
-            ""
-        };
-
-        let highest_efficiency_flag =
-            if f32_are_equal(activity.values.efficiency, data.highest_efficiency()) {
+        let highest_opponents_defeated_flag =
+            if activity.stats.opponents_defeated == data.highest_opponents_defeated {
                 highest_flag
             } else {
                 ""
             };
 
-        let highest_highest_kills_deaths_ratio_flag = if f32_are_equal(
-            activity.values.kills_deaths_ratio,
-            data.kills_deaths_ratio(),
-        ) {
+        let highest_efficiency_flag = if activity.stats.efficiency == data.highest_efficiency {
             highest_flag
         } else {
             ""
         };
 
-        let highest_kills_deaths_assists_flag = if f32_are_equal(
-            activity.values.kills_deaths_assists,
-            data.highest_kills_deaths_assists(),
-        ) {
-            highest_flag
-        } else {
-            ""
-        };
+        let highest_highest_kills_deaths_ratio_flag =
+            if activity.stats.kills_deaths_ratio == data.kills_deaths_ratio {
+                highest_flag
+            } else {
+                ""
+            };
+
+        let highest_kills_deaths_assists_flag =
+            if activity.stats.kills_deaths_assists == data.highest_kills_deaths_assists {
+                highest_flag
+            } else {
+                ""
+            };
 
         println!(
             "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             map_name,
-            format!("{}", activity.values.standing),
+            format!("{}", activity.stats.standing),
             format!("{}", streak),
-            format!("{b}{a}", b=highest_kills_flag, a=activity.values.kills),
-            format!("{b}{a}", b=highest_assists_flag, a=activity.values.assists),
-            format!("{b}{a}", b=highest_opponents_defeated_flag, a=activity.values.opponents_defeated),
-            format!("{b}{a}", b=highest_deaths_flag, a=activity.values.deaths),
-            format!("{b}{a}", b=highest_highest_kills_deaths_ratio_flag, a=format_f32(activity.values.kills_deaths_ratio, 2)),
-            format!("{b}{a}", b=highest_kills_deaths_assists_flag, a=format_f32(activity.values.kills_deaths_assists, 2)),
-            format!("{b}{a}", b=highest_efficiency_flag, a=format_f32(activity.values.efficiency, 2)),
+            format!("{b}{a}", b=highest_kills_flag, a=activity.stats.kills),
+            format!("{b}{a}", b=highest_assists_flag, a=activity.stats.assists),
+            format!("{b}{a}", b=highest_opponents_defeated_flag, a=activity.stats.opponents_defeated),
+            format!("{b}{a}", b=highest_deaths_flag, a=activity.stats.deaths),
+            format!("{b}{a}", b=highest_highest_kills_deaths_ratio_flag, a=format_f32(activity.stats.kills_deaths_ratio, 2)),
+            format!("{b}{a}", b=highest_kills_deaths_assists_flag, a=format_f32(activity.stats.kills_deaths_assists, 2)),
+            format!("{b}{a}", b=highest_efficiency_flag, a=format_f32(activity.stats.efficiency, 2)),
             col_w = col_w,
             map_col_w=map_col_w,
             str_col_w=str_col_w,
@@ -411,33 +395,34 @@ async fn print_default(
 
     println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "HIGHS",
-    format!("{}-{}", data.wins(), data.losses()),
-    format!("{}W {}L", data.longest_win_streak(), data.longest_loss_streak()),
-    format!("{}", data.highest_kills()),
-    format!("{}", data.highest_assists()),
-    format!("{}", data.highest_opponents_defeated()),
-    format!("{}", data.highest_deaths()),
+    format!("{}-{}", data.wins, data.losses),
+    //format!("{}W {}L", data.longest_win_streak(), data.longest_loss_streak()),
+    format!("{}", "TMP"),
+    format!("{}", data.highest_kills),
+    format!("{}", data.highest_assists),
+    format!("{}", data.highest_opponents_defeated),
+    format!("{}", data.highest_deaths),
 
-    format_f32(data.highest_kills_deaths_ratio(), 2),
-    format_f32(data.highest_kills_deaths_assists(), 2),
-    format_f32(data.highest_efficiency(), 2),
+    format_f32(data.highest_kills_deaths_ratio, 2),
+    format_f32(data.highest_kills_deaths_assists, 2),
+    format_f32(data.highest_efficiency, 2),
 
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
-);
+    );
 
     println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "PER GAME",
-    format!("{}% w", format_f32(data.win_percentage(), 2)),
+    format!("{}% w", format_f32(data.win_rate, 2)),
     "",
-    format_f32(data.per_activity_average(data.kills()), 2),
-    format_f32(data.per_activity_average(data.assists()), 2),
-    format_f32(data.per_activity_average(data.opponents_defeated()), 2),
-    format_f32(data.per_activity_average(data.deaths()), 2),
-    format_f32(data.kills_deaths_ratio(), 2),
-    format_f32(data.kills_deaths_assists(), 2),
-    format_f32(data.efficiency(), 2),
+    format_f32(data.stat_per_game(data.kills), 2),
+    format_f32(data.stat_per_game(data.assists), 2),
+    format_f32(data.stat_per_game(data.opponents_defeated), 2),
+    format_f32(data.stat_per_game(data.deaths), 2),
+    format_f32(data.kills_deaths_ratio, 2),
+    format_f32(data.kills_deaths_assists, 2),
+    format_f32(data.efficiency, 2),
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
@@ -449,9 +434,6 @@ async fn print_default(
     println!();
     println!("{}-highest overall", highest_flag);
     println!();
-
-    manifest.close().await?;
-    Ok(())
 }
 
 //TODO: this is called twice. need to track down.
@@ -560,7 +542,7 @@ struct Opt {
     /// Specifying all_time retrieves all activitiy history and may take an extended
     /// amount of time to retrieve depending on the number of activities.
     #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), 
-        short = "T", default_value = "day")]
+        short = "T", default_value = "week")]
     moment: Moment,
 
     /// Activity mode to return stats for
@@ -582,7 +564,7 @@ struct Opt {
     /// Summary information will be generated based on all activities. Ignored if
     /// --output-format is tsv.
     #[structopt(long = "limit", short = "L", default_value = "10")]
-    display_limit: i32,
+    display_limit: u32,
 
     /// Format for command output
     ///
@@ -626,13 +608,76 @@ async fn main() {
         }
     };
 
-    let custom_time = match opt.moment {
+    let start_time = match opt.moment {
         Moment::Custom => {
             opt.custom_time.unwrap() //note, this should be ok, because struct opt should ensure valid value
         }
         _ => opt.moment.get_date_time(),
     };
 
+    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error(
+                "Could not initialize activity store. Have you run dclias?",
+                e,
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
+    let mut manifest = match ManifestInterface::new(&data_dir, false).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Could not initialize manifest. Have you run dcliam?", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
+    match store
+        .sync(&opt.member_id, &opt.character_id, &opt.platform)
+        .await
+    {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Could not sync activity store.", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
+    let data = match store
+        .retrieve_activities_since(
+            &opt.member_id,
+            &opt.character_id,
+            &opt.platform,
+            &opt.mode,
+            &start_time,
+            &mut manifest,
+        )
+        .await
+    {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Could not retrieve data from activity store.", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
+    if data.is_none() {
+        //TODO: TSV Output
+        println!("No activities found.");
+        return;
+    }
+
+    let data = data.unwrap();
+
+    if data.get_performances().is_empty() {
+        //TODO: TSV Output
+        println!("No activities found.");
+        return;
+    }
+
+    /*
     eprintln!(
         "Retrieving activities for {}. This may take a moment...",
         &opt.mode
@@ -643,7 +688,7 @@ async fn main() {
         &opt.character_id,
         &opt.platform,
         &opt.mode,
-        &custom_time,
+        &start_time,
         opt.verbose,
     )
     .await
@@ -662,28 +707,21 @@ async fn main() {
             return;
         }
     };
+    */
 
     match opt.output {
         Output::Default => {
-            match print_default(
-                data_dir,
-                container,
-                opt.display_limit,
-                opt.mode,
-                opt.moment,
-                custom_time,
-            )
-            .await
-            {
-                Ok(_e) => {}
-                Err(e) => {
-                    print_error("Error generating output. (Check the --manifest-path) : ", e);
-                    std::process::exit(EXIT_FAILURE);
-                }
-            };
+            print_default(
+                &data,
+                &opt.display_limit,
+                &opt.mode,
+                &opt.moment,
+                &start_time,
+            );
         }
         Output::Tsv => {
-            match print_tsv(data_dir, container, opt.mode, opt.moment, custom_time).await {
+            /*
+            match print_tsv(&data_dir, container, opt.mode, opt.moment, custom_time).await {
                 Ok(_e) => {}
                 Err(e) => {
                     print_error(
@@ -693,6 +731,7 @@ async fn main() {
                     std::process::exit(EXIT_FAILURE);
                 }
             };
+            */
         }
     }
 }
