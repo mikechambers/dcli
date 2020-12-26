@@ -269,7 +269,7 @@ impl ActivityStoreInterface {
             "Checking for new activities".to_string().to_uppercase()
         );
         eprintln!("------------------------------------------------");
-        eprintln!("This may take a moments depending on the number of activities.");
+        eprintln!("This may take a moment depending on the number of activities.");
         let result = api
             .retrieve_activities_since_id(member_id, character_id, platform, &Mode::AllPvP, max_id)
             .await?;

@@ -217,9 +217,6 @@ fn print_default(
     );
 
     println!();
-    //println!("{}", title);
-    //println!("{}", repeat_str(&"-", title.chars().count()));
-    //println!("Total time played is {}", data.time_played_seconds);
     println!();
     println!("ACTIVITIES");
     println!("==================");
@@ -269,7 +266,7 @@ fn print_default(
         "KD/A",
         "EFF",
         "SUPERS",
-        "GREN",
+        "GRENADES",
         col_w = col_w,
         map_col_w = map_col_w,
         str_col_w=str_col_w,
