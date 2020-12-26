@@ -90,17 +90,23 @@ fn print_tsv(
     ));
     name_values.push(("seconds_played", format!("{}", data.seconds_played)));
 
-    name_values.push(("human_time_played", human_duration(data.seconds_played)));
+    name_values.push((
+        "human_time_played",
+        human_duration(data.seconds_played as u32),
+    ));
 
     name_values.push(("deaths", format!("{}", data.deaths)));
     name_values.push(("average_lifespan", format!("{}", data.average_lifespan)));
 
     name_values.push((
         "human_average_lifespan",
-        human_duration(data.average_lifespan),
+        human_duration(data.average_lifespan as u32),
     ));
 
-    name_values.push(("total_lifespan", format!("{}", data.get_total_lifespan())));
+    name_values.push((
+        "total_lifespan",
+        format!("{}", data.get_total_lifespan() as u32),
+    ));
     name_values.push(("opponents_defeated", format!("{}", data.opponents_defeated)));
     name_values.push(("efficiency", format!("{}", data.efficiency)));
     name_values.push(("kills_deaths_ratio", format!("{}", data.kills_deaths_ratio)));
@@ -142,7 +148,10 @@ fn print_default(data: PvpStatsData, mode: Mode, moment: Moment) {
     println!("{}", title);
     println!("{}", repeat_str("=", title.chars().count()));
 
-    println!("Time played is {}", human_duration(data.seconds_played));
+    println!(
+        "Time played is {}",
+        human_duration(data.seconds_played as u32)
+    );
     println!(
         "{wins} wins and {losses} losses for a {win_percentage}% win rate",
         wins = data.activities_won,
@@ -200,7 +209,7 @@ fn print_default(data: PvpStatsData, mode: Mode, moment: Moment) {
     println!();
 
     println!("You have had an average life span of {lifespan} with an average kill distance of {kill_distance} meters. {precision_percent}% of your kills were precision kills.",
-        lifespan = human_duration(data.average_lifespan),
+        lifespan = human_duration(data.average_lifespan as u32),
         kill_distance = p(data.average_kill_distance, 2),
         precision_percent = p((data.precision_kills / data.kills) * 100.0, 2),
     );

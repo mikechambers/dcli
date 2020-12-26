@@ -161,7 +161,7 @@ pub fn uppercase_first_char(s: &str) -> String {
 }
 
 //this could use some more work and polish. Add "and" before the last item.
-pub fn human_duration(seconds: f32) -> String {
+pub fn human_duration(seconds: u32) -> String {
     let s = seconds as i64;
 
     let dt = Utc.ymd(0, 1, 1).and_hms(0, 0, 0) + Duration::seconds(s);
@@ -173,17 +173,29 @@ pub fn human_duration(seconds: f32) -> String {
     let min = build_time_str(dt.minute() as i32, "minute");
     let s = build_time_str(dt.second() as i32, "second");
 
-    (&format!(
-        "{y} {mon} {d} {h} {min} {s}",
-        y = y,
-        mon = mon,
-        d = d,
-        h = h,
-        min = min,
-        s = s
-    ))
-        .trim()
-        .to_string()
+    //collect all items into a vector
+    let t = vec![y, mon, d, h, min, s];
+
+    //remove empty items
+    let mut t = t
+        .into_iter()
+        .filter(|i| i.trim().chars().count() > 0)
+        .collect::<Vec<String>>();
+
+    //add an add before the last item
+    if t.len() > 1 {
+        t.insert(t.len() - 1, "and".to_string());
+    }
+
+    let mut builder: String = String::new();
+
+    //build final string from remaining pieces
+    for token in t {
+        builder.push_str(&token);
+        builder.push_str(" ");
+    }
+
+    builder.trim().to_string()
 }
 
 pub fn build_time_str(t: i32, label: &str) -> String {

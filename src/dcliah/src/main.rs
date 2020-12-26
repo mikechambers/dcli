@@ -32,7 +32,7 @@ use dcli::output::Output;
 use dcli::{
     crucible::{CruciblePlayerPerformance, CruciblePlayerPerformances},
     enums::mode::Mode,
-    utils::calculate_ratio,
+    utils::{calculate_ratio, human_duration},
 };
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
@@ -206,6 +206,9 @@ fn print_default(
 
     let start_time_label = local.format(format_str);
 
+    println!();
+    println!();
+
     let title = format!(
         "{mode} activities since {start_time} ({moment})",
         mode = uppercase_first_char(&format!("{}", mode)),
@@ -214,15 +217,22 @@ fn print_default(
     );
 
     println!();
-    println!("{}", title);
-    println!("{}", repeat_str(&"-", title.chars().count()));
+    //println!("{}", title);
+    //println!("{}", repeat_str(&"-", title.chars().count()));
+    //println!("Total time played is {}", data.time_played_seconds);
     println!();
     println!("ACTIVITIES");
     println!("==================");
+    println!("{}", title);
+    println!(
+        "Total time played is {}",
+        human_duration(data.time_played_seconds)
+    );
+    println!();
 
     if is_limited {
         println!(
-            "Displaying details for the last {display_count} of {activity_count} activities.",
+            "Displaying details for the last {display_count} of {activity_count} activities",
             display_count = display_count,
             activity_count = activity_count,
         );
