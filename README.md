@@ -19,14 +19,14 @@ Just download, place them in your path and run from the command line (use --help
 | TOOL | DESCRIPTION |
 | --- | --- |
 | [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) | Retrieves information on player's current activity within Destiny 2 |
-| [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) | Retrieves Destiny 2 activity history |
-| [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) | Retrieves character information for specified member id |
-| [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) | Retrieves Destiny 2 Crucible activity stats |
+| [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) | Displays Destiny 2 activity history and stats |
 | [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) | Manages and syncs the remote Destiny 2 API manifest database |
-| [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) | Searches the Destiny 2 manifest by hash ids (from API calls) |
-| [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) | Retrieves primary platform and membership ids for Destiny 2 players |
+| [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclic) | Retrieves character ids for the specified member |
+| [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclis) | Retrieves primary platform and membership ids for Destiny 2 players |
 | [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file. |
+| [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) | Searches the Destiny 2 manifest by hash ids (from API calls) |
 | [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments |
+| [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) | Retrieves Destiny 2 Crucible activity stats *(deprecated for dcliah)*|
 | [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) | Library used across all of the dcli apps |
     
 Each tool page contains additional tool specific information and usage examples.
@@ -39,6 +39,11 @@ The core idea behind the project is to provide small, focused utilities that pro
 To get started, download the release (or compile from source), and place the executables somewhere within your path so you can call them from anywhere. Doing this will make it easy to call from anywhere on your system and from other sciprts.
 
 If you are running on Mac, make sure to [read this article](https://github.com/mikechambers/dcli/wiki/Running-dcli-tools-on-Mac-OS-X) to ensure everything will run correctly.
+
+In general, there are 3 steps to take before you can begin getting data:
+1. Download the manifest (dclim)
+2. Get your member and character ids (dclis, dclic)
+3. Sync your data (dclias)
 
 ### Download the manifest
 

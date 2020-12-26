@@ -433,7 +433,6 @@ fn print_default(
     println!();
 }
 
-//TODO: this is called twice. need to track down.
 fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
     let d =
         match DateTime::parse_from_rfc3339(src) {
