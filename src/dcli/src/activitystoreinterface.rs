@@ -371,7 +371,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(data.activity_details.instance_id) //activity_id
-        .bind(data.period.to_rfc3339().to_string()) //period
+        .bind(data.period.to_rfc3339()) //period
         .bind(format!("{}", data.activity_details.mode.to_id())) //mode
         .bind(format!("{}", data.activity_details.membership_type.to_id())) //platform
         .bind(format!("{}", data.activity_details.director_activity_hash)) //director_activity_hash
@@ -660,7 +660,7 @@ impl ActivityStoreInterface {
 
         "#,
         )
-        .bind(start_time.to_string())
+        .bind(start_time.to_rfc3339())
         .bind(mode.to_id().to_string())
         .bind(character_index.to_string())
         .fetch_all(&mut self.db)
