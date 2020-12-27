@@ -398,11 +398,12 @@ fn print_default(
 
     let wep_col = map_col_w + col_w;
     let wep_header_str = format!(
-        "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
+        "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
         "WEAPON",
         "KILLS",
         "GAMES",
-        "K/G",
+        "K/Gk",
+        "K/Gt",
         "PREC",
         "%",
         "TYPE",
@@ -418,11 +419,12 @@ fn print_default(
 
     for w in &extended.weapons[..max_weps] {
         println!(
-            "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
+            "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
             w.weapon.name,
             w.kills.to_string(),
             w.activity_count.to_string(),
             format_f32(calculate_ratio(w.kills, w.activity_count), 2),
+            format_f32(calculate_ratio(w.kills, data.total_activities), 2),
             w.precision_kills.to_string(),
             format_f32(w.precision_kills_percent, 2),
             format!("{}", w.weapon.item_sub_type),
@@ -430,6 +432,9 @@ fn print_default(
             map_col_w = wep_col,
         );
     }
+    println!();
+    println!("K/Gk - Kills per game with a kill with the weapon");
+    println!("K/Gt - Kills per game across all games");
     println!();
 }
 

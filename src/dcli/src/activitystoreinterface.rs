@@ -231,7 +231,10 @@ impl ActivityStoreInterface {
                     }
                     Err(e) => {
                         eprintln!();
-                        eprintln!("Error retrieving activity details from api : {}", e);
+                        eprintln!(
+                            "Error retrieving activity details from api. Skipping : {}",
+                            e
+                        );
                     }
                 }
             }
