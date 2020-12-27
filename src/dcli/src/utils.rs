@@ -187,15 +187,7 @@ pub fn human_duration(seconds: u32) -> String {
         t.insert(t.len() - 1, "and".to_string());
     }
 
-    let mut builder: String = String::new();
-
-    //build final string from remaining pieces
-    for token in t {
-        builder.push_str(&token);
-        builder.push(' ');
-    }
-
-    builder.trim().to_string()
+    t.join(" ")
 }
 
 pub fn build_time_str(t: i32, label: &str) -> String {

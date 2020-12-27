@@ -560,6 +560,13 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
+    ///Don't sync activities.
+    ///
+    ///If flag is set, activities will not be retrieved before displaying stats.
+    /// This is useful in case you are syncing activities in a seperate process.
+    #[structopt(short = "N", long = "no-sync")]
+    no_sync: bool,
+
     /// Directory where Destiny 2 manifest database file is stored. (optional)
     ///
     /// This will normally be downloaded using the dclim tool, and stored in a file
@@ -607,16 +614,18 @@ async fn main() {
         }
     };
 
-    match store
-        .sync(&opt.member_id, &opt.character_id, &opt.platform)
-        .await
-    {
-        Ok(e) => e,
-        Err(e) => {
-            print_error("Could not sync activity store.", e);
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+    if !opt.no_sync {
+        match store
+            .sync(&opt.member_id, &opt.character_id, &opt.platform)
+            .await
+        {
+            Ok(e) => e,
+            Err(e) => {
+                print_error("Could not sync activity store.", e);
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
+    }
 
     let data = match store
         .retrieve_activities_since(

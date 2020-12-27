@@ -50,7 +50,7 @@ const STORE_FILE_NAME: &str = "dcli.sqlite3";
 const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 
 //numer of simultaneous requests we make to server when retrieving activity history
-const PGCR_REQUEST_CHUNK_AMOUNT: usize = 40;
+const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
 
 pub struct ActivityStoreInterface {
     verbose: bool,
