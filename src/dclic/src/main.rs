@@ -21,10 +21,10 @@
 */
 
 use dcli::apiinterface::ApiInterface;
+use dcli::character::Characters;
 use dcli::enums::platform::Platform;
 use dcli::error::Error;
 use dcli::output::Output;
-use dcli::response::character::CharacterData;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose, repeat_str, TSV_DELIM, TSV_EOL};
 use structopt::StructOpt;
@@ -34,7 +34,7 @@ async fn retrieve_characters(
     member_id: String,
     platform: Platform,
     verbose: bool,
-) -> Result<Vec<CharacterData>, Error> {
+) -> Result<Option<Characters>, Error> {
     let interface = ApiInterface::new(verbose)?;
 
     let characters = interface.retrieve_characters(&member_id, &platform).await?;
@@ -94,9 +94,15 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
-    let chars: Vec<CharacterData> =
+    let chars: Characters =
         match retrieve_characters(opt.member_id, opt.platform, opt.verbose).await {
-            Ok(e) => e,
+            Ok(e) => match e {
+                Some(e) => e,
+                None => {
+                    println!("No Characters found for member.");
+                    return;
+                }
+            },
             Err(e) => {
                 print_error("Error retrieving characters from API.", e);
                 std::process::exit(EXIT_FAILURE);
@@ -113,7 +119,7 @@ async fn main() {
     }
 }
 
-fn print_default(characters: &Vec<CharacterData>) {
+fn print_default(characters: &Characters) {
     let col_w = 12;
     let col_id = 24;
     println!(
@@ -127,8 +133,10 @@ fn print_default(characters: &Vec<CharacterData>) {
 
     println!("{}", repeat_str("-", col_w * 2 + col_id));
 
-    for p in characters.iter() {
-        let label = if p == characters.first().unwrap() {
+    for p in characters.characters.iter() {
+        //we unwrap here because we wont be in loop if there are no items in
+        //characters, and thus last active should always return a reference
+        let label = if p == characters.get_last_active_ref().unwrap() {
             "LAST ACTIVE"
         } else {
             ""
@@ -145,9 +153,9 @@ fn print_default(characters: &Vec<CharacterData>) {
     }
 }
 
-fn print_tsv(characters: &Vec<CharacterData>) {
-    for p in characters.iter() {
-        let label = if p == characters.first().unwrap() {
+fn print_tsv(characters: &Characters) {
+    for p in characters.characters.iter() {
+        let label = if p == characters.get_last_active_ref().unwrap() {
             "LAST ACTIVE"
         } else {
             ""

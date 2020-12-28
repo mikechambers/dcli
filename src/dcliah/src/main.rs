@@ -620,10 +620,7 @@ async fn main() {
     };
 
     if !opt.no_sync {
-        match store
-            .sync(&opt.member_id, &opt.character_id, &opt.platform)
-            .await
-        {
+        match store.sync(&opt.member_id, &opt.platform).await {
             Ok(e) => e,
             Err(e) => {
                 print_error("Could not sync activity store.", e);

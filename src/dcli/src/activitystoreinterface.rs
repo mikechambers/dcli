@@ -95,6 +95,9 @@ impl ActivityStoreInterface {
         Ok(ActivityStoreInterface { db, verbose, path })
     }
 
+    /// TODO currently no way to sync old / delete characters. would be easy to
+    /// add by just moving the character sync into its own api sync_character(id, class_type)
+    /// but not going to worry about it unless someone requests it
     /// retrieves and stores activity details for ids in activity queue
     pub async fn sync(
         &mut self,
@@ -103,13 +106,19 @@ impl ActivityStoreInterface {
     ) -> Result<SyncResult, Error> {
         let api = ApiInterface::new(self.verbose)?;
 
-        let characters = api.retrieve_characters(member_id, platform).await?;
+        let characters = match api.retrieve_characters(member_id, platform).await? {
+            Some(e) => e,
+            None => {
+                return Err(Error::NoCharacters);
+            }
+        };
 
         let member_row_id = self.insert_member_id(&member_id, &platform).await?;
 
         let mut total_synced = 0;
         let mut total_in_queue = 0;
-        for c in characters {
+
+        for c in characters.characters {
             let character_id = &c.id;
             let character_row_id = self.insert_character_id(&c, member_row_id).await?;
 

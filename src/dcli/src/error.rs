@@ -61,6 +61,7 @@ pub enum Error {
     SystemDirectoryNotFound,
     ChronoParse { description: String },
     UnknownEnumValue,
+    NoCharacters,
 }
 
 impl Display for Error {
@@ -145,6 +146,9 @@ impl Display for Error {
             },
             Error::UnknownEnumValue  => {
                 write!(f, "Could not convert value to enum.")
+            },
+            Error::NoCharacters  => {
+                write!(f, "There are no characters for the specified member.")
             },
 
         }

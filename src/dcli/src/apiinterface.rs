@@ -40,6 +40,8 @@ use crate::response::stats::{
 };
 use crate::utils::Period;
 
+use crate::character::Characters;
+
 pub struct ApiInterface {
     client: ApiClient,
 }
@@ -115,7 +117,7 @@ impl ApiInterface {
         &self,
         member_id: &str,
         platform: &Platform,
-    ) -> Result<Vec<CharacterData>, Error> {
+    ) -> Result<Option<Characters>, Error> {
         let url = format!(
             "{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=200",
             base = API_BASE_URL,
@@ -140,16 +142,14 @@ impl ApiInterface {
         let r_characters = match response.characters {
             Some(e) => e,
             None => {
-                return Ok(Vec::new());
+                return Ok(None);
             }
         };
 
-        let mut characters: Vec<CharacterData> =
+        let characters: Vec<CharacterData> =
             r_characters.data.into_iter().map(|(_id, m)| m).collect();
 
-        characters.sort_by(|a, b| b.date_last_played.cmp(&a.date_last_played));
-
-        Ok(characters)
+        Ok(Some(Characters::with_characters(characters)))
     }
 
     pub async fn retrieve_alltime_crucible_stats(

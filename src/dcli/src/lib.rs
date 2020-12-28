@@ -24,6 +24,7 @@ pub mod activitystoreinterface;
 pub mod apiclient;
 pub mod apiinterface;
 pub mod apiutils;
+pub mod character;
 pub mod crucible;
 pub mod cruciblestats;
 pub mod emblem;
