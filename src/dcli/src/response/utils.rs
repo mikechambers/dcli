@@ -27,6 +27,9 @@ use serde::Deserialize;
 use crate::apiutils::RESOURCE_BASE_URL;
 use crate::enums::standing::STANDING_UNKNOWN_MAGIC_NUMBER;
 
+use std::fmt::Display;
+use std::str::FromStr;
+
 //2020-10-05T18:49:25Z
 pub const API_DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
 
@@ -108,9 +111,7 @@ where
 
 //BUG: this doesnt get called if the property is not include in the JSON
 //https://github.com/serde-rs/json/issues/734
-pub fn property_to_option_float<'de, D>(
-    deserializer: D,
-) -> Result<Option<f32>, D::Error>
+pub fn property_to_option_float<'de, D>(deserializer: D) -> Result<Option<f32>, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
@@ -152,14 +153,11 @@ where
     })
 }
 
-pub fn prepend_base_url_option<'de, D>(
-    deserializer: D,
-) -> Result<Option<String>, D::Error>
+pub fn prepend_base_url_option<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
-    Option::<String>::deserialize(deserializer).map(|o: Option<String>| match o
-    {
+    Option::<String>::deserialize(deserializer).map(|o: Option<String>| match o {
         Some(e) => {
             let mut s = String::from(RESOURCE_BASE_URL);
             s.push_str(&e);
@@ -189,9 +187,7 @@ where
 }
 
 //str_to_datetime
-pub fn str_to_datetime<'de, D>(
-    deserializer: D,
-) -> Result<DateTime<Utc>, D::Error>
+pub fn str_to_datetime<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
@@ -214,4 +210,14 @@ where
 
 pub fn standing_default() -> u32 {
     STANDING_UNKNOWN_MAGIC_NUMBER
+}
+
+pub fn str_to_int<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+where
+    T: FromStr,
+    T::Err: Display,
+    D: serde::de::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    T::from_str(&s).map_err(serde::de::Error::custom)
 }

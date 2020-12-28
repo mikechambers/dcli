@@ -118,7 +118,7 @@ impl Display for Error {
             ),
             Error::RequestTimedOut => write!(
                 f,
-                "The API request took too long. Check your network connection and\
+                "The API request took too long. Check your network connection and \
                  try again. (The API servers may be slow right now)."
             ),
             Error::Request => write!(

@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS  "character" (
     "id"	        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
     "character_id"	TEXT NOT NULL,
     "member"	    INTEGER NOT NULL,
+    "class"         INTEGER NOT NULL,
+
     UNIQUE("character_id", "member"),
     FOREIGN KEY ("member")
         REFERENCES "member" ("id")

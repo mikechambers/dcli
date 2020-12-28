@@ -21,8 +21,8 @@ Just download, place them in your path and run from the command line (use --help
 | [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) | Retrieves information on player's current activity within Destiny 2 |
 | [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) | Displays Destiny 2 activity history and stats |
 | [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) | Manages and syncs the remote Destiny 2 API manifest database |
-| [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclic) | Retrieves character ids for the specified member |
-| [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclis) | Retrieves primary platform and membership ids for Destiny 2 players |
+| [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) | Retrieves primary platform and membership ids for Destiny 2 players |
+| [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) | Retrieves character ids for the specified member |
 | [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file. |
 | [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) | Searches the Destiny 2 manifest by hash ids (from API calls) |
 | [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments |

@@ -26,7 +26,7 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 
-use crate::enums::standing::Standing;
+use crate::{enums::standing::Standing, response::character::CharacterData};
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
@@ -99,32 +99,45 @@ impl ActivityStoreInterface {
     pub async fn sync(
         &mut self,
         member_id: &str,
-        character_id: &str,
         platform: &Platform,
     ) -> Result<SyncResult, Error> {
+        let api = ApiInterface::new(self.verbose)?;
+
+        let characters = api.retrieve_characters(member_id, platform).await?;
+
         let member_row_id = self.insert_member_id(&member_id, &platform).await?;
-        let character_row_id = self
-            .insert_character_id(&character_id, member_row_id)
-            .await?;
 
-        //TODO: collection, total new activities found, activities left over?
-        //total activities synced, total activities (do we know this?)
+        let mut total_synced = 0;
+        let mut total_in_queue = 0;
+        for c in characters {
+            let character_id = &c.id;
+            let character_row_id = self.insert_character_id(&c, member_row_id).await?;
 
-        //these calls could be a little more general purpose by taking api ids and not db ids.
-        //however, passing the db ids, lets us optimize a lot of the sql, and avoid
-        //some extra calls to the DB
-        let a = self.sync_activities(character_row_id, character_id).await?;
-        let b = self
-            .update_activity_queue(character_row_id, member_id, character_id, platform)
-            .await?;
-        let c = self.sync_activities(character_row_id, character_id).await?;
+            eprintln!();
 
-        let out = SyncResult {
-            total_synced: a.total_synced + c.total_synced,
-            total_available: b.total_available - c.total_synced,
-        };
+            let s = format!("Syncing activities for {}", c.class_type);
+            eprintln!("{}", s.to_uppercase());
 
-        Ok(out)
+            //TODO: collection, total new activities found, activities left over?
+            //total activities synced, total activities (do we know this?)
+
+            //these calls could be a little more general purpose by taking api ids and not db ids.
+            //however, passing the db ids, lets us optimize a lot of the sql, and avoid
+            //some extra calls to the DB
+            let a = self.sync_activities(character_row_id, character_id).await?;
+            let b = self
+                .update_activity_queue(character_row_id, member_id, character_id, platform)
+                .await?;
+            let c = self.sync_activities(character_row_id, character_id).await?;
+
+            total_synced += a.total_synced + c.total_synced;
+            total_in_queue += b.total_available - b.total_synced;
+        }
+
+        Ok(SyncResult {
+            total_synced,
+            total_available: total_in_queue,
+        })
     }
 
     /// download results from ids in queue, and return number of items synced
@@ -166,7 +179,6 @@ impl ActivityStoreInterface {
         let mut total_synced = 0;
 
         let s = if ids.len() == 1 { "y" } else { "ies" };
-        eprintln!();
         eprintln!(
             "{}",
             format!("Retrieving details for {} activit{}", ids.len(), s).to_uppercase()
@@ -266,7 +278,6 @@ impl ActivityStoreInterface {
 
         let api = ApiInterface::new(self.verbose)?;
 
-        eprintln!();
         eprintln!(
             "{}",
             "Checking for new activities".to_string().to_uppercase()
@@ -574,16 +585,19 @@ impl ActivityStoreInterface {
 
     async fn insert_character_id(
         &mut self,
-        character_id: &str,
+        character: &CharacterData,
         member_rowid: i32,
     ) -> Result<i32, Error> {
+        let character_id = &character.id;
+
         sqlx::query(
             r#"
-            INSERT OR IGNORE into "character" ("character_id", "member") VALUES (?, ?)
+            INSERT OR IGNORE into "character" ("character_id", "member", "class") VALUES (?, ?, ?)
         "#,
         )
         .bind(character_id.to_string())
         .bind(member_rowid)
+        .bind(character.class_type.to_id().to_string())
         .execute(&mut self.db)
         .await?;
 

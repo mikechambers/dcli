@@ -75,18 +75,12 @@ struct Opt {
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
-    /// Destiny 2 API member id
+    /// Destiny 2 API member id for the character to retrieve activities for.
     ///
     /// This is not the user name, but the member id
     /// retrieved from the Destiny API.
     #[structopt(short = "m", long = "member-id", required = true)]
     member_id: String,
-
-    /// Destiny 2 API character id
-    ///
-    /// Destiny 2 API character id for the character to retrieve activities for.
-    #[structopt(short = "c", long = "character-id")]
-    character_id: String,
 }
 
 #[tokio::main]
@@ -111,10 +105,7 @@ async fn main() {
             }
         };
 
-    let results = match store
-        .sync(&opt.member_id, &opt.character_id, &opt.platform)
-        .await
-    {
+    let results = match store.sync(&opt.member_id, &opt.platform).await {
         Ok(e) => e,
         Err(e) => {
             print_error("Error syncing ids.", e);
@@ -153,7 +144,7 @@ fn print_default(results: &SyncResult, store: &ActivityStoreInterface) {
         "ies"
     };
 
-    println!("{} new activit{} synced", results.total_synced, s);
+    println!("{} activit{} synced", results.total_synced, s);
 
     let total_available = results.total_available;
     let queue_str = if total_available == 1 {
