@@ -13,7 +13,7 @@ If you want to sync the database seperately, via dclias, you can pass the '--no-
 
 The tool expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
-![Image of dcliah](../../images/dcliah.png | width=100)
+[![Image of dcliah](../../images/dcliah_sm.png)](../../images/dcliah.png)
 
 ## USAGE
 ```
