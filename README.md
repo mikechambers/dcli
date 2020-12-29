@@ -1,8 +1,41 @@
 # dcli
 
-dcli (Destiny Command Line Interface) is a collection of utilities that provide a command line interface (CLI) for viewing player stats and data from Destiny 2, using the [Destiny 2 API](https://github.com/Bungie-net/api).
+dcli (Destiny Command Line Interface) is a collection of utilities and apps that provide a command line interface (CLI) for viewing player stats and data from Destiny 2, using the [Destiny 2 API](https://github.com/Bungie-net/api).
+
+[![](images/dcliah_sm.png)](images/dcliah.png)
 
 If you run into any issues, have any ideas, or just want to chat, please post in [issues](https://github.com/mikechambers/dcli/issues) or share on [Discord](https://discord.gg/2Y8bV2Mq3p)
+
+
+## Apps
+
+### Utilities
+| TOOL | DESCRIPTION |
+| --- | --- |
+| [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) | Retrieves primary platform and membership ids for Destiny 2 players |
+| [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) | Manages and syncs the remote Destiny 2 API manifest database |
+| [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file. |
+| [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) | Retrieves character ids for the specified member |
+| [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) | Searches the Destiny 2 manifest by hash ids (from API calls) |
+| [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments |
+
+
+### Apps
+| TOOL | DESCRIPTION |
+| --- | --- |
+| [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) | Displays information on player's current activity within Destiny 2 |
+| [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) | Displays Destiny 2 activity history and stats |
+| [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) | Displays Destiny 2 Crucible activity stats *(deprecated for dcliah)*|
+
+
+### Libraries
+| TOOL | DESCRIPTION |
+| --- | --- |
+| [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) | Library used across all of the dcli apps |
+
+Each tool page contains additional tool specific information and usage examples.
+
+You can also find some additional examples in the [examples](examples/) folder.
 
 ## Download and Installation
 
@@ -14,24 +47,6 @@ Just download, place them in your path and run from the command line (use --help
 
 **IMPORTANT**: Mac binaries are not signed, which can cause some hassle the first time you run them. You can find info on how to easily run them [here](https://github.com/mikechambers/dcli/wiki/Running-dcli-tools-on-Mac-OS-X).
 
-## Utilities
-
-| TOOL | DESCRIPTION |
-| --- | --- |
-| [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) | Retrieves information on player's current activity within Destiny 2 |
-| [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) | Displays Destiny 2 activity history and stats |
-| [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) | Manages and syncs the remote Destiny 2 API manifest database |
-| [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) | Retrieves primary platform and membership ids for Destiny 2 players |
-| [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) | Retrieves character ids for the specified member |
-| [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file. |
-| [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) | Searches the Destiny 2 manifest by hash ids (from API calls) |
-| [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments |
-| [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) | Retrieves Destiny 2 Crucible activity stats *(deprecated for dcliah)*|
-| [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) | Library used across all of the dcli apps |
-    
-Each tool page contains additional tool specific information and usage examples.
-
-You can also find some additional examples in the [examples](examples/) folder.
 ## Getting Started
 
 The core idea behind the project is to provide small, focused utilities that provide useful info by themselves, but that can also be combined together, or with other shell scripts to create greater functionality.
@@ -41,23 +56,16 @@ To get started, download the release (or compile from source), and place the exe
 If you are running on Mac, make sure to [read this article](https://github.com/mikechambers/dcli/wiki/Running-dcli-tools-on-Mac-OS-X) to ensure everything will run correctly.
 
 In general, there are 3 steps to take before you can begin getting data:
-1. Download the manifest (dclim)
-2. Get your member and character ids (dclis, dclic)
-3. Sync your data (dclias)
 
-### Download the manifest
+1. Get your member and character ids (dclis, dclic)
+2. Download the manifest (dclim) and sync your activities (dclias)
+3. View your stats (dcliah)
 
-The first thing you should do is to download the manifest using dclim. This is required to use some of the other apis.
 
-```
-$ dclim
-```
-This will download and save the manifest to the system specific local app data directory.
 
 ### Retrieve your member id, platform and character ids
 
-Next, lets find the member id, platform, and character ids for your account.
-
+The first thing we will do is retrieve your Destiny member id and platform for your primary Destiny account. 
 ```
 $ dclis --name mesh --platform xbox
 ```
@@ -73,46 +81,20 @@ Platform Id    1
 
 Note that the platform may be different that what you entered depending on whether you have set up cross save.
 
-We need to save the platform, and id. Lets store those in environment variables also:
+Most of the apps that call the API will require you to pass in your member id and platform.
+
+### (Optional) Save data in environment variables
+
+One useful trick, is to store some of the data you need to reuse, such your member id, in environment variables.
+
+For example, on Linux / Mac OS X, I have this placed in my `.profile` file:
 
 ```
 export MEMBER_ID=4611686018429783292
 export PLATFORM=xbox
 ```
 
-Finally, lets use this information, to get our character ids.
-
-```
-$ dclic --member-id 4611686018429783292 --platform xbox
-```
-
-or, if we saved our previous data in environment variables:
-
-```
-$ dclic --member-id $MEMBER_ID --platform $PLATFORM
-```
-
-This will print out something like this:
-
-```
-Warlock     2305843009264966986                 
-Titan       2305843009264966984                 
-Hunter      2305843009264966985     LAST ACTIVE
-```
-
-
-### (Optional) Save data in environment variables
-
-One useful trick, is to store some of the data you need to reuse, such as the manifest path, in environment variables.
-
-For example, on Linux / Mac OS X, I have this placed in my `.profile` file:
-
-```
-export MEMBER_ID=4611686018429783292
-export CHARACTER_ID=2305843009264966985
-```
-
-Then, I can just use `$MEMBER_ID` whenever I need to use it.
+Then, I can just use `$MEMBER_ID` whenever you need to use it.
 
 Here are some resources going over how to set environment variables on [Mac OS X](https://apple.stackexchange.com/questions/106778/how-do-i-set-environment-variables-on-os-x), [Linux](https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/) and [Windows](https://support.shotgunsoftware.com/hc/en-us/articles/114094235653-Setting-global-environment-variables-on-Windows).
 
@@ -131,25 +113,50 @@ $ echo $env:MEMBER_ID
 
 Storing this data in enviroment variables is not required but makes it much easier to use the apps. The examples below will assume you are using environment variables (if not you can just enter the actual data values in place of the variables).
 
+### Download the manifest
+
+The next thing we need to do is to download the Destiny 2 manifest database using dclim. This contains information about all of the items and activities in Destiny 2, and is updated periodically.
+
+Just run:
+
+```
+$ dclim
+```
+
+and the manifest file will be downloaded and saved in a system appropriate directory. You should peridocially run this command to check whether the manifest has been updated by Bungie.
+
+### Sync your activities
+
+Next, lets sync all of our activity history to a local database. This data will be used by other apps, such as dcliah to generate and display stats.
+
+```
+$ dclias --member-id $MEMBER_ID --platform $PLATFORM
+```
+
+The first time you run this, it may take a couple of minutes to load all of your data (depending on the number of activities that you have). If any errors occur while syncing, just re-run the app when its done. It is smart enough to only sync the acitivties that it missed the first time.
+
+One you have done the initial sync, subsequent activity syncs should be very fast. You can periodically re-run the app to keep things in sync, or have dcliah automatically sync before it displays your stats.
 
 ### Grabbing data
 
-So, lets start getting some data. Lets see whether we are playing Destiny 2, and if so, which activity:
+Now that we have everything set up, we can now start using the apps to view our data.
+
+Let's start getting some data. Lets see whether we are playing Destiny 2, and if so, which activity:
 
 ```
 $ dclia --member-id $MEMBER_ID --platform $PLATFORM
 ```
 
-Lets see all of our Crucible stats since the weekly reset on Tuesday:
+Lets see all of our Crucible stats since the weekly reset on Tuesday for our last played character:
 
 ```
-$ dcliah --member-id $MEMBER_ID --character-id $CHARACTER_ID --platform $PLATFORM --mode all_pvp --moment weekly
+$ dcliah --member-id $MEMBER_ID --platform $PLATFORM --moment weekly
 ```
 
 Lets view our historical Crucible stats across all of our characters for all time:
 
 ```
-$ dclics --member-id $MEMBER_ID --platform xbox --mode all_pvp --moment all_time
+$ dcliah --member-id $MEMBER_ID --platform xbox --mode all_pvp --moment all_time -class all
 ```
 
 ### Putting it all together
