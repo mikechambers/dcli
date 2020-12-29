@@ -28,7 +28,6 @@ use dcli::enums::moment::Moment;
 use dcli::enums::platform::Platform;
 use dcli::enums::standing::Standing;
 use dcli::manifestinterface::ManifestInterface;
-use dcli::output::Output;
 use dcli::{
     crucible::{CruciblePlayerPerformance, CruciblePlayerPerformances},
     enums::mode::Mode,
@@ -77,109 +76,6 @@ fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
     Ok(moment)
 }
 
-/*
-async fn print_tsv(
-    manifest_dir: &PathBuf,
-    data: ActivityStatsContainer,
-    mode: Mode,
-    moment: Moment,
-    start_time: DateTime<Utc>,
-) -> Result<(), Error> {
-    let mut manifest = get_manifest(manifest_dir).await?;
-
-    print!(
-        "VAR{delim}START_TIME{delim}{start_time}{eol}",
-        start_time = start_time.to_rfc3339(),
-        delim = TSV_DELIM,
-        eol = TSV_EOL,
-    );
-
-    print!(
-        "VAR{delim}MOMENT{delim}{moment}{eol}",
-        moment = format!("{}", moment),
-        delim = TSV_DELIM,
-        eol = TSV_EOL,
-    );
-
-    print!(
-        "VAR{delim}MODE{delim}{mode}{eol}",
-        mode = format!("{}", mode),
-        delim = TSV_DELIM,
-        eol = TSV_EOL,
-    );
-
-    print!(
-        "DATA_HEADER{delim}MODE{delim}MAP{delim}DATE{delim}RESULT{delim}KILLS{delim}\
-        DEATHS{delim}ASSISTS{delim}OPP_DEFEATED{delim}KD{delim}KDA{delim}\
-        EFFICIENCY{eol}",
-        delim = TSV_DELIM,
-        eol = TSV_EOL,
-    );
-
-    for activity in &data.activities {
-        let map_name = match manifest
-            .get_activity_definition(activity.details.reference_id)
-            .await
-        {
-            Ok(e) => e.display_properties.name,
-            Err(_e) => "Unknown".to_string(),
-        };
-
-        print!(
-            "DATA_ROW{delim}{mode}{delim}{map}{delim}{date}{delim}{result}{delim}\
-            {kills}{delim}{deaths}{delim}{assists}{delim}{opp_defeated}{delim}\
-            {kd}{delim}{kda}{delim}{eff}{eol}",
-            mode = activity.details.mode,
-            map = map_name,
-            date = activity.period.to_rfc3339(),
-            result = activity.values.standing,
-            kills = activity.values.kills,
-            deaths = activity.values.deaths,
-            assists = activity.values.assists,
-            opp_defeated = activity.values.opponents_defeated,
-            kd = format_f32(activity.values.kills_deaths_ratio, 2),
-            kda = format_f32(activity.values.kills_deaths_assists, 2),
-            eff = format_f32(activity.values.efficiency, 2),
-            eol = TSV_EOL,
-            delim = TSV_DELIM,
-        );
-    }
-
-    print!(
-        "SUMMARY_HIGHS{delim}{delim}{delim}{delim}{result}{delim}\
-        {kills}{delim}{deaths}{delim}{assists}{delim}{opp_defeated}{delim}\
-        {kd}{delim}{kda}{delim}{eff}{eol}",
-        result = format!("{}:{}", data.wins(), data.losses()),
-        kills = data.highest_kills(),
-        deaths = data.highest_deaths(),
-        assists = data.highest_assists(),
-        opp_defeated = data.highest_opponents_defeated(),
-        kd = format_f32(data.highest_kills_deaths_ratio(), 2),
-        kda = format_f32(data.highest_kills_deaths_assists(), 2),
-        eff = format_f32(data.highest_efficiency(), 2),
-        eol = TSV_EOL,
-        delim = TSV_DELIM,
-    );
-
-    print!(
-        "SUMMARY_PER_GAME{delim}{delim}{delim}{delim}{result}{delim}\
-        {kills}{delim}{deaths}{delim}{assists}{delim}{opp_defeated}{delim}\
-        {kd}{delim}{kda}{delim}{eff}{eol}",
-        result = format_f32(data.win_percentage(), 2),
-        kills = format_f32(data.stat_per_game(data.kills()), 2),
-        deaths = format_f32(data.stat_per_game(data.deaths()), 2),
-        assists = format_f32(data.stat_per_game(data.assists()), 2),
-        opp_defeated = format_f32(data.stat_per_game(data.opponents_defeated()), 2),
-        kd = format_f32(data.kills_deaths_ratio(), 2),
-        kda = format_f32(data.kills_deaths_assists(), 2),
-        eff = format_f32(data.efficiency(), 2),
-        eol = TSV_EOL,
-        delim = TSV_DELIM,
-    );
-
-    Ok(())
-}
-*/
 fn print_default(
     data: &CruciblePlayerPerformances,
     activity_limit: &u32,
@@ -460,9 +356,9 @@ fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
 }
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
-/// Command line tool for retrieving Destiny 2 activity history.
+/// Command line tool for retrieving and viewing Destiny 2 Crucible activity history.
 ///
-/// Enables control of which stats are retrieved based on game mode, moment
+/// Enables control of which stats are displayed based on game mode, moment
 /// from which to retrieve them (to present) and character.
 ///
 /// Created by Mike Chambers.
@@ -501,8 +397,8 @@ struct Opt {
     /// Start moment from which to pull activities from
     ///
     /// Activities will be retrieved from moment to the current time.
-    /// For example, Specifying: --moment weekly
     ///
+    /// For example, Specifying: --moment weekly
     /// will return all activities since the last weekly reset on Tuesday.
     ///
     /// Valid values include daily (last daily reset), weekend
@@ -514,9 +410,6 @@ struct Opt {
     ///
     /// For example:
     /// --moment custom --custom-time 2020-12-08T17:00:00.774187+00:00
-    ///
-    /// Specifying all_time retrieves all activitiy history and may take an extended
-    /// amount of time to retrieve depending on the number of activities.
     #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), 
         short = "T", default_value = "week")]
     moment: Moment,
@@ -537,8 +430,7 @@ struct Opt {
 
     /// Limit the number of activity details that will be displayed.
     ///
-    /// Summary information will be generated based on all activities. Ignored if
-    /// --output-format is tsv.
+    /// Summary information will be generated based on all activities.
     #[structopt(long = "activity-limit", short = "L", default_value = "10")]
     activity_limit: u32,
 
@@ -546,16 +438,7 @@ struct Opt {
     #[structopt(long = "weapon-count", short = "w", default_value = "5")]
     weapon_count: u32,
 
-    /// Format for command output
-    ///
-    /// Valid values are default (Default) and tsv.
-    ///
-    /// tsv outputs in a tab (\t) seperated format of name / value or column
-    /// pairs with lines ending in a new line character (\n).
-    #[structopt(short = "O", long = "output-format", default_value = "default")]
-    output: Output,
-
-    /// Character class to retrieve data for.
+    /// Character to retrieve data for.
     ///
     /// Valid values include hunter, titan, warlock, last_active and all.
     #[structopt(short = "C", long = "class", default_value = "last_active")]
@@ -567,18 +450,17 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    ///Don't sync activities.
+    /// Don't sync activities.
     ///
-    ///If flag is set, activities will not be retrieved before displaying stats.
+    /// If flag is set, activities will not be retrieved before displaying stats.
     /// This is useful in case you are syncing activities in a seperate process.
     #[structopt(short = "N", long = "no-sync")]
     no_sync: bool,
 
-    /// Directory where Destiny 2 manifest database file is stored. (optional)
+    /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
-    /// This will normally be downloaded using the dclim tool, and stored in a file
-    /// named manifest.sqlite3 (in the manifest directory specified when running
-    /// dclim).
+    /// This will normally be downloaded using the dclim and dclias tools, and uses
+    /// a system appropriate directory by default.
     #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
     data_dir: Option<PathBuf>,
 }
@@ -616,7 +498,7 @@ async fn main() {
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error("Could not initialize manifest. Have you run dcliam?", e);
+            print_error("Could not initialize manifest. Have you run dclim?", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -663,62 +545,12 @@ async fn main() {
         return;
     }
 
-    /*
-    eprintln!(
-        "Retrieving activities for {}. This may take a moment...",
-        &opt.mode
-    );
-    //todo: is there any need to send a reference to an enum?
-    let data = match retrieve_activities_since(
-        &opt.member_id,
-        &opt.character_id,
-        &opt.platform,
+    print_default(
+        &data,
+        &opt.activity_limit,
         &opt.mode,
+        &opt.moment,
         &start_time,
-        opt.verbose,
-    )
-    .await
-    {
-        Ok(e) => e,
-        Err(e) => {
-            print_error("Error Loading Activities", e);
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
-
-    let container = match data {
-        Some(e) => e,
-        None => {
-            println!("No activities found.");
-            return;
-        }
-    };
-    */
-
-    match opt.output {
-        Output::Default => {
-            print_default(
-                &data,
-                &opt.activity_limit,
-                &opt.mode,
-                &opt.moment,
-                &start_time,
-                &opt.weapon_count,
-            );
-        }
-        Output::Tsv => {
-            /*
-            match print_tsv(&data_dir, container, opt.mode, opt.moment, custom_time).await {
-                Ok(_e) => {}
-                Err(e) => {
-                    print_error(
-                        "Error generatating output. (Check the --manifest-path) : ",
-                        e,
-                    );
-                    std::process::exit(EXIT_FAILURE);
-                }
-            };
-            */
-        }
-    }
+        &opt.weapon_count,
+    );
 }

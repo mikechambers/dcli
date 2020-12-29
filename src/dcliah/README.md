@@ -1,18 +1,34 @@
 # dcliah
 
-Command line tool for retrieving Destiny 2 activity history.
+Command line tool for viewing Destiny 2 Crucible activity history and stats.
 
-The too expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim). You can specify a custom path to the manifest using the --data-dir argument.
+The application will display individual game results and stats, aggregate game results and stats, as well as individual weapon stats. You can specify specific crucible game modes, as well as time periods to create custom reports.
+
+dcliah pulls its data from the local Destiny 2 activity database store. By default, dcliah will create and update this file with the latest activity data, but it can also be seperately managed using dclias (which is an app specifically for syncing remote data locally).
+
+The first time the database is synced with activities may take a couple of minutes (depending on bandwidth and number of activities). However, subsequent synced should be very quick.
+
+If you want to sync the database seperately, via dclias, you can pass the '--no-sync' flag to dcliah, and it will not update the activity store.
+
+
+The tool expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
+
+![Image of dcliah](../../images/dcliah.png | width=100)
 
 ## USAGE
 ```
 USAGE:
-    dcliah [FLAGS] [OPTIONS] --character-id <character-id> --member-id <member-id> --platform <platform>
+    dcliah [FLAGS] [OPTIONS] --member-id <member-id> --platform <platform>
 
 FLAGS:
     -h, --help       
             Prints help information
 
+    -N, --no-sync    
+            Don't sync activities.
+            
+            If flag is set, activities will not be retrieved before displaying stats. This is useful in case you are
+            syncing activities in a seperate process.
     -V, --version    
             Prints version information
 
@@ -22,11 +38,15 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-    -c, --character-id <character-id>    
-            Destiny 2 API character id
+    -L, --activity-limit <activity-limit>      
+            Limit the number of activity details that will be displayed.
             
-            Destiny 2 API character id for the character to retrieve activities for.
-    -t, --custom-time <custom-time>      
+            Summary information will be generated based on all activities. [default: 10]
+    -C, --class <character-class-selection>    
+            Character to retrieve data for.
+            
+            Valid values include hunter, titan, warlock, last_active and all. [default: last_active]
+    -t, --custom-time <custom-time>            
             Custom start time in RFC 3339 date / time format
             
             Must be a valid date in the past.
@@ -34,21 +54,16 @@ OPTIONS:
             Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
             
             Required when --moment is set to custom, but otherwise not applicable.
-    -D, --data-dir <data-dir>            
-            Directory where Destiny 2 manifest database file is stored. (optional)
+    -D, --data-dir <data-dir>                  
+            Directory where Destiny 2 manifest and activity database files are stored. (optional)
             
-            This will normally be downloaded using the dclim tool, and stored in a file named manifest.sqlite3 (in the
-            manifest directory specified when running dclim).
-    -L, --limit <display-limit>          
-            Limit the number of activity details that will be displayed.
-            
-            Summary information will be generated based on all activities. Ignored if --output-format is tsv. [default:
-            10]
-    -m, --member-id <member-id>          
+            This will normally be downloaded using the dclim and dclias tools, and uses a system appropriate directory
+            by default.
+    -m, --member-id <member-id>                
             Destiny 2 API member id
             
             This is not the user name, but the member id retrieved from the Destiny API.
-    -M, --mode <mode>                    
+    -M, --mode <mode>                          
             Activity mode to return stats for
             
             Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, private, rumble,
@@ -57,12 +72,12 @@ OPTIONS:
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
             private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown,
             lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
-    -s, --moment <moment>                
+    -T, --moment <moment>                      
             Start moment from which to pull activities from
             
-            Activities will be retrieved from moment to the current time. For example, Specifying: --moment weekly
+            Activities will be retrieved from moment to the current time.
             
-            will return all activities since the last weekly reset on Tuesday.
+            For example, Specifying: --moment weekly will return all activities since the last weekly reset on Tuesday.
             
             Valid values include daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly
             reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom.
@@ -70,21 +85,13 @@ OPTIONS:
             When custom is specified, the custom start date in RFC3339 format must be specified with the --custom-time
             argument.
             
-            For example: --moment custom --custom-time 2020-12-08T17:00:00.774187+00:00
-            
-            Specifying all_time retrieves all activitiy history and may take an extended amount of time to retrieve
-            depending on the number of activities. [default: day]
-    -O, --output-format <output>         
-            Format for command output
-            
-            Valid values are default (Default) and tsv.
-            
-            tsv outputs in a tab (\t) seperated format of name / value or column pairs with lines ending in a new line
-            character (\n). [default: default]
-    -p, --platform <platform>            
+            For example: --moment custom --custom-time 2020-12-08T17:00:00.774187+00:00 [default: week]
+    -p, --platform <platform>                  
             Platform for specified id
             
             Valid values are: xbox, playstation, stadia or steam.
+    -w, --weapon-count <weapon-count>          
+            The number of weapons to display details for [default: 5]
 ```
 
 
@@ -96,81 +103,38 @@ OPTIONS:
 
 
 member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
-character-id can be retrieved with [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic).   
+   
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
+
+Activity data store can be created and synced seperately using [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias).
 
 ### Examples
 
-#### Retrieve all activities for past month
+#### Retrieve all activities for past month for the most recently played character
 
 ```
-$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --moment month
+$ dcliah --member-id 4611686018429783292 --platform xbox --moment month
 ```
 
-Output:
+#### Retrieve all Trials of Osiris stats for the Titan since the weekend reset
 
 ```
-All PvP activities since November 13, 2020 (last month)
--------------------------------------------------------
-
-ACTIVITIES
-==================
-Displaying details for the last 10 of 79 activities.
-
-MAP               W / L       STREAK   KILLS    ASTS     K+A  DEATHS     K/D    KD/A     EFF
-============================================================================================
-...               ...            ...     ...     ...     ...     ...     ...     ...     ...
-
-Control Quickplay
---------------------------
-Exodus Blue       Win              1      13      10      23      10    1.30    1.80    2.30
-The Dead Cliffs   Loss            -1       7       3      10      12    0.58    0.71    0.83
-Pacifica          Loss            -2      10       9      19      11    0.91    1.32    1.73
-
-None
---------------------------
-The Fortress      Unknown          0      12       2      14     ^13    0.92    1.00    1.08
-
-Control Quickplay
---------------------------
-Pacifica          Loss            -1      18       2      20       8    2.25    2.38    2.50
-Wormhaven         Win              1      11       6      17       7    1.57    2.00    2.43
-The Burnout       Loss            -1      17       5      22       8    2.12    2.44    2.75
-Midtown           Loss            -2       4       0       4       5    0.80    0.80    0.80
-Endless Vale      Win              1      12      11      23      12    1.00    1.46    1.92
-Rusted Lands      Loss            -1      14       7      21      11    1.27    1.59    1.91
---------------------------------------------------------------------------------------------
-HIGHS             42-36        9W 5L      22      15      29      13    7.00    8.00    9.00
-PER GAME          53.16% w             11.81    4.91   16.72    7.22    1.64    1.98    2.32
-============================================================================================
-MAP               W / L       STREAK   KILLS    ASTS     K+A  DEATHS     K/D    KD/A     EFF
-
-^-highest overall
+$ dcliah --member-id 4611686018429783292 --platform xbox --moment weekend --class titan --mode trials_of_osiris
 ```
 
-#### Retrieve all Trials of Osiris Activities since the weekend reset (Friday)
+#### Retrieve all all stats stats for for all time for all characters
 
 ```
-$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --moment weekend --mode trials_of_osiris
+$ dcliah --member-id 4611686018429783292 --platform xbox --moment all_time --class all
 ```
 
-#### Show all activity for past week and output to TSV format (tab seperated values) with a custom manifest file
+#### Use dclitime to track all stats from a specific time
 
 ```
-$ dcliah --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --data-dir /home/mesh/.config/dcli/manifest.sqlite3 --moment week --output-format tsv
+$ export SESSION_START=$(dclitime)
+$ dcliah --member-id 4611686018429783292 --platform xbox --moment custom --custom-time $SESSION_START
 ```
 
-Outputs:
-
-```
-VAR	START_TIME	2020-12-06T18:51:21.968322125+00:00
-VAR	MOMENT	last week
-VAR	MODE	All PvP
-DATA_HEADER	MODE	MAP	DATE	RESULT	KILLS	DEATHS	ASSISTS	OPP_DEFEATED	KD	KDA	EFFICIENCY
-DATA_ROW	Control Quickplay	Rusted Lands	2020-12-09T22:56:30+00:00	Loss	14	11	7	21	1.27	1.59	1.91
-SUMMARY_HIGHS				0:1	14	11	7	21	1.27	1.59	1.91
-SUMMARY_PER_GAME				0.00	14.00	11.00	7.00	21.00	1.27	1.59	1.91
-```
 
 ## Questions, Feature Requests, Feedback
 
