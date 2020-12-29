@@ -4,12 +4,13 @@ Command line tool for viewing Destiny 2 Crucible activity history and stats.
 
 The application will display individual game results and stats, aggregate game results and stats, as well as individual weapon stats. You can specify specific crucible game modes, as well as time periods to create custom reports.
 
-dcliah pulls its data from the local Destiny 2 activity database store. By default, dcliah will create and update this file with the latest activity data, but it can also be seperately managed using dclias (which is an app specifically for syncing remote data locally).
+dcliah pulls its data from the local Destiny 2 activity database store. By default, dcliah will create and update this file with the latest activity data, but it can also be seperately managed using [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias).
 
-The first time the database is synced with activities may take a couple of minutes (depending on bandwidth and number of activities). However, subsequent synced should be very quick.
+The first time the database downloads activity data may take a couple of minutes (depending on bandwidth and number of activities). However, subsequent syncs should be very quick.
 
-If you want to sync the database seperately, via dclias, you can pass the '--no-sync' flag to dcliah, and it will not update the activity store.
+It supports storing and tracking stats for multiple players and characters.
 
+If you want to sync the database seperately, via dclias, you can pass the '--no-sync' flag to dcliah and it will not update the activity store.
 
 The tool expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
@@ -122,13 +123,13 @@ $ dcliah --member-id 4611686018429783292 --platform xbox --moment month
 $ dcliah --member-id 4611686018429783292 --platform xbox --moment weekend --class titan --mode trials_of_osiris
 ```
 
-#### Retrieve all all stats stats for for all time for all characters
+#### Retrieve all stats for all time for all characters
 
 ```
 $ dcliah --member-id 4611686018429783292 --platform xbox --moment all_time --class all
 ```
 
-#### Use dclitime to track all stats from a specific time
+#### Use dclitime to track all stats from a specific time (on unix based systems)
 
 ```
 $ export SESSION_START=$(dclitime)
