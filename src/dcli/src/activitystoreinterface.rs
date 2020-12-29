@@ -36,6 +36,7 @@ use crate::crucible::{
     ActivityDetail, CruciblePlayerPerformance, CruciblePlayerPerformances, CrucibleStats,
     ExtendedCrucibleStats, Item, Medal, MedalStat, Player, WeaponStat,
 };
+use crate::enums::character::{CharacterClass, CharacterClassSelection};
 use crate::enums::medaltier::MedalTier;
 use crate::enums::mode::Mode;
 use crate::enums::platform::Platform;
@@ -124,7 +125,7 @@ impl ActivityStoreInterface {
 
             eprintln!();
 
-            let s = format!("Syncing activities for {}", c.class_type);
+            let s = format!("Checking for new activities for {}", c.class_type);
             eprintln!("{}", s.to_uppercase());
 
             //TODO: collection, total new activities found, activities left over?
@@ -287,10 +288,6 @@ impl ActivityStoreInterface {
 
         let api = ApiInterface::new(self.verbose)?;
 
-        eprintln!(
-            "{}",
-            "Checking for new activities".to_string().to_uppercase()
-        );
         eprintln!("------------------------------------------------");
         eprintln!("This may take a moment depending on the number of activities.");
         let result = api
@@ -648,6 +645,130 @@ impl ActivityStoreInterface {
     pub async fn retrieve_activities_since(
         &mut self,
         member_id: &str,
+        character_selection: &CharacterClassSelection,
+        platform: &Platform,
+        mode: &Mode,
+        start_time: &DateTime<Utc>,
+        manifest: &mut ManifestInterface,
+    ) -> Result<Option<CruciblePlayerPerformances>, Error> {
+        let api = ApiInterface::new(self.verbose)?;
+
+        //first, lets get all of the current characters for the member
+        let characters = match api.retrieve_characters(member_id, platform).await? {
+            Some(e) => e,
+            None => {
+                //if there are not any, return an error
+                return Err(Error::NoCharacters);
+            }
+        };
+
+        //figure which data to retrieve
+        let out = if character_selection == &CharacterClassSelection::All {
+            self.retrieve_activities_for_member_since(
+                member_id, platform, mode, start_time, manifest,
+            )
+            .await?
+        } else {
+            let character_id = if character_selection == &CharacterClassSelection::Titan {
+                match characters.get_by_class_ref(CharacterClass::Titan) {
+                    Some(e) => &e.id,
+                    None => return Err(Error::CharacterDoesNotExist),
+                }
+            } else if character_selection == &CharacterClassSelection::Warlock {
+                match characters.get_by_class_ref(CharacterClass::Warlock) {
+                    Some(e) => &e.id,
+                    None => return Err(Error::CharacterDoesNotExist),
+                }
+            } else if character_selection == &CharacterClassSelection::Hunter {
+                match characters.get_by_class_ref(CharacterClass::Hunter) {
+                    Some(e) => &e.id,
+                    None => return Err(Error::CharacterDoesNotExist),
+                }
+            } else {
+                &characters.get_last_active_ref().unwrap().id
+            };
+
+            self.retrieve_activities_for_character_since(
+                member_id,
+                &character_id,
+                platform,
+                mode,
+                start_time,
+                manifest,
+            )
+            .await?
+        };
+
+        Ok(out)
+    }
+
+    pub async fn retrieve_activities_for_member_since(
+        &mut self,
+        member_id: &str,
+        platform: &Platform,
+        mode: &Mode,
+        start_time: &DateTime<Utc>,
+        manifest: &mut ManifestInterface,
+    ) -> Result<Option<CruciblePlayerPerformances>, Error> {
+        // let character_index = self
+        //     .get_character_row_id(member_id, character_id, platform)
+        //     .await?;
+
+        //let now = std::time::Instant::now();
+
+        /*
+                        select character.id as id from "character", "member" where character_id = ? and
+                        character.member = member.id and member.member_id = ? and member.platform_id = ?
+        */
+
+        //this is running about 550ms
+        let activity_rows = sqlx::query(
+            r#"
+            SELECT
+                *,
+                activity.mode as activity_mode,
+                character_activity_stats.id as character_activity_stats_index  
+            FROM
+                character_activity_stats
+            INNER JOIN
+                activity ON character_activity_stats.activity = activity.id,
+                modes ON modes.activity = activity.id
+            JOIN 
+                character on character_activity_stats.character = character.id
+            JOIN 
+                member on member.id = character.member
+            WHERE
+                member.id = (select id from member where member_id = ? and platform_id = ?) AND
+                period > ? AND
+                modes.mode = ?
+            ORDER BY
+                activity.period DESC
+
+            "#,
+        )
+        .bind(member_id.to_string())
+        .bind(platform.to_id().to_string())
+        .bind(start_time.to_rfc3339())
+        .bind(mode.to_id().to_string())
+        .fetch_all(&mut self.db)
+        .await?;
+
+        //println!("END query {}", now.elapsed().as_millis());
+
+        if activity_rows.is_empty() {
+            return Ok(None);
+        }
+
+        let p = self
+            .parse_performance_rows(manifest, &activity_rows)
+            .await?;
+
+        Ok(Some(p))
+    }
+
+    pub async fn retrieve_activities_for_character_since(
+        &mut self,
+        member_id: &str,
         character_id: &str,
         platform: &Platform,
         mode: &Mode,
@@ -659,21 +780,22 @@ impl ActivityStoreInterface {
             .await?;
 
         //let now = std::time::Instant::now();
-
         //this is running about 550ms
         let activity_rows = sqlx::query(
             r#"
             SELECT
-            *,
-            activity.mode as activity_mode,
-            character_activity_stats.id as character_activity_stats_index  
+                *,
+                activity.mode as activity_mode,
+                character_activity_stats.id as character_activity_stats_index  
             FROM
                 character_activity_stats
-            
             INNER JOIN
                 activity ON character_activity_stats.activity = activity.id,
                 modes ON modes.activity = activity.id
-                
+            JOIN 
+                character on character_activity_stats.character = character.id
+            JOIN 
+                member on member.id = character.member
             WHERE
                 activity.period > ? AND
                 modes.mode = ? AND
@@ -695,14 +817,8 @@ impl ActivityStoreInterface {
             return Ok(None);
         }
 
-        let player_template = Player {
-            member_id: member_id.to_string(),
-            character_id: character_id.to_string(),
-            platform: *platform,
-        };
-
         let p = self
-            .parse_performance_rows(manifest, &activity_rows, &player_template)
+            .parse_performance_rows(manifest, &activity_rows)
             .await?;
 
         Ok(Some(p))
@@ -712,15 +828,12 @@ impl ActivityStoreInterface {
         &mut self,
         manifest: &mut ManifestInterface,
         activity_rows: &[sqlx::sqlite::SqliteRow],
-        player_template: &Player,
     ) -> Result<CruciblePlayerPerformances, Error> {
         let mut performances: Vec<CruciblePlayerPerformance> =
             Vec::with_capacity(activity_rows.len());
 
         for activity_row in activity_rows {
-            let player_performance = self
-                .parse_performance_row(manifest, &activity_row, &player_template)
-                .await?;
+            let player_performance = self.parse_performance_row(manifest, &activity_row).await?;
 
             performances.push(player_performance);
         }
@@ -734,7 +847,6 @@ impl ActivityStoreInterface {
         &mut self,
         manifest: &mut ManifestInterface,
         activity_row: &sqlx::sqlite::SqliteRow,
-        player_template: &Player,
     ) -> Result<CruciblePlayerPerformance, Error> {
         //let activity_index: i32 = activity_row.try_get("activity_index")?;
         let activity_id: i64 = activity_row.try_get_unchecked("activity_id")?;
@@ -910,8 +1022,6 @@ impl ActivityStoreInterface {
             medal_stats.push(medal_stat);
         }
 
-        let player = player_template.clone();
-
         let extended = ExtendedCrucibleStats {
             precision_kills,
             weapon_kills_ability,
@@ -945,6 +1055,18 @@ impl ActivityStoreInterface {
             player_count,
             team_score,
             extended: Some(extended),
+        };
+
+        let member_id: String = activity_row.try_get_unchecked("member_id")?;
+        let character_id = activity_row.try_get_unchecked("character_id")?;
+        let platform_id: i32 = activity_row.try_get_unchecked("platform_id")?;
+
+        let platform = Platform::from_id(platform_id as u32);
+
+        let player = Player {
+            member_id,
+            character_id,
+            platform,
         };
 
         let player_performance = CruciblePlayerPerformance {

@@ -35,6 +35,8 @@ use dcli::{
     utils::{calculate_ratio, human_duration},
 };
 
+use dcli::enums::character::CharacterClassSelection;
+
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
 use dcli::utils::{determine_data_dir, format_f32, repeat_str, uppercase_first_char};
@@ -553,11 +555,11 @@ struct Opt {
     #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 
-    /// Destiny 2 API character id
+    /// Character class to retrieve data for.
     ///
-    /// Destiny 2 API character id for the character to retrieve activities for.
-    #[structopt(short = "c", long = "character-id")]
-    character_id: String,
+    /// Valid values include hunter, titan, warlock, last_active and all.
+    #[structopt(short = "C", long = "class", default_value = "last_active")]
+    character_class_selection: CharacterClassSelection,
 
     ///Print out additional information
     ///
@@ -632,7 +634,7 @@ async fn main() {
     let data = match store
         .retrieve_activities_since(
             &opt.member_id,
-            &opt.character_id,
+            &opt.character_class_selection,
             &opt.platform,
             &opt.mode,
             &start_time,

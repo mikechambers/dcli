@@ -20,7 +20,7 @@ USAGE:
     dclim [FLAGS] [OPTIONS]
 
 FLAGS:
-    -C, --check      
+    -K, --check      
             Check whether a new manifest version is available, but do not download
 
     -F, --force      

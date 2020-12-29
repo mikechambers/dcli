@@ -62,6 +62,7 @@ pub enum Error {
     ChronoParse { description: String },
     UnknownEnumValue,
     NoCharacters,
+    CharacterDoesNotExist,
 }
 
 impl Display for Error {
@@ -148,8 +149,13 @@ impl Display for Error {
                 write!(f, "Could not convert value to enum.")
             },
             Error::NoCharacters  => {
-                write!(f, "There are no characters for the specified member.")
+                write!(f, "There are no characters for the member.")
             },
+            Error::CharacterDoesNotExist  => {
+                write!(f, "Character class does not exist for member.")
+            },
+
+            
 
         }
     }

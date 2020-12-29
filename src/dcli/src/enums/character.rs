@@ -1,5 +1,35 @@
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use std::fmt::{Display, Formatter, Result};
+
+use std::fmt;
+use std::str::FromStr;
+
+#[derive(PartialEq, Eq, Debug)]
+pub enum CharacterClassSelection {
+    Titan = 0,
+    Hunter = 1,
+    Warlock = 2,
+    LastActive = 3,
+    All = 4,
+}
+
+impl FromStr for CharacterClassSelection {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        //wrap in String so we can convert to lower case
+        let s = String::from(s).to_lowercase();
+
+        //get a slice to get a &str for the match
+        match &s[..] {
+            "titan" => Ok(CharacterClassSelection::Titan),
+            "hunter" => Ok(CharacterClassSelection::Hunter),
+            "warlock" => Ok(CharacterClassSelection::Warlock),
+            "last_active" => Ok(CharacterClassSelection::LastActive),
+            "all" => Ok(CharacterClassSelection::All),
+            _ => Err("Unknown CharacterClassSelection type"),
+        }
+    }
+}
 
 /****************CharacterGender *******************/
 #[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
@@ -23,8 +53,8 @@ impl CharacterGender {
     }
 }
 
-impl Display for CharacterGender {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+impl fmt::Display for CharacterGender {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
             CharacterGender::Masculine => "Masculine",
             CharacterGender::Feminine => "Feminine",
@@ -57,15 +87,15 @@ impl CharacterClass {
         }
     }
 }
-fn check_width(s: &str, f: &mut Formatter) -> Result {
+fn check_width(s: &str, f: &mut fmt::Formatter) -> fmt::Result {
     if let Some(width) = f.width() {
         write!(f, "{:width$}", s.to_string(), width = width)
     } else {
         write!(f, "{}", s)
     }
 }
-impl Display for CharacterClass {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+impl fmt::Display for CharacterClass {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
             CharacterClass::Titan => "Titan",
             CharacterClass::Hunter => "Hunter",
@@ -101,8 +131,8 @@ impl CharacterRace {
     }
 }
 
-impl Display for CharacterRace {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+impl fmt::Display for CharacterRace {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
             CharacterRace::Human => "Human",
             CharacterRace::Awoken => "Awoken",
