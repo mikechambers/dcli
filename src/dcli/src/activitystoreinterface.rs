@@ -135,13 +135,14 @@ impl ActivityStoreInterface {
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
             //some extra calls to the DB
             let a = self.sync_activities(character_row_id, character_id).await?;
-            let b = self
+            let _b = self
                 .update_activity_queue(character_row_id, member_id, character_id, platform)
                 .await?;
             let c = self.sync_activities(character_row_id, character_id).await?;
 
             total_synced += a.total_synced + c.total_synced;
-            total_in_queue += b.total_available - b.total_synced;
+            total_in_queue +=
+                (a.total_available + c.total_available) - (a.total_synced + c.total_synced);
         }
 
         Ok(SyncResult {

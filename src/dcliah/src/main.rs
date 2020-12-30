@@ -505,10 +505,11 @@ async fn main() {
 
     if !opt.no_sync {
         match store.sync(&opt.member_id, &opt.platform).await {
-            Ok(e) => e,
+            Ok(_e) => (),
             Err(e) => {
-                print_error("Could not sync activity store.", e);
-                std::process::exit(EXIT_FAILURE);
+                eprintln!("Could not sync activity store {}", e);
+                eprintln!("Using existing data");
+                ()
             }
         };
     }
@@ -532,7 +533,6 @@ async fn main() {
     };
 
     if data.is_none() {
-        //TODO: TSV Output
         println!("No activities found.");
         return;
     }
@@ -540,7 +540,6 @@ async fn main() {
     let data = data.unwrap();
 
     if data.get_performances().is_empty() {
-        //TODO: TSV Output
         println!("No activities found.");
         return;
     }

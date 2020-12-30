@@ -14,7 +14,7 @@ If you run into any issues, have any ideas, or just want to chat, please post in
 | --- | --- |
 | [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) | Retrieves primary platform and membership ids for Destiny 2 players |
 | [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) | Manages and syncs the remote Destiny 2 API manifest database |
-| [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file. |
+| [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file |
 | [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) | Retrieves character ids for the specified member |
 | [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) | Searches the Destiny 2 manifest by hash ids (from API calls) |
 | [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments |
@@ -57,7 +57,7 @@ If you are running on Mac, make sure to [read this article](https://github.com/m
 
 In general, there are 3 steps to take before you can begin getting data:
 
-1. Get your member and character ids (dclis, dclic)
+1. Get your member id and platform (dclis)
 2. Download the manifest (dclim) and sync your activities (dclias)
 3. View your stats (dcliah)
 
