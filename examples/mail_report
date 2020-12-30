@@ -68,7 +68,7 @@ for mode in "${MODES[@]}"; do
     OUTPUT+="************************************************************************************************************\n"
 
     #2>&1 this redirects stderr to stdout so we can capture
-    TMP_OUTPUT=$(dcliah --member-id "$MEMBER_ID" --platform "$PLATFORM" --class all --mode "$mode" --moment week 2> /dev/null)
+    TMP_OUTPUT=$(dcliah --member-id "$MEMBER_ID" --platform "$PLATFORM" --class all --mode "$mode" --moment week --activity-limit 0 --weapon-count 10 2> /dev/null)
 
     if [ $? -eq 1 ] 
     then
