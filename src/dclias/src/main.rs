@@ -25,7 +25,9 @@ use std::path::PathBuf;
 use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::enums::platform::Platform;
 use dcli::output::Output;
-use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE};
+use dcli::utils::{
+    build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE,
+};
 use structopt::StructOpt;
 
 use dcli::activitystoreinterface::SyncResult;
@@ -58,7 +60,11 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "O", long = "output-format", default_value = "default")]
+    #[structopt(
+        short = "O",
+        long = "output-format",
+        default_value = "default"
+    )]
     output: Output,
 
     /// Directory where activity sqlite3 database will be stored. (optional)
@@ -97,7 +103,9 @@ async fn main() {
     };
 
     let mut store: ActivityStoreInterface =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
+            .await
+        {
             Ok(e) => e,
             Err(e) => {
                 print_error("Error initializing activity store.", e);
@@ -148,7 +156,8 @@ fn print_default(results: &SyncResult, store: &ActivityStoreInterface) {
 
     let total_available = results.total_available;
     let queue_str = if total_available == 1 {
-        "1 activity in queue. Activity will be synced the next time app is run.".to_string()
+        "1 activity in queue. Activity will be synced the next time app is run."
+            .to_string()
     } else if total_available == 0 {
         "No activities in queue".to_string()
     } else {

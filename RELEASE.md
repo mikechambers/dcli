@@ -1,5 +1,13 @@
 # dcli Release Notes
 
+## v0.3.0 : December 30, 2020
+
+* Refactored dcliah to use local data
+* Added dclias
+* Deprecated dclics
+* Added default storage locations for data storage. No longer need to specify manifest-dir for apps
+* Simplified and standardized argument names. Please review docs
+
 ## v0.2.0 : December 14, 2020
 
 * Added dcliah

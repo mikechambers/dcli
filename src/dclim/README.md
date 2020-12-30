@@ -76,9 +76,10 @@ Manifest info saved.
 $ dclim --data-dir ~/manifest/ --force
 ```
 
-#### Check status of remote manifest, but do not download. Print out additional information.
+#### Check status of remote manifest, but do not download.
+
 ```
-$ dclim --check --verbose
+$ dclim --check
 ```
 
 which outputs:
@@ -95,7 +96,7 @@ Updated manifest available    89360.20.11.18.2249-6
 #### Check for an updated manifest print output in a tab seperated format (tsv)
 
 ```
-$ dclim --manifest-dir ~/manifest/ --output-format tsv
+$ dclim --output-format tsv
 ```
 
 outputs:

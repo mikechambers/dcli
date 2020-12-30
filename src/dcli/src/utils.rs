@@ -162,19 +162,15 @@ pub fn uppercase_first_char(s: &str) -> String {
 
 //this could use some more work and polish. Add "and" before the last item.
 pub fn human_duration(seconds: u32) -> String {
-    let s = seconds as i64;
-
-    let dt = Utc.ymd(0, 1, 1).and_hms(0, 0, 0) + Duration::seconds(s);
-
-    let y = build_time_str(dt.year(), "year");
+    let dt = Utc.ymd(0, 1, 1).and_hms(0, 0, 0) + Duration::seconds(seconds as i64);
+    let year = build_time_str(dt.year(), "year");
     let mon = build_time_str(dt.month() as i32 - 1, "month");
-    let d = build_time_str(dt.day() as i32 - 1, "day");
-    let h = build_time_str(dt.hour() as i32, "hour");
+    let day = build_time_str(dt.day() as i32 - 1, "day");
+    let hour = build_time_str(dt.hour() as i32, "hour");
     let min = build_time_str(dt.minute() as i32, "minute");
-    let s = build_time_str(dt.second() as i32, "second");
-
+    let sec = build_time_str(dt.second() as i32, "second");
     //collect all items into a vector
-    let t = vec![y, mon, d, h, min, s];
+    let t = vec![year, mon, day, hour, min, sec];
 
     //remove empty items
     let mut t = t

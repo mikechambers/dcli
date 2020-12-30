@@ -509,7 +509,6 @@ async fn main() {
             Err(e) => {
                 eprintln!("Could not sync activity store {}", e);
                 eprintln!("Using existing data");
-                ()
             }
         };
     }

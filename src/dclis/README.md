@@ -8,7 +8,6 @@ on a platform different that the one specified, depending on the cross
 save status of the account. It will return the primary membershipId that
 all data will be associate with.
 
-
 In cases of players who have enabled cross save / play, the primary id and platform will be returned.
 
 The id and platform can be used as input to other [dcli](https://github.com/mikechambers/dcli) tools.

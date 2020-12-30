@@ -12,7 +12,7 @@ It supports storing and tracking stats for multiple players and characters.
 
 If you want to sync the database seperately, via dclias, you can pass the '--no-sync' flag to dcliah and it will not update the activity store.
 
-The tool expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
+The tool expects that the manifest has been downloaded and synced using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
 [![Image of dcliah](../../images/dcliah_sm.png)](../../images/dcliah.png)
 
@@ -101,7 +101,6 @@ OPTIONS:
 | --platform | xbox, playstation, stadia, steam |
 | --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
 | --moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom |
-
 
 member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
    

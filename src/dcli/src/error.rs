@@ -154,9 +154,6 @@ impl Display for Error {
             Error::CharacterDoesNotExist  => {
                 write!(f, "Character class does not exist for member.")
             },
-
-            
-
         }
     }
 }

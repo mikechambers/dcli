@@ -8,7 +8,7 @@ May return more than one result.
 ## USAGE
 ```
 USAGE:
-    dclims [FLAGS] [OPTIONS] --hash <hash> --manifest-path <manifest-path>
+    dclims [FLAGS] [OPTIONS] --hash <hash>
 
 FLAGS:
         --help       
@@ -23,14 +23,16 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-    -h, --hash <hash>                      
+    -D, --data-dir <data-dir>       
+            Directory where Destiny 2 manifest database file is stored. (optional)
+            
+            This will normally be downloaded using the dclim tool, and stored in a file named manifest.sqlite3 (in the
+            manifest directory specified when running dclim).
+    -h, --hash <hash>               
             The hash id from the Destiny 2 API for the item to be searched for.
             
             Example : 326060471
-    -P, --manifest-path <manifest-path>    
-            Local path for Destiny 2 manifest database file
-
-    -o, --output-format <output>                  
+    -O, --output-format <output>    
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -45,7 +47,7 @@ Manifest can be downloaded and synced with from [dclim](https://github.com/mikec
 
 #### Retrieve information for *Luna's Howl* by its API hash id.
 ```
-$ dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 3260604718
+$ dclims -hash 3260604718
 ```
 
 which returns:
@@ -62,7 +64,7 @@ Icon Path      https://www.bungie.net/common/destiny2_content/icons/f59ce6481de3
 #### Retrieve information for *Luna's Howl* by its API hash id and output to tab seperated format (tsv)
 
 ```
-$ dclims --manifest-path ~/tmp/manifest.sqlite3 --hash 153979396 --output-format tsv
+$ dclims --hash 153979396 --output-format tsv
 ```
 
 outputs:

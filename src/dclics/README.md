@@ -2,12 +2,13 @@
 
 Command line tool for retrieving historic Destiny 2 Crucible activity stats.
 
+**dclics has been deprecated and is being replaced by [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah)**
+
 Enables control of which stats are retrieved via:
 
 * Game Mode such as all, control, iron_banner, trials_of_osiris, etc...
 * Time period such as alltime, sincereset, lastmonth...
 * Character, specify for all characters or specific character (any period other than alltime requires that the character is specified)
-
 
 Retrieves stats based on the period specified, up to, but excluding the current day.
 
@@ -42,13 +43,13 @@ OPTIONS:
     -M, --mode <mode>                    
             Activity mode to return stats for
             
-            Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, private,
-            rumble, pvp_competitive, quickplay and trials_of_osiris.
+            Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, private, rumble,
+            pvp_competitive, quickplay and trials_of_osiris.
             
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
             private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown,
             lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
-        --moment <moment>                
+    -T, --moment <moment>                
             Time range to pull stats from
             
             Valid values include day (last day), daily (since last daily reset), week (last week), weekly (since last
@@ -56,7 +57,7 @@ OPTIONS:
             
             All ranges are up to, but not including current day, and thus some values may not return data depending on
             time of day. [default: all_time]
-    -o, --output-format <output>                
+    -O, --output-format <output>         
             Format for command output
             
             Valid values are default (Default) and tsv.
@@ -109,12 +110,6 @@ You have had an average life span of 1 minute 11 seconds with an average kill di
 
 ```
 $ dclics --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --mode iron_banner
-```
-
-#### Show stats for Trials of Osiris since the last weekly reset
-
-```
-$ dclics --member-id 4611686018429783292 --character-id 2305843009264966985 --platform xbox --mode trials_of_osiris --moment weekly
 ```
 
 #### Show life time stats for comp, outputing to a tab seperated format

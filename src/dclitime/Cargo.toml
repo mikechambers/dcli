@@ -1,6 +1,6 @@
 [package]
 name = "dclitime"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
 edition = "2018"
 description = "Command line tool for retrieving Destiny 2 related date / time stamps"

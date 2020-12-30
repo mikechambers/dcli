@@ -38,7 +38,9 @@ use tokio::prelude::*;
 
 pub const MANIFEST_INFO_FILE_NAME: &str = "manifest_info.json";
 
-async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> {
+async fn retrieve_manifest_info(
+    print_url: bool,
+) -> Result<ManifestInfo, Error> {
     let client: ApiClient = ApiClient::new(print_url)?;
     let url = "https://www.bungie.net/Platform/Destiny2/Manifest/";
 
@@ -54,7 +56,10 @@ async fn retrieve_manifest_info(print_url: bool) -> Result<ManifestInfo, Error> 
     Ok(m_info)
 }
 
-fn save_manifest_info(manifest_info: &ManifestInfo, path: &PathBuf) -> Result<(), Error> {
+fn save_manifest_info(
+    manifest_info: &ManifestInfo,
+    path: &PathBuf,
+) -> Result<(), Error> {
     let json = manifest_info.to_json()?;
 
     //opens a file for writing. creates if it doesn't exist, otherwise
@@ -72,7 +77,11 @@ fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
 }
 
 //should this move to ApiClient?
-async fn download_manifest(url: &str, path: &PathBuf, print_url: bool) -> Result<(), Error> {
+async fn download_manifest(
+    url: &str,
+    path: &PathBuf,
+    print_url: bool,
+) -> Result<(), Error> {
     let client: ApiClient = ApiClient::new(print_url)?;
 
     //Download the manifest
@@ -151,7 +160,11 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(short = "O", long = "output-format", default_value = "default")]
+    #[structopt(
+        short = "O",
+        long = "output-format",
+        default_value = "default"
+    )]
     output: Output,
 }
 #[tokio::main]
@@ -215,7 +228,8 @@ async fn main() {
                 );
             }
 
-            manifest_needs_updating = local_manifest_info.url != remote_manifest_info.url;
+            manifest_needs_updating =
+                local_manifest_info.url != remote_manifest_info.url;
         } else {
             //couldnt load local manifest, so we will try and update
             manifest_needs_updating = true;
@@ -245,7 +259,10 @@ async fn main() {
             }
             Output::Tsv => {
                 let mut name_values: Vec<(&str, String)> = Vec::new();
-                name_values.push(("update_avaliable", format!("{}", manifest_needs_updating)));
+                name_values.push((
+                    "update_avaliable",
+                    format!("{}", manifest_needs_updating),
+                ));
                 name_values.push(("updated", format!("{}", false)));
                 name_values.push(("version", remote_manifest_info.version));
                 name_values.push(("url", remote_manifest_info.url));
@@ -259,7 +276,9 @@ async fn main() {
     if opt.force || manifest_needs_updating {
         //print to stderr so user can redirect other output (such as tsv) to stdout
         eprintln!("Downloading manifest. This may take a bit of time.");
-        match download_manifest(&remote_manifest_info.url, &m_path, opt.verbose).await {
+        match download_manifest(&remote_manifest_info.url, &m_path, opt.verbose)
+            .await
+        {
             Ok(e) => e,
             Err(e) => {
                 print_error("Could not download and save manifest", e);
@@ -292,7 +311,8 @@ async fn main() {
         Output::Tsv => {
             let mut name_values: Vec<(&str, String)> = Vec::new();
             name_values.push(("local_path", format!("{}", m_path.display())));
-            name_values.push(("updated", format!("{}", manifest_needs_updating)));
+            name_values
+                .push(("updated", format!("{}", manifest_needs_updating)));
             name_values.push(("version", remote_manifest_info.version));
             name_values.push(("url", remote_manifest_info.url));
 

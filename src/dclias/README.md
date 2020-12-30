@@ -11,7 +11,7 @@ The app has support for storing data across multiple players and characters.
 The app syncs in 3 stages:
 
 1. First, check if there are any local unsynced activities from previous syncs. If so, download their details (step 3).
-2. Call the Destiny API, and get a list of all new activities since the last sync. If it is the first time the app been synced, then retrieve all Crucible activity ids for all time for the specified character. Store the activity ids.
+2. Call the Destiny API, and get a list of all new activities since the last sync. If it is the first time the app has been synced, then retrieve all Crucible activity ids for all time for the specified character. Store the activity ids.
 3. Loop through all of the activity ids that have been found, and download all of the data on each activity and store it in the database.
 
 If an error occurs when downloading the list of activities (step 2), then the app will abort. Just rerun.
@@ -21,7 +21,6 @@ If any errors occur while downloading activity details (step 3), then that speci
 Depending on the number of activities, the initial sync can take a couple of minutes. Subsequent synces should be much faster.
 
 The tool stores match data for the specified character. It does not store match results for the other players in the match.
-
 
 
 ## USAGE
@@ -81,10 +80,10 @@ character-id can be retrieved with [dclic](https://github.com/mikechambers/dcli/
 
 ### Examples
 
-#### Download and store all Crucible activity history
+#### Download and store all Crucible activity history for all characters
 
 ```
-$ dclias --character-id 2305843009264966985 -m --member-id 4611686018429783292 --platform xbox
+$ dclias --member-id 4611686018429783292 --platform xbox
 ```
 
 Outputs:

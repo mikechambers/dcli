@@ -223,6 +223,7 @@ impl CruciblePlayerPerformances {
                 Standing::Unknown => (),
             };
 
+            #[allow(clippy::comparison_chain)]
             if streak > 0 {
                 longest_win_streak = std::cmp::max(longest_win_streak, streak as u32);
             } else if streak < 0 {
