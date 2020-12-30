@@ -21,9 +21,6 @@ set -u
 MEMBER_ID=$MEMBER_ID
 PLATFORM=$PLATFORM
 
-##can get from dclim
-MANIFEST_PATH=$MANIFEST_PATH
-
 DEFAULT_CHECK_INTERVAL_SECONDS=15
 
 echo "CTRL-C to end program"
@@ -33,7 +30,7 @@ while :
 do
     CHECK_INTERVAL_SECONDS=$DEFAULT_CHECK_INTERVAL_SECONDS
     echo "Checking Status"
-    ACTIVITY=$(dclia --manifest-path "$MANIFEST_PATH" --member-id "$MEMBER_ID" --platform "$PLATFORM")
+    ACTIVITY=$(dclia --member-id "$MEMBER_ID" --platform "$PLATFORM")
     #note should do some error checking here in case command fails (can capture exit code)
 
     #we could have the command above output name / value pairs via --output-format tsv

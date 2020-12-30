@@ -26,13 +26,14 @@ $only_check_if_destiny_running = $true
 #whether it should print out status and other output to console
 $quiet=$false
 
-#you can get member_id and platform by running dclis
-$member_id="00000000000000000000"
-$platform="xbox"
+#pull setting from environment variables. you can also
+#just enter them here
 
-#run dclim --manifest-path /tmp/
-#to sync manifest before running this script
-$manifest_path="/tmp/manifest.sqlite3"
+#you can get member_id and platform by running dclis
+$member_id=$env:MEMBER_ID
+$platform=$env:PLATFORM
+
+#run dclim to sync manifest before running this script
 
 ############# program #############
 
@@ -51,7 +52,7 @@ while ($true) {
         }
 
         # assumes dclia is in your path
-        $activity = (dclia --manifest-path $manifest_path --member-id $member_id --platform $platform) -join "`n"
+        $activity = (dclia --member-id $member_id --platform $platform) -join "`n"
         $skip_notification = (($activity -eq "Not currently in an activity") -or ($activity -eq "Currently sitting in Orbit"))
     
         #dont send notification the first time we run

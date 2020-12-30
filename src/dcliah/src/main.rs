@@ -115,7 +115,6 @@ fn print_default(
     );
 
     println!();
-    println!();
     println!("ACTIVITIES");
     println!("==================");
     println!("{}", title);
@@ -532,14 +531,14 @@ async fn main() {
     };
 
     if data.is_none() {
-        println!("No activities found.");
+        println!("No activities found");
         return;
     }
 
     let data = data.unwrap();
 
     if data.get_performances().is_empty() {
-        println!("No activities found.");
+        println!("No activities found");
         return;
     }
 

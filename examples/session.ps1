@@ -17,10 +17,7 @@
 
 ################ Script configuration #################
 
-
-#run dclim --manifest-path /tmp/
-#to sync manifest before running this script
-$manifest_path="/tmp/manifest.sqlite3"
+#run dclim to sync manifest before running this script
 
 #pull setting from environment variables. you can also
 #just enter them here
@@ -28,9 +25,6 @@ $manifest_path="/tmp/manifest.sqlite3"
 #you can get member_id and platform by running dclis
 $member_id=$env:MEMBER_ID
 $platform=$env:PLATFORM
-
-#can get character id from dclic
-$character_id=$env:CHARACTER_ID
 
 #for tracking trials on the weekend mode=trials_of_osiris moment=weekend
 $mode="all_pvp"
@@ -53,8 +47,7 @@ while ($true) {
 
 
     # assumes dcliah.exe is in your path
-    $activity = (dcliah.exe --manifest-path $manifest_path `
-	--member-id $member_id --platform $platform --character-id $character_id `
+    $activity = (dcliah.exe --member-id $member_id --platform $platform `
 	--mode $mode --moment custom --custom-time $session_start 2>$null)  -join "`n"
 	#note, to view any errors that might occur, remove 2>$null (this will print
 	#extra output though, or change to 2>err.txt and it will write to a text file)

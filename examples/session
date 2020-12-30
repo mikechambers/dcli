@@ -23,12 +23,6 @@ MEMBER_ID=$MEMBER_ID
 #can get from dclis
 PLATFORM=$PLATFORM
 
-#can get from dclic
-CHARACTER_ID=$CHARACTER_ID
-
-#can get from dclim
-MANIFEST_PATH=$MANIFEST_PATH
-
 #how often we check (seconds)
 CHECK_INTERVAL=30
 
@@ -51,7 +45,7 @@ while :
 do
 
     #this redirects stderr put to /dev/null
-    ACTIVITY_HISTORY=$(dcliah --member-id "${MEMBER_ID}" --character-id "${CHARACTER_ID}" --platform "${PLATFORM}" --manifest-path "${MANIFEST_PATH}" --mode "${MODE}" --moment custom --custom-time "${SESSION_START}" 2> /dev/null)
+    ACTIVITY_HISTORY=$(dcliah --member-id "${MEMBER_ID}" --platform "${PLATFORM}" --mode "${MODE}" --moment custom --custom-time "${SESSION_START}" 2> /dev/null)
 
     #check and see if an error occured.
     if [ $? -eq 1 ] 

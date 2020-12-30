@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#Retrieves crucible stats for past month for all modes, and reads out a summary.
+# Retrieves crucible stats for past month for all modes, and reads out a summary.
 #
 # Created by Mike Chambers
 # https://www.mikechambers.com
@@ -20,11 +20,6 @@
 #you can get your member id and platform from dclim
 # pull member_id from environment variable but you can just hardcode here
 MEMBER_ID=$MEMBER_ID
-
-# character_id to retrieve stats for
-# can retrieve character_ids from dclic
-# (here it pulls from environment but you can also hardcode)
-CHARACTER_ID=$CHARACTER_ID
 
 #set the correct platform here
 PLATFORM=xbox
