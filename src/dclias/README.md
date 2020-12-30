@@ -101,18 +101,6 @@ Sync complete. Database stored at:
 /home/mesh/.local/share/dcli/dcli.sqlite3
 ```
 
-#### Query the database for most kills in a single game
-
-```
-$ sqlite3 '/home/mesh/.local/share/dcli/dcli.sqlite3' 'select max(kills) as kills from character_activity_stats'
-```
-
-Outputs:
-
-```
-33.0
-```
-
 This assumes sqlite3 is installed on the system.
 
 ## Questions, Feature Requests, Feedback
