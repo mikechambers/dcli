@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.3.1 : December 30, 2020
+
+* Updated tests to run with latest release
+
 ## v0.3.0 : December 30, 2020
 
 * Refactored dcliah to use local data

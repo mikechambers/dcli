@@ -9,8 +9,6 @@
 :: More info at:
 :: https://github.com/mikechambers/dcli/
 
-:: make sure you place the app in your PATH
-
 @echo off
 
 echo ------------- RUNNING dclis.exe--------------
