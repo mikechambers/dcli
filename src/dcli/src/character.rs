@@ -36,7 +36,10 @@ impl Characters {
         out
     }
 
-    pub fn get_by_class_ref(&self, class_type: CharacterClass) -> Option<&CharacterData> {
+    pub fn get_by_class_ref(
+        &self,
+        class_type: CharacterClass,
+    ) -> Option<&CharacterData> {
         if self.characters.is_empty() {
             return None;
         }
