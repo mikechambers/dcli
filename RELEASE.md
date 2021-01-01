@@ -1,5 +1,10 @@
 # dcli Release Notes
 
+## v0.3.2 : January 1, 2021
+
+* Fixed wrong version numbers in some apps
+* Update Copyright year
+
 ## v0.3.1 : December 30, 2020
 
 * Updated tests to run with latest release

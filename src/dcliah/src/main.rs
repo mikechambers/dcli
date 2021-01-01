@@ -1,5 +1,5 @@
 /*
-* Copyright 2020 Mike Chambers
+* Copyright 2021 Mike Chambers
 * https://github.com/mikechambers/dcli
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -38,9 +38,7 @@ use dcli::enums::character::CharacterClassSelection;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{
-    determine_data_dir, format_f32, repeat_str, uppercase_first_char,
-};
+use dcli::utils::{determine_data_dir, format_f32, repeat_str, uppercase_first_char};
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
@@ -314,8 +312,7 @@ fn print_default(
     println!("{}", wep_header_str);
     println!("{}", wep_divider);
 
-    let max_weps =
-        std::cmp::min(*weapon_count as usize, extended.weapons.len());
+    let max_weps = std::cmp::min(*weapon_count as usize, extended.weapons.len());
 
     for w in &extended.weapons[..max_weps] {
         println!(
@@ -486,27 +483,21 @@ async fn main() {
         _ => opt.moment.get_date_time(),
     };
 
-    let mut store =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
-            .await
-        {
-            Ok(e) => e,
-            Err(e) => {
-                print_error(
-                    "Could not initialize activity store. Have you run dclias?",
-                    e,
-                );
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error(
+                "Could not initialize activity store. Have you run dclias?",
+                e,
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
-                e,
-            );
+            print_error("Could not initialize manifest. Have you run dclim?", e);
             std::process::exit(EXIT_FAILURE);
         }
     };

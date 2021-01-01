@@ -378,7 +378,7 @@ dependencies = [
 
 [[package]]
 name = "dclia"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "dcli",
  "structopt",
@@ -387,7 +387,7 @@ dependencies = [
 
 [[package]]
 name = "dcliah"
-version = "0.1.0"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "dcli",
@@ -397,7 +397,7 @@ dependencies = [
 
 [[package]]
 name = "dclias"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "dcli",
  "structopt",
@@ -406,7 +406,7 @@ dependencies = [
 
 [[package]]
 name = "dclic"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "dcli",
  "structopt",
@@ -415,7 +415,7 @@ dependencies = [
 
 [[package]]
 name = "dclics"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "dcli",
@@ -425,7 +425,7 @@ dependencies = [
 
 [[package]]
 name = "dclim"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "dcli",
  "reqwest",
@@ -439,7 +439,7 @@ dependencies = [
 
 [[package]]
 name = "dclims"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "dcli",
  "structopt",
@@ -448,7 +448,7 @@ dependencies = [
 
 [[package]]
 name = "dclis"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "dcli",
  "percent-encoding",
@@ -462,7 +462,7 @@ dependencies = [
 
 [[package]]
 name = "dclitime"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "dcli",
