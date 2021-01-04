@@ -216,6 +216,7 @@ impl Mode {
             || *self == Mode::IronBanner
             || *self == Mode::AllMayhem
             || *self == Mode::Supremacy
+            || *self == Mode::PrivateMatchesAll
             || *self == Mode::Survival
             || *self == Mode::Countdown
             || *self == Mode::TrialsOfTheNine
@@ -288,7 +289,7 @@ impl FromStr for Mode {
             //Reserved29 = 29,
             //Reserved30 = 30,
             "supremacy" => Ok(Mode::Supremacy),
-            "private" => Ok(Mode::PrivateMatchesAll),
+            "all_private" => Ok(Mode::PrivateMatchesAll),
             "survival" => Ok(Mode::Survival),
             "countdown" => Ok(Mode::Countdown),
             "trials_of_the_nine" => Ok(Mode::TrialsOfTheNine),
@@ -303,13 +304,13 @@ impl FromStr for Mode {
             "rumble" => Ok(Mode::Rumble),
             "all_doubles" => Ok(Mode::AllDoubles),
             "doubles" => Ok(Mode::Doubles),
-            "private_matches_clash" => Ok(Mode::PrivateMatchesClash),
-            "private_matches_control" => Ok(Mode::PrivateMatchesControl),
-            "private_matches_supremacy" => Ok(Mode::PrivateMatchesSupremacy),
-            "private_matches_countdown" => Ok(Mode::PrivateMatchesCountdown),
-            "private_matches_survival" => Ok(Mode::PrivateMatchesSurvival),
-            "private_matches_mayhem" => Ok(Mode::PrivateMatchesMayhem),
-            "private_matches_rumble" => Ok(Mode::PrivateMatchesRumble),
+            "private_clash" => Ok(Mode::PrivateMatchesClash),
+            "private_control" => Ok(Mode::PrivateMatchesControl),
+            "private_supremacy" => Ok(Mode::PrivateMatchesSupremacy),
+            "private_countdown" => Ok(Mode::PrivateMatchesCountdown),
+            "private_survival" => Ok(Mode::PrivateMatchesSurvival),
+            "private_mayhem" => Ok(Mode::PrivateMatchesMayhem),
+            "private_rumble" => Ok(Mode::PrivateMatchesRumble),
             "heroic_adventures" => Ok(Mode::HeroicAdventure),
             "showdown" => Ok(Mode::Showdown),
             "lockdown" => Ok(Mode::Lockdown),

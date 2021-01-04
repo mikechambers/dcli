@@ -420,8 +420,8 @@ struct Opt {
     /// quickplay and trials_of_osiris.
     ///
     /// Addition values available are crimsom_doubles, supremacy, survival,
-    /// countdown, all_doubles, doubles, private_matches_clash, private_matches_control,
-    /// private_matches_survival, private_matches_rumble, showdown, lockdown,
+    /// countdown, all_doubles, doubles, private_clash, private_control,
+    /// private_survival, private_rumble, showdown, lockdown,
     /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine
     #[structopt(long = "mode", short = "M", 
         parse(try_from_str=parse_and_validate_mode), default_value = "all_pvp")]

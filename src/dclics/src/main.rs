@@ -30,10 +30,7 @@ use dcli::error::Error;
 use dcli::output::Output;
 use dcli::response::stats::{DailyPvPStatsValuesData, PvpStatsData};
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{
-    build_tsv, format_f32, human_duration, print_error, print_verbose,
-    repeat_str,
-};
+use dcli::utils::{build_tsv, format_f32, human_duration, print_error, print_verbose, repeat_str};
 use structopt::StructOpt;
 
 fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
@@ -78,11 +75,9 @@ fn print_tsv(
     name_values.push(("moment_human", format!("{}", period.moment)));
     name_values.push(("mode", format!("{}", mode)));
     name_values.push(("mode_id", format!("{}", mode.to_id())));
-    name_values
-        .push(("activities_entered", format!("{}", data.activities_entered)));
+    name_values.push(("activities_entered", format!("{}", data.activities_entered)));
     name_values.push(("activities_won", format!("{}", data.activities_won)));
-    name_values
-        .push(("activities_lost", format!("{}", data.get_activities_lost())));
+    name_values.push(("activities_lost", format!("{}", data.get_activities_lost())));
     name_values.push(("assists", format!("{}", data.assists)));
     name_values.push(("kills", format!("{}", data.kills)));
     name_values.push((
@@ -101,8 +96,7 @@ fn print_tsv(
     ));
 
     name_values.push(("deaths", format!("{}", data.deaths)));
-    name_values
-        .push(("average_lifespan", format!("{}", data.average_lifespan)));
+    name_values.push(("average_lifespan", format!("{}", data.average_lifespan)));
 
     name_values.push((
         "human_average_lifespan",
@@ -113,11 +107,9 @@ fn print_tsv(
         "total_lifespan",
         format!("{}", data.get_total_lifespan() as u32),
     ));
-    name_values
-        .push(("opponents_defeated", format!("{}", data.opponents_defeated)));
+    name_values.push(("opponents_defeated", format!("{}", data.opponents_defeated)));
     name_values.push(("efficiency", format!("{}", data.efficiency)));
-    name_values
-        .push(("kills_deaths_ratio", format!("{}", data.kills_deaths_ratio)));
+    name_values.push(("kills_deaths_ratio", format!("{}", data.kills_deaths_ratio)));
     name_values.push((
         "kills_deaths_assists",
         format!("{}", data.kills_deaths_assists),
@@ -150,8 +142,7 @@ fn print_default(data: PvpStatsData, mode: Mode, moment: Moment) {
         _ => "",
     };
 
-    let title: String =
-        format!("Destiny 2 stats for {:#} {}", mode, moment_string);
+    let title: String = format!("Destiny 2 stats for {:#} {}", mode, moment_string);
 
     println!();
     println!("{}", title);
@@ -165,8 +156,7 @@ fn print_default(data: PvpStatsData, mode: Mode, moment: Moment) {
         "{wins} wins and {losses} losses for a {win_percentage}% win rate",
         wins = data.activities_won,
         losses = data.get_activities_lost(),
-        win_percentage =
-            p((data.activities_won / data.activities_entered) * 100.0, 2),
+        win_percentage = p((data.activities_won / data.activities_entered) * 100.0, 2),
     );
 
     println!();
@@ -277,8 +267,8 @@ struct Opt {
     /// quickplay and trials_of_osiris.
     ///
     /// Addition values available are crimsom_doubles, supremacy, survival,
-    /// countdown, all_doubles, doubles, private_matches_clash, private_matches_control,
-    /// private_matches_survival, private_matches_rumble, showdown, lockdown,
+    /// countdown, all_doubles, doubles, private_clash, private_control,
+    /// private_survival, private_rumble, showdown, lockdown,
     /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine
     #[structopt(short = "M", long = "mode", default_value = "all_pvp")]
     mode: Mode,
@@ -289,11 +279,7 @@ struct Opt {
     ///
     /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
     /// ending in a new line character (\n).
-    #[structopt(
-        short = "O",
-        long = "output-format",
-        default_value = "default"
-    )]
+    #[structopt(short = "O", long = "output-format", default_value = "default")]
     output: Output,
 
     /// Destiny 2 API character id
@@ -323,12 +309,7 @@ async fn retrieve_all_time_stats(
     let client: ApiInterface = ApiInterface::new(verbose)?;
 
     let data: PvpStatsData = match client
-        .retrieve_alltime_crucible_stats(
-            &member_id,
-            &character_id,
-            &platform,
-            &mode,
-        )
+        .retrieve_alltime_crucible_stats(&member_id, &character_id, &platform, &mode)
         .await?
     {
         Some(e) => e,
@@ -351,13 +332,7 @@ async fn retrieve_aggregate_crucible_stats(
     let client: ApiInterface = ApiInterface::new(verbose)?;
 
     let data: Vec<DailyPvPStatsValuesData> = match client
-        .retrieve_aggregate_crucible_stats(
-            &member_id,
-            &character_id,
-            &platform,
-            &mode,
-            period,
-        )
+        .retrieve_aggregate_crucible_stats(&member_id, &character_id, &platform, &mode, period)
         .await?
     {
         Some(e) => e,
@@ -383,8 +358,7 @@ async fn main() {
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     //use unwrap_or_else as it is lazily evaluated
-    let character_id: String =
-        opt.character_id.unwrap_or_else(|| "0".to_string());
+    let character_id: String = opt.character_id.unwrap_or_else(|| "0".to_string());
 
     //TODO: probably need to pass a reference here and then clone it.
     let moment_period = MomentPeriod::from_moment(opt.moment);

@@ -47,7 +47,7 @@ OPTIONS:
             pvp_competitive, quickplay and trials_of_osiris.
             
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
-            private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown,
+            private_clash, private_control, private_survival, private_rumble, showdown,
             lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
     -T, --moment <moment>                
             Time range to pull stats from
@@ -73,7 +73,7 @@ OPTIONS:
 | ARGUMENT | OPTIONS |
 |---|---|
 | --platform | xbox, playstation, stadia or steam |
-| --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
+| --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
 | --moment | day (last day), daily (since last daily reset), week (last week), weekly (since last weekly reset on Tuesday), month (last month), weekend (since last Friday reset) and all_time |
 
 

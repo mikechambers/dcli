@@ -67,11 +67,11 @@ OPTIONS:
     -M, --mode <mode>                          
             Activity mode to return stats for
             
-            Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, private, rumble,
+            Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble,
             pvp_competitive, quickplay and trials_of_osiris.
             
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
-            private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown,
+            private_clash, private_control, private_survival, private_rumble, showdown,
             lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
     -T, --moment <moment>                      
             Start moment from which to pull activities from
@@ -99,7 +99,7 @@ OPTIONS:
 | ARGUMENT | OPTIONS |
 |---|---|
 | --platform | xbox, playstation, stadia, steam |
-| --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_matches_clash, private_matches_control, private_matches_survival, private_matches_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
+| --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
 | --moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom |
 
 member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
@@ -107,6 +107,8 @@ member-id and platform can be retrieved with [dclis](https://github.com/mikecham
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
 Activity data store can be created and synced seperately using [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias).
+
+**NOTE** : Currently, due to a [bug](https://github.com/Bungie-net/api/issues/1386) in the Destiny 2 API, you will only get results for private matches when specifying *all_private*. The other options are still included in case the bug is fixed. If viewing private match stats is important to you, please leave a comment [here](https://github.com/mikechambers/dcli/issues/10).
 
 ### Examples
 
