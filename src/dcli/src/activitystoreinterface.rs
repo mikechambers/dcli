@@ -119,12 +119,10 @@ impl ActivityStoreInterface {
     ) -> Result<SyncResult, Error> {
         let api = ApiInterface::new(self.verbose)?;
 
-        let characters = match api.retrieve_characters(member_id, platform).await? {
-            Some(e) => e,
-            None => {
-                return Err(Error::NoCharacters);
-            }
-        };
+        let characters = api
+            .retrieve_characters(member_id, platform)
+            .await?
+            .ok_or(Error::NoCharacters)?;
 
         let member_row_id = self.insert_member_id(&member_id, &platform).await?;
 
@@ -139,9 +137,6 @@ impl ActivityStoreInterface {
             let character_id = &c.id;
             let character_row_id = self.insert_character_id(&c, member_row_id).await?;
             eprintln!("{}", format!("{}", c.class_type).to_uppercase());
-
-            //TODO: collection, total new activities found, activities left over?
-            //total activities synced, total activities (do we know this?)
 
             //these calls could be a little more general purpose by taking api ids and not db ids.
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
@@ -207,8 +202,7 @@ impl ActivityStoreInterface {
             "{}",
             format!("Retrieving details for {} activit{}", ids.len(), s)
         );
-        //eprintln!("------------------------------------------------");
-        //eprintln!("This may take a few minutes depending on the number of activities");
+
         eprintln!(
             "Each dot represents {} activities",
             PGCR_REQUEST_CHUNK_AMOUNT
@@ -229,6 +223,7 @@ impl ActivityStoreInterface {
 
             //loop through. if we get results. grab those, otherwise, we ignore
             //any errors, as that will keep the IDs in the queue to try next time
+            //TODO: this is a mess. can we simpify and not nest so deeply?
             for r in results {
                 match r {
                     Ok(e) => {
@@ -384,11 +379,20 @@ impl ActivityStoreInterface {
 
             let instance_id = activity.details.instance_id;
 
-            sqlx::query("INSERT into activity_queue ('activity_id', 'character') VALUES (?, ?)")
-                .bind(instance_id)
-                .bind(character_row_id)
-                .execute(&mut self.db)
-                .await?;
+            match sqlx::query(
+                "INSERT into activity_queue ('activity_id', 'character') VALUES (?, ?)",
+            )
+            .bind(instance_id)
+            .bind(character_row_id)
+            .execute(&mut self.db)
+            .await
+            {
+                Ok(_e) => (),
+                Err(e) => {
+                    sqlx::query("ROLLBACK;").execute(&mut self.db).await?;
+                    return Err(Error::from(e));
+                }
+            };
         }
         sqlx::query("COMMIT;").execute(&mut self.db).await?;
 
@@ -441,9 +445,6 @@ impl ActivityStoreInterface {
         character_row_id: i32,
         character_id: &str,
     ) -> Result<(), Error> {
-        //2526740498
-        //data.activity_details.director_activity_hash
-
         sqlx::query(
             r#"
             INSERT INTO "main"."activity"
@@ -453,12 +454,16 @@ impl ActivityStoreInterface {
         )
         .bind(data.activity_details.instance_id) //activity_id
         .bind(data.period.to_rfc3339()) //period
-        .bind(format!("{}", data.activity_details.mode.to_id())) //mode
-        .bind(format!("{}", data.activity_details.membership_type.to_id())) //platform
-        .bind(format!("{}", data.activity_details.director_activity_hash)) //director_activity_hash
-        .bind(format!("{}", data.activity_details.reference_id)) //reference_id
+        .bind(data.activity_details.mode.to_id().to_string()) //mode
+        .bind(data.activity_details.membership_type.to_id().to_string()) //platform
+        .bind(data.activity_details.director_activity_hash.to_string()) //director_activity_hash
+        .bind(data.activity_details.reference_id.to_string()) //reference_id
         .execute(&mut self.db)
         .await?;
+
+        let activity_row_id = self
+            .get_activity_row_id(data.activity_details.instance_id)
+            .await?;
 
         for mode in &data.activity_details.modes {
             sqlx::query(
@@ -467,13 +472,11 @@ impl ActivityStoreInterface {
                 (
                     "mode", "activity"
                 )
-                SELECT
-                    ?,
-                    id from activity where activity_id = ?
+                VALUES(?,?)
                 "#,
             )
             .bind(mode.to_id().to_string())
-            .bind(data.activity_details.instance_id)
+            .bind(activity_row_id)
             .execute(&mut self.db)
             .await?;
         }
@@ -508,44 +511,58 @@ impl ActivityStoreInterface {
                 "weapon_kills_grenade", "weapon_kills_melee", "weapon_kills_super", 
                 "all_medals_earned", "activity"
             )
-            SELECT
+            VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                id from activity where activity_id = ?
+                ? )
             "#,
         )
         //we for through format, as otherwise we have to cast to i32, and while
         //shouldnt be an issue, there is a chance we could lose precision when
         //converting some of the IDS. so we just do this to be consistent.
         //TODO: should think about losing data when pulling out of DB
-        .bind(format!("{}", character_row_id as u32)) //character
-        .bind(format!("{}", char_data.values.assists as u32)) //assists
-        .bind(format!("{}", char_data.values.score as u32)) //score
-        .bind(format!("{}", char_data.values.kills as u32)) //kiis
-        .bind(format!("{}", char_data.values.deaths as u32)) //deaths
-        .bind(format!("{}", char_data.values.average_score_per_kill)) //average_score_per_kill
-        .bind(format!("{}", char_data.values.average_score_per_life)) //average_score_per_life
-        .bind(format!("{}", char_data.values.completed as u32)) //completed
-        .bind(format!("{}", char_data.values.opponents_defeated as u32)) //opponents_defeated
+        .bind(character_row_id as i32) //character
+        .bind(char_data.values.assists as i32) //assists
+        .bind(char_data.values.score as i32) //score
+        .bind(char_data.values.kills as i32) //kiis
+        .bind(char_data.values.deaths as i32) //deaths
+        .bind(char_data.values.average_score_per_kill) //average_score_per_kill
+        .bind(char_data.values.average_score_per_life) //average_score_per_life
+        .bind(char_data.values.completed as i32) //completed
+        .bind(char_data.values.opponents_defeated as i32) //opponents_defeated
         .bind(format!(
             "{}",
             char_data.values.activity_duration_seconds as u32
         )) //activity_duration_seconds
-        .bind(format!("{}", char_data.values.standing as u32)) //standing
-        .bind(format!("{}", char_data.values.team as u32)) //team
-        .bind(format!("{}", char_data.values.completion_reason as u32)) //completion_reason
-        .bind(format!("{}", char_data.values.start_seconds as u32)) //start_seconds
-        .bind(format!("{}", char_data.values.time_played_seconds as u32)) //time_played_seconds
-        .bind(format!("{}", char_data.values.player_count as u32)) //player_count
-        .bind(format!("{}", char_data.values.team_score as u32)) //team_score
-        .bind(format!("{}", precision_kills)) //precision_kills
-        .bind(format!("{}", weapon_kills_ability)) //weapon_kills_ability
-        .bind(format!("{}", weapon_kills_grenade)) //weapon_kills_grenade
-        .bind(format!("{}", weapon_kills_melee)) //weapon_kills_melee
-        .bind(format!("{}", weapon_kills_super)) //weapon_kills_super
-        .bind(format!("{}", all_medals_earned)) //weapon_kills_super
-        .bind(data.activity_details.instance_id) //activity
+        .bind(char_data.values.standing as i32) //standing
+        .bind(char_data.values.team as i32) //team
+        .bind(char_data.values.completion_reason as i32) //completion_reason
+        .bind(char_data.values.start_seconds as i32) //start_seconds
+        .bind(char_data.values.time_played_seconds as i32) //time_played_seconds
+        .bind(char_data.values.player_count as i32) //player_count
+        .bind(char_data.values.team_score as i32) //team_score
+        .bind(precision_kills as i32) //precision_kills
+        .bind(weapon_kills_ability as i32) //weapon_kills_ability
+        .bind(weapon_kills_grenade as i32) //weapon_kills_grenade
+        .bind(weapon_kills_melee as i32) //weapon_kills_melee
+        .bind(weapon_kills_super as i32) //weapon_kills_super
+        .bind(all_medals_earned as i32) //weapon_kills_super
+        .bind(activity_row_id) //activity
         .execute(&mut self.db)
         .await?;
+
+        //character_activity_stats
+
+        let row = sqlx::query(
+            r#"
+            SELECT "id" FROM "character_activity_stats" WHERE activity = ? and character = ?
+        "#,
+        )
+        .bind(activity_row_id)
+        .bind(character_row_id)
+        .fetch_one(&mut self.db)
+        .await?;
+
+        let character_activity_stats_id: i32 = row.try_get("id")?;
 
         for (key, value) in medal_hash {
             sqlx::query(
@@ -554,12 +571,14 @@ impl ActivityStoreInterface {
                 (
                     "reference_id", "count", "character_activity_stats"
                 )
-                select ?, ?, id from character_activity_stats where rowid = 
-                (SELECT max(rowid) from character_activity_stats);
+                VALUES  (
+                    ?,?,?
+                )
                 "#,
             )
             .bind(key) //reference_id
             .bind(format!("{}", value.basic.value as u32)) //unique_weapon_kills
+            .bind(character_activity_stats_id)
             .execute(&mut self.db)
             .await?;
         }
@@ -574,14 +593,14 @@ impl ActivityStoreInterface {
                     (
                         "reference_id", "kills", "precision_kills", "kills_precision_kills_ratio", "character_activity_stats"
                     )
-                    select ?, ?, ?, ?, id from character_activity_stats where rowid = 
-                    (SELECT max(rowid) from character_activity_stats);
+                    VALUES (?, ?, ?, ?, ?)
                     "#,
                 )
                 .bind(format!("{}", w.reference_id)) //reference_id
                 .bind(format!("{}", w.values.unique_weapon_kills as u32)) //unique_weapon_kills
                 .bind(format!("{}", w.values.unique_weapon_precision_kills as u32)) //unique_weapon_precision_kills
                 .bind(format!("{}", w.values.unique_weapon_kills_precision_kills)) //unique_weapon_kills_precision_kills
+                .bind(character_activity_stats_id)
                 .execute(&mut self.db)
                 .await?;
             }
@@ -609,6 +628,21 @@ impl ActivityStoreInterface {
         .await?;
 
         Ok(())
+    }
+
+    async fn get_activity_row_id(&mut self, instance_id: i64) -> Result<i32, Error> {
+        let row = sqlx::query(
+            r#"
+            SELECT "id" FROM "activity" WHERE activity_id = ?
+        "#,
+        )
+        .bind(instance_id.to_string())
+        .fetch_one(&mut self.db)
+        .await?;
+
+        let id: i32 = row.try_get("id")?;
+
+        Ok(id)
     }
 
     async fn get_character_row_id(
