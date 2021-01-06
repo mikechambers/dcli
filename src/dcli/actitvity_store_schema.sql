@@ -1,5 +1,21 @@
 BEGIN TRANSACTION;
 
+DROP TABLE IF EXISTS "modes";
+DROP TABLE IF EXISTS "weapon_result";
+DROP TABLE IF EXISTS "medal_result";
+DROP TABLE IF EXISTS "activity_queue";
+DROP TABLE IF EXISTS "character_activity_stats";
+DROP TABLE IF EXISTS "activity";
+DROP TABLE IF EXISTS "version";
+DROP TABLE IF EXISTS "character";
+DROP TABLE IF EXISTS "member";
+
+CREATE TABLE IF NOT EXISTS "main"."version" (
+    "version"   INTEGER NOT NULL UNIQUE
+);
+
+INSERT INTO "main"."version"("version") VALUES (3);
+
 CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
     "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
     "activity_id" INTEGER NOT NULL,

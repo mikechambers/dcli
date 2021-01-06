@@ -48,10 +48,12 @@ use crate::{
 };
 
 const STORE_FILE_NAME: &str = "dcli.sqlite3";
-const ACTIVITY_STORE_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
+const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 
 //numer of simultaneous requests we make to server when retrieving activity history
 const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
+
+const DB_SCHEMA_VERSION: i32 = 3;
 
 pub struct ActivityStoreInterface {
     verbose: bool,
@@ -68,11 +70,12 @@ impl ActivityStoreInterface {
         store_dir: &PathBuf,
         verbose: bool,
     ) -> Result<ActivityStoreInterface, Error> {
-        let path = format!("{}", store_dir.join(STORE_FILE_NAME).display());
+        let path = store_dir.join(STORE_FILE_NAME).display().to_string();
 
         let read_only = false;
         let connection_string: &str = &path;
 
+        //TODO: Is this still the correct / best journal mode for us?
         let mut db = SqliteConnectOptions::from_str(&connection_string)?
             .journal_mode(SqliteJournalMode::Wal)
             .create_if_missing(true)
@@ -81,16 +84,25 @@ impl ActivityStoreInterface {
             .await?;
 
         //is this an existing db, or a completly new one / first time?
-        let rows = sqlx::query(
+
+        let should_update_schema = match sqlx::query(
             r#"
-            SELECT name FROM sqlite_master WHERE type='table' AND name='activity_queue'
+            SELECT max(version) as max_version FROM version
         "#,
         )
-        .fetch_all(&mut db)
-        .await?;
+        .fetch_one(&mut db)
+        .await
+        {
+            Ok(e) => {
+                let version: i32 = e.try_get("max_version").unwrap_or(-1);
+                version < DB_SCHEMA_VERSION
+            }
+            Err(_e) => true,
+        };
 
-        if rows.is_empty() {
-            sqlx::query(ACTIVITY_STORE_SCHEMA).execute(&mut db).await?;
+        if should_update_schema {
+            eprintln!("Data store needs to be updated.");
+            sqlx::query(STORE_DB_SCHEMA).execute(&mut db).await?;
         }
 
         Ok(ActivityStoreInterface { db, verbose, path })
@@ -126,7 +138,6 @@ impl ActivityStoreInterface {
         for c in characters.characters {
             let character_id = &c.id;
             let character_row_id = self.insert_character_id(&c, member_row_id).await?;
-
             eprintln!("{}", format!("{}", c.class_type).to_uppercase());
 
             //TODO: collection, total new activities found, activities left over?
@@ -135,11 +146,15 @@ impl ActivityStoreInterface {
             //these calls could be a little more general purpose by taking api ids and not db ids.
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
             //some extra calls to the DB
-            let a = self.sync_activities(character_row_id, character_id).await?;
-            let _b = self
-                .update_activity_queue(character_row_id, member_id, character_id, platform)
+            let a = self
+                .sync_activities(character_row_id, character_id, &api)
                 .await?;
-            let c = self.sync_activities(character_row_id, character_id).await?;
+            let _b = self
+                .update_activity_queue(character_row_id, member_id, character_id, platform, &api)
+                .await?;
+            let c = self
+                .sync_activities(character_row_id, character_id, &api)
+                .await?;
 
             total_synced += a.total_synced + c.total_synced;
             total_in_queue +=
@@ -157,6 +172,7 @@ impl ActivityStoreInterface {
         &mut self,
         character_row_id: i32,
         character_id: &str,
+        api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
         let mut ids: Vec<i64> = Vec::new();
 
@@ -182,10 +198,6 @@ impl ActivityStoreInterface {
                 total_synced: 0,
             });
         }
-
-        //let mut count = 0;
-
-        let api = ApiInterface::new(self.verbose)?;
 
         let total_available = ids.len() as u32;
         let mut total_synced = 0;
@@ -284,56 +296,32 @@ impl ActivityStoreInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
+        api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
         //TODO catch errors so we can continue?
         let prv_result = self
-            .update_private_activity_queue(character_row_id, member_id, character_id, platform)
-            .await?;
-        let pub_result = self
-            .update_public_activity_queue(character_row_id, member_id, character_id, platform)
-            .await?;
-
-        Ok(pub_result + prv_result)
-    }
-
-    async fn update_private_activity_queue(
-        &mut self,
-        character_row_id: i32,
-        member_id: &str,
-        character_id: &str,
-        platform: &Platform,
-    ) -> Result<SyncResult, Error> {
-        let result = self
             ._update_activity_queue(
                 character_row_id,
                 member_id,
                 character_id,
                 platform,
                 &Mode::PrivateMatchesAll,
+                &api,
             )
             .await?;
 
-        Ok(result)
-    }
-
-    async fn update_public_activity_queue(
-        &mut self,
-        character_row_id: i32,
-        member_id: &str,
-        character_id: &str,
-        platform: &Platform,
-    ) -> Result<SyncResult, Error> {
-        let result = self
+        let pub_result = self
             ._update_activity_queue(
                 character_row_id,
                 member_id,
                 character_id,
                 platform,
                 &Mode::AllPvP,
+                &api,
             )
             .await?;
 
-        Ok(result)
+        Ok(pub_result + prv_result)
     }
 
     //updates activity id queue with ids which have not been synced
@@ -344,10 +332,9 @@ impl ActivityStoreInterface {
         character_id: &str,
         platform: &Platform,
         mode: &Mode,
+        api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
         let max_id: i64 = self.get_max_activity_id(character_row_id, mode).await?;
-
-        let api = ApiInterface::new(self.verbose)?;
 
         let result = api
             .retrieve_activities_since_id(member_id, character_id, platform, mode, max_id)
@@ -377,7 +364,7 @@ impl ActivityStoreInterface {
             .execute(&mut self.db)
             .await?;
 
-        let total = activities.len() as u32;
+        let mut total = 0;
 
         for activity in activities {
             let director_activity_hash = activity.details.director_activity_hash;
@@ -392,6 +379,8 @@ impl ActivityStoreInterface {
 
                 continue;
             }
+
+            total += 1;
 
             let instance_id = activity.details.instance_id;
 
@@ -457,7 +446,7 @@ impl ActivityStoreInterface {
 
         sqlx::query(
             r#"
-            INSERT OR IGNORE INTO "main"."activity"
+            INSERT INTO "main"."activity"
                 ("activity_id","period","mode","platform","director_activity_hash", "reference_id") 
             VALUES (?,?,?,?,?, ?)
         "#,
@@ -474,7 +463,7 @@ impl ActivityStoreInterface {
         for mode in &data.activity_details.modes {
             sqlx::query(
                 r#"
-                INSERT OR IGNORE INTO "main"."modes"
+                INSERT INTO "main"."modes"
                 (
                     "mode", "activity"
                 )
@@ -817,6 +806,12 @@ impl ActivityStoreInterface {
         */
 
         //this is running about 550ms
+        //TODO: this currently works because the bungie api for private only returns 32
+        //and does not contain submodes. so we only get private results if we explicitly
+        //search for private all (32), and dont get no private results. however,
+        //if bungie fixes this and starts include additional mode data (i.e. private control)
+        //then this will start to mix private and all when searching for control.
+        //need to see if its a private or non-private and then exclude others.
         let activity_rows = sqlx::query(
             r#"
             SELECT

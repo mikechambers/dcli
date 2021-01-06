@@ -250,6 +250,17 @@ impl Mode {
             || *self == Mode::ControlCompetitive
             || *self == Mode::TrialsOfOsiris
     }
+
+    pub fn is_private(&self) -> bool {
+        *self == Mode::PrivateMatchesAll
+            || *self == Mode::PrivateMatchesClash
+            || *self == Mode::PrivateMatchesControl
+            || *self == Mode::PrivateMatchesSupremacy
+            || *self == Mode::PrivateMatchesCountdown
+            || *self == Mode::PrivateMatchesSurvival
+            || *self == Mode::PrivateMatchesMayhem
+            || *self == Mode::PrivateMatchesRumble
+    }
 }
 
 impl FromStr for Mode {
