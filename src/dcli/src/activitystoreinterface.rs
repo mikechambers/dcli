@@ -653,13 +653,19 @@ impl ActivityStoreInterface {
     ) -> Result<i32, Error> {
         let row = sqlx::query(
             r#"
-                select character.id as id from "character", "member" where character_id = ? and
-                character.member = member.id and member.member_id = ? and member.platform_id = ?
+            SELECT
+                character.id as id 
+            FROM
+                "character"
+            JOIN
+                member on character.member = member.id and member.member_id = ? and member.platform_id = ?
+            WHERE
+                character_id = ?
         "#,
         )
-        .bind(character_id.to_string())
         .bind(member_id.to_string())
-        .bind(format!("{}", platform.to_id()))
+        .bind(platform.to_id().to_string())
+        .bind(character_id.to_string())
         .fetch_one(&mut self.db)
         .await?;
 
@@ -772,13 +778,10 @@ impl ActivityStoreInterface {
         let api = ApiInterface::new(self.verbose)?;
 
         //first, lets get all of the current characters for the member
-        let characters = match api.retrieve_characters(member_id, platform).await? {
-            Some(e) => e,
-            None => {
-                //if there are not any, return an error
-                return Err(Error::NoCharacters);
-            }
-        };
+        let characters = api
+            .retrieve_characters(member_id, platform)
+            .await?
+            .ok_or(Error::NoCharacters)?;
 
         //figure which data to retrieve
         let out = if character_selection == &CharacterClassSelection::All {
@@ -828,17 +831,6 @@ impl ActivityStoreInterface {
         start_time: &DateTime<Utc>,
         manifest: &mut ManifestInterface,
     ) -> Result<Option<CruciblePlayerPerformances>, Error> {
-        // let character_index = self
-        //     .get_character_row_id(member_id, character_id, platform)
-        //     .await?;
-
-        //let now = std::time::Instant::now();
-
-        /*
-                        select character.id as id from "character", "member" where character_id = ? and
-                        character.member = member.id and member.member_id = ? and member.platform_id = ?
-        */
-
         //this is running about 550ms
         //TODO: this currently works because the bungie api for private only returns 32
         //and does not contain submodes. so we only get private results if we explicitly
@@ -876,8 +868,6 @@ impl ActivityStoreInterface {
         .bind(mode.to_id().to_string())
         .fetch_all(&mut self.db)
         .await?;
-
-        //println!("END query {}", now.elapsed().as_millis());
 
         if activity_rows.is_empty() {
             return Ok(None);
@@ -972,7 +962,6 @@ impl ActivityStoreInterface {
         manifest: &mut ManifestInterface,
         activity_row: &sqlx::sqlite::SqliteRow,
     ) -> Result<CruciblePlayerPerformance, Error> {
-        //let activity_index: i32 = activity_row.try_get("activity_index")?;
         let activity_id: i64 = activity_row.try_get_unchecked("activity_id")?;
 
         let mode_id: i32 = activity_row.try_get_unchecked("activity_mode")?;
