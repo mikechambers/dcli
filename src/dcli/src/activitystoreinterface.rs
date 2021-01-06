@@ -418,6 +418,10 @@ impl ActivityStoreInterface {
         {
             Ok(_e) => {
                 sqlx::query("COMMIT;").execute(&mut self.db).await?;
+                sqlx::query("PRAGMA OPTIMIZE;")
+                    .execute(&mut self.db)
+                    .await?;
+
                 Ok(())
             }
             Err(e) => {
@@ -831,6 +835,14 @@ impl ActivityStoreInterface {
         start_time: &DateTime<Utc>,
         manifest: &mut ManifestInterface,
     ) -> Result<Option<CruciblePlayerPerformances>, Error> {
+        //if mode if private, we dont restrict results
+        let restrict_mode_id = if mode.is_private() {
+            -1
+        } else {
+            //if not private, then we dont include any results that are private
+            Mode::PrivateMatchesAll.to_id() as i32
+        };
+
         //this is running about 550ms
         //TODO: this currently works because the bungie api for private only returns 32
         //and does not contain submodes. so we only get private results if we explicitly
@@ -848,24 +860,22 @@ impl ActivityStoreInterface {
                 character_activity_stats
             INNER JOIN
                 activity ON character_activity_stats.activity = activity.id,
-                modes ON modes.activity = activity.id
-            JOIN 
-                character on character_activity_stats.character = character.id
-            JOIN 
+                character on character_activity_stats.character = character.id,
                 member on member.id = character.member
             WHERE
                 member.id = (select id from member where member_id = ? and platform_id = ?) AND
                 period > ? AND
-                modes.mode = ?
+                exists (select 1 from modes where activity = activity.id and mode = ?) AND
+                not exists (select 1 from modes where activity = activity.id and mode = ?)
             ORDER BY
                 activity.period DESC
-
             "#,
         )
         .bind(member_id.to_string())
         .bind(platform.to_id().to_string())
         .bind(start_time.to_rfc3339())
         .bind(mode.to_id().to_string())
+        .bind(restrict_mode_id.to_string())
         .fetch_all(&mut self.db)
         .await?;
 
@@ -893,6 +903,14 @@ impl ActivityStoreInterface {
             .get_character_row_id(member_id, character_id, platform)
             .await?;
 
+        //if mode if private, we dont restrict results
+        let restrict_mode_id = if mode.is_private() {
+            -1
+        } else {
+            //if not private, then we dont include any results that are private
+            Mode::PrivateMatchesAll.to_id() as i32
+        };
+
         //let now = std::time::Instant::now();
         //this is running about 550ms
         let activity_rows = sqlx::query(
@@ -905,14 +923,12 @@ impl ActivityStoreInterface {
                 character_activity_stats
             INNER JOIN
                 activity ON character_activity_stats.activity = activity.id,
-                modes ON modes.activity = activity.id
-            JOIN 
-                character on character_activity_stats.character = character.id
-            JOIN 
+                character on character_activity_stats.character = character.id,
                 member on member.id = character.member
             WHERE
                 activity.period > ? AND
-                modes.mode = ? AND
+                exists (select 1 from modes where activity = activity.id and mode = ?) AND
+                not exists (select 1 from modes where activity = activity.id and mode = ?) AND
                 character_activity_stats.character = ?
             ORDER BY
                 activity.period DESC
@@ -921,11 +937,10 @@ impl ActivityStoreInterface {
         )
         .bind(start_time.to_rfc3339())
         .bind(mode.to_id().to_string())
+        .bind(restrict_mode_id.to_string())
         .bind(character_index.to_string())
         .fetch_all(&mut self.db)
         .await?;
-
-        //println!("END query {}", now.elapsed().as_millis());
 
         if activity_rows.is_empty() {
             return Ok(None);
