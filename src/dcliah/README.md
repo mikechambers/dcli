@@ -2,7 +2,7 @@
 
 Command line tool for viewing Destiny 2 Crucible activity history and stats.
 
-The application will display individual game results and stats, aggregate game results and stats, as well as individual weapon stats. You can specify specific crucible game modes, as well as time periods to create custom reports.
+The application will display individual game results and stats, aggregate game results and stats, as well as individual weapon stats. You can specify specific crucible game modes, as well as time periods to create custom reports. Private and non-private stats are seperated from each other.
 
 dcliah pulls its data from the local Destiny 2 activity database store. By default, dcliah will create and update this file with the latest activity data, but it can also be seperately managed using [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias).
 
@@ -10,7 +10,7 @@ The first time the database downloads activity data may take a couple of minutes
 
 It supports storing and tracking stats for multiple players and characters.
 
-If you want to sync the database seperately, via dclias, you can pass the '--no-sync' flag to dcliah and it will not update the activity store.
+If you want to sync the database seperately via dclias, you can pass the '--no-sync' flag to dcliah and it will not update the activity store.
 
 The tool expects that the manifest has been downloaded and synced using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
@@ -137,6 +137,16 @@ $ export SESSION_START=$(dclitime)
 $ dcliah --member-id 4611686018429783292 --platform xbox --moment custom --custom-time $SESSION_START
 ```
 
+#### View all time stats for Hand Canons
+```
+& dcliah --member-id $MEMBER_ID --platform $PLATFORM --mode all_pvp --moment all_time --weapon-count 10000 | grep "Hand Cannon"
+```
+
+or in Windows Powershell
+
+```
+& dcliah.exe --member-id $env:MEMBER_ID --platform $env:PLATFORM --mode all_pvp --moment all_time --weapon-count 10000 | Select-String "Hand Cannon"
+```
 
 ## Questions, Feature Requests, Feedback
 

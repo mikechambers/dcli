@@ -1,5 +1,10 @@
 # dcli Release Notes
 
+## v0.3.5 : January 6, 2021
+* Added support for private matches. See [issue 10](https://github.com/mikechambers/dcli/issues/10) for current limitations
+* General optimizations and performance improvements
+* This update will require that all activity data be redownloaded
+
 ## v0.3.2 : January 1, 2021
 
 * Fixed wrong version numbers in some apps
