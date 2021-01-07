@@ -20,11 +20,40 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod character;
-pub mod itemtype;
-pub mod medaltier;
-pub mod mode;
-pub mod moment;
-pub mod platform;
-pub mod standing;
-pub mod weaponsort;
+//use std::fmt;
+use std::str::FromStr;
+
+#[derive(PartialEq, Debug)]
+pub enum WeaponSort {
+    Name,
+    Kills,
+    Games,
+    KillsPerGameKills,
+    KillsPerGameTotal,
+    PrecisionTotal,
+    PrecisionPercent,
+    Type,
+}
+
+impl FromStr for WeaponSort {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        //wrap in String so we can convert to lower case
+        let s = String::from(s).to_lowercase();
+
+        //get a slice to get a &str for the match
+        match &s[..] {
+            "name" => Ok(WeaponSort::Name),
+            "kills" => Ok(WeaponSort::Kills),
+            "games" => Ok(WeaponSort::Games),
+            "kills_per_game_kills" => Ok(WeaponSort::KillsPerGameKills),
+            "kills_per_game_total" => Ok(WeaponSort::KillsPerGameTotal),
+            "precision_total" => Ok(WeaponSort::PrecisionTotal),
+            "precision_percent" => Ok(WeaponSort::PrecisionPercent),
+            "type" => Ok(WeaponSort::Type),
+
+            _ => Err("Unknown WeaponSort type"),
+        }
+    }
+}

@@ -93,6 +93,12 @@ OPTIONS:
             Valid values are: xbox, playstation, stadia or steam.
     -w, --weapon-count <weapon-count>          
             The number of weapons to display details for [default: 5]
+
+    -W, --weapon-sort <weapon-sort>            
+            Specify weapon stats sort order
+            
+            Valid values include name, kills (default), games, kills_per_game_kills, kills_per_game_total,
+            precision_total, precision_percent, type [default: kills]
 ```
 
 
@@ -101,6 +107,7 @@ OPTIONS:
 | --platform | xbox, playstation, stadia, steam |
 | --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
 | --moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom |
+| --weapon-sort | name, kills (default), games, kills_per_game_kills kills_per_game_total, precision_total, precision_percent, type |
 
 member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
    

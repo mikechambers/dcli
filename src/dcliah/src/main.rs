@@ -35,6 +35,7 @@ use dcli::{
 };
 
 use dcli::enums::character::CharacterClassSelection;
+use dcli::enums::weaponsort::WeaponSort;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
@@ -85,6 +86,7 @@ fn print_default(
     moment: &Moment,
     start_time: &DateTime<Utc>,
     weapon_count: &u32,
+    weapon_sort: &WeaponSort,
 ) {
     //todo: might want to look at buffering output
     //https://rust-cli.github.io/book/tutorial/output.html
@@ -309,15 +311,70 @@ fn print_default(
         col_w = col_w,
         map_col_w = wep_col,
     );
+
     let wep_divider = repeat_str(&"=", wep_header_str.chars().count());
 
     println!("{}", wep_header_str);
     println!("{}", wep_divider);
 
-    let max_weps =
-        std::cmp::min(*weapon_count as usize, extended.weapons.len());
+    let mut weapons = extended.weapons.clone();
+    match weapon_sort {
+        WeaponSort::Name => {
+            weapons.sort_by(|a, b| {
+                a.weapon
+                    .name
+                    .to_lowercase()
+                    .cmp(&b.weapon.name.to_lowercase())
+            });
+        }
+        WeaponSort::Kills => {
+            //sorted by kills by default so we dont need to sort again
+            //weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
+        }
+        WeaponSort::Games => {
+            weapons.sort_by(|a, b| b.activity_count.cmp(&a.activity_count));
+        }
+        WeaponSort::KillsPerGameKills => {
+            weapons.sort_by(|a, b| {
+                let a_kpk = calculate_ratio(a.kills, a.activity_count);
+                let b_kpk = calculate_ratio(b.kills, b.activity_count);
+                b_kpk.partial_cmp(&a_kpk).unwrap()
+            });
+        }
+        WeaponSort::KillsPerGameTotal => {
+            weapons.sort_by(|a, b| {
+                let a_kpg = calculate_ratio(a.kills, data.total_activities);
+                let b_kpg = calculate_ratio(b.kills, data.total_activities);
+                b_kpg.partial_cmp(&a_kpg).unwrap()
+            });
+        }
+        WeaponSort::PrecisionTotal => {
+            weapons.sort_by(|a, b| {
+                b.precision_kills.partial_cmp(&a.precision_kills).unwrap()
+            });
+        }
+        WeaponSort::PrecisionPercent => {
+            weapons.sort_by(|a, b| {
+                b.precision_kills_percent
+                    .partial_cmp(&a.precision_kills_percent)
+                    .unwrap()
+            });
+        }
+        WeaponSort::Type => {
+            weapons.sort_by(|a, b| {
+                let a_type =
+                    format!("{}", a.weapon.item_sub_type).to_lowercase();
+                let b_type =
+                    format!("{}", b.weapon.item_sub_type).to_lowercase();
 
-    for w in &extended.weapons[..max_weps] {
+                a_type.cmp(&b_type)
+            });
+        }
+    }
+
+    let max_weps = std::cmp::min(*weapon_count as usize, weapons.len());
+
+    for w in &weapons[..max_weps] {
         println!(
             "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
             w.weapon.name,
@@ -446,6 +503,13 @@ struct Opt {
     #[structopt(short = "C", long = "class", default_value = "last_active")]
     character_class_selection: CharacterClassSelection,
 
+    /// Specify weapon stats sort order
+    ///
+    /// Valid values include name, kills (default), games, kills_per_game_kills,
+    /// kills_per_game_total, precision_total, precision_percent, type
+    #[structopt(short = "W", long = "weapon-sort", default_value = "kills")]
+    weapon_sort: WeaponSort,
+
     ///Print out additional information
     ///
     ///Output is printed to stderr.
@@ -558,5 +622,6 @@ async fn main() {
         &opt.moment,
         &start_time,
         &opt.weapon_count,
+        &opt.weapon_sort,
     );
 }

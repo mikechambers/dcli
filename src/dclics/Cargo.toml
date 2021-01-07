@@ -1,7 +1,7 @@
 [package]
 name = "dclics"
 #version
-version = "0.3.5"
+version = "0.3.6"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
 description = "Command line tool for retrieving current Destiny 2 Crucible activity stats."
 homepage = "https://www.mikechambers.com"

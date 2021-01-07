@@ -1,5 +1,8 @@
 # dcli Release Notes
 
+## v0.3.6 : January 6, 2021
+* Added support to sort weapon stat results in dcliah (--weapon-sort)
+
 ## v0.3.5 : January 6, 2021
 * Added support for private matches. See [issue 10](https://github.com/mikechambers/dcli/issues/10) for current limitations
 * General optimizations and performance improvements
