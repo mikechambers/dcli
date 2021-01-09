@@ -39,12 +39,11 @@ use dcli::enums::weaponsort::WeaponSort;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{
-    determine_data_dir, format_f32, repeat_str, uppercase_first_char,
-};
+use dcli::utils::{determine_data_dir, format_f32, repeat_str, uppercase_first_char};
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
+use num_format::{Locale, ToFormattedString};
 use structopt::StructOpt;
 
 fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
@@ -150,12 +149,13 @@ fn print_default(
     println!();
 
     let col_w = 10;
+    let wl_col_w = 14;
     let map_col_w = 18;
     let str_col_w = 10;
 
     //TODO: maybe format this to yellow background
     let header = format!(
-        "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
         "MAP",
         "W/L",
         "STREAK",
@@ -168,9 +168,11 @@ fn print_default(
         "EFF",
         "SUPERS",
         "GRENADES",
+        "MELEES",
         col_w = col_w,
         map_col_w = map_col_w,
         str_col_w=str_col_w,
+        wl_col_w=wl_col_w,
     );
     println!("{}", header);
     let header_divider = repeat_str(&"=", header.chars().count());
@@ -178,11 +180,12 @@ fn print_default(
 
     let slice: &[CruciblePlayerPerformance] = if is_limited {
         println!(
-            "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-            "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...",
+            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...","...",
             col_w = col_w,
             map_col_w = map_col_w,
             str_col_w=str_col_w,
+            wl_col_w=wl_col_w,
         );
 
         &performances[..*activity_limit as usize]
@@ -229,33 +232,56 @@ fn print_default(
         let extended = activity.stats.extended.as_ref().unwrap();
         let supers = extended.weapon_kills_super;
         let grenades = extended.weapon_kills_grenade;
+        let melees = extended.weapon_kills_melee;
 
         println!(
-            "{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             map_name,
-            format!("{}", activity.stats.standing),
-            format!("{}", streak),
-            format!("{a}", a=activity.stats.kills),
-            format!("{a}", a=activity.stats.assists),
-            format!("{a}", a=activity.stats.opponents_defeated),
-            format!("{a}", a=activity.stats.deaths),
+            activity.stats.standing.to_string(),
+            streak.to_string(),
+            activity.stats.kills.to_string(),
+            activity.stats.assists.to_string(),
+            activity.stats.opponents_defeated.to_string(),
+            activity.stats.deaths.to_string(),
             format_f32(activity.stats.kills_deaths_ratio, 2),
             format_f32(activity.stats.kills_deaths_assists, 2),
             format_f32(activity.stats.efficiency, 2),
             supers.to_string(),
             grenades.to_string(),
+            melees.to_string(),
             col_w = col_w,
             map_col_w=map_col_w,
             str_col_w=str_col_w,
+            wl_col_w=wl_col_w,
         );
     }
 
     let extended = data.extended.as_ref().unwrap();
     println!("{}", repeat_str(&"-", header.chars().count()));
 
-    println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    "TOTALS",
+    data.total_activities.to_formatted_string(&Locale::en),
+    "",
+    data.kills.to_formatted_string(&Locale::en),
+    data.assists.to_formatted_string(&Locale::en),
+    data.opponents_defeated.to_formatted_string(&Locale::en),
+    data.deaths.to_formatted_string(&Locale::en),
+    "".to_string(),
+    "".to_string(),
+    "".to_string(),
+    extended.weapon_kills_super.to_formatted_string(&Locale::en),
+    extended.weapon_kills_grenade.to_formatted_string(&Locale::en),
+    extended.weapon_kills_melee.to_formatted_string(&Locale::en),
+    col_w = col_w,
+    map_col_w=map_col_w,
+    str_col_w=str_col_w,
+    wl_col_w=wl_col_w,
+    );
+
+    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "HIGHS",
-    format!("{}-{}", data.wins, data.losses),
+    format!("{}-{}", data.wins.to_formatted_string(&Locale::en), data.losses.to_formatted_string(&Locale::en)),
     format!("{}W {}L", data.longest_win_streak, data.longest_loss_streak),
     format!("{}", data.highest_kills),
     format!("{}", data.highest_assists),
@@ -267,15 +293,17 @@ fn print_default(
     format_f32(data.highest_efficiency, 2),
     format!("{}", extended.highest_weapon_kills_super),
     format!("{}", extended.highest_weapon_kills_grenade),
+    format!("{}", extended.highest_weapon_kills_melee),
 
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
+    wl_col_w=wl_col_w,
     );
 
-    println!("{:<0map_col_w$}{:<0col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "PER GAME",
-    format!("{}% w", format_f32(data.win_rate, 2)),
+    format!("{}%", format_f32(data.win_rate, 2)),
     "",
     format_f32(data.stat_per_game(data.kills), 2),
     format_f32(data.stat_per_game(data.assists), 2),
@@ -286,9 +314,11 @@ fn print_default(
     format_f32(data.efficiency, 2),
     format_f32(data.stat_per_game(extended.weapon_kills_super), 2),
     format_f32(data.stat_per_game(extended.weapon_kills_grenade), 2),
+    format_f32(data.stat_per_game(extended.weapon_kills_melee), 2),
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
+    wl_col_w=wl_col_w,
     );
 
     println!("{}", header_divider);
@@ -349,9 +379,7 @@ fn print_default(
             });
         }
         WeaponSort::PrecisionTotal => {
-            weapons.sort_by(|a, b| {
-                b.precision_kills.partial_cmp(&a.precision_kills).unwrap()
-            });
+            weapons.sort_by(|a, b| b.precision_kills.partial_cmp(&a.precision_kills).unwrap());
         }
         WeaponSort::PrecisionPercent => {
             weapons.sort_by(|a, b| {
@@ -362,10 +390,8 @@ fn print_default(
         }
         WeaponSort::Type => {
             weapons.sort_by(|a, b| {
-                let a_type =
-                    format!("{}", a.weapon.item_sub_type).to_lowercase();
-                let b_type =
-                    format!("{}", b.weapon.item_sub_type).to_lowercase();
+                let a_type = format!("{}", a.weapon.item_sub_type).to_lowercase();
+                let b_type = format!("{}", b.weapon.item_sub_type).to_lowercase();
 
                 a_type.cmp(&b_type)
             });
@@ -378,11 +404,11 @@ fn print_default(
         println!(
             "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
             w.weapon.name,
-            w.kills.to_string(),
-            w.activity_count.to_string(),
+            w.kills.to_formatted_string(&Locale::en),
+            w.activity_count.to_formatted_string(&Locale::en),
             format_f32(calculate_ratio(w.kills, w.activity_count), 2),
             format_f32(calculate_ratio(w.kills, data.total_activities), 2),
-            w.precision_kills.to_string(),
+            w.precision_kills.to_formatted_string(&Locale::en),
             format_f32(w.precision_kills_percent, 2),
             format!("{}", w.weapon.item_sub_type),
             col_w = col_w,
@@ -550,27 +576,21 @@ async fn main() {
         _ => opt.moment.get_date_time(),
     };
 
-    let mut store =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
-            .await
-        {
-            Ok(e) => e,
-            Err(e) => {
-                print_error(
-                    "Could not initialize activity store. Have you run dclias?",
-                    e,
-                );
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error(
+                "Could not initialize activity store. Have you run dclias?",
+                e,
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
-                e,
-            );
+            print_error("Could not initialize manifest. Have you run dclim?", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
