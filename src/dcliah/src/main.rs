@@ -260,7 +260,7 @@ fn print_default(
     println!("{}", repeat_str(&"-", header.chars().count()));
 
     println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-    "TOTALS",
+    "TOTAL",
     data.total_activities.to_formatted_string(&Locale::en),
     "",
     data.kills.to_formatted_string(&Locale::en),
@@ -280,7 +280,7 @@ fn print_default(
     );
 
     println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-    "HIGHS",
+    "HIGH",
     format!("{}-{}", data.wins.to_formatted_string(&Locale::en), data.losses.to_formatted_string(&Locale::en)),
     format!("{}W {}L", data.longest_win_streak, data.longest_loss_streak),
     format!("{}", data.highest_kills),
@@ -329,14 +329,15 @@ fn print_default(
 
     let wep_col = map_col_w + col_w;
     let wep_header_str = format!(
-        "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
+        "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
         "WEAPON",
-        "KILLS",
         "GAMES",
+        "KILLS",
+        "% TOTAL",
         "K/Gk",
         "K/Gt",
         "PREC",
-        "%",
+        "% PREC",
         "TYPE",
         col_w = col_w,
         map_col_w = wep_col,
@@ -402,20 +403,22 @@ fn print_default(
 
     for w in &weapons[..max_weps] {
         println!(
-            "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
+            "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
             w.weapon.name,
-            w.kills.to_formatted_string(&Locale::en),
             w.activity_count.to_formatted_string(&Locale::en),
+            w.kills.to_formatted_string(&Locale::en),
+            format!("{}%", format_f32((w.kills as f32 / data.kills as f32) * 100.0, 2)),
             format_f32(calculate_ratio(w.kills, w.activity_count), 2),
             format_f32(calculate_ratio(w.kills, data.total_activities), 2),
             w.precision_kills.to_formatted_string(&Locale::en),
-            format_f32(w.precision_kills_percent, 2),
+            format!("{}%", format_f32(w.precision_kills_percent, 2)),
             format!("{}", w.weapon.item_sub_type),
             col_w = col_w,
             map_col_w = wep_col,
         );
     }
     println!();
+    println!("% TOTAL - Percentage of all kills");
     println!("K/Gk - Kills per game with a kill with the weapon");
     println!("K/Gt - Kills per game across all games");
     println!();
