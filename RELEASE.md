@@ -1,5 +1,8 @@
 # dcli Release Notes
 
+## v0.3.7 : January 11, 2021
+* Added additional weapon metrics
+
 ## v0.3.6 : January 6, 2021
 * Added support to sort weapon stat results in dcliah (--weapon-sort)
 
