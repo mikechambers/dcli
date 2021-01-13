@@ -477,7 +477,7 @@ impl ActivityStoreInterface {
         for mode in &data.activity_details.modes {
             sqlx::query(
                 r#"
-                INSERT INTO "main"."modes"
+                INSERT OR IGNORE INTO "main"."modes"
                 (
                     "mode", "activity"
                 )
