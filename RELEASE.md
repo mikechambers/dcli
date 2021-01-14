@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.3.71
+* Fixed bug that led to wrong weapon stats when used in 1 game
+* Fixed bug preventing import of data of multiple players when they had played in same activity
+
 ## v0.3.7 : January 11, 2021
 * Added additional weapon metrics
 
