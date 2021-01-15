@@ -26,7 +26,10 @@ use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 
-use crate::{enums::standing::Standing, response::character::CharacterData};
+use crate::{
+    enums::standing::Standing,
+    response::pgcr::DestinyPostGameCarnageReportEntry,
+};
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::Row;
@@ -59,7 +62,7 @@ const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 //numer of simultaneous requests we make to server when retrieving activity history
 const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
 
-const DB_SCHEMA_VERSION: i32 = 3;
+const DB_SCHEMA_VERSION: i32 = 4;
 
 pub struct ActivityStoreInterface {
     verbose: bool,
@@ -125,13 +128,17 @@ impl ActivityStoreInterface {
     ) -> Result<SyncResult, Error> {
         let api = ApiInterface::new(self.verbose)?;
 
-        let characters = api
-            .retrieve_characters(member_id, platform)
-            .await?
-            .ok_or(Error::NoCharacters)?;
+        //TODO: call API to get display name
+        //https://www.bungie.net/Platform/Destiny2/1/Profile/4611686018429783292/?components=100,200
+        let player_info = api.get_player_info(member_id, platform).await?;
 
-        let member_row_id =
-            self.insert_member_id(&member_id, &platform).await?;
+        let characters = player_info.characters;
+
+        let display_name = player_info.user_info.display_name;
+
+        let member_row_id = self
+            .insert_member_id(&member_id, &platform, &display_name)
+            .await?;
 
         let mut total_synced = 0;
         let mut total_in_queue = 0;
@@ -145,16 +152,16 @@ impl ActivityStoreInterface {
         eprintln!("This may take a few minutes depending on the number of activities.");
         for c in characters.characters {
             let character_id = &c.id;
-            let character_row_id =
-                self.insert_character_id(&c, member_row_id).await?;
+            let character_row_id = self
+                .insert_character_id(&c.id, &c.class_type, member_row_id)
+                .await?;
             eprintln!("{}", format!("{}", c.class_type).to_uppercase());
 
             //these calls could be a little more general purpose by taking api ids and not db ids.
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
             //some extra calls to the DB
-            let a = self
-                .sync_activities(character_row_id, character_id, &api)
-                .await?;
+
+            let a = self.sync_activities(character_row_id, &api).await?;
             let _b = self
                 .update_activity_queue(
                     character_row_id,
@@ -164,9 +171,8 @@ impl ActivityStoreInterface {
                     &api,
                 )
                 .await?;
-            let c = self
-                .sync_activities(character_row_id, character_id, &api)
-                .await?;
+
+            let c = self.sync_activities(character_row_id, &api).await?;
 
             total_synced += a.total_synced + c.total_synced;
             total_in_queue += (a.total_available + c.total_available)
@@ -183,7 +189,6 @@ impl ActivityStoreInterface {
     async fn sync_activities(
         &mut self,
         character_row_id: i32,
-        character_id: &str,
         api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
         let mut ids: Vec<i64> = Vec::new();
@@ -245,27 +250,21 @@ impl ActivityStoreInterface {
                 match r {
                     Ok(e) => {
                         match e {
-                            Some(e) => {
-                                match self
-                                    .insert_character_activity_stats(
-                                        &e,
-                                        character_row_id,
-                                        character_id,
-                                    )
-                                    .await
-                                {
-                                    Ok(_e) => {
-                                        total_synced += 1;
-                                    }
-                                    Err(e) => {
-                                        eprintln!();
-                                        eprintln!(
+                            Some(e) => match self
+                                .insert_activity(&e, character_row_id)
+                                .await
+                            {
+                                Ok(_e) => {
+                                    total_synced += 1;
+                                }
+                                Err(e) => {
+                                    eprintln!();
+                                    eprintln!(
                                         "Error inserting data into character activity stats table. Skipping. : {}",
                                         e,
                                     );
-                                    }
                                 }
-                            }
+                            },
                             None => {
                                 eprintln!();
                                 eprintln!(
@@ -431,24 +430,16 @@ impl ActivityStoreInterface {
         })
     }
 
-    async fn insert_character_activity_stats(
+    async fn insert_activity(
         &mut self,
         data: &DestinyPostGameCarnageReportData,
         character_row_id: i32,
-        character_id: &str,
     ) -> Result<(), Error> {
         sqlx::query("BEGIN TRANSACTION;")
             .execute(&mut self.db)
             .await?;
 
-        match self
-            ._insert_character_activity_stats(
-                data,
-                character_row_id,
-                character_id,
-            )
-            .await
-        {
+        match self._insert_activity(data, character_row_id).await {
             Ok(_e) => {
                 sqlx::query("COMMIT;").execute(&mut self.db).await?;
                 sqlx::query("PRAGMA OPTIMIZE;")
@@ -468,20 +459,30 @@ impl ActivityStoreInterface {
     fn get_medal_hash_value(
         &self,
         property: &str,
-        medal_hash: &mut HashMap<String, DestinyHistoricalStatsValue>,
+        medal_hash: &HashMap<String, DestinyHistoricalStatsValue>,
     ) -> u32 {
-        match medal_hash.remove(property) {
+        match medal_hash.get(property) {
             Some(e) => e.basic.value as u32,
             None => 0,
         }
     }
 
-    async fn _insert_character_activity_stats(
+    async fn _insert_activity(
         &mut self,
         data: &DestinyPostGameCarnageReportData,
         character_row_id: i32,
-        character_id: &str,
     ) -> Result<(), Error> {
+        //see if we already have this activity
+        match self
+            .get_activity_row_id(data.activity_details.instance_id)
+            .await
+        {
+            Ok(_e) => {
+                return Ok(());
+            }
+            Err(_e) => (),
+        };
+
         sqlx::query(
             r#"
             INSERT OR IGNORE INTO "main"."activity"
@@ -502,10 +503,28 @@ impl ActivityStoreInterface {
             .get_activity_row_id(data.activity_details.instance_id)
             .await?;
 
+        for team in &data.teams {
+            sqlx::query(
+                r#"
+                INSERT INTO "main"."team_result"
+                (
+                    "team_id", "score", "standing", "activity"
+                )
+                VALUES(?,?, ?, ?)
+                "#,
+            )
+            .bind(team.team_id)
+            .bind(team.score as i32)
+            .bind(team.standing as i32)
+            .bind(activity_row_id)
+            .execute(&mut self.db)
+            .await?;
+        }
+
         for mode in &data.activity_details.modes {
             sqlx::query(
                 r#"
-                INSERT OR IGNORE INTO "main"."modes"
+                INSERT INTO "main"."modes"
                 (
                     "mode", "activity"
                 )
@@ -518,25 +537,66 @@ impl ActivityStoreInterface {
             .await?;
         }
 
-        let char_data = data
-            .get_entry_for_character(&character_id)
-            .ok_or(Error::CharacterDataNotFound)?;
+        for entry in &data.entries {
+            //todo: not sure if we should use membership type of crosssave orveride
+            let member_row_id = self
+                .insert_member_id(
+                    &entry.player.user_info.membership_id,
+                    &entry.player.user_info.cross_save_override,
+                    &entry.player.user_info.display_name,
+                )
+                .await?;
 
-        let mut medal_hash: HashMap<String, DestinyHistoricalStatsValue> =
-            char_data.extended.values;
+            let class_type = CharacterClass::from_hash(entry.player.class_hash);
+
+            let character_row_id = self
+                .insert_character_id(
+                    &entry.character_id,
+                    &class_type,
+                    member_row_id,
+                )
+                .await?;
+
+            self._insert_character_activity_stats(
+                &entry,
+                character_row_id,
+                activity_row_id,
+            )
+            .await?;
+        }
+
+        self.remove_from_activity_queue(
+            &character_row_id,
+            &data.activity_details.instance_id,
+        )
+        .await?;
+
+        Ok(())
+    }
+
+    async fn _insert_character_activity_stats(
+        &mut self,
+        entry: &DestinyPostGameCarnageReportEntry,
+        character_row_id: i32,
+        activity_row_id: i32,
+    ) -> Result<(), Error> {
+        let char_data = entry;
+
+        let medal_hash: &HashMap<String, DestinyHistoricalStatsValue> =
+            &entry.extended.values;
 
         let precision_kills: u32 =
-            self.get_medal_hash_value("precisionKills", &mut medal_hash);
+            self.get_medal_hash_value("precisionKills", medal_hash);
         let weapon_kills_ability: u32 =
-            self.get_medal_hash_value("weaponKillsAbility", &mut medal_hash);
+            self.get_medal_hash_value("weaponKillsAbility", medal_hash);
         let weapon_kills_grenade: u32 =
-            self.get_medal_hash_value("weaponKillsGrenade", &mut medal_hash);
+            self.get_medal_hash_value("weaponKillsGrenade", medal_hash);
         let weapon_kills_melee: u32 =
-            self.get_medal_hash_value("weaponKillsMelee", &mut medal_hash);
+            self.get_medal_hash_value("weaponKillsMelee", medal_hash);
         let weapon_kills_super: u32 =
-            self.get_medal_hash_value("weaponKillsSuper", &mut medal_hash);
+            self.get_medal_hash_value("weaponKillsSuper", medal_hash);
         let all_medals_earned: u32 =
-            self.get_medal_hash_value("allMedalsEarned", &mut medal_hash);
+            self.get_medal_hash_value("allMedalsEarned", medal_hash);
 
         sqlx::query(
             r#"
@@ -624,7 +684,7 @@ impl ActivityStoreInterface {
 
         //ran into a case once where weapons was missing, so have to check here
         if char_data.extended.weapons.is_some() {
-            let weapons = char_data.extended.weapons.unwrap();
+            let weapons = entry.extended.weapons.as_ref().unwrap();
             for w in weapons {
                 sqlx::query(
                     r#"
@@ -644,12 +704,6 @@ impl ActivityStoreInterface {
                 .await?;
             }
         }
-
-        self.remove_from_activity_queue(
-            &character_row_id,
-            &data.activity_details.instance_id,
-        )
-        .await?;
 
         Ok(())
     }
@@ -694,7 +748,6 @@ impl ActivityStoreInterface {
         &mut self,
         member_id: &str,
         character_id: &str,
-        platform: &Platform,
     ) -> Result<i32, Error> {
         let row = sqlx::query(
             r#"
@@ -703,13 +756,12 @@ impl ActivityStoreInterface {
             FROM
                 "character"
             JOIN
-                member on character.member = member.id and member.member_id = ? and member.platform_id = ?
+                member on character.member = member.id and member.member_id = ?
             WHERE
                 character_id = ?
         "#,
         )
         .bind(member_id.to_string())
-        .bind(platform.to_id().to_string())
         .bind(character_id.to_string())
         .fetch_one(&mut self.db)
         .await?;
@@ -723,20 +775,27 @@ impl ActivityStoreInterface {
         &mut self,
         member_id: &str,
         platform: &Platform,
+        display_name: &str,
     ) -> Result<i32, Error> {
+        //we will use whatever the last display name that we find (since you can
+        //change it on PC)
         sqlx::query(
             r#"
-            INSERT OR IGNORE into "member" ("member_id", "platform_id") VALUES (?, ?)
+            INSERT into "member" ("member_id", "platform_id", "display_name") VALUES (?, ?, ?)
+            ON CONFLICT(member_id) DO UPDATE
+            set display_name = ?
         "#,
         )
         .bind(member_id.to_string())
         .bind(format!("{}", platform.to_id()))
+        .bind(format!("{}", display_name.to_string()))
+        .bind(format!("{}", display_name.to_string()))
         .execute(&mut self.db)
         .await?;
 
         let row = sqlx::query(
             r#"
-            SELECT id from "member" where member_id=? and platform_id=?
+            SELECT id from "member" where member_id=?
         "#,
         )
         .bind(member_id.to_string())
@@ -751,11 +810,10 @@ impl ActivityStoreInterface {
 
     async fn insert_character_id(
         &mut self,
-        character: &CharacterData,
+        character_id: &str,
+        class_type: &CharacterClass,
         member_rowid: i32,
     ) -> Result<i32, Error> {
-        let character_id = &character.id;
-
         sqlx::query(
             r#"
             INSERT OR IGNORE into "character" ("character_id", "member", "class") VALUES (?, ?, ?)
@@ -763,7 +821,7 @@ impl ActivityStoreInterface {
         )
         .bind(character_id.to_string())
         .bind(member_rowid)
-        .bind(character.class_type.to_id().to_string())
+        .bind(class_type.to_id().to_string())
         .execute(&mut self.db)
         .await?;
 
@@ -808,6 +866,7 @@ impl ActivityStoreInterface {
         .await?;
 
         let activity_id: i64 = row.try_get("max_activity_id")?;
+
         Ok(activity_id)
     }
 
@@ -831,7 +890,7 @@ impl ActivityStoreInterface {
         //figure which data to retrieve
         let out = if character_selection == &CharacterClassSelection::All {
             self.retrieve_activities_for_member_since(
-                member_id, platform, mode, start_time, manifest,
+                member_id, mode, start_time, manifest,
             )
             .await?
         } else {
@@ -859,7 +918,6 @@ impl ActivityStoreInterface {
             self.retrieve_activities_for_character_since(
                 member_id,
                 &character_id,
-                platform,
                 mode,
                 start_time,
                 manifest,
@@ -873,7 +931,6 @@ impl ActivityStoreInterface {
     pub async fn retrieve_activities_for_member_since(
         &mut self,
         member_id: &str,
-        platform: &Platform,
         mode: &Mode,
         start_time: &DateTime<Utc>,
         manifest: &mut ManifestInterface,
@@ -906,7 +963,7 @@ impl ActivityStoreInterface {
                 character on character_activity_stats.character = character.id,
                 member on member.id = character.member
             WHERE
-                member.id = (select id from member where member_id = ? and platform_id = ?) AND
+                member.id = (select id from member where member_id = ?) AND
                 period > ? AND
                 exists (select 1 from modes where activity = activity.id and mode = ?) AND
                 not exists (select 1 from modes where activity = activity.id and mode = ?)
@@ -915,7 +972,6 @@ impl ActivityStoreInterface {
             "#,
         )
         .bind(member_id.to_string())
-        .bind(platform.to_id().to_string())
         .bind(start_time.to_rfc3339())
         .bind(mode.to_id().to_string())
         .bind(restrict_mode_id.to_string())
@@ -937,14 +993,12 @@ impl ActivityStoreInterface {
         &mut self,
         member_id: &str,
         character_id: &str,
-        platform: &Platform,
         mode: &Mode,
         start_time: &DateTime<Utc>,
         manifest: &mut ManifestInterface,
     ) -> Result<Option<CruciblePlayerPerformances>, Error> {
-        let character_index = self
-            .get_character_row_id(member_id, character_id, platform)
-            .await?;
+        let character_index =
+            self.get_character_row_id(member_id, character_id).await?;
 
         //if mode if private, we dont restrict results
         let restrict_mode_id = if mode.is_private() {

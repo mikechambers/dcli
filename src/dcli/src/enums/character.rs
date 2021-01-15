@@ -97,6 +97,7 @@ pub enum CharacterClass {
     Titan = 0,
     Hunter = 1,
     Warlock = 2,
+    Unknown = 255,
 }
 
 impl CharacterClass {
@@ -110,6 +111,14 @@ impl CharacterClass {
             1 => CharacterClass::Hunter,
             2 => CharacterClass::Warlock,
             _ => panic!("Unknkown Character Class Id : {}", id),
+        }
+    }
+    pub fn from_hash(id: u32) -> CharacterClass {
+        match id {
+            3655393761 => CharacterClass::Titan,
+            671679327 => CharacterClass::Hunter,
+            2271682572 => CharacterClass::Warlock,
+            _ => CharacterClass::Unknown,
         }
     }
 }
@@ -126,6 +135,7 @@ impl fmt::Display for CharacterClass {
             CharacterClass::Titan => "Titan",
             CharacterClass::Hunter => "Hunter",
             CharacterClass::Warlock => "Warlock",
+            CharacterClass::Unknown => "Unknown",
         };
 
         check_width(out, f)

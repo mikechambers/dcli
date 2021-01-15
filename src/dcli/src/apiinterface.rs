@@ -26,14 +26,12 @@ use chrono::{DateTime, Utc};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 use crate::apiclient::ApiClient;
-use crate::apiutils::{API_BASE_URL, PGCR_BASE_URL};
 use crate::enums::mode::Mode;
 use crate::enums::platform::Platform;
 use crate::error::Error;
 use crate::response::activities::{
     ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT,
 };
-use crate::response::character::CharacterData;
 use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::pgcr::{DestinyPostGameCarnageReportData, PGCRResponse};
@@ -42,6 +40,10 @@ use crate::response::stats::{
     PvpStatsData,
 };
 use crate::utils::Period;
+use crate::{
+    apiutils::{API_BASE_URL, PGCR_BASE_URL},
+    character::PlayerInfo,
+};
 
 use crate::character::Characters;
 
@@ -115,14 +117,13 @@ impl ApiInterface {
         Ok(current_activity)
     }
 
-    /// Retrieves characters for specified member_id and platform
-    pub async fn retrieve_characters(
+    pub async fn get_player_info(
         &self,
         member_id: &str,
         platform: &Platform,
-    ) -> Result<Option<Characters>, Error> {
+    ) -> Result<PlayerInfo, Error> {
         let url = format!(
-            "{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=200",
+            "{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=100,200",
             base = API_BASE_URL,
             platform_id = platform.to_id(),
             member_id = utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
@@ -144,17 +145,36 @@ impl ApiInterface {
             }
         };
 
-        let r_characters = match response.characters {
-            Some(e) => e,
-            None => {
-                return Ok(None);
-            }
-        };
+        //characters should never be empty
+        //todo: test with player with no chars created
+        let c = response
+            .characters
+            .unwrap()
+            .data
+            .into_iter()
+            .map(|(_id, m)| m)
+            .collect();
 
-        let characters: Vec<CharacterData> =
-            r_characters.data.into_iter().map(|(_id, m)| m).collect();
+        let characters = Characters::with_characters(c);
 
-        Ok(Some(Characters::with_characters(characters)))
+        //profile should never be empty
+        let user_info = response.profile.unwrap().data.user_info;
+
+        Ok(PlayerInfo {
+            characters,
+            user_info,
+        })
+    }
+
+    /// Retrieves characters for specified member_id and platform
+    pub async fn retrieve_characters(
+        &self,
+        member_id: &str,
+        platform: &Platform,
+    ) -> Result<Option<Characters>, Error> {
+        let player_info = self.get_player_info(member_id, platform).await?;
+
+        Ok(Some(player_info.characters))
     }
 
     pub async fn retrieve_alltime_crucible_stats(

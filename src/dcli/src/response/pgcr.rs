@@ -23,12 +23,15 @@
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 
-use crate::response::activities::{
-    ActivityHistoricalStatsValues, DestinyHistoricalStatsActivity,
-};
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
 use crate::response::utils::{property_to_value, standing_default};
+use crate::{
+    enums::platform::Platform,
+    response::activities::{
+        ActivityHistoricalStatsValues, DestinyHistoricalStatsActivity,
+    },
+};
 
 pub const MAX_ACTIVITIES_REQUEST_COUNT: i32 = 250;
 
@@ -61,7 +64,23 @@ pub struct DestinyPostGameCarnageReportData {
 
     #[serde(skip_serializing, deserialize_with = "str_to_datetime")]
     pub period: DateTime<Utc>,
-    //teams,
+
+    pub teams: Vec<DestinyPostGameCarnageReportTeamEntry>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DestinyPostGameCarnageReportTeamEntry {
+    #[serde(rename = "teamId")]
+    pub team_id: i32,
+
+    #[serde(rename = "teamName")]
+    pub team_name: String,
+
+    #[serde(deserialize_with = "property_to_value")]
+    pub score: f32,
+
+    #[serde(deserialize_with = "property_to_value")]
+    pub standing: f32,
 }
 
 impl DestinyPostGameCarnageReportData {
@@ -135,16 +154,16 @@ pub struct UserInfoCard {
     pub icon_path: String,
 
     #[serde(rename = "crossSaveOverride")]
-    pub cross_save_override: i32,
+    pub cross_save_override: Platform,
 
     #[serde(rename = "applicableMembershipTypes")]
-    pub applicable_membership_types: Option<Vec<i32>>,
+    pub applicable_membership_types: Option<Vec<Platform>>,
 
     #[serde(rename = "isPublic")]
     pub is_public: bool,
 
     #[serde(rename = "membershipType")]
-    pub membership_type: i32,
+    pub membership_type: Platform,
 
     #[serde(rename = "membershipId")]
     pub membership_id: String,

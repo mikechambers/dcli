@@ -1,6 +1,7 @@
 BEGIN TRANSACTION;
 
 DROP TABLE IF EXISTS "modes";
+DROP TABLE IF EXISTS "team_result";
 DROP TABLE IF EXISTS "weapon_result";
 DROP TABLE IF EXISTS "medal_result";
 DROP TABLE IF EXISTS "activity_queue";
@@ -17,7 +18,7 @@ CREATE TABLE IF NOT EXISTS "main"."version" (
     "version"   INTEGER NOT NULL UNIQUE
 );
 
-INSERT INTO "main"."version"("version") VALUES (3);
+INSERT INTO "main"."version"("version") VALUES (4);
 
 CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
     "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -30,10 +31,11 @@ CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
 );
 
 CREATE TABLE IF NOT EXISTS  "member" (
-    "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-    "member_id"	TEXT NOT NULL,
+    "id"            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+    "member_id"	    TEXT NOT NULL,
     "platform_id"	INTEGER NOT NULL,
-    UNIQUE("member_id", "platform_id")
+    "display_name"  TEXT NOT NULL,
+    UNIQUE("member_id")
 );
 
 CREATE TABLE IF NOT EXISTS  "character" (
@@ -63,6 +65,20 @@ CREATE TABLE IF NOT EXISTS "main"."modes" (
     "mode"	    INTEGER NOT NULL,
     "activity"  INTEGER NOT NULL,
     UNIQUE("mode", "activity"),
+
+    FOREIGN KEY ("activity")
+        REFERENCES "activity" ("id")
+        ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "main"."team_result" (
+    "id"	    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+    "team_id"   INTEGER NOT NULL,
+    "activity"  INTEGER NOT NULL,
+    "score"     INTEGER NOT NULL,
+    "standing"  INTEGER NOT NULL,
+
+    UNIQUE("team_id", "activity"),
 
     FOREIGN KEY ("activity")
         REFERENCES "activity" ("id")

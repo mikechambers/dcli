@@ -41,6 +41,7 @@ impl Default for Standing {
 }
 
 impl Standing {
+    //todo: any value except 1 is probably defeat
     pub fn from_value(value: u32) -> Standing {
         if value == 0 {
             Standing::Victory

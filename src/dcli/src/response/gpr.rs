@@ -30,6 +30,8 @@ use crate::response::character::CharacterData;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
 
+use super::pgcr::UserInfoCard;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetProfileResponse {
     #[serde(rename = "Response")]
@@ -51,6 +53,19 @@ pub struct ProfileResponse {
 
     #[serde(rename = "characterActivities")]
     pub character_activities: Option<CharacterActivitiesFieldData>,
+
+    pub profile: Option<ProfileData>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProfileData {
+    pub data: ProfileDetailsData,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProfileDetailsData {
+    #[serde(rename = "userInfo")]
+    pub user_info: UserInfoCard,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -20,8 +20,13 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::enums::character::CharacterClass;
 use crate::response::character::CharacterData;
+use crate::{enums::character::CharacterClass, response::pgcr::UserInfoCard};
+
+pub struct PlayerInfo {
+    pub characters: Characters,
+    pub user_info: UserInfoCard,
+}
 
 pub struct Characters {
     pub characters: Vec<CharacterData>,
