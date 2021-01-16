@@ -28,9 +28,7 @@ use crate::response::utils::str_to_datetime;
 use crate::response::utils::{property_to_value, standing_default};
 use crate::{
     enums::platform::Platform,
-    response::activities::{
-        ActivityHistoricalStatsValues, DestinyHistoricalStatsActivity,
-    },
+    response::activities::{ActivityHistoricalStatsValues, DestinyHistoricalStatsActivity},
 };
 
 pub const MAX_ACTIVITIES_REQUEST_COUNT: i32 = 250;
@@ -71,7 +69,7 @@ pub struct DestinyPostGameCarnageReportData {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DestinyPostGameCarnageReportTeamEntry {
     #[serde(rename = "teamId")]
-    pub team_id: i32,
+    pub team: i32,
 
     #[serde(rename = "teamName")]
     pub team_name: String,
@@ -202,10 +200,7 @@ pub struct DestinyHistoricalWeaponStats {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyHistoricalWeaponsStatsValues {
-    #[serde(
-        rename = "uniqueWeaponKills",
-        deserialize_with = "property_to_value"
-    )]
+    #[serde(rename = "uniqueWeaponKills", deserialize_with = "property_to_value")]
     #[serde(default)]
     pub unique_weapon_kills: f32,
 

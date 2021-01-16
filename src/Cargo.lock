@@ -395,6 +395,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dcliad"
+version = "0.3.71"
+dependencies = [
+ "dcli",
+ "structopt",
+ "tokio",
+]
+
+[[package]]
 name = "dcliah"
 version = "0.3.71"
 dependencies = [

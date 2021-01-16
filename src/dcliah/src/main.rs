@@ -29,7 +29,7 @@ use dcli::enums::platform::Platform;
 use dcli::enums::standing::Standing;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::{
-    crucible::{CruciblePlayerPerformance, CruciblePlayerPerformances},
+    crucible::{CruciblePlayerActivityPerformance, CruciblePlayerActivityPerformances},
     enums::mode::Mode,
     utils::{calculate_ratio, human_duration},
 };
@@ -39,9 +39,7 @@ use dcli::enums::weaponsort::WeaponSort;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{
-    determine_data_dir, format_f32, repeat_str, uppercase_first_char,
-};
+use dcli::utils::{determine_data_dir, format_f32, repeat_str, uppercase_first_char};
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
@@ -81,7 +79,7 @@ fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
 }
 
 fn print_default(
-    data: &CruciblePlayerPerformances,
+    data: &CruciblePlayerActivityPerformances,
     activity_limit: &u32,
     mode: &Mode,
     moment: &Moment,
@@ -180,7 +178,7 @@ fn print_default(
     let header_divider = repeat_str(&"=", header.chars().count());
     println!("{}", header_divider);
 
-    let slice: &[CruciblePlayerPerformance] = if is_limited {
+    let slice: &[CruciblePlayerActivityPerformance] = if is_limited {
         println!(
             "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...","...",
@@ -382,9 +380,7 @@ fn print_default(
             });
         }
         WeaponSort::PrecisionTotal => {
-            weapons.sort_by(|a, b| {
-                b.precision_kills.partial_cmp(&a.precision_kills).unwrap()
-            });
+            weapons.sort_by(|a, b| b.precision_kills.partial_cmp(&a.precision_kills).unwrap());
         }
         WeaponSort::PrecisionPercent => {
             weapons.sort_by(|a, b| {
@@ -395,10 +391,8 @@ fn print_default(
         }
         WeaponSort::Type => {
             weapons.sort_by(|a, b| {
-                let a_type =
-                    format!("{}", a.weapon.item_sub_type).to_lowercase();
-                let b_type =
-                    format!("{}", b.weapon.item_sub_type).to_lowercase();
+                let a_type = format!("{}", a.weapon.item_sub_type).to_lowercase();
+                let b_type = format!("{}", b.weapon.item_sub_type).to_lowercase();
 
                 a_type.cmp(&b_type)
             });
@@ -585,27 +579,21 @@ async fn main() {
         _ => opt.moment.get_date_time(),
     };
 
-    let mut store =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
-            .await
-        {
-            Ok(e) => e,
-            Err(e) => {
-                print_error(
-                    "Could not initialize activity store. Have you run dclias?",
-                    e,
-                );
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error(
+                "Could not initialize activity store. Have you run dclias?",
+                e,
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
-                e,
-            );
+            print_error("Could not initialize manifest. Have you run dclim?", e);
             std::process::exit(EXIT_FAILURE);
         }
     };

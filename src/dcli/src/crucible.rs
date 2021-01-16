@@ -31,15 +31,31 @@ use std::cmp::max;
 use std::collections::HashMap;
 
 use crate::utils::{
-    calculate_efficiency, calculate_kills_deaths_assists,
-    calculate_kills_deaths_ratio,
+    calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
 };
+
+pub struct Team {
+    pub id: i32,
+    pub standing: Standing,
+    pub score: u32,
+    pub player_performances: Vec<CruciblePlayerPerformance>,
+}
+
+pub struct CrucibleActivity {
+    pub details: ActivityDetail,
+    pub teams: HashMap<i32, Team>,
+}
 
 #[derive(Debug)]
 pub struct CruciblePlayerPerformance {
     pub player: Player,
-    pub activity_detail: ActivityDetail,
+    pub stats: CrucibleStats,
+}
 
+#[derive(Debug)]
+pub struct CruciblePlayerActivityPerformance {
+    pub player: Player,
+    pub activity_detail: ActivityDetail,
     pub stats: CrucibleStats,
 }
 
@@ -58,7 +74,7 @@ pub struct CrucibleStats {
     pub kills_deaths_assists: f32,
     pub activity_duration_seconds: u32,
     pub standing: Standing,
-    pub team: u32,
+    pub team: i32,
     pub completion_reason: u32,
     pub start_seconds: u32,
     pub time_played_seconds: u32,
@@ -86,6 +102,7 @@ pub struct Player {
     pub member_id: String,
     pub character_id: String,
     pub platform: Platform,
+    pub display_name: String,
 }
 
 #[derive(Debug, Clone)]
@@ -122,8 +139,8 @@ pub struct Medal {
 }
 
 #[derive(Debug, Default)]
-pub struct CruciblePlayerPerformances {
-    performances: Vec<CruciblePlayerPerformance>,
+pub struct CruciblePlayerActivityPerformances {
+    performances: Vec<CruciblePlayerActivityPerformance>,
 
     pub total_activities: u32,
     pub wins: u32,
@@ -153,19 +170,19 @@ pub struct CruciblePlayerPerformances {
     pub longest_win_streak: u32,
     pub longest_loss_streak: u32,
 
-    pub extended: Option<ExtendedCruciblePlayerPerformances>,
+    pub extended: Option<ExtendedCruciblePlayerActivityPerformances>,
 }
 
-impl CruciblePlayerPerformances {
-    pub fn get_performances(&self) -> &Vec<CruciblePlayerPerformance> {
+impl CruciblePlayerActivityPerformances {
+    pub fn get_performances(&self) -> &Vec<CruciblePlayerActivityPerformance> {
         &self.performances
     }
 
     pub fn with_performances(
-        performances: Vec<CruciblePlayerPerformance>,
-    ) -> CruciblePlayerPerformances {
-        let mut out = CruciblePlayerPerformances::default();
-        let mut extended = ExtendedCruciblePlayerPerformances::default();
+        performances: Vec<CruciblePlayerActivityPerformance>,
+    ) -> CruciblePlayerActivityPerformances {
+        let mut out = CruciblePlayerActivityPerformances::default();
+        let mut extended = ExtendedCruciblePlayerActivityPerformances::default();
 
         out.total_activities = performances.len() as u32;
         out.performances = performances;
@@ -195,8 +212,7 @@ impl CruciblePlayerPerformances {
             out.highest_deaths = max(p.stats.deaths, out.highest_deaths);
             out.highest_opponents_defeated =
                 max(p.stats.opponents_defeated, out.highest_opponents_defeated);
-            out.highest_efficiency =
-                out.highest_efficiency.max(p.stats.efficiency);
+            out.highest_efficiency = out.highest_efficiency.max(p.stats.efficiency);
             out.highest_kills_deaths_ratio = out
                 .highest_kills_deaths_ratio
                 .max(p.stats.kills_deaths_ratio);
@@ -227,11 +243,9 @@ impl CruciblePlayerPerformances {
 
             #[allow(clippy::comparison_chain)]
             if streak > 0 {
-                longest_win_streak =
-                    std::cmp::max(longest_win_streak, streak as u32);
+                longest_win_streak = std::cmp::max(longest_win_streak, streak as u32);
             } else if streak < 0 {
-                longest_loss_streak =
-                    std::cmp::max(longest_loss_streak, streak.abs() as u32);
+                longest_loss_streak = std::cmp::max(longest_loss_streak, streak.abs() as u32);
             }
 
             last_standing = p.stats.standing;
@@ -257,18 +271,12 @@ impl CruciblePlayerPerformances {
                     e.weapon_kills_grenade,
                 );
 
-                extended.highest_weapon_kills_melee = max(
-                    extended.highest_weapon_kills_melee,
-                    e.weapon_kills_melee,
-                );
-                extended.highest_weapon_kills_super = max(
-                    extended.highest_weapon_kills_super,
-                    e.weapon_kills_super,
-                );
-                extended.highest_all_medals_earned = max(
-                    extended.highest_all_medals_earned,
-                    e.all_medals_earned,
-                );
+                extended.highest_weapon_kills_melee =
+                    max(extended.highest_weapon_kills_melee, e.weapon_kills_melee);
+                extended.highest_weapon_kills_super =
+                    max(extended.highest_weapon_kills_super, e.weapon_kills_super);
+                extended.highest_all_medals_earned =
+                    max(extended.highest_all_medals_earned, e.all_medals_earned);
 
                 for m in &e.medals {
                     let key = &m.medal.id;
@@ -308,8 +316,7 @@ impl CruciblePlayerPerformances {
                         if ws.kills == 0 {
                             0.0
                         } else {
-                            (ws.precision_kills as f32 / ws.kills as f32)
-                                * 100.0
+                            (ws.precision_kills as f32 / ws.kills as f32) * 100.0
                         }
                     };
                 }
@@ -320,13 +327,11 @@ impl CruciblePlayerPerformances {
         out.longest_loss_streak = longest_loss_streak;
 
         if has_extended {
-            let mut medals: Vec<MedalStat> =
-                medal_hash.into_iter().map(|(_id, m)| m).collect();
+            let mut medals: Vec<MedalStat> = medal_hash.into_iter().map(|(_id, m)| m).collect();
 
             medals.sort_by(|a, b| b.count.cmp(&a.count));
 
-            let mut weapons: Vec<WeaponStat> =
-                weapon_hash.into_iter().map(|(_id, w)| w).collect();
+            let mut weapons: Vec<WeaponStat> = weapon_hash.into_iter().map(|(_id, w)| w).collect();
             weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
 
             extended.medals = medals;
@@ -338,14 +343,11 @@ impl CruciblePlayerPerformances {
         }
 
         if out.total_activities > 0 {
-            out.win_rate =
-                (out.wins as f32 / out.total_activities as f32) * 100.0;
+            out.win_rate = (out.wins as f32 / out.total_activities as f32) * 100.0;
         }
 
-        out.efficiency =
-            calculate_efficiency(out.kills, out.deaths, out.assists);
-        out.kills_deaths_ratio =
-            calculate_kills_deaths_ratio(out.kills, out.deaths);
+        out.efficiency = calculate_efficiency(out.kills, out.deaths, out.assists);
+        out.kills_deaths_ratio = calculate_kills_deaths_ratio(out.kills, out.deaths);
         out.kills_deaths_assists =
             calculate_kills_deaths_assists(out.kills, out.deaths, out.assists);
 
@@ -362,7 +364,7 @@ impl CruciblePlayerPerformances {
 }
 
 #[derive(Debug, Default)]
-pub struct ExtendedCruciblePlayerPerformances {
+pub struct ExtendedCruciblePlayerActivityPerformances {
     pub precision_kills: u32,
     pub weapon_kills_ability: u32,
     pub weapon_kills_grenade: u32,
