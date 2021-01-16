@@ -34,6 +34,7 @@ use crate::utils::{
     calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
 };
 
+#[derive(Debug)]
 pub struct Team {
     pub id: i32,
     pub standing: Standing,
@@ -41,6 +42,7 @@ pub struct Team {
     pub player_performances: Vec<CruciblePlayerPerformance>,
 }
 
+#[derive(Debug)]
 pub struct CrucibleActivity {
     pub details: ActivityDetail,
     pub teams: HashMap<i32, Team>,

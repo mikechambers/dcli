@@ -828,32 +828,68 @@ impl ActivityStoreInterface {
 
     pub async fn retrieve_last_activity(
         &mut self,
-        character_id: &str,
+        member_id: &str,
+        platform: &Platform,
+        character_selection: &CharacterClassSelection,
         mode: &Mode,
         manifest: &mut ManifestInterface,
     ) -> Result<CrucibleActivity, Error> {
-        let activity_row = sqlx::query(
-            r#"
-            SELECT
-                activity.id,
-                activity.activity_id,
-                activity.period,
-                activity.mode as activity_mode,
-                activity.director_activity_hash,
-                activity.reference_id
-            FROM
-                activity
-            INNER JOIN
-                character_activity_stats on character_activity_stats.activity = activity.id,
-                character on character_activity_stats.character = character.id AND character.character_id = ?
-            WHERE
-                exists (select 1 from modes where activity = activity.id and mode = ?)
-            ORDER BY
-                period DESC LIMIT 1
-            "#
-        ).bind(character_id.to_string())
-        .bind(mode.to_id().to_string())
-        .fetch_one(&mut self.db).await?;
+        let activity_row = if character_selection == &CharacterClassSelection::All {
+            sqlx::query(
+                r#"
+                SELECT
+                    activity.id,
+                    activity.activity_id,
+                    activity.period,
+                    activity.mode as activity_mode,
+                    activity.director_activity_hash,
+                    activity.reference_id,
+                    activity.platform
+                FROM
+                    activity
+                INNER JOIN
+                    character_activity_stats on character_activity_stats.activity = activity.id,
+                    character on character_activity_stats.character = character.id,
+                    member on character.member = member.id AND member.member_id = ?
+                WHERE
+                    exists (select 1 from modes where activity = activity.id and mode = ?)
+                ORDER BY
+                    period DESC LIMIT 1
+                "#,
+            )
+            .bind(member_id.to_string())
+            .bind(mode.to_id().to_string())
+            .fetch_one(&mut self.db)
+            .await?
+        } else {
+            let character_id = self
+                .retrieve_character_selection_id(member_id, platform, character_selection)
+                .await?;
+
+            sqlx::query(
+                    r#"
+                    SELECT
+                        activity.id,
+                        activity.activity_id,
+                        activity.period,
+                        activity.mode as activity_mode,
+                        activity.director_activity_hash,
+                        activity.reference_id,
+                        activity.platform
+                    FROM
+                        activity
+                    INNER JOIN
+                        character_activity_stats on character_activity_stats.activity = activity.id,
+                        character on character_activity_stats.character = character.id AND character.character_id = ?
+                    WHERE
+                        exists (select 1 from modes where activity = activity.id and mode = ?)
+                    ORDER BY
+                        period DESC LIMIT 1
+                    "#
+                ).bind(character_id.to_string())
+                .bind(mode.to_id().to_string())
+                .fetch_one(&mut self.db).await?
+        };
 
         let activity_row_id: i32 = activity_row.try_get("id")?;
 
@@ -874,7 +910,7 @@ impl ActivityStoreInterface {
         let mut teams: HashMap<i32, Team> = HashMap::new();
 
         for t in team_rows {
-            let standing: f32 = t.try_get("standing")?;
+            let standing: i32 = t.try_get("standing")?;
             let standing = Standing::from_value(standing as u32);
 
             let id: i32 = t.try_get("team_id")?;
@@ -893,10 +929,12 @@ impl ActivityStoreInterface {
             teams.insert(id, team);
         }
 
+        //TODO: need to account for character and member, need to join both
         let character_rows = sqlx::query(
             r#"
             SELECT
-                *
+                *,
+                character_activity_stats.id as character_activity_stats_index
             FROM
                 character_activity_stats
             INNER JOIN
@@ -911,13 +949,13 @@ impl ActivityStoreInterface {
         .await?;
 
         for c_row in character_rows {
-            let c = self
-                .parse_individual_performance_row(manifest, &c_row)
-                .await?;
+            let stats = self.parse_crucible_stats(manifest, &c_row).await?;
+
+            let player = self.parse_player(&c_row).await?;
 
             let cpp = CruciblePlayerPerformance {
-                stats: c.stats,
-                player: c.player,
+                stats: stats,
+                player: player,
             };
 
             match teams.get_mut(&cpp.stats.team) {
@@ -1152,7 +1190,7 @@ impl ActivityStoreInterface {
         manifest: &mut ManifestInterface,
         activity_row: &sqlx::sqlite::SqliteRow,
     ) -> Result<ActivityDetail, Error> {
-        let activity_id: i64 = activity_row.try_get_unchecked("activity_id")?;
+        let activity_id: i64 = activity_row.try_get("activity_id")?;
 
         let mode_id: i32 = activity_row.try_get_unchecked("activity_mode")?;
         let platform_id: i32 = activity_row.try_get_unchecked("platform")?;
