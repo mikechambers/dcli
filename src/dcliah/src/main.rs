@@ -29,7 +29,9 @@ use dcli::enums::platform::Platform;
 use dcli::enums::standing::Standing;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::{
-    crucible::{CruciblePlayerActivityPerformance, CruciblePlayerActivityPerformances},
+    crucible::{
+        AggregateCruciblePerformances, CruciblePlayerActivityPerformance, CruciblePlayerPerformance,
+    },
     enums::mode::Mode,
     utils::{calculate_ratio, human_duration},
 };
@@ -79,7 +81,7 @@ fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
 }
 
 fn print_default(
-    data: &CruciblePlayerActivityPerformances,
+    data: &Vec<CruciblePlayerActivityPerformance>,
     activity_limit: &u32,
     mode: &Mode,
     moment: &Moment,
@@ -90,7 +92,11 @@ fn print_default(
     //todo: might want to look at buffering output
     //https://rust-cli.github.io/book/tutorial/output.html
 
-    let performances = data.get_performances();
+    let performances = data;
+
+    let o: Vec<&CruciblePlayerPerformance> = performances.iter().map(|x| &x.performance).collect();
+    let aggregate = AggregateCruciblePerformances::with_performances(o);
+
     let activity_count = performances.len();
 
     let display_count = std::cmp::min(activity_count, *activity_limit as usize);
@@ -123,7 +129,7 @@ fn print_default(
     println!("{}", title);
     println!(
         "Total time played is {}",
-        human_duration(data.time_played_seconds)
+        human_duration(aggregate.time_played_seconds)
     );
     println!();
 
@@ -205,7 +211,7 @@ fn print_default(
             last_mode = activity.activity_detail.mode;
         }
 
-        let standing = activity.stats.standing;
+        let standing = activity.performance.stats.standing;
         if standing == last_standing {
             streak = match last_standing {
                 Standing::Unknown => 0,
@@ -229,7 +235,7 @@ fn print_default(
             map_name.push_str("..")
         }
 
-        let extended = activity.stats.extended.as_ref().unwrap();
+        let extended = activity.performance.stats.extended.as_ref().unwrap();
         let supers = extended.weapon_kills_super;
         let grenades = extended.weapon_kills_grenade;
         let melees = extended.weapon_kills_melee;
@@ -237,15 +243,15 @@ fn print_default(
         println!(
             "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             map_name,
-            activity.stats.standing.to_string(),
+            activity.performance.stats.standing.to_string(),
             streak.to_string(),
-            activity.stats.kills.to_string(),
-            activity.stats.assists.to_string(),
-            activity.stats.opponents_defeated.to_string(),
-            activity.stats.deaths.to_string(),
-            format_f32(activity.stats.kills_deaths_ratio, 2),
-            format_f32(activity.stats.kills_deaths_assists, 2),
-            format_f32(activity.stats.efficiency, 2),
+            activity.performance.stats.kills.to_string(),
+            activity.performance.stats.assists.to_string(),
+            activity.performance.stats.opponents_defeated.to_string(),
+            activity.performance.stats.deaths.to_string(),
+            format_f32(activity.performance.stats.kills_deaths_ratio, 2),
+            format_f32(activity.performance.stats.kills_deaths_assists, 2),
+            format_f32(activity.performance.stats.efficiency, 2),
             supers.to_string(),
             grenades.to_string(),
             melees.to_string(),
@@ -256,17 +262,17 @@ fn print_default(
         );
     }
 
-    let extended = data.extended.as_ref().unwrap();
+    let extended = aggregate.extended.as_ref().unwrap();
     println!("{}", repeat_str(&"-", header.chars().count()));
 
     println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "TOTAL",
-    data.total_activities.to_formatted_string(&Locale::en),
+    aggregate.total_activities.to_formatted_string(&Locale::en),
     "",
-    data.kills.to_formatted_string(&Locale::en),
-    data.assists.to_formatted_string(&Locale::en),
-    data.opponents_defeated.to_formatted_string(&Locale::en),
-    data.deaths.to_formatted_string(&Locale::en),
+    aggregate.kills.to_formatted_string(&Locale::en),
+    aggregate.assists.to_formatted_string(&Locale::en),
+    aggregate.opponents_defeated.to_formatted_string(&Locale::en),
+    aggregate.deaths.to_formatted_string(&Locale::en),
     "".to_string(),
     "".to_string(),
     "".to_string(),
@@ -281,16 +287,16 @@ fn print_default(
 
     println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "HIGH",
-    format!("{}-{}", data.wins.to_formatted_string(&Locale::en), data.losses.to_formatted_string(&Locale::en)),
-    format!("{}W {}L", data.longest_win_streak, data.longest_loss_streak),
-    format!("{}", data.highest_kills),
-    format!("{}", data.highest_assists),
-    format!("{}", data.highest_opponents_defeated),
-    format!("{}", data.highest_deaths),
+    format!("{}-{}", aggregate.wins.to_formatted_string(&Locale::en), aggregate.losses.to_formatted_string(&Locale::en)),
+    format!("{}W {}L", aggregate.longest_win_streak, aggregate.longest_loss_streak),
+    format!("{}", aggregate.highest_kills),
+    format!("{}", aggregate.highest_assists),
+    format!("{}", aggregate.highest_opponents_defeated),
+    format!("{}", aggregate.highest_deaths),
 
-    format_f32(data.highest_kills_deaths_ratio, 2),
-    format_f32(data.highest_kills_deaths_assists, 2),
-    format_f32(data.highest_efficiency, 2),
+    format_f32(aggregate.highest_kills_deaths_ratio, 2),
+    format_f32(aggregate.highest_kills_deaths_assists, 2),
+    format_f32(aggregate.highest_efficiency, 2),
     format!("{}", extended.highest_weapon_kills_super),
     format!("{}", extended.highest_weapon_kills_grenade),
     format!("{}", extended.highest_weapon_kills_melee),
@@ -303,18 +309,18 @@ fn print_default(
 
     println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "PER GAME",
-    format!("{}%", format_f32(data.win_rate, 2)),
+    format!("{}%", format_f32(aggregate.win_rate, 2)),
     "",
-    format_f32(data.stat_per_game(data.kills), 2),
-    format_f32(data.stat_per_game(data.assists), 2),
-    format_f32(data.stat_per_game(data.opponents_defeated), 2),
-    format_f32(data.stat_per_game(data.deaths), 2),
-    format_f32(data.kills_deaths_ratio, 2),
-    format_f32(data.kills_deaths_assists, 2),
-    format_f32(data.efficiency, 2),
-    format_f32(data.stat_per_game(extended.weapon_kills_super), 2),
-    format_f32(data.stat_per_game(extended.weapon_kills_grenade), 2),
-    format_f32(data.stat_per_game(extended.weapon_kills_melee), 2),
+    format_f32(aggregate.stat_per_game(aggregate.kills), 2),
+    format_f32(aggregate.stat_per_game(aggregate.assists), 2),
+    format_f32(aggregate.stat_per_game(aggregate.opponents_defeated), 2),
+    format_f32(aggregate.stat_per_game(aggregate.deaths), 2),
+    format_f32(aggregate.kills_deaths_ratio, 2),
+    format_f32(aggregate.kills_deaths_assists, 2),
+    format_f32(aggregate.efficiency, 2),
+    format_f32(aggregate.stat_per_game(extended.weapon_kills_super), 2),
+    format_f32(aggregate.stat_per_game(extended.weapon_kills_grenade), 2),
+    format_f32(aggregate.stat_per_game(extended.weapon_kills_melee), 2),
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
@@ -374,8 +380,8 @@ fn print_default(
         }
         WeaponSort::KillsPerGameTotal => {
             weapons.sort_by(|a, b| {
-                let a_kpg = calculate_ratio(a.kills, data.total_activities);
-                let b_kpg = calculate_ratio(b.kills, data.total_activities);
+                let a_kpg = calculate_ratio(a.kills, aggregate.total_activities);
+                let b_kpg = calculate_ratio(b.kills, aggregate.total_activities);
                 b_kpg.partial_cmp(&a_kpg).unwrap()
             });
         }
@@ -407,9 +413,9 @@ fn print_default(
             w.weapon.name,
             w.activity_count.to_formatted_string(&Locale::en),
             w.kills.to_formatted_string(&Locale::en),
-            format!("{}%", format_f32((w.kills as f32 / data.kills as f32) * 100.0, 2)),
+            format!("{}%", format_f32((w.kills as f32 / aggregate.kills as f32) * 100.0, 2)),
             format_f32(calculate_ratio(w.kills, w.activity_count), 2),
-            format_f32(calculate_ratio(w.kills, data.total_activities), 2),
+            format_f32(calculate_ratio(w.kills, aggregate.total_activities), 2),
             w.precision_kills.to_formatted_string(&Locale::en),
             format!("{}%", format_f32(w.precision_kills_percent, 2)),
             format!("{}", w.weapon.item_sub_type),
@@ -631,9 +637,9 @@ async fn main() {
         return;
     }
 
-    let data = data.unwrap();
+    let data: Vec<CruciblePlayerActivityPerformance> = data.unwrap();
 
-    if data.get_performances().is_empty() {
+    if data.is_empty() {
         println!("No activities found");
         return;
     }

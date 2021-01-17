@@ -37,9 +37,8 @@ use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 
 use crate::crucible::{
-    ActivityDetail, CruciblePlayerActivityPerformance, CruciblePlayerActivityPerformances,
-    CruciblePlayerPerformance, CrucibleStats, ExtendedCrucibleStats, Item, Medal, MedalStat,
-    Player, WeaponStat,
+    ActivityDetail, CruciblePlayerActivityPerformance, CruciblePlayerPerformance, CrucibleStats,
+    ExtendedCrucibleStats, Item, Medal, MedalStat, Player, WeaponStat,
 };
 use crate::enums::character::{CharacterClass, CharacterClassSelection};
 use crate::enums::medaltier::MedalTier;
@@ -1021,7 +1020,7 @@ impl ActivityStoreInterface {
         mode: &Mode,
         start_time: &DateTime<Utc>,
         manifest: &mut ManifestInterface,
-    ) -> Result<Option<CruciblePlayerActivityPerformances>, Error> {
+    ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
         let out = if character_selection == &CharacterClassSelection::All {
             self.retrieve_activities_for_member_since(member_id, mode, start_time, manifest)
                 .await?
@@ -1049,7 +1048,7 @@ impl ActivityStoreInterface {
         mode: &Mode,
         start_time: &DateTime<Utc>,
         manifest: &mut ManifestInterface,
-    ) -> Result<Option<CruciblePlayerActivityPerformances>, Error> {
+    ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
         //if mode if private, we dont restrict results
         let restrict_mode_id = if mode.is_private() {
             -1
@@ -1111,7 +1110,7 @@ impl ActivityStoreInterface {
         mode: &Mode,
         start_time: &DateTime<Utc>,
         manifest: &mut ManifestInterface,
-    ) -> Result<Option<CruciblePlayerActivityPerformances>, Error> {
+    ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
         let character_index = self.get_character_row_id(member_id, character_id).await?;
 
         //if mode if private, we dont restrict results
@@ -1168,7 +1167,7 @@ impl ActivityStoreInterface {
         &mut self,
         manifest: &mut ManifestInterface,
         activity_rows: &[sqlx::sqlite::SqliteRow],
-    ) -> Result<CruciblePlayerActivityPerformances, Error> {
+    ) -> Result<Vec<CruciblePlayerActivityPerformance>, Error> {
         let mut performances: Vec<CruciblePlayerActivityPerformance> =
             Vec::with_capacity(activity_rows.len());
 
@@ -1180,9 +1179,9 @@ impl ActivityStoreInterface {
             performances.push(player_performance);
         }
         //performances.sort_by(|a, b| a.activity_detail.period.cmp(&b.activity_detail.period));
-        let p = CruciblePlayerActivityPerformances::with_performances(performances);
+        //let p = AggregateCruciblePerformances::with_performances(performances);
 
-        Ok(p)
+        Ok(performances)
     }
 
     async fn parse_activity(
@@ -1438,10 +1437,11 @@ impl ActivityStoreInterface {
         let stats = self.parse_crucible_stats(manifest, activity_row).await?;
         let player = self.parse_player(activity_row).await?;
 
+        let performance = CruciblePlayerPerformance { player, stats };
+
         let player_performance = CruciblePlayerActivityPerformance {
-            player,
+            performance,
             activity_detail,
-            stats,
         };
 
         Ok(player_performance)

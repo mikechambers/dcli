@@ -56,10 +56,18 @@ pub struct CruciblePlayerPerformance {
 
 #[derive(Debug)]
 pub struct CruciblePlayerActivityPerformance {
+    pub performance: CruciblePlayerPerformance,
+    pub activity_detail: ActivityDetail,
+}
+
+/*
+#[derive(Debug)]
+pub struct CruciblePlayerActivityPerformance {
     pub player: Player,
     pub activity_detail: ActivityDetail,
     pub stats: CrucibleStats,
 }
+*/
 
 #[derive(Debug)]
 pub struct CrucibleStats {
@@ -141,9 +149,7 @@ pub struct Medal {
 }
 
 #[derive(Debug, Default)]
-pub struct CruciblePlayerActivityPerformances {
-    performances: Vec<CruciblePlayerActivityPerformance>,
-
+pub struct AggregateCruciblePerformances {
     pub total_activities: u32,
     pub wins: u32,
     pub losses: u32,
@@ -175,19 +181,14 @@ pub struct CruciblePlayerActivityPerformances {
     pub extended: Option<ExtendedCruciblePlayerActivityPerformances>,
 }
 
-impl CruciblePlayerActivityPerformances {
-    pub fn get_performances(&self) -> &Vec<CruciblePlayerActivityPerformance> {
-        &self.performances
-    }
-
+impl AggregateCruciblePerformances {
     pub fn with_performances(
-        performances: Vec<CruciblePlayerActivityPerformance>,
-    ) -> CruciblePlayerActivityPerformances {
-        let mut out = CruciblePlayerActivityPerformances::default();
+        performances: Vec<&CruciblePlayerPerformance>,
+    ) -> AggregateCruciblePerformances {
+        let mut out = AggregateCruciblePerformances::default();
         let mut extended = ExtendedCruciblePlayerActivityPerformances::default();
 
         out.total_activities = performances.len() as u32;
-        out.performances = performances;
 
         let mut medal_hash: HashMap<String, MedalStat> = HashMap::new();
         let mut weapon_hash: HashMap<u32, WeaponStat> = HashMap::new();
@@ -198,7 +199,7 @@ impl CruciblePlayerActivityPerformances {
         let mut last_standing = Standing::Unknown;
 
         let mut has_extended = false;
-        for p in &out.performances {
+        for p in &performances {
             out.assists += p.stats.assists;
             out.score += p.stats.score;
             out.kills += p.stats.kills;
