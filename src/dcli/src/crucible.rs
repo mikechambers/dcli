@@ -183,7 +183,7 @@ pub struct AggregateCruciblePerformances {
 
 impl AggregateCruciblePerformances {
     pub fn with_performances(
-        performances: Vec<&CruciblePlayerPerformance>,
+        performances: &Vec<&CruciblePlayerPerformance>,
     ) -> AggregateCruciblePerformances {
         let mut out = AggregateCruciblePerformances::default();
         let mut extended = ExtendedCruciblePlayerActivityPerformances::default();
@@ -199,7 +199,7 @@ impl AggregateCruciblePerformances {
         let mut last_standing = Standing::Unknown;
 
         let mut has_extended = false;
-        for p in &performances {
+        for p in performances {
             out.assists += p.stats.assists;
             out.score += p.stats.score;
             out.kills += p.stats.kills;

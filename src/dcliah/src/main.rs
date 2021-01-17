@@ -94,8 +94,9 @@ fn print_default(
 
     let performances = data;
 
-    let o: Vec<&CruciblePlayerPerformance> = performances.iter().map(|x| &x.performance).collect();
-    let aggregate = AggregateCruciblePerformances::with_performances(o);
+    let cpp: Vec<&CruciblePlayerPerformance> =
+        performances.iter().map(|x| &x.performance).collect();
+    let aggregate = AggregateCruciblePerformances::with_performances(&cpp);
 
     let activity_count = performances.len();
 
