@@ -72,8 +72,8 @@ impl Standing {
 impl fmt::Display for Standing {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let out = match self {
-            Standing::Victory => "Win",
-            Standing::Defeat => "Loss",
+            Standing::Victory => "Victory",
+            Standing::Defeat => "Defeat",
             Standing::Unknown => "Unknown",
         };
 

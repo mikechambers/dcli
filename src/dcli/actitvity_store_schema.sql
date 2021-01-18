@@ -141,6 +141,7 @@ CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
     "weapon_kills_melee"        INTEGER NOT NULL,
     "weapon_kills_super"        INTEGER NOT NULL,
     "all_medals_earned"         INTEGER NOT NULL,
+    "light_level"               INTEGER NOT NULL,
 
     UNIQUE("activity", "character"),
 

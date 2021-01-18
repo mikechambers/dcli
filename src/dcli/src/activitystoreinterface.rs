@@ -58,6 +58,7 @@ const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
 
 const DB_SCHEMA_VERSION: i32 = 4;
+const NO_TEAMS_INDEX: i32 = 253;
 
 pub struct ActivityStoreInterface {
     verbose: bool,
@@ -568,11 +569,11 @@ impl ActivityStoreInterface {
                 "team", "completion_reason", "start_seconds", "time_played_seconds", 
                 "player_count", "team_score", "precision_kills", "weapon_kills_ability", 
                 "weapon_kills_grenade", "weapon_kills_melee", "weapon_kills_super", 
-                "all_medals_earned", "activity"
+                "all_medals_earned", "light_level", "activity"
             )
             VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ? )
+                ?, ? )
             "#,
         )
         //we for through format, as otherwise we have to cast to i32, and while
@@ -605,6 +606,7 @@ impl ActivityStoreInterface {
         .bind(weapon_kills_melee as i32) //weapon_kills_melee
         .bind(weapon_kills_super as i32) //weapon_kills_super
         .bind(all_medals_earned as i32) //weapon_kills_super
+        .bind(char_data.player.light_level) //activity
         .bind(activity_row_id) //activity
         .execute(&mut self.db)
         .await?;
@@ -910,6 +912,16 @@ impl ActivityStoreInterface {
 
         let mut teams: HashMap<i32, Team> = HashMap::new();
 
+        let mut team_names = vec![
+            "Alpha".to_string(),
+            "Bravo".to_string(),
+            "Charlie".to_string(),
+            "Delta".to_string(),
+            "Echo".to_string(),
+            "Foxtrot".to_string(),
+        ];
+        team_names.reverse();
+
         for t in team_rows {
             let standing: i32 = t.try_get("standing")?;
             let standing = Standing::from_value(standing as u32);
@@ -920,14 +932,35 @@ impl ActivityStoreInterface {
 
             let player_performances: Vec<CruciblePlayerPerformance> = Vec::new();
 
+            let display_name = team_names.pop().unwrap_or("".to_string());
+
             let team = Team {
                 standing,
                 id,
                 score,
                 player_performances,
+                display_name,
             };
 
             teams.insert(id, team);
+        }
+
+        //Rumble wont have any teams, so we put all items in one team
+        //this also covered any bugs where no teams are specified
+        let mut no_teams = false;
+        if teams.is_empty() {
+            let display_name = team_names.pop().unwrap_or("".to_string());
+
+            let team = Team {
+                standing: Standing::Unknown,
+                id: NO_TEAMS_INDEX,
+                score: 0,
+                player_performances: Vec::new(),
+                display_name,
+            };
+
+            teams.insert(NO_TEAMS_INDEX, team);
+            no_teams = true;
         }
 
         //TODO: need to account for character and member, need to join both
@@ -954,12 +987,15 @@ impl ActivityStoreInterface {
 
             let player = self.parse_player(&c_row).await?;
 
-            let cpp = CruciblePlayerPerformance {
-                stats: stats,
-                player: player,
+            let cpp = CruciblePlayerPerformance { stats, player };
+
+            let index = if no_teams {
+                NO_TEAMS_INDEX
+            } else {
+                cpp.stats.team
             };
 
-            match teams.get_mut(&cpp.stats.team) {
+            match teams.get_mut(&index) {
                 Some(e) => e.player_performances.push(cpp),
                 None => eprintln!("Invalid Team ID : Skipping"),
             }

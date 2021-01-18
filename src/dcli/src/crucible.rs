@@ -40,6 +40,7 @@ pub struct Team {
     pub standing: Standing,
     pub score: u32,
     pub player_performances: Vec<CruciblePlayerPerformance>,
+    pub display_name: String,
 }
 
 #[derive(Debug)]
@@ -49,11 +50,11 @@ pub struct CrucibleActivity {
 }
 
 impl CrucibleActivity {
-    pub fn get_standing_for_member(&self, member_id: &str) -> Option<Standing> {
+    pub fn get_member_performance(&self, member_id: &str) -> Option<&CruciblePlayerPerformance> {
         for (_k, t) in &self.teams {
             for p in &t.player_performances {
                 if p.player.member_id == member_id {
-                    return Some(p.stats.standing);
+                    return Some(p);
                 }
             }
         }

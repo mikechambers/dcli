@@ -201,6 +201,10 @@ impl Mode {
         *self == Mode::Gambit || *self == Mode::GambitPrime
     }
 
+    pub fn is_rumble(&self) -> bool {
+        *self == Mode::Rumble || *self == Mode::PrivateMatchesRumble
+    }
+
     pub fn is_nightfall(&self) -> bool {
         *self == Mode::Nightfall
             || *self == Mode::HeroicNightfall

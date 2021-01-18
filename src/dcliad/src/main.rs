@@ -23,8 +23,8 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use dcli::enums::platform::Platform;
 use dcli::{crucible::CrucibleActivity, enums::moment::Moment};
+use dcli::{enums::platform::Platform, utils::human_duration};
 
 use dcli::enums::mode::Mode;
 use dcli::manifestinterface::ManifestInterface;
@@ -33,7 +33,9 @@ use dcli::enums::character::CharacterClassSelection;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{determine_data_dir, format_f32, repeat_str, uppercase_first_char};
+use dcli::utils::{
+    determine_data_dir, format_f32, human_date_format, repeat_str, uppercase_first_char,
+};
 
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
@@ -71,19 +73,41 @@ fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
     Ok(moment)
 }
 
+fn generate_score(data: &CrucibleActivity) -> String {
+    let mut tokens: Vec<String> = Vec::new();
+
+    for (_k, t) in &data.teams {
+        tokens.push(t.score.to_string());
+        tokens.push("-".to_string());
+    }
+
+    tokens.pop();
+
+    tokens.join("")
+}
+
 fn print_default(data: &CrucibleActivity, member_id: &str, summary: bool) {
     let col_w = 10;
     let name_col_w = 18;
 
-    let sm_border_width = name_col_w + col_w + col_w;
-    let team_title_border = repeat_str("-", sm_border_width);
-    let activity_title_border = repeat_str("=", sm_border_width);
+    let member_performance = data.get_member_performance(member_id).unwrap();
+
+    let team_title_border = repeat_str("-", name_col_w + col_w);
+    let activity_title_border = repeat_str("=", name_col_w + col_w + col_w);
 
     println!("ACTIVITY");
     println!("{}", activity_title_border);
 
-    println!("{} on {}", data.details.mode, data.details.map_name);
-    println!("{}", data.get_standing_for_member(member_id).unwrap());
+    println!(
+        "{} on {} :: {} ({})",
+        data.details.mode,
+        data.details.map_name,
+        human_date_format(&data.details.period),
+        human_duration(member_performance.stats.activity_duration_seconds)
+    );
+
+    println!("{}", generate_score(data));
+    println!("{}!", member_performance.stats.standing);
     println!();
 
     let header = format!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
@@ -109,7 +133,7 @@ fn print_default(data: &CrucibleActivity, member_id: &str, summary: bool) {
     let entry_border = repeat_str(".", table_width);
 
     for (_k, v) in &data.teams {
-        println!("{}", "Team A (101) Victory!");
+        println!("[{}] {} Team {}", v.score, v.display_name, v.standing);
         println!("{}", team_title_border);
         println!("{}", header);
         println!("{}", header_border);
