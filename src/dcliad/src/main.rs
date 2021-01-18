@@ -23,7 +23,7 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use dcli::{crucible::CrucibleActivity, enums::moment::Moment};
+use dcli::crucible::CrucibleActivity;
 use dcli::{enums::platform::Platform, utils::human_duration};
 
 use dcli::enums::mode::Mode;
@@ -33,9 +33,7 @@ use dcli::enums::character::CharacterClassSelection;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{
-    determine_data_dir, format_f32, human_date_format, repeat_str, uppercase_first_char,
-};
+use dcli::utils::{determine_data_dir, format_f32, human_date_format, repeat_str};
 
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
@@ -51,28 +49,6 @@ fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
     Ok(mode)
 }
 
-fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
-    let moment = Moment::from_str(src)?;
-
-    //note, we positive capture what we want in case new properties
-    //are added in the future
-    match moment {
-        Moment::Daily => {}
-        Moment::Weekend => {}
-        Moment::Weekly => {}
-        Moment::Day => {}
-        Moment::Week => {}
-        Moment::Month => {}
-        Moment::AllTime => {}
-        Moment::Custom => {}
-        _ => {
-            return Err(format!("Unsupported moment specified : {}", src));
-        }
-    };
-
-    Ok(moment)
-}
-
 fn generate_score(data: &CrucibleActivity) -> String {
     let mut tokens: Vec<String> = Vec::new();
 
@@ -86,7 +62,7 @@ fn generate_score(data: &CrucibleActivity) -> String {
     tokens.join("")
 }
 
-fn print_default(data: &CrucibleActivity, member_id: &str, summary: bool) {
+fn print_default(data: &CrucibleActivity, member_id: &str, detailed: bool) {
     let col_w = 10;
     let name_col_w = 18;
 
@@ -153,13 +129,29 @@ fn print_default(data: &CrucibleActivity, member_id: &str, summary: bool) {
                 extended.weapon_kills_grenade.to_string(),
                 extended.weapon_kills_ability.to_string(),
                 extended.all_medals_earned.to_string(),
-                "",
+                p.stats.generate_status(),
                 col_w=col_w,
                 name_col_w = name_col_w,
             );
 
-            if !summary {
+            //todo: what if they dont have weapon kills (test)
+            if detailed {
                 println!("{}", entry_border);
+
+                for w in &extended.weapons {
+                    println!(
+                        "{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}",
+                        w.weapon.name,
+                        w.kills.to_string(),
+                        w.precision_kills.to_string(),
+                        format!("{}%", format_f32(w.precision_kills_percent * 100.0, 0)),
+                        format!("{}", w.weapon.item_sub_type),
+                        w_name_col_w = col_w + col_w + name_col_w,
+                        col_w = col_w,
+                        col_w2 = col_w * 2,
+                    );
+                }
+                println!();
             }
         }
         //println!("{}", header_border);
@@ -232,12 +224,12 @@ struct Opt {
     #[structopt(short = "N", long = "no-sync")]
     no_sync: bool,
 
-    /// Only display a summary of activity details.
+    /// Only display a expanded view of activity details.
     ///
-    /// If flag is set, only player summary results will be displayed, and no detailed
-    /// data such as weapon stats will be presented..
-    #[structopt(short = "s", long = "summary")]
-    summary: bool,
+    /// If flag is set, additional informationwill be displayed, including weapon stats
+    /// and match overview data.
+    #[structopt(short = "d", long = "detailed")]
+    detailed: bool,
 
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
@@ -305,5 +297,5 @@ async fn main() {
         }
     };
 
-    print_default(&data, &opt.member_id, opt.summary);
+    print_default(&data, &opt.member_id, opt.detailed);
 }

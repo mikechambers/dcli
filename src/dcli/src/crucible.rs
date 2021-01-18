@@ -34,6 +34,8 @@ use crate::utils::{
     calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
 };
 
+const PLAYER_START_BUFFER: u32 = 30;
+
 #[derive(Debug)]
 pub struct Team {
     pub id: i32,
@@ -75,15 +77,6 @@ pub struct CruciblePlayerActivityPerformance {
     pub activity_detail: ActivityDetail,
 }
 
-/*
-#[derive(Debug)]
-pub struct CruciblePlayerActivityPerformance {
-    pub player: Player,
-    pub activity_detail: ActivityDetail,
-    pub stats: CrucibleStats,
-}
-*/
-
 #[derive(Debug)]
 pub struct CrucibleStats {
     pub assists: u32,
@@ -107,6 +100,22 @@ pub struct CrucibleStats {
     pub team_score: u32,
 
     pub extended: Option<ExtendedCrucibleStats>,
+}
+
+impl CrucibleStats {
+    pub fn generate_status(&self) -> String {
+        let mut out: Vec<String> = Vec::new();
+
+        if self.start_seconds > PLAYER_START_BUFFER {
+            out.push("L".to_string());
+        }
+
+        if self.completed == 0 {
+            out.push("E".to_string());
+        }
+
+        out.join("")
+    }
 }
 
 #[derive(Debug)]
