@@ -497,6 +497,8 @@ impl ActivityStoreInterface {
             .await?;
         }
 
+        //TODO: Rumble will have no teams. Need to create one
+
         for mode in &data.activity_details.modes {
             sqlx::query(
                 r#"

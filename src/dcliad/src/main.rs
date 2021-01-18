@@ -23,8 +23,8 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use dcli::enums::moment::Moment;
 use dcli::enums::platform::Platform;
+use dcli::{crucible::CrucibleActivity, enums::moment::Moment};
 
 use dcli::enums::mode::Mode;
 use dcli::manifestinterface::ManifestInterface;
@@ -70,18 +70,81 @@ fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
 
     Ok(moment)
 }
-/*
-fn print_default(
-    data: &AggregateCruciblePerformances,
-    activity_limit: &u32,
-    mode: &Mode,
-    moment: &Moment,
-    start_time: &DateTime<Utc>,
-    weapon_count: &u32,
-    weapon_sort: &WeaponSort,
-) {
+
+fn print_default(data: &CrucibleActivity, member_id: &str, summary: bool) {
+    let col_w = 10;
+    let name_col_w = 18;
+
+    let sm_border_width = name_col_w + col_w + col_w;
+    let team_title_border = repeat_str("-", sm_border_width);
+    let activity_title_border = repeat_str("=", sm_border_width);
+
+    println!("ACTIVITY");
+    println!("{}", activity_title_border);
+
+    println!("{} on {}", data.details.mode, data.details.map_name);
+    println!("{}", data.get_standing_for_member(member_id).unwrap());
+    println!();
+
+    let header = format!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    "PLAYER",
+    "KILLS",
+    "ASTS",
+    "K+A",
+    "DEATHS",
+    "K/D",
+    "KD/A",
+    "EFF",
+    "SUPERS",
+    "GRENADES",
+    "MELEES",
+    "MEDALS",
+    "STATUS",
+    col_w=col_w,
+    name_col_w = name_col_w,
+    );
+
+    let table_width = header.chars().count();
+    let header_border = repeat_str("=", table_width);
+    let entry_border = repeat_str(".", table_width);
+
+    for (_k, v) in &data.teams {
+        println!("{}", "Team A (101) Victory!");
+        println!("{}", team_title_border);
+        println!("{}", header);
+        println!("{}", header_border);
+
+        for p in &v.player_performances {
+            let extended = p.stats.extended.as_ref().unwrap();
+            println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+                p.player.display_name,
+                p.stats.kills.to_string(),
+                p.stats.assists.to_string(),
+                p.stats.opponents_defeated.to_string(),
+                p.stats.deaths.to_string(),
+                format_f32(p.stats.kills_deaths_ratio, 2),
+                format_f32(p.stats.kills_deaths_assists, 2),
+                format_f32(p.stats.efficiency, 2),
+                extended.weapon_kills_super.to_string(),
+                extended.weapon_kills_grenade.to_string(),
+                extended.weapon_kills_ability.to_string(),
+                extended.all_medals_earned.to_string(),
+                "",
+                col_w=col_w,
+                name_col_w = name_col_w,
+            );
+
+            if !summary {
+                println!("{}", entry_border);
+            }
+        }
+        //println!("{}", header_border);
+        //println!("{}", header);
+        println!();
+    }
+
+    //PLAYER      KILLS       ASTS     K+A   DEATHS      K/D         KD/A       EFF         SUPERS  GRENADES    MELEES    MEDALS  STATUS
 }
-*/
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
@@ -144,6 +207,13 @@ struct Opt {
     /// This is useful in case you are syncing activities in a seperate process.
     #[structopt(short = "N", long = "no-sync")]
     no_sync: bool,
+
+    /// Only display a summary of activity details.
+    ///
+    /// If flag is set, only player summary results will be displayed, and no detailed
+    /// data such as weapon stats will be presented..
+    #[structopt(short = "s", long = "summary")]
+    summary: bool,
 
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
@@ -211,28 +281,5 @@ async fn main() {
         }
     };
 
-    println!("{:#?}", data);
-    /*
-    if data.is_none() {
-        println!("No activities found");
-        return;
-    }
-
-    let data = data.unwrap();
-
-    if data.get_performances().is_empty() {
-        println!("No activities found");
-        return;
-    }
-
-    print_default(
-        &data,
-        &opt.activity_limit,
-        &opt.mode,
-        &opt.moment,
-        &start_time,
-        &opt.weapon_count,
-        &opt.weapon_sort,
-    );
-    */
+    print_default(&data, &opt.member_id, opt.summary);
 }

@@ -48,6 +48,20 @@ pub struct CrucibleActivity {
     pub teams: HashMap<i32, Team>,
 }
 
+impl CrucibleActivity {
+    pub fn get_standing_for_member(&self, member_id: &str) -> Option<Standing> {
+        for (_k, t) in &self.teams {
+            for p in &t.player_performances {
+                if p.player.member_id == member_id {
+                    return Some(p.stats.standing);
+                }
+            }
+        }
+
+        None
+    }
+}
+
 #[derive(Debug)]
 pub struct CruciblePlayerPerformance {
     pub player: Player,
@@ -113,6 +127,7 @@ pub struct Player {
     pub character_id: String,
     pub platform: Platform,
     pub display_name: String,
+    //pub light_level: i32,
 }
 
 #[derive(Debug, Clone)]
