@@ -1453,6 +1453,9 @@ impl ActivityStoreInterface {
         let character_id = activity_row.try_get_unchecked("character_id")?;
         let platform_id: i32 = activity_row.try_get_unchecked("platform_id")?;
         let display_name: String = activity_row.try_get_unchecked("display_name")?;
+        let light_level: i32 = activity_row.try_get_unchecked("light_level")?;
+        let class_type: i32 = activity_row.try_get_unchecked("class")?;
+        let class_type = CharacterClass::from_id(class_type as u32);
 
         let platform = Platform::from_id(platform_id as u32);
 
@@ -1461,6 +1464,8 @@ impl ActivityStoreInterface {
             character_id,
             platform,
             display_name,
+            light_level,
+            class_type,
         };
 
         Ok(player)

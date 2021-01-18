@@ -54,9 +54,7 @@ impl FromStr for CharacterClassSelection {
 }
 
 /****************CharacterGender *******************/
-#[derive(
-    PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug,
-)]
+#[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
 #[repr(u32)]
 pub enum CharacterGender {
     Masculine = 0,
@@ -89,9 +87,7 @@ impl fmt::Display for CharacterGender {
 }
 
 /****************CharacterClass *******************/
-#[derive(
-    PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug,
-)]
+#[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
 #[repr(u32)]
 pub enum CharacterClass {
     Titan = 0,
@@ -105,12 +101,12 @@ impl CharacterClass {
         *self as u32
     }
 
-    pub fn from_id(id: u64) -> CharacterClass {
+    pub fn from_id(id: u32) -> CharacterClass {
         match id {
             0 => CharacterClass::Titan,
             1 => CharacterClass::Hunter,
             2 => CharacterClass::Warlock,
-            _ => panic!("Unknkown Character Class Id : {}", id),
+            _ => CharacterClass::Unknown,
         }
     }
     pub fn from_hash(id: u32) -> CharacterClass {
@@ -144,9 +140,7 @@ impl fmt::Display for CharacterClass {
 
 /*************************** CharacterRace *************************/
 
-#[derive(
-    PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug,
-)]
+#[derive(PartialEq, Eq, Clone, Copy, Serialize_repr, Deserialize_repr, Debug)]
 #[repr(u32)]
 pub enum CharacterRace {
     Human = 0,

@@ -109,11 +109,12 @@ fn print_default(data: &CrucibleActivity, member_id: &str, detailed: bool) {
     let entry_border = repeat_str(".", table_width);
 
     for (_k, v) in &data.teams {
-        println!("[{}] {} Team {}", v.score, v.display_name, v.standing);
+        println!("[{}] {} Team {}!", v.score, v.display_name, v.standing);
         println!("{}", team_title_border);
         println!("{}", header);
         println!("{}", header_border);
 
+        let mut first_performance = true;
         for p in &v.player_performances {
             let extended = p.stats.extended.as_ref().unwrap();
             println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
@@ -135,20 +136,66 @@ fn print_default(data: &CrucibleActivity, member_id: &str, detailed: bool) {
             );
 
             //todo: what if they dont have weapon kills (test)
-            if detailed {
+            if detailed && !extended.weapons.is_empty() {
                 println!("{}", entry_border);
 
-                for w in &extended.weapons {
+                let mut weapons = extended.weapons.clone();
+                weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
+
+                let mut min_index = 2;
+                if first_performance {
                     println!(
-                        "{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}",
-                        w.weapon.name,
-                        w.kills.to_string(),
-                        w.precision_kills.to_string(),
-                        format!("{}%", format_f32(w.precision_kills_percent * 100.0, 0)),
-                        format!("{}", w.weapon.item_sub_type),
+                        //"{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}",
+                        "{:<0col_w$}{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}",
+                        format!("{}", p.player.class_type),
+                        "NAME",
+                        "KILLS",
+                        "PREC",
+                        "%",
+                        "TYPE",
                         w_name_col_w = col_w + col_w + name_col_w,
                         col_w = col_w,
-                        col_w2 = col_w * 2,
+                        col_w2 = col_w * 3,
+                    );
+                    first_performance = false;
+                    min_index = 1;
+                }
+
+                for i in 0..std::cmp::max(min_index, weapons.len()) {
+                    let modifier = 2 - min_index;
+                    let meta = match i + modifier {
+                        0 => format!("{}", p.player.class_type),
+                        1 => p.player.light_level.to_string(),
+                        _ => "".to_string(),
+                    };
+
+                    let mut weapon_name = "".to_string();
+                    let mut weapon_kills = "".to_string();
+                    let mut precision_kills = "".to_string();
+                    let mut precision_kills_percent = "".to_string();
+                    let mut weapon_type = "".to_string();
+
+                    if i < weapons.len() {
+                        let w = &weapons[i];
+                        weapon_name = w.weapon.name.to_string();
+                        weapon_kills = w.kills.to_string();
+                        precision_kills = w.precision_kills.to_string();
+                        precision_kills_percent =
+                            format!("{}", format_f32(w.precision_kills_percent * 100.0, 0));
+                        weapon_type = format!("{}", w.weapon.item_sub_type);
+                    }
+
+                    println!(
+                        "{:<0col_w$}{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}",
+                        meta,
+                        weapon_name,
+                        weapon_kills,
+                        precision_kills,
+                        precision_kills_percent,
+                        weapon_type,
+                        w_name_col_w = col_w + col_w + name_col_w,
+                        col_w = col_w,
+                        col_w2 = col_w * 3,
                     );
                 }
                 println!();

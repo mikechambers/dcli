@@ -20,11 +20,14 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::enums::itemtype::{ItemSubType, ItemType};
 use crate::enums::medaltier::MedalTier;
 use crate::enums::mode::Mode;
 use crate::enums::platform::Platform;
 use crate::enums::standing::Standing;
+use crate::enums::{
+    character::CharacterClass,
+    itemtype::{ItemSubType, ItemType},
+};
 use chrono::{DateTime, Utc};
 
 use std::cmp::max;
@@ -137,7 +140,8 @@ pub struct Player {
     pub character_id: String,
     pub platform: Platform,
     pub display_name: String,
-    //pub light_level: i32,
+    pub light_level: i32,
+    pub class_type: CharacterClass,
 }
 
 #[derive(Debug, Clone)]
