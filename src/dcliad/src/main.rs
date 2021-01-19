@@ -23,7 +23,10 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use dcli::crucible::{AggregateCruciblePerformances, CrucibleActivity, CruciblePlayerPerformance};
+use dcli::{
+    crucible::{AggregateCruciblePerformances, CrucibleActivity, CruciblePlayerPerformance},
+    enums::completionreason::CompletionReason,
+};
 use dcli::{enums::platform::Platform, utils::human_duration};
 
 use dcli::enums::mode::Mode;
@@ -68,6 +71,13 @@ fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: boo
 
     let member_performance = data.get_member_performance(member_id).unwrap();
 
+    let completion_reason =
+        if member_performance.stats.completion_reason == CompletionReason::Unknown {
+            "".to_string()
+        } else {
+            format!("({})", member_performance.stats.completion_reason)
+        };
+
     let team_title_border = repeat_str("-", name_col_w + col_w);
     let activity_title_border = repeat_str("=", name_col_w + col_w + col_w);
 
@@ -83,8 +93,9 @@ fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: boo
         human_duration(member_performance.stats.activity_duration_seconds)
     );
 
-    println!("{}", generate_score(data));
     println!("{}!", member_performance.stats.standing);
+    println!("{} {}", generate_score(data), completion_reason);
+
     println!();
 
     let header = format!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
@@ -110,6 +121,7 @@ fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: boo
     let entry_border = repeat_str(".", table_width);
     let footer_border = repeat_str("-", table_width);
 
+    let mut all_performances: Vec<&CruciblePlayerPerformance> = Vec::new();
     for (_k, v) in &data.teams {
         println!("[{}] {} Team {}!", v.score, v.display_name, v.standing);
         println!("{}", team_title_border);
@@ -210,31 +222,19 @@ fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: boo
         }
         println!("{}", footer_border);
 
-        let cpp: Vec<&CruciblePlayerPerformance> = player_performances.iter().map(|x| x).collect();
+        let mut cpp: Vec<&CruciblePlayerPerformance> = Vec::new();
+
+        for p in &v.player_performances {
+            cpp.push(p);
+            all_performances.push(p);
+        }
+
         let aggregate = AggregateCruciblePerformances::with_performances(&cpp);
 
         let agg_extended = aggregate.extended.as_ref().unwrap();
         let agg_supers = agg_extended.weapon_kills_super;
         let agg_grenades = agg_extended.weapon_kills_grenade;
         let agg_melees = agg_extended.weapon_kills_melee;
-
-        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-            "AVG",
-            format_f32(aggregate.kills as f32 / player_performances.len() as f32, 2),
-            format_f32(aggregate.assists as f32 / player_performances.len() as f32,2),
-            format_f32(aggregate.opponents_defeated as f32 / player_performances.len() as f32,2),
-            format_f32(aggregate.deaths as f32 / player_performances.len() as f32,2),
-            "",
-            "",
-            "",
-            format_f32(agg_supers as f32 / player_performances.len() as f32,2),
-            format_f32(agg_grenades as f32 / player_performances.len() as f32,2),
-            format_f32(agg_melees as f32 / player_performances.len() as f32,2),
-            format_f32(aggregate.extended.as_ref().unwrap().all_medals_earned as f32 / player_performances.len() as f32,2),
-            "", //MAKE THIS REASON FOR COMPLETEION
-            col_w=col_w,
-            name_col_w = name_col_w,
-        );
 
         println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             "TOTAL",
@@ -254,10 +254,76 @@ fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: boo
             name_col_w = name_col_w,
         );
 
+        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "AVG",
+            format_f32(aggregate.kills as f32 / player_performances.len() as f32, 2),
+            format_f32(aggregate.assists as f32 / player_performances.len() as f32,2),
+            format_f32(aggregate.opponents_defeated as f32 / player_performances.len() as f32,2),
+            format_f32(aggregate.deaths as f32 / player_performances.len() as f32,2),
+            "",
+            "",
+            "",
+            format_f32(agg_supers as f32 / player_performances.len() as f32,2),
+            format_f32(agg_grenades as f32 / player_performances.len() as f32,2),
+            format_f32(agg_melees as f32 / player_performances.len() as f32,2),
+            format_f32(aggregate.extended.as_ref().unwrap().all_medals_earned as f32 / player_performances.len() as f32,2),
+            "", //MAKE THIS REASON FOR COMPLETEION
+            col_w=col_w,
+            name_col_w = name_col_w,
+        );
+
         //println!("{}", header_border);
         //println!("{}", header);
         println!();
     }
+
+    println!("Combined");
+    println!("{}", team_title_border);
+
+    let aggregate = AggregateCruciblePerformances::with_performances(&all_performances);
+
+    let agg_extended = aggregate.extended.as_ref().unwrap();
+    let agg_supers = agg_extended.weapon_kills_super;
+    let agg_grenades = agg_extended.weapon_kills_grenade;
+    let agg_melees = agg_extended.weapon_kills_melee;
+
+    println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        "TOTAL",
+        aggregate.kills.to_string(),
+        aggregate.assists.to_string(),
+        aggregate.opponents_defeated.to_string(),
+        aggregate.deaths.to_string(),
+        format_f32(aggregate.kills_deaths_ratio, 2),
+        format_f32(aggregate.kills_deaths_assists, 2),
+        format_f32(aggregate.efficiency, 2),
+        agg_supers.to_string(),
+        agg_grenades.to_string(),
+        agg_melees.to_string(),
+        aggregate.extended.as_ref().unwrap().all_medals_earned.to_string(),
+        "", //MAKE THIS REASON FOR COMPLETEION
+        col_w=col_w,
+        name_col_w = name_col_w,
+    );
+
+    println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    "AVG",
+    format_f32(aggregate.kills as f32 / all_performances.len() as f32, 2),
+    format_f32(aggregate.assists as f32 / all_performances.len() as f32,2),
+    format_f32(aggregate.opponents_defeated as f32 / all_performances.len() as f32,2),
+    format_f32(aggregate.deaths as f32 / all_performances.len() as f32,2),
+    "",
+    "",
+    "",
+    format_f32(agg_supers as f32 / all_performances.len() as f32,2),
+    format_f32(agg_grenades as f32 / all_performances.len() as f32,2),
+    format_f32(agg_melees as f32 / all_performances.len() as f32,2),
+    format_f32(aggregate.extended.as_ref().unwrap().all_medals_earned as f32 / all_performances.len() as f32,2),
+    "", //MAKE THIS REASON FOR COMPLETEION
+    col_w=col_w,
+    name_col_w = name_col_w,
+);
+
+    println!();
 
     //PLAYER      KILLS       ASTS     K+A   DEATHS      K/D         KD/A       EFF         SUPERS  GRENADES    MELEES    MEDALS  STATUS
 }

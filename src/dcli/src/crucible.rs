@@ -20,7 +20,6 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use crate::enums::medaltier::MedalTier;
 use crate::enums::mode::Mode;
 use crate::enums::platform::Platform;
 use crate::enums::standing::Standing;
@@ -28,6 +27,7 @@ use crate::enums::{
     character::CharacterClass,
     itemtype::{ItemSubType, ItemType},
 };
+use crate::enums::{completionreason::CompletionReason, medaltier::MedalTier};
 use chrono::{DateTime, Utc};
 
 use std::cmp::max;
@@ -88,7 +88,7 @@ pub struct CrucibleStats {
     pub deaths: u32,
     pub average_score_per_kill: f32,
     pub average_score_per_life: f32,
-    pub completed: u32,
+    pub completed: bool,
     pub opponents_defeated: u32,
     pub efficiency: f32,
     pub kills_deaths_ratio: f32,
@@ -96,7 +96,7 @@ pub struct CrucibleStats {
     pub activity_duration_seconds: u32,
     pub standing: Standing,
     pub team: i32,
-    pub completion_reason: u32,
+    pub completion_reason: CompletionReason,
     pub start_seconds: u32,
     pub time_played_seconds: u32,
     pub player_count: u32,
@@ -113,7 +113,7 @@ impl CrucibleStats {
             out.push("L".to_string());
         }
 
-        if self.completed == 0 {
+        if !self.completed {
             out.push("E".to_string());
         }
 

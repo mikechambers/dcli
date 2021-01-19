@@ -28,7 +28,7 @@ use chrono::{DateTime, Utc};
 
 use crate::{
     crucible::{CrucibleActivity, Team},
-    enums::standing::Standing,
+    enums::{completionreason::CompletionReason, standing::Standing},
     response::pgcr::DestinyPostGameCarnageReportEntry,
 };
 use futures::TryStreamExt;
@@ -1280,7 +1280,7 @@ impl ActivityStoreInterface {
         let average_score_per_life: f32 =
             activity_row.try_get_unchecked("average_score_per_life")?;
         let completed: i32 = activity_row.try_get_unchecked("completed")?;
-        let completed: u32 = completed as u32;
+        let completed: bool = completed == 1;
 
         let opponents_defeated: i32 = activity_row.try_get_unchecked("opponents_defeated")?;
         let opponents_defeated: u32 = opponents_defeated as u32;
@@ -1296,7 +1296,7 @@ impl ActivityStoreInterface {
         let team: i32 = activity_row.try_get_unchecked("team")?;
 
         let completion_reason: i32 = activity_row.try_get_unchecked("completion_reason")?;
-        let completion_reason: u32 = completion_reason as u32;
+        let completion_reason = CompletionReason::from_id(completion_reason as u32);
 
         let start_seconds: i32 = activity_row.try_get_unchecked("start_seconds")?;
         let start_seconds: u32 = start_seconds as u32;

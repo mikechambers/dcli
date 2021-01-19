@@ -21,6 +21,7 @@
 */
 
 pub mod character;
+pub mod completionreason;
 pub mod itemtype;
 pub mod medaltier;
 pub mod mode;
