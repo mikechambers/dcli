@@ -65,7 +65,7 @@ fn generate_score(data: &CrucibleActivity) -> String {
     tokens.join("")
 }
 
-fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: bool) {
+fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon_count: u32) {
     let col_w = 10;
     let name_col_w = 18;
 
@@ -155,7 +155,7 @@ fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: boo
             );
 
             //todo: what if they dont have weapon kills (test)
-            if extended_details && !extended.weapons.is_empty() {
+            if details && !extended.weapons.is_empty() {
                 println!("{}", entry_border);
 
                 let mut weapons = extended.weapons.clone();
@@ -287,6 +287,8 @@ fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: boo
     let agg_grenades = agg_extended.weapon_kills_grenade;
     let agg_melees = agg_extended.weapon_kills_melee;
 
+    println!("{}", header);
+    println!("{}", header_border);
     println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
         "TOTAL",
         aggregate.kills.to_string(),
@@ -325,7 +327,43 @@ fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: boo
 
     println!();
 
-    //PLAYER      KILLS       ASTS     K+A   DEATHS      K/D         KD/A       EFF         SUPERS  GRENADES    MELEES    MEDALS  STATUS
+    let wep_col = name_col_w + col_w;
+    let wep_header_str = format!(
+        "{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0name_col_w$}",
+        "WEAPON",
+        "KILLS",
+        "% TOTAL",
+        "PREC",
+        "% PREC",
+        "TYPE",
+        col_w = col_w,
+        name_col_w = wep_col,
+    );
+
+    let wep_divider = repeat_str(&"=", wep_header_str.chars().count());
+    println!("{}", wep_header_str);
+    println!("{}", wep_divider);
+
+    let weapons = &aggregate.extended.as_ref().unwrap().weapons;
+    let max_weps = std::cmp::min(weapon_count as usize, weapons.len());
+
+    let wep_col = name_col_w + col_w;
+    for w in &weapons[..max_weps] {
+        println!(
+            "{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0name_col_w$}",
+            w.weapon.name,
+            w.kills.to_string(),
+            format!(
+                "{}%",
+                format_f32((w.kills as f32 / aggregate.kills as f32) * 100.0, 2)
+            ),
+            w.precision_kills.to_string(),
+            format!("{}%", format_f32(w.precision_kills_percent, 2)),
+            format!("{}", w.weapon.item_sub_type),
+            col_w = col_w,
+            name_col_w = wep_col,
+        );
+    }
 }
 
 #[derive(StructOpt, Debug)]
@@ -394,8 +432,12 @@ struct Opt {
     ///
     /// If flag is set, additional information will be displayed, including weapon stats
     /// and match overview data.
-    #[structopt(short = "e", long = "extended")]
-    extended: bool,
+    #[structopt(short = "d", long = "details")]
+    details: bool,
+
+    /// The number of weapons to display details for.
+    #[structopt(long = "weapon-count", short = "w", default_value = "5")]
+    weapon_count: u32,
 
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
@@ -463,5 +505,5 @@ async fn main() {
         }
     };
 
-    print_default(&data, &opt.member_id, opt.extended);
+    print_default(&data, &opt.member_id, opt.details, opt.weapon_count);
 }
