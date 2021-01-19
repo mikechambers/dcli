@@ -23,7 +23,7 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use dcli::crucible::CrucibleActivity;
+use dcli::crucible::{AggregateCruciblePerformances, CrucibleActivity, CruciblePlayerPerformance};
 use dcli::{enums::platform::Platform, utils::human_duration};
 
 use dcli::enums::mode::Mode;
@@ -62,7 +62,7 @@ fn generate_score(data: &CrucibleActivity) -> String {
     tokens.join("")
 }
 
-fn print_default(data: &CrucibleActivity, member_id: &str, detailed: bool) {
+fn print_default(data: &CrucibleActivity, member_id: &str, extended_details: bool) {
     let col_w = 10;
     let name_col_w = 18;
 
@@ -71,6 +71,7 @@ fn print_default(data: &CrucibleActivity, member_id: &str, detailed: bool) {
     let team_title_border = repeat_str("-", name_col_w + col_w);
     let activity_title_border = repeat_str("=", name_col_w + col_w + col_w);
 
+    println!();
     println!("ACTIVITY");
     println!("{}", activity_title_border);
 
@@ -107,6 +108,7 @@ fn print_default(data: &CrucibleActivity, member_id: &str, detailed: bool) {
     let table_width = header.chars().count();
     let header_border = repeat_str("=", table_width);
     let entry_border = repeat_str(".", table_width);
+    let footer_border = repeat_str("-", table_width);
 
     for (_k, v) in &data.teams {
         println!("[{}] {} Team {}!", v.score, v.display_name, v.standing);
@@ -115,7 +117,12 @@ fn print_default(data: &CrucibleActivity, member_id: &str, detailed: bool) {
         println!("{}", header_border);
 
         let mut first_performance = true;
-        for p in &v.player_performances {
+
+        let mut player_performances = v.player_performances.clone();
+        player_performances
+            .sort_by(|a, b| b.stats.opponents_defeated.cmp(&a.stats.opponents_defeated));
+
+        for p in &player_performances {
             let extended = p.stats.extended.as_ref().unwrap();
             println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
                 p.player.display_name,
@@ -136,7 +143,7 @@ fn print_default(data: &CrucibleActivity, member_id: &str, detailed: bool) {
             );
 
             //todo: what if they dont have weapon kills (test)
-            if detailed && !extended.weapons.is_empty() {
+            if extended_details && !extended.weapons.is_empty() {
                 println!("{}", entry_border);
 
                 let mut weapons = extended.weapons.clone();
@@ -201,6 +208,52 @@ fn print_default(data: &CrucibleActivity, member_id: &str, detailed: bool) {
                 println!();
             }
         }
+        println!("{}", footer_border);
+
+        let cpp: Vec<&CruciblePlayerPerformance> = player_performances.iter().map(|x| x).collect();
+        let aggregate = AggregateCruciblePerformances::with_performances(&cpp);
+
+        let agg_extended = aggregate.extended.as_ref().unwrap();
+        let agg_supers = agg_extended.weapon_kills_super;
+        let agg_grenades = agg_extended.weapon_kills_grenade;
+        let agg_melees = agg_extended.weapon_kills_melee;
+
+        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "AVG",
+            format_f32(aggregate.kills as f32 / player_performances.len() as f32, 2),
+            format_f32(aggregate.assists as f32 / player_performances.len() as f32,2),
+            format_f32(aggregate.opponents_defeated as f32 / player_performances.len() as f32,2),
+            format_f32(aggregate.deaths as f32 / player_performances.len() as f32,2),
+            "",
+            "",
+            "",
+            format_f32(agg_supers as f32 / player_performances.len() as f32,2),
+            format_f32(agg_grenades as f32 / player_performances.len() as f32,2),
+            format_f32(agg_melees as f32 / player_performances.len() as f32,2),
+            format_f32(aggregate.extended.as_ref().unwrap().all_medals_earned as f32 / player_performances.len() as f32,2),
+            "", //MAKE THIS REASON FOR COMPLETEION
+            col_w=col_w,
+            name_col_w = name_col_w,
+        );
+
+        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "TOTAL",
+            aggregate.kills.to_string(),
+            aggregate.assists.to_string(),
+            aggregate.opponents_defeated.to_string(),
+            aggregate.deaths.to_string(),
+            format_f32(aggregate.kills_deaths_ratio, 2),
+            format_f32(aggregate.kills_deaths_assists, 2),
+            format_f32(aggregate.efficiency, 2),
+            agg_supers.to_string(),
+            agg_grenades.to_string(),
+            agg_melees.to_string(),
+            aggregate.extended.as_ref().unwrap().all_medals_earned.to_string(),
+            "", //MAKE THIS REASON FOR COMPLETEION
+            col_w=col_w,
+            name_col_w = name_col_w,
+        );
+
         //println!("{}", header_border);
         //println!("{}", header);
         println!();
@@ -271,12 +324,12 @@ struct Opt {
     #[structopt(short = "N", long = "no-sync")]
     no_sync: bool,
 
-    /// Only display a expanded view of activity details.
+    /// Displayed extended activity details.
     ///
-    /// If flag is set, additional informationwill be displayed, including weapon stats
+    /// If flag is set, additional information will be displayed, including weapon stats
     /// and match overview data.
-    #[structopt(short = "d", long = "detailed")]
-    detailed: bool,
+    #[structopt(short = "e", long = "extended")]
+    extended: bool,
 
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
@@ -344,5 +397,5 @@ async fn main() {
         }
     };
 
-    print_default(&data, &opt.member_id, opt.detailed);
+    print_default(&data, &opt.member_id, opt.extended);
 }

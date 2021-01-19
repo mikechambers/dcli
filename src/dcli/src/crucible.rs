@@ -39,7 +39,7 @@ use crate::utils::{
 
 const PLAYER_START_BUFFER: u32 = 30;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Team {
     pub id: i32,
     pub standing: Standing,
@@ -48,7 +48,7 @@ pub struct Team {
     pub display_name: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CrucibleActivity {
     pub details: ActivityDetail,
     pub teams: HashMap<i32, Team>,
@@ -68,19 +68,19 @@ impl CrucibleActivity {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CruciblePlayerPerformance {
     pub player: Player,
     pub stats: CrucibleStats,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CruciblePlayerActivityPerformance {
     pub performance: CruciblePlayerPerformance,
     pub activity_detail: ActivityDetail,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CrucibleStats {
     pub assists: u32,
     pub score: u32,
@@ -121,7 +121,7 @@ impl CrucibleStats {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ExtendedCrucibleStats {
     pub precision_kills: u32,
     pub weapon_kills_ability: u32,
@@ -415,7 +415,7 @@ pub struct ExtendedCruciblePlayerActivityPerformances {
     pub medals: Vec<MedalStat>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ActivityDetail {
     pub id: i64,
     pub period: DateTime<Utc>,
