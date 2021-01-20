@@ -149,9 +149,9 @@ fn print_default(
     println!();
 
     let col_w = 10;
-    let wl_col_w = 14;
+    let wl_col_w = 10;
     let map_col_w = 18;
-    let str_col_w = 10;
+    let str_col_w = 7;
 
     //TODO: maybe format this to yellow background
     let header = format!(
