@@ -519,7 +519,7 @@ struct Opt {
     /// Activity mode to return stats for
     ///
     /// Supported values are all_pvp (default), control, clash, elimination,
-    /// mayhem, iron_banner, private, rumble, pvp_competitive,
+    /// mayhem, iron_banner, all_private, rumble, pvp_competitive,
     /// quickplay and trials_of_osiris.
     ///
     /// Addition values available are crimsom_doubles, supremacy, survival,
@@ -530,17 +530,17 @@ struct Opt {
         parse(try_from_str=parse_and_validate_mode), default_value = "all_pvp")]
     mode: Mode,
 
-    /// Limit the number of activity details that will be displayed.
+    /// Limit the number of activity details that will be displayed
     ///
     /// Summary information will be generated based on all activities.
     #[structopt(long = "activity-limit", short = "L", default_value = "10")]
     activity_limit: u32,
 
-    /// The number of weapons to display details for.
+    /// The number of weapons to display details for
     #[structopt(long = "weapon-count", short = "w", default_value = "5")]
     weapon_count: u32,
 
-    /// Character to retrieve data for.
+    /// Character to retrieve data for
     ///
     /// Valid values include hunter, titan, warlock, last_active and all.
     #[structopt(short = "C", long = "class", default_value = "last_active")]
@@ -559,7 +559,7 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    /// Don't sync activities.
+    /// Don't sync activities
     ///
     /// If flag is set, activities will not be retrieved before displaying stats.
     /// This is useful in case you are syncing activities in a seperate process.

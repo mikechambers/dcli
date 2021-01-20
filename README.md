@@ -25,7 +25,7 @@ If you run into any issues, have any ideas, or just want to chat, please post in
 | --- | --- |
 | [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) | Displays information on player's current activity within Destiny 2 |
 | [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) | Displays Destiny 2 activity history and stats |
-| [dclics](https://github.com/mikechambers/dcli/tree/main/src/dclics) | Displays Destiny 2 Crucible activity stats *(deprecated for dcliah)*|
+| [dcliad](https://github.com/mikechambers/dcli/tree/main/src/dcliad) | Displays Destiny 2 Crucible activity / match details |
 
 
 ### Libraries

@@ -24,7 +24,10 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use dcli::{
-    crucible::{AggregateCruciblePerformances, CrucibleActivity, CruciblePlayerPerformance},
+    crucible::{
+        AggregateCruciblePerformances, CrucibleActivity,
+        CruciblePlayerPerformance,
+    },
     enums::completionreason::CompletionReason,
 };
 use dcli::{enums::platform::Platform, utils::human_duration};
@@ -37,7 +40,9 @@ use dcli::error::Error;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{determine_data_dir, format_f32, human_date_format, repeat_str};
+use dcli::utils::{
+    determine_data_dir, format_f32, human_date_format, repeat_str,
+};
 
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
@@ -66,7 +71,12 @@ fn generate_score(data: &CrucibleActivity) -> String {
     tokens.join("")
 }
 
-fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon_count: u32) {
+fn print_default(
+    data: &CrucibleActivity,
+    member_id: &str,
+    details: bool,
+    weapon_count: u32,
+) {
     let col_w = 10;
     let name_col_w = 24;
 
@@ -76,13 +86,17 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
 
     match data.get_member_performance(member_id) {
         Some(e) => {
-            completion_reason = if e.stats.completion_reason == CompletionReason::Unknown {
-                "".to_string()
-            } else {
-                format!("({})", e.stats.completion_reason)
-            };
+            completion_reason =
+                if e.stats.completion_reason == CompletionReason::Unknown {
+                    "".to_string()
+                } else {
+                    format!("({})", e.stats.completion_reason)
+                };
 
-            activity_duration = format!("({})", human_duration(e.stats.activity_duration_seconds));
+            activity_duration = format!(
+                "({})",
+                human_duration(e.stats.activity_duration_seconds)
+            );
             standing_str = format!("{}!", e.stats.standing);
         }
         None => {}
@@ -141,8 +155,9 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
         let mut first_performance = true;
 
         let mut player_performances = v.player_performances.clone();
-        player_performances
-            .sort_by(|a, b| b.stats.opponents_defeated.cmp(&a.stats.opponents_defeated));
+        player_performances.sort_by(|a, b| {
+            b.stats.opponents_defeated.cmp(&a.stats.opponents_defeated)
+        });
 
         for p in &player_performances {
             let extended = p.stats.extended.as_ref().unwrap();
@@ -209,8 +224,10 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
                         weapon_name = w.weapon.name.to_string();
                         weapon_kills = w.kills.to_string();
                         precision_kills = w.precision_kills.to_string();
-                        precision_kills_percent =
-                            format!("{}", format_f32(w.precision_kills_percent * 100.0, 0));
+                        precision_kills_percent = format!(
+                            "{}",
+                            format_f32(w.precision_kills_percent * 100.0, 0)
+                        );
                         weapon_type = format!("{}", w.weapon.item_sub_type);
                     }
 
@@ -290,7 +307,8 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
     println!("Combined");
     println!("{}", team_title_border);
 
-    let aggregate = AggregateCruciblePerformances::with_performances(&all_performances);
+    let aggregate =
+        AggregateCruciblePerformances::with_performances(&all_performances);
 
     let agg_extended = aggregate.extended.as_ref().unwrap();
     let agg_supers = agg_extended.weapon_kills_super;
@@ -382,7 +400,10 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving and viewing Destiny 2 Crucible activity details.
 ///
-/// Display player details for individual Crucible games.
+/// By default the details on the last activity will be displayed, and you can
+/// specify the specific activity via the --activity-index argument. The index
+/// can be retrieved from dcliah, as well as directly from the sqlite datastore
+/// (activity.id)
 ///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
@@ -407,10 +428,10 @@ struct Opt {
     #[structopt(short = "p", long = "platform", required = true)]
     platform: Platform,
 
-    /// Activity mode to return stats for
+    /// Activity mode from which to return last activity
     ///
     /// Supported values are all_pvp (default), control, clash, elimination,
-    /// mayhem, iron_banner, private, rumble, pvp_competitive,
+    /// mayhem, iron_banner, all_private, rumble, pvp_competitive,
     /// quickplay and trials_of_osiris.
     ///
     /// Addition values available are crimsom_doubles, supremacy, survival,
@@ -421,7 +442,7 @@ struct Opt {
         parse(try_from_str=parse_and_validate_mode), default_value = "all_pvp")]
     mode: Mode,
 
-    /// Character to retrieve data for.
+    /// Character class to retrieve data for
     ///
     /// Valid values include hunter, titan, warlock, last_active and all.
     #[structopt(short = "C", long = "class", default_value = "last_active")]
@@ -433,25 +454,25 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    /// Don't sync activities.
+    /// Don't sync activities
     ///
     /// If flag is set, activities will not be retrieved before displaying stats.
     /// This is useful in case you are syncing activities in a seperate process.
     #[structopt(short = "N", long = "no-sync")]
     no_sync: bool,
 
-    /// Displayed extended activity details.
+    /// Display extended activity details
     ///
-    /// If flag is set, additional information will be displayed, including weapon stats
-    /// and match overview data.
+    /// If flag is set, additional information will be displayed, including per
+    /// user weapon stats.
     #[structopt(short = "d", long = "details")]
     details: bool,
 
-    /// The number of weapons to display details for.
+    /// The number of weapons to display details for
     #[structopt(long = "weapon-count", short = "w", default_value = "5")]
     weapon_count: u32,
 
-    /// The index of the activity to display data about.
+    /// The index of the activity to display data about
     ///
     /// By default, the last activity will be displayed. The index can be retrieved
     /// from other dcli apps, such as dcliah, or directly from the sqlite datastore.
@@ -478,21 +499,27 @@ async fn main() {
         }
     };
 
-    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
-        Ok(e) => e,
-        Err(e) => {
-            print_error(
-                "Could not initialize activity store. Have you run dclias?",
-                e,
-            );
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+    let mut store =
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
+            .await
+        {
+            Ok(e) => e,
+            Err(e) => {
+                print_error(
+                    "Could not initialize activity store. Have you run dclias?",
+                    e,
+                );
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error("Could not initialize manifest. Have you run dclim?", e);
+            print_error(
+                "Could not initialize manifest. Have you run dclim?",
+                e,
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };

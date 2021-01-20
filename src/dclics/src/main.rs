@@ -273,7 +273,7 @@ struct Opt {
     /// Activity mode to return stats for
     ///
     /// Supported values are all_pvp (default), control, clash, elimination,
-    /// mayhem, iron_banner, private, rumble, pvp_competitive,
+    /// mayhem, iron_banner, all_private, rumble, pvp_competitive,
     /// quickplay and trials_of_osiris.
     ///
     /// Addition values available are crimsom_doubles, supremacy, survival,
