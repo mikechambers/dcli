@@ -70,14 +70,23 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
     let col_w = 10;
     let name_col_w = 24;
 
-    let member_performance = data.get_member_performance(member_id).unwrap();
+    let mut activity_duration = "".to_string();
+    let mut completion_reason = "".to_string();
+    let mut standing_str = "".to_string();
 
-    let completion_reason =
-        if member_performance.stats.completion_reason == CompletionReason::Unknown {
-            "".to_string()
-        } else {
-            format!("({})", member_performance.stats.completion_reason)
-        };
+    match data.get_member_performance(member_id) {
+        Some(e) => {
+            completion_reason = if e.stats.completion_reason == CompletionReason::Unknown {
+                "".to_string()
+            } else {
+                format!("({})", e.stats.completion_reason)
+            };
+
+            activity_duration = format!("({})", human_duration(e.stats.activity_duration_seconds));
+            standing_str = format!("{}!", e.stats.standing);
+        }
+        None => {}
+    };
 
     let team_title_border = repeat_str("-", name_col_w + col_w);
     let activity_title_border = repeat_str("=", name_col_w + col_w + col_w);
@@ -87,14 +96,14 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
     println!("{}", activity_title_border);
 
     println!(
-        "{} on {} :: {} ({})",
+        "{} on {} :: {} {}",
         data.details.mode,
         data.details.map_name,
         human_date_format(&data.details.period),
-        human_duration(member_performance.stats.activity_duration_seconds)
+        activity_duration
     );
 
-    println!("{}!", member_performance.stats.standing);
+    println!("{}", standing_str);
     println!("{} {}", generate_score(data), completion_reason);
 
     println!();
