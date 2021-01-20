@@ -872,7 +872,7 @@ impl ActivityStoreInterface {
             sqlx::query(
                     r#"
                     SELECT
-                        activity.id,
+                        activity.id as activity_index_id,
                         activity.activity_id,
                         activity.period,
                         activity.mode as activity_mode,
@@ -894,7 +894,7 @@ impl ActivityStoreInterface {
                 .fetch_one(&mut self.db).await?
         };
 
-        let activity_row_id: i32 = activity_row.try_get("id")?;
+        let activity_row_id: i32 = activity_row.try_get("activity_index_id")?;
 
         let team_rows = sqlx::query(
             r#"
@@ -1107,6 +1107,7 @@ impl ActivityStoreInterface {
             SELECT
                 *,
                 activity.mode as activity_mode,
+                activity.id as activity_index_id,
                 character_activity_stats.id as character_activity_stats_index  
             FROM
                 character_activity_stats
@@ -1166,6 +1167,7 @@ impl ActivityStoreInterface {
             SELECT
                 *,
                 activity.mode as activity_mode,
+                activity.id as activity_index_id,
                 character_activity_stats.id as character_activity_stats_index  
             FROM
                 character_activity_stats
@@ -1243,9 +1245,13 @@ impl ActivityStoreInterface {
         let reference_id: i64 = activity_row.try_get_unchecked("reference_id")?;
         let reference_id: u32 = reference_id as u32;
 
+        let index_id: i32 = activity_row.try_get_unchecked("activity_index_id")?;
+        let index_id: u32 = index_id as u32;
+
         let activity_definition = manifest.get_activity_definition(reference_id).await?;
 
         let activity_detail = ActivityDetail {
+            index_id,
             id: activity_id,
             period,
             map_name: activity_definition.display_properties.name,

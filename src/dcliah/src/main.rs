@@ -148,14 +148,15 @@ fn print_default(
     }
     println!();
 
-    let col_w = 10;
+    let col_w = 8;
     let wl_col_w = 10;
     let map_col_w = 18;
     let str_col_w = 7;
+    let id_col_w = 8;
 
     //TODO: maybe format this to yellow background
     let header = format!(
-        "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
         "MAP",
         "W/L",
         "STREAK",
@@ -166,13 +167,15 @@ fn print_default(
         "K/D",
         "KD/A",
         "EFF",
-        "SUPERS",
-        "GRENADES",
-        "MELEES",
+        "SUP",
+        "GREN",
+        "MEL",
+        "INDEX",
         col_w = col_w,
         map_col_w = map_col_w,
         str_col_w=str_col_w,
         wl_col_w=wl_col_w,
+        id_col_w=id_col_w,
     );
     println!("{}", header);
     let header_divider = repeat_str(&"=", header.chars().count());
@@ -180,12 +183,13 @@ fn print_default(
 
     let slice: &[CruciblePlayerActivityPerformance] = if is_limited {
         println!(
-            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-            "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...","...",
+            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+            "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...","...","...",
             col_w = col_w,
             map_col_w = map_col_w,
             str_col_w=str_col_w,
             wl_col_w=wl_col_w,
+            id_col_w = id_col_w,
         );
 
         &performances[..*activity_limit as usize]
@@ -235,7 +239,7 @@ fn print_default(
         let melees = extended.weapon_kills_melee;
 
         println!(
-            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
             map_name,
             activity.performance.stats.standing.to_string(),
             streak.to_string(),
@@ -249,10 +253,12 @@ fn print_default(
             supers.to_string(),
             grenades.to_string(),
             melees.to_string(),
+            activity.activity_detail.index_id.to_string(),
             col_w = col_w,
             map_col_w=map_col_w,
             str_col_w=str_col_w,
             wl_col_w=wl_col_w,
+            id_col_w=id_col_w,
         );
     }
 

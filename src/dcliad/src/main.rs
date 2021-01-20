@@ -67,7 +67,7 @@ fn generate_score(data: &CrucibleActivity) -> String {
 
 fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon_count: u32) {
     let col_w = 10;
-    let name_col_w = 18;
+    let name_col_w = 24;
 
     let member_performance = data.get_member_performance(member_id).unwrap();
 
@@ -118,7 +118,7 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
 
     let table_width = header.chars().count();
     let header_border = repeat_str("=", table_width);
-    let entry_border = repeat_str(".", table_width);
+    let entry_border = repeat_str(".", name_col_w);
     let footer_border = repeat_str("-", table_width);
 
     let mut all_performances: Vec<&CruciblePlayerPerformance> = Vec::new();

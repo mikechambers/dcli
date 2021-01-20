@@ -27,6 +27,7 @@ use std::fmt;
 #[repr(i32)]
 pub enum CompletionReason {
     ObjectiveComplete = 0,
+    Failed = 2,
     TimerFinished = 1,
     NoOpponents = 3,
     Mercy = 4,
@@ -42,6 +43,7 @@ impl CompletionReason {
         match id {
             0 => CompletionReason::ObjectiveComplete,
             1 => CompletionReason::TimerFinished,
+            2 => CompletionReason::Failed,
             3 => CompletionReason::NoOpponents,
             4 => CompletionReason::Mercy,
             255 => CompletionReason::Unknown,
@@ -55,6 +57,7 @@ impl fmt::Display for CompletionReason {
         let out = match self {
             CompletionReason::ObjectiveComplete => "Objective Complete",
             CompletionReason::TimerFinished => "Timer Finished",
+            CompletionReason::Failed => "Failed",
             CompletionReason::NoOpponents => "No Opponents",
             CompletionReason::Mercy => "Mercy",
             CompletionReason::Unknown => "Unknown",
