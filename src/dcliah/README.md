@@ -10,7 +10,7 @@ The first time the database downloads activity data may take a couple of minutes
 
 It supports storing and tracking stats for multiple players and characters.
 
-If you want to sync the database seperately via dclias, you can pass the '--no-sync' flag to dcliah and it will not update the activity store.
+If you want to sync the database seperately via dclias, you can pass the `-no-sync` flag to dcliah and it will not update the activity store.
 
 The tool expects that the manifest has been downloaded and synced using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 

@@ -2,11 +2,11 @@
 
 Command line tool for retrieving and viewing Destiny 2 Crucible activity / match details.
 
-By default the details on the last activity will be displayed, with options ('--mode') to specify the mode from which to retrieve the last activity.
+By default the details on the last activity will be displayed, with options (`--mode`) to specify the mode from which to retrieve the last activity.
 
-You can also specify the specific activity via the '--activity-index' argument. The index can be retrieved from dcliah, as well as directly from the sqlite datastor (activity.id).
+You can also specify the specific activity via the `--activity-index` argument. The index can be retrieved from dcliah, as well as directly from the sqlite datastor (activity.id).
 
-By default, the app will display summary data for the match, including each player and an overview of weapon usage. By passing in the '--details' flag, per user weapon usage and stats will be displayed.
+By default, the app will display summary data for the match, including each player and an overview of weapon usage. By passing in the `--details` flag, per user weapon usage and stats will be displayed.
 
 dcliad pulls its data from the local Destiny 2 activity database store. By default, dcliad will create and update this file with the latest activity data, but it can also be seperately managed using [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias).
 
@@ -14,7 +14,7 @@ The first time the database downloads activity data may take a couple of minutes
 
 It supports storing and tracking stats for multiple players and characters.
 
-If you want to sync the database seperately via dclias, you can pass the '--no-sync' flag to dcliad and it will not update the activity store.
+If you want to sync the database seperately via dclias, you can pass the `--no-sync` flag to dcliad and it will not update the activity store.
 
 The tool expects that the manifest has been downloaded and synced using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
@@ -107,7 +107,7 @@ $ dcliad --member-id 4611686018429783292 --platform xbox
 #### View details for last Iron Banner match played on hunter class
 
 ```
-$ dcliad --member-id 4611686018429783292 --platform xbox --mode iron_banner -- class hunter
+$ dcliad --member-id 4611686018429783292 --platform xbox --mode iron_banner --class hunter
 ```
 
 #### View details for last activity played displaying extended details 
