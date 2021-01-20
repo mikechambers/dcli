@@ -63,6 +63,7 @@ pub enum Error {
     UnknownEnumValue,
     NoCharacters,
     CharacterDoesNotExist,
+    ActivityNotFound,
 }
 
 impl Display for Error {
@@ -153,6 +154,9 @@ impl Display for Error {
             },
             Error::CharacterDoesNotExist  => {
                 write!(f, "Character class does not exist for member.")
+            },
+            Error::ActivityNotFound  => {
+                write!(f, "Could not find activity in data store.")
             },
         }
     }

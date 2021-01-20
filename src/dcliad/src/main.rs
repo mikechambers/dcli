@@ -33,6 +33,7 @@ use dcli::enums::mode::Mode;
 use dcli::manifestinterface::ManifestInterface;
 
 use dcli::enums::character::CharacterClassSelection;
+use dcli::error::Error;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
@@ -364,6 +365,8 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
             name_col_w = wep_col,
         );
     }
+
+    println!();
 }
 
 #[derive(StructOpt, Debug)]
@@ -439,6 +442,13 @@ struct Opt {
     #[structopt(long = "weapon-count", short = "w", default_value = "5")]
     weapon_count: u32,
 
+    /// The index of the activity to display data about.
+    ///
+    /// By default, the last activity will be displayed. The index can be retrieved
+    /// from other dcli apps, such as dcliah, or directly from the sqlite datastore.
+    #[structopt(long = "activity-index", short = "a")]
+    activity_index: Option<u32>,
+
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
     /// This will normally be downloaded using the dclim and dclias tools, and uses
@@ -488,18 +498,29 @@ async fn main() {
         };
     }
 
-    let data = match store
-        .retrieve_last_activity(
-            &opt.member_id,
-            &opt.platform,
-            &opt.character_class_selection,
-            &opt.mode,
-            &mut manifest,
-        )
-        .await
-    {
+    let data_result = match opt.activity_index {
+        Some(e) => store.retrieve_activity_by_index(e, &mut manifest).await,
+        None => {
+            store
+                .retrieve_last_activity(
+                    &opt.member_id,
+                    &opt.platform,
+                    &opt.character_class_selection,
+                    &opt.mode,
+                    &mut manifest,
+                )
+                .await
+        }
+    };
+
+    let data = match data_result {
         Ok(e) => e,
         Err(e) => {
+            if e == Error::ActivityNotFound {
+                println!("No activities found");
+                return;
+            }
+
             print_error("Could not retrieve data from activity store.", e);
             std::process::exit(EXIT_FAILURE);
         }
