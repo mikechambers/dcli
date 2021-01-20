@@ -2,7 +2,8 @@
 
 dcli (Destiny Command Line Interface) is a collection of utilities and apps that provide a command line interface (CLI) for viewing player stats and data from Destiny 2, using the [Destiny 2 API](https://github.com/Bungie-net/api).
 
-[![](images/dcliah_sm.png)](images/dcliah.png)
+[![](images/dcliah_x_sm.png)](images/dcliah.png)
+[![](images/dcliad_x_sm.png)](images/dcliad.png)
 
 If you run into any issues, have any ideas, or just want to chat, please post in [issues](https://github.com/mikechambers/dcli/issues) or share on [Discord](https://discord.gg/2Y8bV2Mq3p)
 
