@@ -2,7 +2,7 @@
 
 Command line tool for retrieving historic Destiny 2 Crucible activity stats.
 
-**dclics has been deprecated and is being replaced by [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah)**
+**dclics has been deprecated and is being replaced by [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah)** The last release that includes dclics is [v0.3.71](https://github.com/mikechambers/dcli/releases/tag/v0.3.71).
 
 Enables control of which stats are retrieved via:
 
