@@ -1,5 +1,12 @@
 # dcli Release Notes
 
+## v0.3.8 January 22, 2021
+* Released dcliad (per game details)
+* Removed dclics (last included in v0.3.71)
+* Update data store format. Will require all data to be re-downloaded
+* Data for all activity players is now stored in data store (previously only store data for specified player)
+* dcliah added some additional data to stat output
+
 ## v0.3.71 January 14, 2021
 * Fixed bug that led to wrong weapon stats when used in 1 game
 * Fixed bug preventing import of data of multiple players when they had played in same activity

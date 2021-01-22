@@ -60,7 +60,7 @@ impl CrucibleActivity {
         &self,
         member_id: &str,
     ) -> Option<&CruciblePlayerPerformance> {
-        for (_k, t) in &self.teams {
+        for t in self.teams.values() {
             for p in &t.player_performances {
                 if p.player.member_id == member_id {
                     return Some(p);
@@ -216,7 +216,7 @@ pub struct AggregateCruciblePerformances {
 
 impl AggregateCruciblePerformances {
     pub fn with_performances(
-        performances: &Vec<&CruciblePlayerPerformance>,
+        performances: &[&CruciblePlayerPerformance],
     ) -> AggregateCruciblePerformances {
         let mut out = AggregateCruciblePerformances::default();
         let mut extended =

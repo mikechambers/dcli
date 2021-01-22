@@ -23,11 +23,14 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use dcli::enums::platform::Platform;
 use dcli::{
-    crucible::{AggregateCruciblePerformances, CrucibleActivity, CruciblePlayerPerformance},
+    crucible::{
+        AggregateCruciblePerformances, CrucibleActivity,
+        CruciblePlayerPerformance,
+    },
     enums::completionreason::CompletionReason,
 };
+use dcli::{enums::platform::Platform, utils::truncate_ascii_string};
 
 use dcli::enums::mode::Mode;
 use dcli::manifestinterface::ManifestInterface;
@@ -37,7 +40,10 @@ use dcli::error::Error;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{determine_data_dir, format_f32, human_date_format, human_duration, repeat_str};
+use dcli::utils::{
+    determine_data_dir, format_f32, human_date_format, human_duration,
+    repeat_str,
+};
 
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
@@ -56,7 +62,7 @@ fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
 fn generate_score(data: &CrucibleActivity) -> String {
     let mut tokens: Vec<String> = Vec::new();
 
-    for (_k, t) in &data.teams {
+    for t in data.teams.values() {
         tokens.push(t.score.to_string());
         tokens.push("-".to_string());
     }
@@ -66,7 +72,13 @@ fn generate_score(data: &CrucibleActivity) -> String {
     tokens.join("")
 }
 
-fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon_count: u32) {
+fn print_default(
+    data: &CrucibleActivity,
+    member_id: &str,
+    details: bool,
+    weapon_count: u32,
+    verbose: bool,
+) {
     let col_w = 10;
     let name_col_w = 24;
 
@@ -74,18 +86,17 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
     let mut completion_reason = "".to_string();
     let mut standing_str = "".to_string();
 
-    match data.get_member_performance(member_id) {
-        Some(e) => {
-            completion_reason = if e.stats.completion_reason == CompletionReason::Unknown {
+    if let Some(e) = data.get_member_performance(member_id) {
+        completion_reason =
+            if e.stats.completion_reason == CompletionReason::Unknown {
                 "".to_string()
             } else {
                 format!("({})", e.stats.completion_reason)
             };
 
-            activity_duration = format!("({})", human_duration(e.stats.activity_duration_seconds));
-            standing_str = format!("{}!", e.stats.standing);
-        }
-        None => {}
+        activity_duration =
+            format!("({})", human_duration(e.stats.activity_duration_seconds));
+        standing_str = format!("{}!", e.stats.standing);
     };
 
     let team_title_border = repeat_str("-", name_col_w + col_w);
@@ -102,6 +113,10 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
         human_date_format(&data.details.period),
         activity_duration
     );
+
+    if verbose {
+        println!("Activity ID : {}", data.details.id);
+    }
 
     println!("{}", standing_str);
     println!("{} {}", generate_score(data), completion_reason);
@@ -132,7 +147,7 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
     let footer_border = repeat_str("-", table_width);
 
     let mut all_performances: Vec<&CruciblePlayerPerformance> = Vec::new();
-    for (_k, v) in &data.teams {
+    for v in data.teams.values() {
         println!("[{}] {} Team {}!", v.score, v.display_name, v.standing);
         println!("{}", team_title_border);
         println!("{}", header);
@@ -141,13 +156,14 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
         let mut first_performance = true;
 
         let mut player_performances = v.player_performances.clone();
-        player_performances
-            .sort_by(|a, b| b.stats.opponents_defeated.cmp(&a.stats.opponents_defeated));
+        player_performances.sort_by(|a, b| {
+            b.stats.opponents_defeated.cmp(&a.stats.opponents_defeated)
+        });
 
         for p in &player_performances {
             let extended = p.stats.extended.as_ref().unwrap();
             println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-                p.player.display_name,
+                truncate_ascii_string(&p.player.display_name, name_col_w),
                 p.stats.kills.to_string(),
                 p.stats.assists.to_string(),
                 p.stats.opponents_defeated.to_string(),
@@ -210,7 +226,8 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
                         weapon_kills = w.kills.to_string();
                         precision_kills = w.precision_kills.to_string();
                         precision_kills_percent =
-                            format!("{}", format_f32(w.precision_kills_percent * 100.0, 0));
+                            format_f32(w.precision_kills_percent * 100.0, 0)
+                                .to_string();
                         weapon_type = format!("{}", w.weapon.item_sub_type);
                     }
 
@@ -290,7 +307,8 @@ fn print_default(data: &CrucibleActivity, member_id: &str, details: bool, weapon
     println!("Combined");
     println!("{}", team_title_border);
 
-    let aggregate = AggregateCruciblePerformances::with_performances(&all_performances);
+    let aggregate =
+        AggregateCruciblePerformances::with_performances(&all_performances);
 
     let agg_extended = aggregate.extended.as_ref().unwrap();
     let agg_supers = agg_extended.weapon_kills_super;
@@ -481,21 +499,27 @@ async fn main() {
         }
     };
 
-    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
-        Ok(e) => e,
-        Err(e) => {
-            print_error(
-                "Could not initialize activity store. Have you run dclias?",
-                e,
-            );
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+    let mut store =
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
+            .await
+        {
+            Ok(e) => e,
+            Err(e) => {
+                print_error(
+                    "Could not initialize activity store. Have you run dclias?",
+                    e,
+                );
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error("Could not initialize manifest. Have you run dclim?", e);
+            print_error(
+                "Could not initialize manifest. Have you run dclim?",
+                e,
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -538,5 +562,11 @@ async fn main() {
         }
     };
 
-    print_default(&data, &opt.member_id, opt.details, opt.weapon_count);
+    print_default(
+        &data,
+        &opt.member_id,
+        opt.details,
+        opt.weapon_count,
+        opt.verbose,
+    );
 }

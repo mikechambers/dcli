@@ -294,3 +294,11 @@ pub fn calculate_percent(value: u32, total: u32) -> f32 {
 
     (value as f32 / total as f32) * 100.0
 }
+
+pub fn truncate_ascii_string(input: &str, max_len: usize) -> String {
+    if input.chars().count() <= max_len {
+        return input.to_string();
+    }
+
+    format!("{:.len$}...", input, len = max_len - 3)
+}

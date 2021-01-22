@@ -85,7 +85,7 @@ fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
 }
 
 fn print_default(
-    data: &Vec<CruciblePlayerActivityPerformance>,
+    data: &[CruciblePlayerActivityPerformance],
     activity_limit: &u32,
     mode: &Mode,
     moment: &Moment,
