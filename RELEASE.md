@@ -1,6 +1,6 @@
 # dcli Release Notes
 
-## v0.4.0 January 22, 2021
+## v0.5.0 January 22, 2021
 * Released dcliad (per-game details)
 * Removed dclics (last included in v0.3.71)
 * removed stats_report example (required dclics)
