@@ -37,7 +37,7 @@ dcliah.exe --member-id 4611686018429783292 --platform xbox
 
 echo ------------- RUNNING dcliad.exe --------------
 
-dcliah.exe --member-id 4611686018429783292 --platform xbox
+dcliad.exe --member-id 4611686018429783292 --platform xbox
 
 echo ------------- RUNNING dclitime.exe ---------------
 
