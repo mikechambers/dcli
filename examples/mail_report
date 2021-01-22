@@ -9,10 +9,8 @@
 # More info at:
 # https://github.com/mikechambers/dcli/
 #
-# This is a pretty simple script / output. You could get more advanced control
-# by passing in '--output-format tsv' to dclics and then generating the email from the
-# data
-# Requires dclics v0.1.2
+# This is a pretty simple script / output. 
+# Requires dcliah v0.8.0
 
 # (pulling from environment but you can also hardcode)
 EMAIL_ADDRESS=$EMAIL
@@ -102,7 +100,7 @@ echo -e "${OUTPUT}\n"
 
 echo "Emailing report to: ${EMAIL_ADDRESS}"
 
-#just wrap in <pre>, so it maintains formatting from dclics output
+#just wrap in <pre>, so it maintains formatting from dcliah output
 BODY="Mime-Version: 1.0\nContent-Type: text/html\n<html><body><pre style=\"font-family: monospace; font-size:medium;\">${OUTPUT}</pre></body></html>"
 
 (echo "To: ${EMAIL_ADDRESS}"

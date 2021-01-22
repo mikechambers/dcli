@@ -26,12 +26,6 @@ The script pulls member-id, platform and manifest-path from environment variable
 
 Uses dclitime and dcliah.
 
-### stats_report
-
-Bash script that reads crucible stat data from dclics, and outputs a summary (will speak it if running on OS X or if you have installed [espeak](http://espeak.sourceforge.net/) on Linux). Demonstrates how to parse TSV name / value data from dcli apps into bash variables.
-
-Requires a modern / updated version of bash to run on OS X. More info [here](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba).
-
 ### status_notification
 
 * [status_notification for Bash](status_notification)
@@ -48,14 +42,6 @@ Bash script that uses [dcliah](https://github.com/mikechambers/dcli/tree/main/sr
 Requires that a sendmail client is [configured](https://blog.travismclarke.com/post/send-email-from-terminal/) on system (although that should be easy to change in the scripts). Requires a newer version of Bash, so you may need to upgrade if running on OS X. Read script for configuration info.
 
 ### Snippets
-
-#### Grab and print a single value
-
-Prints out K/D for all modes for the past month:
-```
-$ dclics --member-id 4611686018429783292 --platform xbox --mode all_pvp --character-id 2305843009264966985 --moment month --output-format tsv | grep kills_deaths_ratio | awk '{print $2}'
-1.5986928
-```
 
 #### Query the activity database for most kills in a single game
 

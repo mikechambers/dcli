@@ -143,7 +143,7 @@ fn print_default(
 
     let table_width = header.chars().count();
     let header_border = repeat_str("=", table_width);
-    let entry_border = repeat_str(".", name_col_w);
+    let entry_border = repeat_str(".", table_width);
     let footer_border = repeat_str("-", table_width);
 
     let mut all_performances: Vec<&CruciblePlayerPerformance> = Vec::new();
@@ -393,6 +393,8 @@ fn print_default(
         );
     }
 
+    println!();
+    println!("STATUS : L - Joined late, E - Left early");
     println!();
 }
 
