@@ -31,11 +31,11 @@ echo ------------- RUNNING dclia.exe--------------
 
 call dclia.exe --member-id 4611686018429783292 --platform xbox
 
-echo ------------- RUNNING dclics.exe--------------
-
-call dclics.exe --member-id 4611686018429783292 --platform xbox --character-id 2305843009264966985
-
 echo ------------- RUNNING dcliah.exe --------------
+
+dcliah.exe --member-id 4611686018429783292 --platform xbox
+
+echo ------------- RUNNING dcliad.exe --------------
 
 dcliah.exe --member-id 4611686018429783292 --platform xbox
 

@@ -100,7 +100,7 @@ impl ActivityStoreInterface {
         {
             Ok(e) => {
                 let version: i32 = e.try_get("max_version").unwrap_or(-1);
-                version < DB_SCHEMA_VERSION
+                version != DB_SCHEMA_VERSION
             }
             Err(_e) => true,
         };
