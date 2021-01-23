@@ -136,7 +136,7 @@ $ dclias --member-id $MEMBER_ID --platform $PLATFORM
 
 The first time you run this, it may take a couple of minutes to load all of your data (depending on the number of activities that you have). If any errors occur while syncing, just re-run the app when its done. It is smart enough to only sync the acitivties that it missed the first time.
 
-One you have done the initial sync, subsequent activity syncs should be very fast. You can periodically re-run the app to keep things in sync, or have dcliah automatically sync before it displays your stats.
+Once you have done the initial sync, subsequent activity syncs should be very fast. You can periodically re-run the app to keep things in sync, or have dcliah / dcliad automatically sync before it displays your stats.
 
 ### Grabbing data
 
@@ -154,7 +154,7 @@ Lets see all of our Crucible stats since the weekly reset on Tuesday for our las
 $ dcliah --member-id $MEMBER_ID --platform $PLATFORM --moment weekly
 ```
 
-Lets view our historical Crucible stats across all of our characters for all time:
+Lets view our historic Crucible stats across all of our characters for all time:
 
 ```
 $ dcliah --member-id $MEMBER_ID --platform xbox --mode all_pvp --moment all_time -class all
@@ -169,7 +169,6 @@ There are a couple of examples in the [examples directory](https://github.com/mi
 * Send a notification when you load into a new activity (particularly useful when playing crucible so you can see which map you are loading into)
 * Automatically generate weekly reports on your Crucible stats and email them to yourself
 * Track your Crucible stats per game play session
-* Generate an overview of your recent pvp stats, and have the system read them to you
 
 As you can see, right now, a lot of the functionality is Crucible based. If you would like to see other functionality, make sure you requests it in the [issues](https://github.com/mikechambers/dcli/issues), or [Discord](https://discord.gg/2Y8bV2Mq3p).
 
