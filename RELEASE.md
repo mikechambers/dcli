@@ -1,5 +1,8 @@
 # dcli Release Notes
 
+## v0.5.1 January 22, 2021
+* Re-releasing as Windows Defender falsly flagged dcliah as containing malware (known issue with Defender). Hoping it won't flag new build.
+
 ## v0.5.0 January 22, 2021
 * Released dcliad (per-game details)
 * Removed dclics (last included in v0.3.71)
