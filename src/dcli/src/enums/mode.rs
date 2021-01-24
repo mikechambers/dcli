@@ -253,6 +253,7 @@ impl Mode {
             || *self == Mode::ControlQuickplay
             || *self == Mode::ControlCompetitive
             || *self == Mode::TrialsOfOsiris
+            || *self == Mode::Momentum
     }
 
     pub fn is_private(&self) -> bool {
