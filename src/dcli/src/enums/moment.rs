@@ -26,9 +26,12 @@ use std::str::FromStr;
 use chrono::prelude::*;
 use chrono::{DateTime, Duration, Utc};
 
-use crate::utils::{
-    get_destiny2_launch_date, get_last_daily_reset, get_last_friday_reset,
-    get_last_weekly_reset, Period,
+use crate::{
+    error::Error,
+    utils::{
+        get_destiny2_launch_date, get_last_daily_reset, get_last_friday_reset,
+        get_last_weekly_reset,
+    },
 };
 
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -48,6 +51,19 @@ pub enum Moment {
     NextMonth,
     AllTime,
     Custom,
+
+    Launch,
+    CurseOfOsiris,
+    Warmind,
+    SeasonOfTheOutlaw,
+    SeasonOfTheForge,
+    SeasonOfTheDrifter,
+    SeasonOfOpulence,
+    SeasonOfTheUndying,
+    SeasonOfDawn,
+    SeasonOfTheWorthy,
+    SeasonOfArrivals,
+    SeasonOfTheHunt,
 }
 
 impl Moment {
@@ -68,6 +84,19 @@ impl Moment {
             Moment::NextMonth => Utc::now() + Duration::days(30),
             Moment::AllTime => get_destiny2_launch_date(),
             Moment::Custom => Utc.ymd(0, 0, 0).and_hms(0, 0, 0),
+
+            Moment::Launch => Utc.ymd(2017, 9, 6).and_hms(0, 0, 1),
+            Moment::CurseOfOsiris => Utc.ymd(2017, 12, 5).and_hms(18, 0, 0),
+            Moment::Warmind => Utc.ymd(2018, 5, 8).and_hms(18, 0, 0),
+            Moment::SeasonOfTheOutlaw => Utc.ymd(2018, 9, 4).and_hms(18, 0, 0),
+            Moment::SeasonOfTheForge => Utc.ymd(2018, 12, 4).and_hms(18, 0, 0),
+            Moment::SeasonOfTheDrifter => Utc.ymd(2019, 3, 5).and_hms(18, 0, 0),
+            Moment::SeasonOfOpulence => Utc.ymd(2019, 6, 4).and_hms(18, 0, 0),
+            Moment::SeasonOfTheUndying => Utc.ymd(2019, 10, 1).and_hms(18, 0, 0),
+            Moment::SeasonOfDawn => Utc.ymd(2019, 12, 10).and_hms(18, 0, 0),
+            Moment::SeasonOfTheWorthy => Utc.ymd(2020, 3, 10).and_hms(18, 0, 0),
+            Moment::SeasonOfArrivals => Utc.ymd(2020, 6, 9).and_hms(18, 0, 0),
+            Moment::SeasonOfTheHunt => Utc.ymd(2020, 11, 10).and_hms(18, 0, 0),
         }
     }
 }
@@ -97,6 +126,19 @@ impl FromStr for Moment {
             "all_time" => Ok(Moment::AllTime),
             "custom" => Ok(Moment::Custom),
 
+            "launch" => Ok(Moment::Launch),
+            "curse_of_osiris" => Ok(Moment::CurseOfOsiris),
+            "warmind" => Ok(Moment::Warmind),
+            "season_of_the_outlaw" => Ok(Moment::SeasonOfTheOutlaw),
+            "season_of_the_forge" => Ok(Moment::SeasonOfTheForge),
+            "season_of_the_drifter" => Ok(Moment::SeasonOfTheDrifter),
+            "season_of_opulence" => Ok(Moment::SeasonOfOpulence),
+            "season_of_the_undying" => Ok(Moment::SeasonOfTheUndying),
+            "season_of_dawn" => Ok(Moment::SeasonOfDawn),
+            "season_of_the_worthy" => Ok(Moment::SeasonOfTheWorthy),
+            "season_of_arrivals" => Ok(Moment::SeasonOfArrivals),
+            "season_of_the_hunt" => Ok(Moment::SeasonOfTheHunt),
+
             _ => Err("Unknown Moment type"),
         }
     }
@@ -120,44 +162,59 @@ impl fmt::Display for Moment {
             Moment::NextMonth => "next month",
             Moment::AllTime => "all time",
 
-            //TODO: is there a way to store the date / time with custom?
-            //now that we are parsing ourselves?
-            //can it default to none? Probably not
             Moment::Custom => "custom",
+
+            Moment::Launch => "launch",
+            Moment::CurseOfOsiris => "Curse of Osiris",
+            Moment::Warmind => "Warmind",
+            Moment::SeasonOfTheOutlaw => "Season of the Outlaw",
+            Moment::SeasonOfTheForge => "Season of the Forge",
+            Moment::SeasonOfTheDrifter => "Season of the Drifter",
+            Moment::SeasonOfOpulence => "Season of Opulence",
+            Moment::SeasonOfTheUndying => "Season of the Undying",
+            Moment::SeasonOfDawn => "Season of Dawn",
+            Moment::SeasonOfTheWorthy => "Season of the Worthy",
+            Moment::SeasonOfArrivals => "Season of Arrivals",
+            Moment::SeasonOfTheHunt => "Season of the Hunt",
         };
 
         write!(f, "{}", out)
     }
 }
 
-pub struct MomentPeriod {
-    pub moment: Moment,
-    pub start: DateTime<Utc>,
-    pub end: DateTime<Utc>,
+#[derive(Debug)]
+pub struct DateTimePeriod {
+    start: DateTime<Utc>,
+    end: DateTime<Utc>,
 }
 
-impl Period for MomentPeriod {
-    fn get_start(&self) -> DateTime<Utc> {
+impl DateTimePeriod {
+    pub fn get_start(&self) -> DateTime<Utc> {
         self.start
     }
 
-    fn get_end(&self) -> DateTime<Utc> {
+    pub fn get_end(&self) -> DateTime<Utc> {
         self.end
     }
-}
 
-impl MomentPeriod {
-    ///Takes a Moment and creates MomentPeriod relative to now.
-    ///If Moment is in the future, it will be from now to moment,
-    ///If Moment is in the past, it will be from moment to now.
-    pub fn from_moment(moment: Moment) -> MomentPeriod {
-        let mut start = moment.get_date_time();
-        let mut end = Utc::now();
+    pub fn with_start_time(start: DateTime<Utc>) -> Result<DateTimePeriod, Error> {
+        let end = Utc::now();
 
         if start > end {
-            std::mem::swap(&mut start, &mut end);
+            return Err(Error::DateTimePeriodOrder);
         }
 
-        MomentPeriod { moment, start, end }
+        Ok(DateTimePeriod { start, end })
+    }
+
+    pub fn with_start_end_time(
+        start: DateTime<Utc>,
+        end: DateTime<Utc>,
+    ) -> Result<DateTimePeriod, Error> {
+        if start > end {
+            return Err(Error::DateTimePeriodOrder);
+        }
+
+        Ok(DateTimePeriod { start, end })
     }
 }

@@ -64,6 +64,7 @@ pub enum Error {
     NoCharacters,
     CharacterDoesNotExist,
     ActivityNotFound,
+    DateTimePeriodOrder,
 }
 
 impl Display for Error {
@@ -158,6 +159,11 @@ impl Display for Error {
             Error::ActivityNotFound  => {
                 write!(f, "Could not find activity in data store.")
             },
+            Error::DateTimePeriodOrder  => {
+                write!(f, "Start date must be before end date.")
+            },
+
+            
         }
     }
 }

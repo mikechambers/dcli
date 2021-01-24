@@ -24,7 +24,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
-use dcli::enums::moment::Moment;
+use dcli::enums::moment::{DateTimePeriod, Moment};
 use dcli::enums::platform::Platform;
 use dcli::enums::standing::Standing;
 use dcli::manifestinterface::ManifestInterface;
@@ -60,24 +60,9 @@ fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
     Ok(mode)
 }
 
+//TODO: we may not need custom validation here now
 fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
     let moment = Moment::from_str(src)?;
-
-    //note, we positive capture what we want in case new properties
-    //are added in the future
-    match moment {
-        Moment::Daily => {}
-        Moment::Weekend => {}
-        Moment::Weekly => {}
-        Moment::Day => {}
-        Moment::Week => {}
-        Moment::Month => {}
-        Moment::AllTime => {}
-        Moment::Custom => {}
-        _ => {
-            return Err(format!("Unsupported moment specified : {}", src));
-        }
-    };
 
     Ok(moment)
 }
@@ -88,6 +73,8 @@ fn print_default(
     mode: &Mode,
     moment: &Moment,
     start_time: &DateTime<Utc>,
+    end_moment: &Moment,
+    end_time: &DateTime<Utc>,
     weapon_count: &u32,
     weapon_sort: &WeaponSort,
 ) {
@@ -106,16 +93,28 @@ fn print_default(
     let is_limited = activity_count != display_count;
 
     let start_time_label = human_date_format(&start_time);
+    let end_time_label = human_date_format(&end_time);
 
     println!();
     println!();
 
-    let title = format!(
-        "{mode} activities since {start_time} ({moment})",
-        mode = uppercase_first_char(&format!("{}", mode)),
-        start_time = start_time_label,
-        moment = moment,
-    );
+    let title = if end_moment == &Moment::Now {
+        format!(
+            "{mode} activities since {start_time} ({moment})",
+            mode = uppercase_first_char(&format!("{}", mode)),
+            start_time = start_time_label,
+            moment = moment,
+        )
+    } else {
+        format!(
+            "{mode} activities from {start_time} ({moment}) to {end_time} ({end_moment})",
+            mode = uppercase_first_char(&format!("{}", mode)),
+            start_time = start_time_label,
+            moment = moment,
+            end_time = end_time_label,
+            end_moment = end_moment,
+        )
+    };
 
     println!();
     println!("ACTIVITIES");
@@ -149,7 +148,7 @@ fn print_default(
     println!();
 
     let col_w = 8;
-    let wl_col_w = 10;
+    let wl_col_w = 14;
     let map_col_w = 18;
     let str_col_w = 7;
     let id_col_w = 8;
@@ -485,8 +484,18 @@ struct Opt {
     /// Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
     ///
     /// Required when --moment is set to custom, but otherwise not applicable.
-    #[structopt(short = "t", long = "custom-time", parse(try_from_str = parse_rfc3339), required_if("start-moment", "custom"))]
+    #[structopt(short = "t", long = "custom-time", parse(try_from_str = parse_rfc3339), required_if("moment", "custom"))]
     custom_time: Option<DateTime<Utc>>,
+
+    /// Custom end time in RFC 3339 date / time format
+    ///
+    /// Must be a valid date in the past.
+    ///
+    /// Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
+    ///
+    /// Required when --end-moment is set to custom, but otherwise not applicable.
+    #[structopt(short = "e", long = "end-custom-time", parse(try_from_str = parse_rfc3339), required_if("end-moment", "custom"))]
+    end_custom_time: Option<DateTime<Utc>>,
 
     /// Start moment from which to pull activities from
     ///
@@ -507,6 +516,28 @@ struct Opt {
     #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), 
         short = "T", default_value = "week")]
     moment: Moment,
+
+    /// End moment from which to pull activities from
+    ///
+    /// Activities will be retrieved from --moment to --end-moment. End moment
+    /// must be greater than moment
+    ///
+    /// For example, Specifying: --moment month --end-moment weekly
+    /// will return all activities from a month ago up to the most recent weekly
+    /// reset.
+    ///
+    /// Valid values include daily (last daily reset), weekend
+    /// (last weekend reset on Friday), weekly (last weekly reset on Tuesday),
+    /// day (last day), week (last week), month (last month), all_time and custom.
+    ///
+    /// When custom is specified, the custom start date in RFC3339 format must
+    /// be specified with the --end-custom-time argument.
+    ///
+    /// For example:
+    /// --moment custom --end-custom-time 2020-12-08T17:00:00.774187+00:00
+    #[structopt(long = "end-moment", parse(try_from_str=parse_and_validate_moment), 
+        short = "E", default_value = "now")]
+    end_moment: Moment,
 
     /// Activity mode to return stats for
     ///
@@ -585,6 +616,21 @@ async fn main() {
         _ => opt.moment.get_date_time(),
     };
 
+    let end_time = match opt.end_moment {
+        Moment::Custom => {
+            opt.end_custom_time.unwrap() //note, this should be ok, because struct opt should ensure valid value
+        }
+        _ => opt.end_moment.get_date_time(),
+    };
+
+    let time_period = match DateTimePeriod::with_start_end_time(start_time, end_time) {
+        Ok(e) => e,
+        Err(_e) => {
+            eprintln!("--end-moment must be greater than --moment");
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
     let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
         Ok(e) => e,
         Err(e) => {
@@ -620,7 +666,7 @@ async fn main() {
             &opt.character_class_selection,
             &opt.platform,
             &opt.mode,
-            &start_time,
+            &time_period,
             &mut manifest,
         )
         .await
@@ -649,7 +695,9 @@ async fn main() {
         &opt.activity_limit,
         &opt.mode,
         &opt.moment,
-        &start_time,
+        &time_period.get_start(),
+        &opt.end_moment,
+        &time_period.get_end(),
         &opt.weapon_count,
         &opt.weapon_sort,
     );

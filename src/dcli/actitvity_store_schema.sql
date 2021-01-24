@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS "member";
 
 DROP INDEX IF EXISTS "modes_activity_index";
 DROP INDEX IF EXISTS "character_activity_stats_char_index";
+DROP INDEX IF EXISTS "activity_period_index";
 
 CREATE TABLE IF NOT EXISTS "main"."version" (
     "version"   INTEGER NOT NULL UNIQUE
@@ -156,5 +157,6 @@ CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
 
 CREATE INDEX modes_activity_index ON modes (activity);
 CREATE INDEX character_activity_stats_char_index ON character_activity_stats (character);
+CREATE INDEX activity_period_index ON activity (period);
 
 COMMIT;

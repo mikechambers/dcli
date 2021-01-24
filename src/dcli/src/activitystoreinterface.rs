@@ -28,7 +28,7 @@ use chrono::{DateTime, Utc};
 
 use crate::{
     crucible::{CrucibleActivity, Team},
-    enums::{completionreason::CompletionReason, standing::Standing},
+    enums::{completionreason::CompletionReason, moment::DateTimePeriod, standing::Standing},
     response::pgcr::DestinyPostGameCarnageReportEntry,
 };
 use futures::TryStreamExt;
@@ -1134,22 +1134,22 @@ impl ActivityStoreInterface {
         character_selection: &CharacterClassSelection,
         platform: &Platform,
         mode: &Mode,
-        start_time: &DateTime<Utc>,
+        time_period: &DateTimePeriod,
         manifest: &mut ManifestInterface,
     ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
         let out = if character_selection == &CharacterClassSelection::All {
-            self.retrieve_activities_for_member_since(member_id, mode, start_time, manifest)
+            self.retrieve_activities_for_member_since(member_id, mode, time_period, manifest)
                 .await?
         } else {
             let character_id = self
                 .retrieve_character_selection_id(member_id, platform, character_selection)
                 .await?;
 
-            self.retrieve_activities_for_character_since(
+            self.retrieve_activities_for_character(
                 member_id,
                 &character_id,
                 mode,
-                start_time,
+                time_period,
                 manifest,
             )
             .await?
@@ -1162,7 +1162,7 @@ impl ActivityStoreInterface {
         &mut self,
         member_id: &str,
         mode: &Mode,
-        start_time: &DateTime<Utc>,
+        time_period: &DateTimePeriod,
         manifest: &mut ManifestInterface,
     ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
         //if mode if private, we dont restrict results
@@ -1196,6 +1196,7 @@ impl ActivityStoreInterface {
             WHERE
                 member.id = (select id from member where member_id = ?) AND
                 period > ? AND
+                period < ? AND
                 exists (select 1 from modes where activity = activity.id and mode = ?) AND
                 not exists (select 1 from modes where activity = activity.id and mode = ?)
             ORDER BY
@@ -1203,7 +1204,8 @@ impl ActivityStoreInterface {
             "#,
         )
         .bind(member_id.to_string())
-        .bind(start_time.to_rfc3339())
+        .bind(time_period.get_start().to_rfc3339())
+        .bind(time_period.get_end().to_rfc3339())
         .bind(mode.to_id().to_string())
         .bind(restrict_mode_id.to_string())
         .fetch_all(&mut self.db)
@@ -1220,12 +1222,12 @@ impl ActivityStoreInterface {
         Ok(Some(p))
     }
 
-    pub async fn retrieve_activities_for_character_since(
+    pub async fn retrieve_activities_for_character(
         &mut self,
         member_id: &str,
         character_id: &str,
         mode: &Mode,
-        start_time: &DateTime<Utc>,
+        time_period: &DateTimePeriod,
         manifest: &mut ManifestInterface,
     ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
         let character_index = self.get_character_row_id(member_id, character_id).await?;
@@ -1255,6 +1257,7 @@ impl ActivityStoreInterface {
                 member on member.id = character.member
             WHERE
                 activity.period > ? AND
+                activity.period < ? AND
                 exists (select 1 from modes where activity = activity.id and mode = ?) AND
                 not exists (select 1 from modes where activity = activity.id and mode = ?) AND
                 character_activity_stats.character = ?
@@ -1263,7 +1266,8 @@ impl ActivityStoreInterface {
 
         "#,
         )
-        .bind(start_time.to_rfc3339())
+        .bind(time_period.get_start().to_rfc3339())
+        .bind(time_period.get_end().to_rfc3339())
         .bind(mode.to_id().to_string())
         .bind(restrict_mode_id.to_string())
         .bind(character_index.to_string())
