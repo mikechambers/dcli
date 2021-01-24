@@ -111,7 +111,7 @@ fn print_default(
     weapon_count: u32,
     verbose: bool,
 ) {
-    let col_w = 10;
+    let col_w = 8;
     let name_col_w = 24;
 
     let mut activity_duration = "".to_string();
@@ -162,10 +162,10 @@ fn print_default(
     "K/D",
     "KD/A",
     "EFF",
-    "SUPERS",
-    "GRENADES",
-    "MELEES",
-    "MEDALS",
+    "SUP",
+    "GREN",
+    "MEL",
+    "MED",
     "ELO",
     "STATUS",
     col_w=col_w,
