@@ -1,8 +1,11 @@
 # dcli Release Notes
 
-## v0.5.2 January 24, 2021
+## v0.5.5 January 24, 2021
 * Added player rating to dcliad (this is based on Destiny combat rating, similar to elo)
 * Fixed bug where wrong platform was being stored for players. Requires database update and data to be re-synced
+* Added --end-moment argument to dcliah to allow specifying start / end moments to search.
+* Added moments for each season (see docs for [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah))
+* Some performance optimizations for data store queries
 
 ## v0.5.1 January 22, 2021
 * Re-releasing as Windows Defender falsly flagged dcliah as containing malware (known issue with Defender). Hoping it won't flag new build.
