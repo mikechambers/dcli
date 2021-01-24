@@ -166,7 +166,7 @@ fn print_default(
     "GREN",
     "MEL",
     "MED",
-    "ELO",
+    "RATING",
     "STATUS",
     col_w=col_w,
     name_col_w = name_col_w,
