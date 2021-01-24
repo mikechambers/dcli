@@ -26,7 +26,8 @@ use std::{collections::HashMap, path::PathBuf};
 use dcli::{
     apiinterface::ApiInterface,
     crucible::{
-        AggregateCruciblePerformances, CrucibleActivity, CruciblePlayerPerformance, Player,
+        AggregateCruciblePerformances, CrucibleActivity,
+        CruciblePlayerPerformance, Player,
     },
     enums::completionreason::CompletionReason,
     utils::{calculate_avg, f32_are_equal},
@@ -41,7 +42,10 @@ use dcli::error::Error;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{determine_data_dir, format_f32, human_date_format, human_duration, repeat_str};
+use dcli::utils::{
+    determine_data_dir, format_f32, human_date_format, human_duration,
+    repeat_str,
+};
 
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
@@ -72,7 +76,10 @@ fn generate_score(data: &CrucibleActivity) -> String {
     tokens.join("")
 }
 
-async fn get_combat_ratings(data: &CrucibleActivity, verbose: bool) -> HashMap<u64, f32> {
+async fn get_combat_ratings(
+    data: &CrucibleActivity,
+    verbose: bool,
+) -> HashMap<u64, f32> {
     let mut players: Vec<&Player> = Vec::new();
 
     for t in data.teams.values() {
@@ -119,13 +126,15 @@ fn print_default(
     let mut standing_str = "".to_string();
 
     if let Some(e) = data.get_member_performance(member_id) {
-        completion_reason = if e.stats.completion_reason == CompletionReason::Unknown {
-            "".to_string()
-        } else {
-            format!("({})", e.stats.completion_reason)
-        };
+        completion_reason =
+            if e.stats.completion_reason == CompletionReason::Unknown {
+                "".to_string()
+            } else {
+                format!("({})", e.stats.completion_reason)
+            };
 
-        activity_duration = format!("({})", human_duration(e.stats.activity_duration_seconds));
+        activity_duration =
+            format!("({})", human_duration(e.stats.activity_duration_seconds));
         standing_str = format!("{}!", e.stats.standing);
     };
 
@@ -192,11 +201,13 @@ fn print_default(
         let mut first_performance = true;
 
         let mut player_performances = v.player_performances.clone();
-        player_performances
-            .sort_by(|a, b| b.stats.opponents_defeated.cmp(&a.stats.opponents_defeated));
+        player_performances.sort_by(|a, b| {
+            b.stats.opponents_defeated.cmp(&a.stats.opponents_defeated)
+        });
 
         for p in &player_performances {
-            let elo = *elo_hash.get(&p.player.calculate_hash()).unwrap_or(&0.0) * ELO_SCALE;
+            let elo = *elo_hash.get(&p.player.calculate_hash()).unwrap_or(&0.0)
+                * ELO_SCALE;
 
             let mut elo_str = "".to_string();
             if !f32_are_equal(elo, 0.0) {
@@ -275,7 +286,8 @@ fn print_default(
                         weapon_kills = w.kills.to_string();
                         precision_kills = w.precision_kills.to_string();
                         precision_kills_percent =
-                            format_f32(w.precision_kills_percent * 100.0, 0).to_string();
+                            format_f32(w.precision_kills_percent * 100.0, 0)
+                                .to_string();
                         weapon_type = format!("{}", w.weapon.item_sub_type);
                     }
 
@@ -364,7 +376,8 @@ fn print_default(
     println!("Combined");
     println!("{}", team_title_border);
 
-    let aggregate = AggregateCruciblePerformances::with_performances(&all_performances);
+    let aggregate =
+        AggregateCruciblePerformances::with_performances(&all_performances);
 
     let agg_extended = aggregate.extended.as_ref().unwrap();
     let agg_supers = agg_extended.weapon_kills_super;
@@ -566,21 +579,27 @@ async fn main() {
         }
     };
 
-    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
-        Ok(e) => e,
-        Err(e) => {
-            print_error(
-                "Could not initialize activity store. Have you run dclias?",
-                e,
-            );
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+    let mut store =
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
+            .await
+        {
+            Ok(e) => e,
+            Err(e) => {
+                print_error(
+                    "Could not initialize activity store. Have you run dclias?",
+                    e,
+                );
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error("Could not initialize manifest. Have you run dclim?", e);
+            print_error(
+                "Could not initialize manifest. Have you run dclim?",
+                e,
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
