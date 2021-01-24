@@ -20,15 +20,16 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use std::path::PathBuf;
 use std::str::FromStr;
+use std::{collections::HashMap, path::PathBuf};
 
 use dcli::{
+    apiinterface::ApiInterface,
     crucible::{
-        AggregateCruciblePerformances, CrucibleActivity,
-        CruciblePlayerPerformance,
+        AggregateCruciblePerformances, CrucibleActivity, CruciblePlayerPerformance, Player,
     },
     enums::completionreason::CompletionReason,
+    utils::{calculate_avg, f32_are_equal},
 };
 use dcli::{enums::platform::Platform, utils::truncate_ascii_string};
 
@@ -40,14 +41,13 @@ use dcli::error::Error;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
-use dcli::utils::{
-    determine_data_dir, format_f32, human_date_format, human_duration,
-    repeat_str,
-};
+use dcli::utils::{determine_data_dir, format_f32, human_date_format, human_duration, repeat_str};
 
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
 use structopt::StructOpt;
+
+const ELO_SCALE: f32 = 10.0;
 
 fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
     let mode = Mode::from_str(src)?;
@@ -72,8 +72,40 @@ fn generate_score(data: &CrucibleActivity) -> String {
     tokens.join("")
 }
 
+async fn get_combat_ratings(data: &CrucibleActivity, verbose: bool) -> HashMap<u64, f32> {
+    let mut players: Vec<&Player> = Vec::new();
+
+    for t in data.teams.values() {
+        for p in &t.player_performances {
+            players.push(&p.player);
+        }
+    }
+
+    let elo_hash: HashMap<u64, f32> = match ApiInterface::new(verbose) {
+        Ok(e) => {
+            let mut player_refs: Vec<&Player> = Vec::new();
+            for t in data.teams.values() {
+                for p in &t.player_performances {
+                    player_refs.push(&p.player);
+                }
+            }
+
+            match e
+                .retrieve_combat_ratings(&player_refs, &data.details.mode)
+                .await
+            {
+                Ok(e) => e,
+                Err(_e) => HashMap::new(),
+            }
+        }
+        Err(_e) => HashMap::new(),
+    };
+    elo_hash
+}
+
 fn print_default(
     data: &CrucibleActivity,
+    elo_hash: &HashMap<u64, f32>,
     member_id: &str,
     details: bool,
     weapon_count: u32,
@@ -87,15 +119,13 @@ fn print_default(
     let mut standing_str = "".to_string();
 
     if let Some(e) = data.get_member_performance(member_id) {
-        completion_reason =
-            if e.stats.completion_reason == CompletionReason::Unknown {
-                "".to_string()
-            } else {
-                format!("({})", e.stats.completion_reason)
-            };
+        completion_reason = if e.stats.completion_reason == CompletionReason::Unknown {
+            "".to_string()
+        } else {
+            format!("({})", e.stats.completion_reason)
+        };
 
-        activity_duration =
-            format!("({})", human_duration(e.stats.activity_duration_seconds));
+        activity_duration = format!("({})", human_duration(e.stats.activity_duration_seconds));
         standing_str = format!("{}!", e.stats.standing);
     };
 
@@ -123,7 +153,7 @@ fn print_default(
 
     println!();
 
-    let header = format!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    let header = format!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "PLAYER",
     "KILLS",
     "ASTS",
@@ -136,6 +166,7 @@ fn print_default(
     "GRENADES",
     "MELEES",
     "MEDALS",
+    "ELO",
     "STATUS",
     col_w=col_w,
     name_col_w = name_col_w,
@@ -147,7 +178,12 @@ fn print_default(
     let footer_border = repeat_str("-", table_width);
 
     let mut all_performances: Vec<&CruciblePlayerPerformance> = Vec::new();
+    let mut elo_total_count = 0;
+    let mut elo_total_total = 0.0;
     for v in data.teams.values() {
+        let mut elo_team_count = 0;
+        let mut elo_team_total = 0.0;
+
         println!("[{}] {} Team {}!", v.score, v.display_name, v.standing);
         println!("{}", team_title_border);
         println!("{}", header);
@@ -156,13 +192,25 @@ fn print_default(
         let mut first_performance = true;
 
         let mut player_performances = v.player_performances.clone();
-        player_performances.sort_by(|a, b| {
-            b.stats.opponents_defeated.cmp(&a.stats.opponents_defeated)
-        });
+        player_performances
+            .sort_by(|a, b| b.stats.opponents_defeated.cmp(&a.stats.opponents_defeated));
 
         for p in &player_performances {
+            let elo = *elo_hash.get(&p.player.calculate_hash()).unwrap_or(&0.0) * ELO_SCALE;
+
+            let mut elo_str = "".to_string();
+            if !f32_are_equal(elo, 0.0) {
+                elo_team_count += 1;
+                elo_team_total += elo;
+
+                elo_total_count += 1;
+                elo_total_total += elo;
+
+                elo_str = format_f32(elo, 0);
+            }
+
             let extended = p.stats.extended.as_ref().unwrap();
-            println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
                 truncate_ascii_string(&p.player.display_name, name_col_w),
                 p.stats.kills.to_string(),
                 p.stats.assists.to_string(),
@@ -175,6 +223,7 @@ fn print_default(
                 extended.weapon_kills_grenade.to_string(),
                 extended.weapon_kills_ability.to_string(),
                 extended.all_medals_earned.to_string(),
+                elo_str,
                 p.stats.generate_status(),
                 col_w=col_w,
                 name_col_w = name_col_w,
@@ -226,8 +275,7 @@ fn print_default(
                         weapon_kills = w.kills.to_string();
                         precision_kills = w.precision_kills.to_string();
                         precision_kills_percent =
-                            format_f32(w.precision_kills_percent * 100.0, 0)
-                                .to_string();
+                            format_f32(w.precision_kills_percent * 100.0, 0).to_string();
                         weapon_type = format!("{}", w.weapon.item_sub_type);
                     }
 
@@ -263,7 +311,14 @@ fn print_default(
         let agg_grenades = agg_extended.weapon_kills_grenade;
         let agg_melees = agg_extended.weapon_kills_melee;
 
-        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        let team_elo = calculate_avg(elo_team_total, elo_team_count);
+        let team_elo_str = if f32_are_equal(team_elo, 0.0) {
+            "".to_string()
+        } else {
+            format_f32(team_elo, 0)
+        };
+
+        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             "TOTAL",
             aggregate.kills.to_string(),
             aggregate.assists.to_string(),
@@ -276,12 +331,13 @@ fn print_default(
             agg_grenades.to_string(),
             agg_melees.to_string(),
             aggregate.extended.as_ref().unwrap().all_medals_earned.to_string(),
-            "", //MAKE THIS REASON FOR COMPLETEION
+            "",
+            "",
             col_w=col_w,
             name_col_w = name_col_w,
         );
 
-        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             "AVG",
             format_f32(aggregate.kills as f32 / player_performances.len() as f32, 2),
             format_f32(aggregate.assists as f32 / player_performances.len() as f32,2),
@@ -294,6 +350,7 @@ fn print_default(
             format_f32(agg_grenades as f32 / player_performances.len() as f32,2),
             format_f32(agg_melees as f32 / player_performances.len() as f32,2),
             format_f32(aggregate.extended.as_ref().unwrap().all_medals_earned as f32 / player_performances.len() as f32,2),
+            team_elo_str,
             "", //MAKE THIS REASON FOR COMPLETEION
             col_w=col_w,
             name_col_w = name_col_w,
@@ -307,8 +364,7 @@ fn print_default(
     println!("Combined");
     println!("{}", team_title_border);
 
-    let aggregate =
-        AggregateCruciblePerformances::with_performances(&all_performances);
+    let aggregate = AggregateCruciblePerformances::with_performances(&all_performances);
 
     let agg_extended = aggregate.extended.as_ref().unwrap();
     let agg_supers = agg_extended.weapon_kills_super;
@@ -317,7 +373,7 @@ fn print_default(
 
     println!("{}", header);
     println!("{}", header_border);
-    println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
         "TOTAL",
         aggregate.kills.to_string(),
         aggregate.assists.to_string(),
@@ -330,12 +386,20 @@ fn print_default(
         agg_grenades.to_string(),
         agg_melees.to_string(),
         aggregate.extended.as_ref().unwrap().all_medals_earned.to_string(),
+        "",
         "", //MAKE THIS REASON FOR COMPLETEION
         col_w=col_w,
         name_col_w = name_col_w,
     );
 
-    println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    let total_elo = calculate_avg(elo_total_total, elo_total_count);
+    let total_elo_str = if f32_are_equal(total_elo, 0.0) {
+        "".to_string()
+    } else {
+        format_f32(total_elo, 0)
+    };
+
+    println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "AVG",
     format_f32(aggregate.kills as f32 / all_performances.len() as f32, 2),
     format_f32(aggregate.assists as f32 / all_performances.len() as f32,2),
@@ -348,6 +412,7 @@ fn print_default(
     format_f32(agg_grenades as f32 / all_performances.len() as f32,2),
     format_f32(agg_melees as f32 / all_performances.len() as f32,2),
     format_f32(aggregate.extended.as_ref().unwrap().all_medals_earned as f32 / all_performances.len() as f32,2),
+    total_elo_str,
     "", //MAKE THIS REASON FOR COMPLETEION
     col_w=col_w,
     name_col_w = name_col_w,
@@ -501,27 +566,21 @@ async fn main() {
         }
     };
 
-    let mut store =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
-            .await
-        {
-            Ok(e) => e,
-            Err(e) => {
-                print_error(
-                    "Could not initialize activity store. Have you run dclias?",
-                    e,
-                );
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error(
+                "Could not initialize activity store. Have you run dclias?",
+                e,
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
-                e,
-            );
+            print_error("Could not initialize manifest. Have you run dclim?", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -564,8 +623,11 @@ async fn main() {
         }
     };
 
+    let elo_hash = get_combat_ratings(&data, opt.verbose).await;
+
     print_default(
         &data,
+        &elo_hash,
         &opt.member_id,
         opt.details,
         opt.weapon_count,

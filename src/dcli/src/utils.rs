@@ -93,10 +93,7 @@ pub fn print_error(msg: &str, error: Error) {
     eprintln!("       https://github.com/mikechambers/dcli/issues");
 }
 
-pub fn calculate_per_activity_average(
-    value: u32,
-    total_activities: u32,
-) -> f32 {
+pub fn calculate_per_activity_average(value: u32, total_activities: u32) -> f32 {
     if total_activities == 0 {
         return 0.0;
     }
@@ -122,11 +119,7 @@ pub fn calculate_kills_deaths_ratio(kills: u32, deaths: u32) -> f32 {
     }
 }
 
-pub fn calculate_kills_deaths_assists(
-    kills: u32,
-    deaths: u32,
-    assists: u32,
-) -> f32 {
+pub fn calculate_kills_deaths_assists(kills: u32, deaths: u32, assists: u32) -> f32 {
     let kills = kills as f32;
     let assists = assists as f32;
 
@@ -182,8 +175,7 @@ pub fn human_date_format(start_time: &DateTime<Utc>) -> String {
 
 //this could use some more work and polish. Add "and" before the last item.
 pub fn human_duration(seconds: u32) -> String {
-    let dt =
-        Utc.ymd(0, 1, 1).and_hms(0, 0, 0) + Duration::seconds(seconds as i64);
+    let dt = Utc.ymd(0, 1, 1).and_hms(0, 0, 0) + Duration::seconds(seconds as i64);
     let year = build_time_str(dt.year(), "year");
     let mon = build_time_str(dt.month() as i32 - 1, "month");
     let day = build_time_str(dt.day() as i32 - 1, "day");
@@ -250,10 +242,7 @@ pub fn get_last_daily_reset() -> DateTime<Utc> {
     find_previous_moment(past_reset, DAY_IN_SECONDS)
 }
 
-fn find_previous_moment(
-    past_reset: DateTime<Utc>,
-    interval: i64,
-) -> DateTime<Utc> {
+fn find_previous_moment(past_reset: DateTime<Utc>, interval: i64) -> DateTime<Utc> {
     let now: DateTime<Utc> = Utc::now();
 
     //get total seconds between now and the past reset
@@ -266,8 +255,7 @@ pub fn determine_data_dir(dir: Option<PathBuf>) -> Result<PathBuf, Error> {
     let path = match dir {
         Some(e) => e,
         None => {
-            let dld = dirs_next::data_local_dir()
-                .ok_or(Error::SystemDirectoryNotFound)?;
+            let dld = dirs_next::data_local_dir().ok_or(Error::SystemDirectoryNotFound)?;
             dld.join("dcli")
         }
     };
@@ -285,6 +273,14 @@ pub fn calculate_ratio(a: u32, b: u32) -> f32 {
     }
 
     a as f32 / b as f32
+}
+
+pub fn calculate_avg(total: f32, count: u32) -> f32 {
+    if count == 0 {
+        return 0.0;
+    }
+
+    total / count as f32
 }
 
 pub fn calculate_percent(value: u32, total: u32) -> f32 {
