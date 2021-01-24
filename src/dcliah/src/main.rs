@@ -451,8 +451,8 @@ fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving and viewing Destiny 2 Crucible activity history.
 ///
-/// Enables control of which stats are displayed based on game mode, moment
-/// from which to retrieve them (to present) and character.
+/// Enables control of which stats are displayed based on game mode, moment range
+/// from which to retrieve them and character.
 ///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
@@ -499,14 +499,18 @@ struct Opt {
 
     /// Start moment from which to pull activities from
     ///
-    /// Activities will be retrieved from moment to the current time.
+    /// Activities will be retrieved from moment to end-moment.
     ///
     /// For example, Specifying: --moment weekly
     /// will return all activities since the last weekly reset on Tuesday.
     ///
     /// Valid values include daily (last daily reset), weekend
     /// (last weekend reset on Friday), weekly (last weekly reset on Tuesday),
-    /// day (last day), week (last week), month (last month), all_time and custom.
+    /// day (last day), week (last week), month (last month), all_time and custom
+    /// as well as the following season moments launch, curse_of_osiris, warmind,
+    /// season_of_the_outlaw, season_of_the_forge, season_of_the_drifter,
+    /// season_of_opulence, season_of_the_undying, season_of_dawn,
+    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --custom-time argument.
@@ -519,7 +523,7 @@ struct Opt {
 
     /// End moment from which to pull activities from
     ///
-    /// Activities will be retrieved from --moment to --end-moment. End moment
+    /// Activities will be retrieved from moment to end-moment. End moment
     /// must be greater than moment
     ///
     /// For example, Specifying: --moment month --end-moment weekly
@@ -528,7 +532,11 @@ struct Opt {
     ///
     /// Valid values include daily (last daily reset), weekend
     /// (last weekend reset on Friday), weekly (last weekly reset on Tuesday),
-    /// day (last day), week (last week), month (last month), all_time and custom.
+    /// day (last day), week (last week), month (last month), all_time and custom
+    /// as well as the following season moments launch, curse_of_osiris, warmind,
+    /// season_of_the_outlaw, season_of_the_forge, season_of_the_drifter,
+    /// season_of_opulence, season_of_the_undying, season_of_dawn,
+    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --end-custom-time argument.

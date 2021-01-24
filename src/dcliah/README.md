@@ -26,7 +26,7 @@ FLAGS:
             Prints help information
 
     -N, --no-sync    
-            Don't sync activities.
+            Don't sync activities
             
             If flag is set, activities will not be retrieved before displaying stats. This is useful in case you are
             syncing activities in a seperate process.
@@ -40,11 +40,11 @@ FLAGS:
 
 OPTIONS:
     -L, --activity-limit <activity-limit>      
-            Limit the number of activity details that will be displayed.
+            Limit the number of activity details that will be displayed
             
             Summary information will be generated based on all activities. [default: 10]
     -C, --class <character-class-selection>    
-            Character to retrieve data for.
+            Character to retrieve data for
             
             Valid values include hunter, titan, warlock, last_active and all. [default: last_active]
     -t, --custom-time <custom-time>            
@@ -60,6 +60,32 @@ OPTIONS:
             
             This will normally be downloaded using the dclim and dclias tools, and uses a system appropriate directory
             by default.
+    -e, --end-custom-time <end-custom-time>    
+            Custom end time in RFC 3339 date / time format
+            
+            Must be a valid date in the past.
+            
+            Example RFC 3339 format: 2020-12-08T17:00:00.774187+00:00
+            
+            Required when --end-moment is set to custom, but otherwise not applicable.
+    -E, --end-moment <end-moment>              
+            End moment from which to pull activities from
+            
+            Activities will be retrieved from moment to end-moment. End moment must be greater than moment
+            
+            For example, Specifying: --moment month --end-moment weekly will return all activities from a month ago up
+            to the most recent weekly reset.
+            
+            Valid values include daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly
+            reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom as well as the
+            following season moments launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge,
+            season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy,
+            season_of_arrivals, season_of_the_hunt.
+            
+            When custom is specified, the custom start date in RFC3339 format must be specified with the --end-custom-
+            time argument.
+            
+            For example: --moment custom --end-custom-time 2020-12-08T17:00:00.774187+00:00 [default: now]
     -m, --member-id <member-id>                
             Destiny 2 API member id
             
@@ -67,21 +93,24 @@ OPTIONS:
     -M, --mode <mode>                          
             Activity mode to return stats for
             
-            Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble,
-            pvp_competitive, quickplay and trials_of_osiris.
+            Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private,
+            rumble, pvp_competitive, quickplay and trials_of_osiris.
             
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
-            private_clash, private_control, private_survival, private_rumble, showdown,
-            lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
+            private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched,
+            scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
     -T, --moment <moment>                      
             Start moment from which to pull activities from
             
-            Activities will be retrieved from moment to the current time.
+            Activities will be retrieved from moment to end-moment.
             
             For example, Specifying: --moment weekly will return all activities since the last weekly reset on Tuesday.
             
             Valid values include daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly
-            reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom.
+            reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom as well as the
+            following season moments launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge,
+            season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy,
+            season_of_arrivals, season_of_the_hunt.
             
             When custom is specified, the custom start date in RFC3339 format must be specified with the --custom-time
             argument.
@@ -106,7 +135,8 @@ OPTIONS:
 |---|---|
 | --platform | xbox, playstation, stadia, steam |
 | --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
-| --moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom |
+| --moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt |
+| --end-moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt |
 | --weapon-sort | name, kills (default), games, kills_per_game_kills kills_per_game_total, precision_total, precision_percent, type |
 
 member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
@@ -129,6 +159,12 @@ $ dcliah --member-id 4611686018429783292 --platform xbox --moment month
 
 ```
 $ dcliah --member-id 4611686018429783292 --platform xbox --moment weekend --class titan --mode trials_of_osiris
+```
+
+#### Retrieve all stats for Season of Arrivals
+
+```
+$ dcliah --member-id 4611686018429783292 --platform xbox --moment season_of_arrivals --end-moment season_of_the_hunt
 ```
 
 #### Retrieve all stats for all time for all characters
