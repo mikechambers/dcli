@@ -24,18 +24,20 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
-use dcli::enums::moment::{DateTimePeriod, Moment};
-use dcli::enums::platform::Platform;
 use dcli::enums::standing::Standing;
+use dcli::enums::{
+    completionreason::CompletionReason,
+    moment::{DateTimePeriod, Moment},
+};
 use dcli::manifestinterface::ManifestInterface;
 use dcli::{
     crucible::{
-        AggregateCruciblePerformances, CruciblePlayerActivityPerformance,
-        CruciblePlayerPerformance,
+        AggregateCruciblePerformances, CruciblePlayerActivityPerformance, CruciblePlayerPerformance,
     },
     enums::mode::Mode,
     utils::{calculate_ratio, human_duration},
 };
+use dcli::{enums::platform::Platform, utils::calculate_percent};
 
 use dcli::enums::character::CharacterClassSelection;
 use dcli::enums::weaponsort::WeaponSort;
@@ -43,8 +45,7 @@ use dcli::enums::weaponsort::WeaponSort;
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
 use dcli::utils::{
-    determine_data_dir, format_f32, human_date_format, repeat_str,
-    uppercase_first_char,
+    determine_data_dir, format_f32, human_date_format, repeat_str, uppercase_first_char,
 };
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::EXIT_FAILURE;
@@ -159,7 +160,7 @@ fn print_default(
 
     //TODO: maybe format this to yellow background
     let header = format!(
-        "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+        "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
         "MAP",
         "W/L",
         "STREAK",
@@ -173,6 +174,7 @@ fn print_default(
         "SUP",
         "GREN",
         "MEL",
+        "MERCY",
         "INDEX",
         col_w = col_w,
         map_col_w = map_col_w,
@@ -186,8 +188,8 @@ fn print_default(
 
     let slice: &[CruciblePlayerActivityPerformance] = if is_limited {
         println!(
-            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
-            "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...","...","...",
+            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+            "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...", "...", "...","...",
             col_w = col_w,
             map_col_w = map_col_w,
             str_col_w=str_col_w,
@@ -241,8 +243,14 @@ fn print_default(
         let grenades = extended.weapon_kills_grenade;
         let melees = extended.weapon_kills_melee;
 
+        let mercy_str = if activity.performance.stats.completion_reason == CompletionReason::Mercy {
+            "X"
+        } else {
+            ""
+        };
+
         println!(
-            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
             map_name,
             activity.performance.stats.standing.to_string(),
             streak.to_string(),
@@ -256,6 +264,7 @@ fn print_default(
             supers.to_string(),
             grenades.to_string(),
             melees.to_string(),
+            mercy_str,
             activity.activity_detail.index_id.to_string(),
             col_w = col_w,
             map_col_w=map_col_w,
@@ -268,7 +277,7 @@ fn print_default(
     let extended = aggregate.extended.as_ref().unwrap();
     println!("{}", repeat_str(&"-", header.chars().count()));
 
-    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "TOTAL",
     aggregate.total_activities.to_formatted_string(&Locale::en),
     "",
@@ -282,13 +291,16 @@ fn print_default(
     extended.weapon_kills_super.to_formatted_string(&Locale::en),
     extended.weapon_kills_grenade.to_formatted_string(&Locale::en),
     extended.weapon_kills_melee.to_formatted_string(&Locale::en),
+    aggregate.total_mercy.to_string(),
+    "",
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
     wl_col_w=wl_col_w,
+    id_col_w=id_col_w,
     );
 
-    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "HIGH",
     format!("{}-{}", aggregate.wins.to_formatted_string(&Locale::en), aggregate.losses.to_formatted_string(&Locale::en)),
     format!("{}W {}L", aggregate.longest_win_streak, aggregate.longest_loss_streak),
@@ -303,14 +315,17 @@ fn print_default(
     format!("{}", extended.highest_weapon_kills_super),
     format!("{}", extended.highest_weapon_kills_grenade),
     format!("{}", extended.highest_weapon_kills_melee),
+    "",
+    "",
 
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
     wl_col_w=wl_col_w,
+    id_col_w=id_col_w,
     );
 
-    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "PER GAME",
     format!("{}%", format_f32(aggregate.win_rate, 2)),
     "",
@@ -324,10 +339,13 @@ fn print_default(
     format_f32(aggregate.stat_per_game(extended.weapon_kills_super), 2),
     format_f32(aggregate.stat_per_game(extended.weapon_kills_grenade), 2),
     format_f32(aggregate.stat_per_game(extended.weapon_kills_melee), 2),
+    format!("{}%",format_f32(calculate_percent(aggregate.total_mercy, aggregate.total_activities), 2)),
+    "",
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
     wl_col_w=wl_col_w,
+    id_col_w=id_col_w,
     );
 
     println!("{}", header_divider);
@@ -383,17 +401,13 @@ fn print_default(
         }
         WeaponSort::KillsPerGameTotal => {
             weapons.sort_by(|a, b| {
-                let a_kpg =
-                    calculate_ratio(a.kills, aggregate.total_activities);
-                let b_kpg =
-                    calculate_ratio(b.kills, aggregate.total_activities);
+                let a_kpg = calculate_ratio(a.kills, aggregate.total_activities);
+                let b_kpg = calculate_ratio(b.kills, aggregate.total_activities);
                 b_kpg.partial_cmp(&a_kpg).unwrap()
             });
         }
         WeaponSort::PrecisionTotal => {
-            weapons.sort_by(|a, b| {
-                b.precision_kills.partial_cmp(&a.precision_kills).unwrap()
-            });
+            weapons.sort_by(|a, b| b.precision_kills.partial_cmp(&a.precision_kills).unwrap());
         }
         WeaponSort::PrecisionPercent => {
             weapons.sort_by(|a, b| {
@@ -404,10 +418,8 @@ fn print_default(
         }
         WeaponSort::Type => {
             weapons.sort_by(|a, b| {
-                let a_type =
-                    format!("{}", a.weapon.item_sub_type).to_lowercase();
-                let b_type =
-                    format!("{}", b.weapon.item_sub_type).to_lowercase();
+                let a_type = format!("{}", a.weapon.item_sub_type).to_lowercase();
+                let b_type = format!("{}", b.weapon.item_sub_type).to_lowercase();
 
                 a_type.cmp(&b_type)
             });
@@ -641,36 +653,29 @@ async fn main() {
         _ => opt.end_moment.get_date_time(),
     };
 
-    let time_period =
-        match DateTimePeriod::with_start_end_time(start_time, end_time) {
-            Ok(e) => e,
-            Err(_e) => {
-                eprintln!("--end-moment must be greater than --moment");
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let time_period = match DateTimePeriod::with_start_end_time(start_time, end_time) {
+        Ok(e) => e,
+        Err(_e) => {
+            eprintln!("--end-moment must be greater than --moment");
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
-    let mut store =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
-            .await
-        {
-            Ok(e) => e,
-            Err(e) => {
-                print_error(
-                    "Could not initialize activity store. Have you run dclias?",
-                    e,
-                );
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error(
+                "Could not initialize activity store. Have you run dclias?",
+                e,
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
-                e,
-            );
+            print_error("Could not initialize manifest. Have you run dclim?", e);
             std::process::exit(EXIT_FAILURE);
         }
     };

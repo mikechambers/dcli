@@ -34,8 +34,7 @@ use std::{cmp::max, collections::hash_map::DefaultHasher, hash::Hasher};
 use std::{collections::HashMap, hash::Hash};
 
 use crate::utils::{
-    calculate_efficiency, calculate_kills_deaths_assists,
-    calculate_kills_deaths_ratio,
+    calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio,
 };
 
 const PLAYER_START_BUFFER: u32 = 30;
@@ -56,10 +55,7 @@ pub struct CrucibleActivity {
 }
 
 impl CrucibleActivity {
-    pub fn get_member_performance(
-        &self,
-        member_id: &str,
-    ) -> Option<&CruciblePlayerPerformance> {
+    pub fn get_member_performance(&self, member_id: &str) -> Option<&CruciblePlayerPerformance> {
         for t in self.teams.values() {
             for p in &t.player_performances {
                 if p.player.member_id == member_id {
@@ -219,6 +215,8 @@ pub struct AggregateCruciblePerformances {
     pub longest_win_streak: u32,
     pub longest_loss_streak: u32,
 
+    pub total_mercy: u32,
+
     pub extended: Option<ExtendedCruciblePlayerActivityPerformances>,
 }
 
@@ -227,8 +225,7 @@ impl AggregateCruciblePerformances {
         performances: &[&CruciblePlayerPerformance],
     ) -> AggregateCruciblePerformances {
         let mut out = AggregateCruciblePerformances::default();
-        let mut extended =
-            ExtendedCruciblePlayerActivityPerformances::default();
+        let mut extended = ExtendedCruciblePlayerActivityPerformances::default();
 
         out.total_activities = performances.len() as u32;
 
@@ -242,6 +239,10 @@ impl AggregateCruciblePerformances {
 
         let mut has_extended = false;
         for p in performances {
+            if p.stats.completion_reason == CompletionReason::Mercy {
+                out.total_mercy += 1;
+            };
+
             out.assists += p.stats.assists;
             out.score += p.stats.score;
             out.kills += p.stats.kills;
@@ -257,8 +258,7 @@ impl AggregateCruciblePerformances {
             out.highest_deaths = max(p.stats.deaths, out.highest_deaths);
             out.highest_opponents_defeated =
                 max(p.stats.opponents_defeated, out.highest_opponents_defeated);
-            out.highest_efficiency =
-                out.highest_efficiency.max(p.stats.efficiency);
+            out.highest_efficiency = out.highest_efficiency.max(p.stats.efficiency);
             out.highest_kills_deaths_ratio = out
                 .highest_kills_deaths_ratio
                 .max(p.stats.kills_deaths_ratio);
@@ -289,11 +289,9 @@ impl AggregateCruciblePerformances {
 
             #[allow(clippy::comparison_chain)]
             if streak > 0 {
-                longest_win_streak =
-                    std::cmp::max(longest_win_streak, streak as u32);
+                longest_win_streak = std::cmp::max(longest_win_streak, streak as u32);
             } else if streak < 0 {
-                longest_loss_streak =
-                    std::cmp::max(longest_loss_streak, streak.abs() as u32);
+                longest_loss_streak = std::cmp::max(longest_loss_streak, streak.abs() as u32);
             }
 
             last_standing = p.stats.standing;
@@ -319,18 +317,12 @@ impl AggregateCruciblePerformances {
                     e.weapon_kills_grenade,
                 );
 
-                extended.highest_weapon_kills_melee = max(
-                    extended.highest_weapon_kills_melee,
-                    e.weapon_kills_melee,
-                );
-                extended.highest_weapon_kills_super = max(
-                    extended.highest_weapon_kills_super,
-                    e.weapon_kills_super,
-                );
-                extended.highest_all_medals_earned = max(
-                    extended.highest_all_medals_earned,
-                    e.all_medals_earned,
-                );
+                extended.highest_weapon_kills_melee =
+                    max(extended.highest_weapon_kills_melee, e.weapon_kills_melee);
+                extended.highest_weapon_kills_super =
+                    max(extended.highest_weapon_kills_super, e.weapon_kills_super);
+                extended.highest_all_medals_earned =
+                    max(extended.highest_all_medals_earned, e.all_medals_earned);
 
                 for m in &e.medals {
                     let key = &m.medal.id;
@@ -370,8 +362,7 @@ impl AggregateCruciblePerformances {
                         if ws.kills == 0 {
                             0.0
                         } else {
-                            (ws.precision_kills as f32 / ws.kills as f32)
-                                * 100.0
+                            (ws.precision_kills as f32 / ws.kills as f32) * 100.0
                         }
                     };
                 }
@@ -382,13 +373,11 @@ impl AggregateCruciblePerformances {
         out.longest_loss_streak = longest_loss_streak;
 
         if has_extended {
-            let mut medals: Vec<MedalStat> =
-                medal_hash.into_iter().map(|(_id, m)| m).collect();
+            let mut medals: Vec<MedalStat> = medal_hash.into_iter().map(|(_id, m)| m).collect();
 
             medals.sort_by(|a, b| b.count.cmp(&a.count));
 
-            let mut weapons: Vec<WeaponStat> =
-                weapon_hash.into_iter().map(|(_id, w)| w).collect();
+            let mut weapons: Vec<WeaponStat> = weapon_hash.into_iter().map(|(_id, w)| w).collect();
             weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
 
             extended.medals = medals;
@@ -400,14 +389,11 @@ impl AggregateCruciblePerformances {
         }
 
         if out.total_activities > 0 {
-            out.win_rate =
-                (out.wins as f32 / out.total_activities as f32) * 100.0;
+            out.win_rate = (out.wins as f32 / out.total_activities as f32) * 100.0;
         }
 
-        out.efficiency =
-            calculate_efficiency(out.kills, out.deaths, out.assists);
-        out.kills_deaths_ratio =
-            calculate_kills_deaths_ratio(out.kills, out.deaths);
+        out.efficiency = calculate_efficiency(out.kills, out.deaths, out.assists);
+        out.kills_deaths_ratio = calculate_kills_deaths_ratio(out.kills, out.deaths);
         out.kills_deaths_assists =
             calculate_kills_deaths_assists(out.kills, out.deaths, out.assists);
 
