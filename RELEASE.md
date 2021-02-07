@@ -1,5 +1,8 @@
 # dcli Release Notes
 
+## v0.5.61 February 7, 2021
+* Added moment for Season of the Chosen
+
 ## v0.5.6 February 7, 2021
 * Display mercy data in dcliah
 

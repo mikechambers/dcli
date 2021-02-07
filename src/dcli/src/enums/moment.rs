@@ -64,6 +64,7 @@ pub enum Moment {
     SeasonOfTheWorthy,
     SeasonOfArrivals,
     SeasonOfTheHunt,
+    SeasonOfTheChosen,
 }
 
 impl Moment {
@@ -92,13 +93,12 @@ impl Moment {
             Moment::SeasonOfTheForge => Utc.ymd(2018, 12, 4).and_hms(18, 0, 0),
             Moment::SeasonOfTheDrifter => Utc.ymd(2019, 3, 5).and_hms(18, 0, 0),
             Moment::SeasonOfOpulence => Utc.ymd(2019, 6, 4).and_hms(18, 0, 0),
-            Moment::SeasonOfTheUndying => {
-                Utc.ymd(2019, 10, 1).and_hms(18, 0, 0)
-            }
+            Moment::SeasonOfTheUndying => Utc.ymd(2019, 10, 1).and_hms(18, 0, 0),
             Moment::SeasonOfDawn => Utc.ymd(2019, 12, 10).and_hms(18, 0, 0),
             Moment::SeasonOfTheWorthy => Utc.ymd(2020, 3, 10).and_hms(18, 0, 0),
             Moment::SeasonOfArrivals => Utc.ymd(2020, 6, 9).and_hms(18, 0, 0),
             Moment::SeasonOfTheHunt => Utc.ymd(2020, 11, 10).and_hms(18, 0, 0),
+            Moment::SeasonOfTheChosen => Utc.ymd(2021, 2, 9).and_hms(18, 0, 0),
         }
     }
 }
@@ -140,6 +140,7 @@ impl FromStr for Moment {
             "season_of_the_worthy" => Ok(Moment::SeasonOfTheWorthy),
             "season_of_arrivals" => Ok(Moment::SeasonOfArrivals),
             "season_of_the_hunt" => Ok(Moment::SeasonOfTheHunt),
+            "season_of_the_chosen" => Ok(Moment::SeasonOfTheChosen),
 
             _ => Err("Unknown Moment type"),
         }
@@ -178,6 +179,7 @@ impl fmt::Display for Moment {
             Moment::SeasonOfTheWorthy => "Season of the Worthy",
             Moment::SeasonOfArrivals => "Season of Arrivals",
             Moment::SeasonOfTheHunt => "Season of the Hunt",
+            Moment::SeasonOfTheChosen => "Season of the Chosen",
         };
 
         write!(f, "{}", out)
@@ -199,9 +201,7 @@ impl DateTimePeriod {
         self.end
     }
 
-    pub fn with_start_time(
-        start: DateTime<Utc>,
-    ) -> Result<DateTimePeriod, Error> {
+    pub fn with_start_time(start: DateTime<Utc>) -> Result<DateTimePeriod, Error> {
         let end = Utc::now();
 
         if start > end {
