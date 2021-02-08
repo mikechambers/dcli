@@ -32,8 +32,7 @@ use dcli::enums::{
 use dcli::manifestinterface::ManifestInterface;
 use dcli::{
     crucible::{
-        AggregateCruciblePerformances, CruciblePlayerActivityPerformance,
-        CruciblePlayerPerformance,
+        AggregateCruciblePerformances, CruciblePlayerActivityPerformance, CruciblePlayerPerformance,
     },
     enums::mode::Mode,
     utils::{calculate_ratio, human_duration},
@@ -46,8 +45,7 @@ use dcli::enums::weaponsort::WeaponSort;
 use dcli::activitystoreinterface::ActivityStoreInterface;
 
 use dcli::utils::{
-    determine_data_dir, format_f32, human_date_format, repeat_str,
-    uppercase_first_char,
+    determine_data_dir, format_f32, human_date_format, repeat_str, uppercase_first_char,
 };
 //use dcli::utils::EXIT_FAILURE;
 use dcli::utils::EXIT_FAILURE;
@@ -245,9 +243,7 @@ fn print_default(
         let grenades = extended.weapon_kills_grenade;
         let melees = extended.weapon_kills_melee;
 
-        let mercy_str = if activity.performance.stats.completion_reason
-            == CompletionReason::Mercy
-        {
+        let mercy_str = if activity.performance.stats.completion_reason == CompletionReason::Mercy {
             "X"
         } else {
             ""
@@ -405,17 +401,13 @@ fn print_default(
         }
         WeaponSort::KillsPerGameTotal => {
             weapons.sort_by(|a, b| {
-                let a_kpg =
-                    calculate_ratio(a.kills, aggregate.total_activities);
-                let b_kpg =
-                    calculate_ratio(b.kills, aggregate.total_activities);
+                let a_kpg = calculate_ratio(a.kills, aggregate.total_activities);
+                let b_kpg = calculate_ratio(b.kills, aggregate.total_activities);
                 b_kpg.partial_cmp(&a_kpg).unwrap()
             });
         }
         WeaponSort::PrecisionTotal => {
-            weapons.sort_by(|a, b| {
-                b.precision_kills.partial_cmp(&a.precision_kills).unwrap()
-            });
+            weapons.sort_by(|a, b| b.precision_kills.partial_cmp(&a.precision_kills).unwrap());
         }
         WeaponSort::PrecisionPercent => {
             weapons.sort_by(|a, b| {
@@ -426,10 +418,8 @@ fn print_default(
         }
         WeaponSort::Type => {
             weapons.sort_by(|a, b| {
-                let a_type =
-                    format!("{}", a.weapon.item_sub_type).to_lowercase();
-                let b_type =
-                    format!("{}", b.weapon.item_sub_type).to_lowercase();
+                let a_type = format!("{}", a.weapon.item_sub_type).to_lowercase();
+                let b_type = format!("{}", b.weapon.item_sub_type).to_lowercase();
 
                 a_type.cmp(&b_type)
             });
@@ -542,7 +532,8 @@ struct Opt {
     /// as well as the following season moments launch, curse_of_osiris, warmind,
     /// season_of_the_outlaw, season_of_the_forge, season_of_the_drifter,
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
-    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt.
+    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
+    /// season_of_the_chosen.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --custom-time argument.
@@ -568,7 +559,8 @@ struct Opt {
     /// as well as the following season moments launch, curse_of_osiris, warmind,
     /// season_of_the_outlaw, season_of_the_forge, season_of_the_drifter,
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
-    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt.
+    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
+    /// season_of_the_chosen.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --end-custom-time argument.
@@ -663,36 +655,29 @@ async fn main() {
         _ => opt.end_moment.get_date_time(),
     };
 
-    let time_period =
-        match DateTimePeriod::with_start_end_time(start_time, end_time) {
-            Ok(e) => e,
-            Err(_e) => {
-                eprintln!("--end-moment must be greater than --moment");
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let time_period = match DateTimePeriod::with_start_end_time(start_time, end_time) {
+        Ok(e) => e,
+        Err(_e) => {
+            eprintln!("--end-moment must be greater than --moment");
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
-    let mut store =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
-            .await
-        {
-            Ok(e) => e,
-            Err(e) => {
-                print_error(
-                    "Could not initialize activity store. Have you run dclias?",
-                    e,
-                );
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let mut store = match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error(
+                "Could not initialize activity store. Have you run dclias?",
+                e,
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
-                e,
-            );
+            print_error("Could not initialize manifest. Have you run dclim?", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
