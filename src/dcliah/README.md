@@ -80,7 +80,7 @@ OPTIONS:
             reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom as well as the
             following season moments launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge,
             season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy,
-            season_of_arrivals, season_of_the_hunt.
+            season_of_arrivals, season_of_the_hunt, season_of_the_chosen.
             
             When custom is specified, the custom start date in RFC3339 format must be specified with the --end-custom-
             time argument.
@@ -110,7 +110,7 @@ OPTIONS:
             reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom as well as the
             following season moments launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge,
             season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy,
-            season_of_arrivals, season_of_the_hunt.
+            season_of_arrivals, season_of_the_hunt, season_of_the_chosen.
             
             When custom is specified, the custom start date in RFC3339 format must be specified with the --custom-time
             argument.
@@ -135,8 +135,8 @@ OPTIONS:
 |---|---|
 | --platform | xbox, playstation, stadia, steam |
 | --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
-| --moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt |
-| --end-moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt |
+| --moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt, season_of_the_chosen |
+| --end-moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt, season_of_the_chosen |
 | --weapon-sort | name, kills (default), games, kills_per_game_kills kills_per_game_total, precision_total, precision_percent, type |
 
 member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   

@@ -162,8 +162,6 @@ impl Display for Error {
             Error::DateTimePeriodOrder  => {
                 write!(f, "Start date must be before end date.")
             },
-
-            
         }
     }
 }

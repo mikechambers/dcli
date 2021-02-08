@@ -1,5 +1,11 @@
 # dcli Release Notes
 
+## v0.5.61 February 7, 2021
+* Added moment for Season of the Chosen
+
+## v0.5.6 February 7, 2021
+* Display mercy data in dcliah
+
 ## v0.5.5 January 24, 2021
 * Added player rating to dcliad (this is based on Destiny combat rating, similar to elo)
 * Fixed bug where wrong platform was being stored for players. Requires database update and data to be re-synced

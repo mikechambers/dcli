@@ -24,9 +24,11 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
-use dcli::enums::moment::{DateTimePeriod, Moment};
-use dcli::enums::platform::Platform;
 use dcli::enums::standing::Standing;
+use dcli::enums::{
+    completionreason::CompletionReason,
+    moment::{DateTimePeriod, Moment},
+};
 use dcli::manifestinterface::ManifestInterface;
 use dcli::{
     crucible::{
@@ -35,6 +37,7 @@ use dcli::{
     enums::mode::Mode,
     utils::{calculate_ratio, human_duration},
 };
+use dcli::{enums::platform::Platform, utils::calculate_percent};
 
 use dcli::enums::character::CharacterClassSelection;
 use dcli::enums::weaponsort::WeaponSort;
@@ -71,15 +74,17 @@ fn print_default(
     data: &[CruciblePlayerActivityPerformance],
     activity_limit: &u32,
     mode: &Mode,
+    time_period: &DateTimePeriod,
     moment: &Moment,
-    start_time: &DateTime<Utc>,
     end_moment: &Moment,
-    end_time: &DateTime<Utc>,
     weapon_count: &u32,
     weapon_sort: &WeaponSort,
 ) {
     //todo: might want to look at buffering output
     //https://rust-cli.github.io/book/tutorial/output.html
+
+    let start_time = time_period.get_start();
+    let end_time = time_period.get_end();
 
     let performances = data;
 
@@ -155,7 +160,7 @@ fn print_default(
 
     //TODO: maybe format this to yellow background
     let header = format!(
-        "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+        "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
         "MAP",
         "W/L",
         "STREAK",
@@ -169,6 +174,7 @@ fn print_default(
         "SUP",
         "GREN",
         "MEL",
+        "MERCY",
         "INDEX",
         col_w = col_w,
         map_col_w = map_col_w,
@@ -182,8 +188,8 @@ fn print_default(
 
     let slice: &[CruciblePlayerActivityPerformance] = if is_limited {
         println!(
-            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
-            "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...","...","...",
+            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+            "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...", "...", "...","...",
             col_w = col_w,
             map_col_w = map_col_w,
             str_col_w=str_col_w,
@@ -237,8 +243,14 @@ fn print_default(
         let grenades = extended.weapon_kills_grenade;
         let melees = extended.weapon_kills_melee;
 
+        let mercy_str = if activity.performance.stats.completion_reason == CompletionReason::Mercy {
+            "X"
+        } else {
+            ""
+        };
+
         println!(
-            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+            "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
             map_name,
             activity.performance.stats.standing.to_string(),
             streak.to_string(),
@@ -252,6 +264,7 @@ fn print_default(
             supers.to_string(),
             grenades.to_string(),
             melees.to_string(),
+            mercy_str,
             activity.activity_detail.index_id.to_string(),
             col_w = col_w,
             map_col_w=map_col_w,
@@ -264,7 +277,7 @@ fn print_default(
     let extended = aggregate.extended.as_ref().unwrap();
     println!("{}", repeat_str(&"-", header.chars().count()));
 
-    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "TOTAL",
     aggregate.total_activities.to_formatted_string(&Locale::en),
     "",
@@ -278,13 +291,16 @@ fn print_default(
     extended.weapon_kills_super.to_formatted_string(&Locale::en),
     extended.weapon_kills_grenade.to_formatted_string(&Locale::en),
     extended.weapon_kills_melee.to_formatted_string(&Locale::en),
+    aggregate.total_mercy.to_string(),
+    "",
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
     wl_col_w=wl_col_w,
+    id_col_w=id_col_w,
     );
 
-    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "HIGH",
     format!("{}-{}", aggregate.wins.to_formatted_string(&Locale::en), aggregate.losses.to_formatted_string(&Locale::en)),
     format!("{}W {}L", aggregate.longest_win_streak, aggregate.longest_loss_streak),
@@ -299,14 +315,17 @@ fn print_default(
     format!("{}", extended.highest_weapon_kills_super),
     format!("{}", extended.highest_weapon_kills_grenade),
     format!("{}", extended.highest_weapon_kills_melee),
+    "",
+    "",
 
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
     wl_col_w=wl_col_w,
+    id_col_w=id_col_w,
     );
 
-    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "PER GAME",
     format!("{}%", format_f32(aggregate.win_rate, 2)),
     "",
@@ -320,10 +339,13 @@ fn print_default(
     format_f32(aggregate.stat_per_game(extended.weapon_kills_super), 2),
     format_f32(aggregate.stat_per_game(extended.weapon_kills_grenade), 2),
     format_f32(aggregate.stat_per_game(extended.weapon_kills_melee), 2),
+    format!("{}%",format_f32(calculate_percent(aggregate.total_mercy, aggregate.total_activities), 2)),
+    "",
     col_w = col_w,
     map_col_w=map_col_w,
     str_col_w=str_col_w,
     wl_col_w=wl_col_w,
+    id_col_w=id_col_w,
     );
 
     println!("{}", header_divider);
@@ -510,7 +532,8 @@ struct Opt {
     /// as well as the following season moments launch, curse_of_osiris, warmind,
     /// season_of_the_outlaw, season_of_the_forge, season_of_the_drifter,
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
-    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt.
+    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
+    /// season_of_the_chosen.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --custom-time argument.
@@ -536,7 +559,8 @@ struct Opt {
     /// as well as the following season moments launch, curse_of_osiris, warmind,
     /// season_of_the_outlaw, season_of_the_forge, season_of_the_drifter,
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
-    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt.
+    /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
+    /// season_of_the_chosen.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --end-custom-time argument.
@@ -702,10 +726,9 @@ async fn main() {
         &data,
         &opt.activity_limit,
         &opt.mode,
+        &time_period,
         &opt.moment,
-        &time_period.get_start(),
         &opt.end_moment,
-        &time_period.get_end(),
         &opt.weapon_count,
         &opt.weapon_sort,
     );

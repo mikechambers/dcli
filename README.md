@@ -204,6 +204,10 @@ $ cargo build --release
 
 which will place the compiled tools in *src/target/release*
 
+## Known Issues
+
+* Tied matches are not displayed correctly, and are treated as a Victory.
+
 ## License
 
 Project released under a [MIT License](LICENSE.md).
