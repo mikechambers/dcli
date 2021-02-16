@@ -207,6 +207,7 @@ which will place the compiled tools in *src/target/release*
 ## Known Issues
 
 * Tied matches are not displayed correctly, and are treated as a Victory.
+* If a weapon is encountered which is not in the manifest, you may get a `RowNotFound` Error. You can fix this by running `dclim` to update the manifest.
 
 ## License
 
