@@ -1,5 +1,8 @@
 # dcli Release Notes
 
+## v0.5.62
+* Fixed bug that could cause some activities to never sync property (and could throw RowNotFound error.) Requires all data to be re-synced.
+
 ## v0.5.61 February 7, 2021
 * Added moment for Season of the Chosen
 

@@ -28,10 +28,7 @@ use chrono::{DateTime, Utc};
 
 use crate::{
     crucible::{CrucibleActivity, Team},
-    enums::{
-        completionreason::CompletionReason, moment::DateTimePeriod,
-        standing::Standing,
-    },
+    enums::{completionreason::CompletionReason, moment::DateTimePeriod, standing::Standing},
     response::pgcr::DestinyPostGameCarnageReportEntry,
 };
 use futures::TryStreamExt;
@@ -40,9 +37,8 @@ use sqlx::Row;
 use sqlx::{ConnectOptions, SqliteConnection};
 
 use crate::crucible::{
-    ActivityDetail, CruciblePlayerActivityPerformance,
-    CruciblePlayerPerformance, CrucibleStats, ExtendedCrucibleStats, Item,
-    Medal, MedalStat, Player, WeaponStat,
+    ActivityDetail, CruciblePlayerActivityPerformance, CruciblePlayerPerformance, CrucibleStats,
+    ExtendedCrucibleStats, Item, Medal, MedalStat, Player, WeaponStat,
 };
 use crate::enums::character::{CharacterClass, CharacterClassSelection};
 use crate::enums::medaltier::MedalTier;
@@ -51,13 +47,8 @@ use crate::enums::platform::Platform;
 use crate::{apiinterface::ApiInterface, manifestinterface::ManifestInterface};
 use crate::{
     error::Error,
-    response::pgcr::{
-        DestinyHistoricalStatsValue, DestinyPostGameCarnageReportData,
-    },
-    utils::{
-        calculate_efficiency, calculate_kills_deaths_assists,
-        calculate_kills_deaths_ratio,
-    },
+    response::pgcr::{DestinyHistoricalStatsValue, DestinyPostGameCarnageReportData},
+    utils::{calculate_efficiency, calculate_kills_deaths_assists, calculate_kills_deaths_ratio},
 };
 
 const STORE_FILE_NAME: &str = "dcli.sqlite3";
@@ -168,20 +159,14 @@ impl ActivityStoreInterface {
 
             let a = self.sync_activities(character_row_id, &api).await?;
             let _b = self
-                .update_activity_queue(
-                    character_row_id,
-                    member_id,
-                    character_id,
-                    platform,
-                    &api,
-                )
+                .update_activity_queue(character_row_id, member_id, character_id, platform, &api)
                 .await?;
 
             let c = self.sync_activities(character_row_id, &api).await?;
 
             total_synced += a.total_synced + c.total_synced;
-            total_in_queue += (a.total_available + c.total_available)
-                - (a.total_synced + c.total_synced);
+            total_in_queue +=
+                (a.total_available + c.total_available) - (a.total_synced + c.total_synced);
         }
 
         Ok(SyncResult {
@@ -255,10 +240,7 @@ impl ActivityStoreInterface {
                 match r {
                     Ok(e) => {
                         match e {
-                            Some(e) => match self
-                                .insert_activity(&e, character_row_id)
-                                .await
-                            {
+                            Some(e) => match self.insert_activity(&e, character_row_id).await {
                                 Ok(_e) => {
                                     total_synced += 1;
                                 }
@@ -272,9 +254,7 @@ impl ActivityStoreInterface {
                             },
                             None => {
                                 eprintln!();
-                                eprintln!(
-                                    "PGCR returned empty response. Ignoring."
-                                );
+                                eprintln!("PGCR returned empty response. Ignoring.");
                                 //TODO: should not get here, as none means either an API error
                                 //occured or there is no data associated with the ID (which is
                                 //an api data error).
@@ -352,17 +332,10 @@ impl ActivityStoreInterface {
         mode: &Mode,
         api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
-        let max_id: i64 =
-            self.get_max_activity_id(character_row_id, mode).await?;
+        let max_id: i64 = self.get_max_activity_id(character_row_id, mode).await?;
 
         let result = api
-            .retrieve_activities_since_id(
-                member_id,
-                character_id,
-                platform,
-                mode,
-                max_id,
-            )
+            .retrieve_activities_since_id(member_id, character_id, platform, mode, max_id)
             .await?;
 
         if result.is_none() {
@@ -392,8 +365,7 @@ impl ActivityStoreInterface {
         let mut total = 0;
 
         for activity in activities {
-            let director_activity_hash =
-                activity.details.director_activity_hash;
+            let director_activity_hash = activity.details.director_activity_hash;
 
             //these are DestinyActivityDefinition manifest hashes for gambit private
             //matches
@@ -488,6 +460,8 @@ impl ActivityStoreInterface {
             Err(_e) => (),
         };
 
+        //todo:if it already exists, what should we do? we have the data? do we need to remove
+        //from queue?
         sqlx::query(
             r#"
             INSERT OR IGNORE INTO "main"."activity"
@@ -557,26 +531,15 @@ impl ActivityStoreInterface {
             let class_type = CharacterClass::from_hash(entry.player.class_hash);
 
             let character_row_id = self
-                .insert_character_id(
-                    &entry.character_id,
-                    &class_type,
-                    member_row_id,
-                )
+                .insert_character_id(&entry.character_id, &class_type, member_row_id)
                 .await?;
 
-            self._insert_character_activity_stats(
-                &entry,
-                character_row_id,
-                activity_row_id,
-            )
-            .await?;
+            self._insert_character_activity_stats(&entry, character_row_id, activity_row_id)
+                .await?;
         }
 
-        self.remove_from_activity_queue(
-            &character_row_id,
-            &data.activity_details.instance_id,
-        )
-        .await?;
+        self.remove_from_activity_queue(&character_row_id, &data.activity_details.instance_id)
+            .await?;
 
         Ok(())
     }
@@ -589,21 +552,14 @@ impl ActivityStoreInterface {
     ) -> Result<(), Error> {
         let char_data = entry;
 
-        let medal_hash: &HashMap<String, DestinyHistoricalStatsValue> =
-            &entry.extended.values;
+        let medal_hash: &HashMap<String, DestinyHistoricalStatsValue> = &entry.extended.values;
 
-        let precision_kills: u32 =
-            self.get_medal_hash_value("precisionKills", medal_hash);
-        let weapon_kills_ability: u32 =
-            self.get_medal_hash_value("weaponKillsAbility", medal_hash);
-        let weapon_kills_grenade: u32 =
-            self.get_medal_hash_value("weaponKillsGrenade", medal_hash);
-        let weapon_kills_melee: u32 =
-            self.get_medal_hash_value("weaponKillsMelee", medal_hash);
-        let weapon_kills_super: u32 =
-            self.get_medal_hash_value("weaponKillsSuper", medal_hash);
-        let all_medals_earned: u32 =
-            self.get_medal_hash_value("allMedalsEarned", medal_hash);
+        let precision_kills: u32 = self.get_medal_hash_value("precisionKills", medal_hash);
+        let weapon_kills_ability: u32 = self.get_medal_hash_value("weaponKillsAbility", medal_hash);
+        let weapon_kills_grenade: u32 = self.get_medal_hash_value("weaponKillsGrenade", medal_hash);
+        let weapon_kills_melee: u32 = self.get_medal_hash_value("weaponKillsMelee", medal_hash);
+        let weapon_kills_super: u32 = self.get_medal_hash_value("weaponKillsSuper", medal_hash);
+        let all_medals_earned: u32 = self.get_medal_hash_value("allMedalsEarned", medal_hash);
 
         sqlx::query(
             r#"
@@ -734,10 +690,7 @@ impl ActivityStoreInterface {
         Ok(())
     }
 
-    async fn get_activity_row_id(
-        &mut self,
-        instance_id: i64,
-    ) -> Result<i32, Error> {
+    async fn get_activity_row_id(&mut self, instance_id: i64) -> Result<i32, Error> {
         let row = sqlx::query(
             r#"
             SELECT "id" FROM "activity" WHERE activity_id = ?
@@ -853,11 +806,10 @@ impl ActivityStoreInterface {
         character_row_id: i32,
         mode: &Mode,
     ) -> Result<i64, Error> {
-        //TODO: need to filter based on mode
-        let row = sqlx::query(
+        let rows = sqlx::query(
             r#"
             SELECT
-                MAX(activity.activity_id) as max_activity_id
+                activity_id as max_activity_id
             FROM
                 "activity"
             INNER JOIN
@@ -866,15 +818,20 @@ impl ActivityStoreInterface {
                 modes ON modes.activity = activity.id and modes.mode in (select mode from modes where mode = ?)
             WHERE
                 character_activity_stats.character = ?
+            ORDER BY period DESC LIMIT 1
         "#,
         )
         .bind(mode.to_id().to_string())
         .bind(character_row_id.to_string())
-        .fetch_one(&mut self.db)
+        .fetch_all(&mut self.db)
         .await?;
 
-        let activity_id: i64 = row.try_get("max_activity_id")?;
+        if rows.is_empty() {
+            return Ok(0);
+        }
 
+        let row = &rows[0];
+        let activity_id: i64 = row.try_get("max_activity_id")?;
         Ok(activity_id)
     }
 
@@ -920,8 +877,7 @@ impl ActivityStoreInterface {
             },
         };
 
-        let crucible_activity =
-            self.populate_activity_data(&activity_row, manifest).await?;
+        let crucible_activity = self.populate_activity_data(&activity_row, manifest).await?;
         Ok(crucible_activity)
     }
 
@@ -933,9 +889,7 @@ impl ActivityStoreInterface {
         mode: &Mode,
         manifest: &mut ManifestInterface,
     ) -> Result<CrucibleActivity, Error> {
-        let activity_row = if character_selection
-            == &CharacterClassSelection::All
-        {
+        let activity_row = if character_selection == &CharacterClassSelection::All {
             match sqlx::query(
                 r#"
                 SELECT
@@ -975,11 +929,7 @@ impl ActivityStoreInterface {
             }
         } else {
             let character_id = self
-                .retrieve_character_selection_id(
-                    member_id,
-                    platform,
-                    character_selection,
-                )
+                .retrieve_character_selection_id(member_id, platform, character_selection)
                 .await?;
 
             match sqlx::query(
@@ -1019,8 +969,7 @@ impl ActivityStoreInterface {
                 }
         };
 
-        let crucible_activity =
-            self.populate_activity_data(&activity_row, manifest).await?;
+        let crucible_activity = self.populate_activity_data(&activity_row, manifest).await?;
         Ok(crucible_activity)
     }
 
@@ -1065,11 +1014,9 @@ impl ActivityStoreInterface {
             let score: i32 = t.try_get("score")?;
             let score = score as u32;
 
-            let player_performances: Vec<CruciblePlayerPerformance> =
-                Vec::new();
+            let player_performances: Vec<CruciblePlayerPerformance> = Vec::new();
 
-            let display_name =
-                team_names.pop().unwrap_or_else(|| "".to_string());
+            let display_name = team_names.pop().unwrap_or_else(|| "".to_string());
 
             let team = Team {
                 standing,
@@ -1086,8 +1033,7 @@ impl ActivityStoreInterface {
         //this also covered any bugs where no teams are specified
         let mut no_teams = false;
         if teams.is_empty() {
-            let display_name =
-                team_names.pop().unwrap_or_else(|| "".to_string());
+            let display_name = team_names.pop().unwrap_or_else(|| "".to_string());
 
             let team = Team {
                 standing: Standing::Unknown,
@@ -1179,12 +1125,10 @@ impl ActivityStoreInterface {
                     None => return Err(Error::CharacterDoesNotExist),
                 }
             }
-            CharacterClassSelection::LastActive => {
-                match characters.get_last_active_ref() {
-                    Some(e) => e.id.to_string(),
-                    None => return Err(Error::CharacterDoesNotExist),
-                }
-            }
+            CharacterClassSelection::LastActive => match characters.get_last_active_ref() {
+                Some(e) => e.id.to_string(),
+                None => return Err(Error::CharacterDoesNotExist),
+            },
         };
 
         Ok(out)
@@ -1200,20 +1144,11 @@ impl ActivityStoreInterface {
         manifest: &mut ManifestInterface,
     ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
         let out = if character_selection == &CharacterClassSelection::All {
-            self.retrieve_activities_for_member_since(
-                member_id,
-                mode,
-                time_period,
-                manifest,
-            )
-            .await?
+            self.retrieve_activities_for_member_since(member_id, mode, time_period, manifest)
+                .await?
         } else {
             let character_id = self
-                .retrieve_character_selection_id(
-                    member_id,
-                    platform,
-                    character_selection,
-                )
+                .retrieve_character_selection_id(member_id, platform, character_selection)
                 .await?;
 
             self.retrieve_activities_for_character(
@@ -1301,8 +1236,7 @@ impl ActivityStoreInterface {
         time_period: &DateTimePeriod,
         manifest: &mut ManifestInterface,
     ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
-        let character_index =
-            self.get_character_row_id(member_id, character_id).await?;
+        let character_index = self.get_character_row_id(member_id, character_id).await?;
 
         //if mode if private, we dont restrict results
         let restrict_mode_id = if mode.is_private() {
@@ -1396,16 +1330,13 @@ impl ActivityStoreInterface {
             activity_row.try_get_unchecked("director_activity_hash")?;
         let director_activity_hash: u32 = director_activity_hash as u32;
 
-        let reference_id: i64 =
-            activity_row.try_get_unchecked("reference_id")?;
+        let reference_id: i64 = activity_row.try_get_unchecked("reference_id")?;
         let reference_id: u32 = reference_id as u32;
 
-        let index_id: i32 =
-            activity_row.try_get_unchecked("activity_index_id")?;
+        let index_id: i32 = activity_row.try_get_unchecked("activity_index_id")?;
         let index_id: u32 = index_id as u32;
 
-        let activity_definition =
-            manifest.get_activity_definition(reference_id).await?;
+        let activity_definition = manifest.get_activity_definition(reference_id).await?;
 
         let activity_detail = ActivityDetail {
             index_id,
@@ -1445,8 +1376,7 @@ impl ActivityStoreInterface {
         let completed: i32 = activity_row.try_get_unchecked("completed")?;
         let completed: bool = completed == 1;
 
-        let opponents_defeated: i32 =
-            activity_row.try_get_unchecked("opponents_defeated")?;
+        let opponents_defeated: i32 = activity_row.try_get_unchecked("opponents_defeated")?;
         let opponents_defeated: u32 = opponents_defeated as u32;
 
         let activity_duration_seconds: i32 =
@@ -1459,48 +1389,37 @@ impl ActivityStoreInterface {
 
         let team: i32 = activity_row.try_get_unchecked("team")?;
 
-        let completion_reason: i32 =
-            activity_row.try_get_unchecked("completion_reason")?;
-        let completion_reason =
-            CompletionReason::from_id(completion_reason as u32);
+        let completion_reason: i32 = activity_row.try_get_unchecked("completion_reason")?;
+        let completion_reason = CompletionReason::from_id(completion_reason as u32);
 
-        let start_seconds: i32 =
-            activity_row.try_get_unchecked("start_seconds")?;
+        let start_seconds: i32 = activity_row.try_get_unchecked("start_seconds")?;
         let start_seconds: u32 = start_seconds as u32;
 
-        let time_played_seconds: i32 =
-            activity_row.try_get_unchecked("time_played_seconds")?;
+        let time_played_seconds: i32 = activity_row.try_get_unchecked("time_played_seconds")?;
         let time_played_seconds: u32 = time_played_seconds as u32;
 
-        let player_count: i32 =
-            activity_row.try_get_unchecked("player_count")?;
+        let player_count: i32 = activity_row.try_get_unchecked("player_count")?;
         let player_count: u32 = player_count as u32;
 
         let team_score: i32 = activity_row.try_get_unchecked("team_score")?;
         let team_score: u32 = team_score as u32;
 
-        let precision_kills: i32 =
-            activity_row.try_get_unchecked("precision_kills")?;
+        let precision_kills: i32 = activity_row.try_get_unchecked("precision_kills")?;
         let precision_kills: u32 = precision_kills as u32;
 
-        let weapon_kills_ability: i32 =
-            activity_row.try_get_unchecked("weapon_kills_ability")?;
+        let weapon_kills_ability: i32 = activity_row.try_get_unchecked("weapon_kills_ability")?;
         let weapon_kills_ability: u32 = weapon_kills_ability as u32;
 
-        let weapon_kills_grenade: i32 =
-            activity_row.try_get_unchecked("weapon_kills_grenade")?;
+        let weapon_kills_grenade: i32 = activity_row.try_get_unchecked("weapon_kills_grenade")?;
         let weapon_kills_grenade: u32 = weapon_kills_grenade as u32;
 
-        let weapon_kills_melee: i32 =
-            activity_row.try_get_unchecked("weapon_kills_melee")?;
+        let weapon_kills_melee: i32 = activity_row.try_get_unchecked("weapon_kills_melee")?;
         let weapon_kills_melee: u32 = weapon_kills_melee as u32;
 
-        let weapon_kills_super: i32 =
-            activity_row.try_get_unchecked("weapon_kills_super")?;
+        let weapon_kills_super: i32 = activity_row.try_get_unchecked("weapon_kills_super")?;
         let weapon_kills_super: u32 = weapon_kills_super as u32;
 
-        let all_medals_earned: i32 =
-            activity_row.try_get_unchecked("all_medals_earned")?;
+        let all_medals_earned: i32 = activity_row.try_get_unchecked("all_medals_earned")?;
         let all_medals_earned: u32 = all_medals_earned as u32;
 
         let character_activity_stats_index: i64 =
@@ -1515,21 +1434,18 @@ impl ActivityStoreInterface {
         .fetch_all(&mut self.db)
         .await?;
 
-        let mut weapon_stats: Vec<WeaponStat> =
-            Vec::with_capacity(weapon_rows.len());
+        let mut weapon_stats: Vec<WeaponStat> = Vec::with_capacity(weapon_rows.len());
         for weapon_row in &weapon_rows {
-            let reference_id: i64 =
-                weapon_row.try_get_unchecked("reference_id")?;
+            let reference_id: i64 = weapon_row.try_get_unchecked("reference_id")?;
             let reference_id = reference_id as u32;
 
             let kills: i32 = weapon_row.try_get_unchecked("kills")?;
-            let precision_kills: i32 =
-                weapon_row.try_get_unchecked("precision_kills")?;
-            let precision_kills_percent: f32 =
-                weapon_row.try_get("kills_precision_kills_ratio")?;
+            let precision_kills: i32 = weapon_row.try_get_unchecked("precision_kills")?;
+            let precision_kills_percent: f32 = weapon_row.try_get("kills_precision_kills_ratio")?;
 
-            let item_definition =
-                manifest.get_iventory_item_definition(reference_id).await?;
+            let item_definition = manifest.get_iventory_item_definition(reference_id).await?;
+
+            //TODO: catch error here if not found
 
             let name: String = item_definition
                 .display_properties
@@ -1564,11 +1480,9 @@ impl ActivityStoreInterface {
         .fetch_all(&mut self.db)
         .await?;
 
-        let mut medal_stats: Vec<MedalStat> =
-            Vec::with_capacity(medal_rows.len());
+        let mut medal_stats: Vec<MedalStat> = Vec::with_capacity(medal_rows.len());
         for medal_row in &medal_rows {
-            let reference_id: String =
-                medal_row.try_get_unchecked("reference_id")?;
+            let reference_id: String = medal_row.try_get_unchecked("reference_id")?;
 
             let count: i32 = medal_row.try_get_unchecked("count")?;
             let count: u32 = count as u32;
@@ -1612,9 +1526,7 @@ impl ActivityStoreInterface {
             opponents_defeated,
             efficiency: calculate_efficiency(kills, deaths, assists),
             kills_deaths_ratio: calculate_kills_deaths_ratio(kills, deaths),
-            kills_deaths_assists: calculate_kills_deaths_assists(
-                kills, deaths, assists,
-            ),
+            kills_deaths_assists: calculate_kills_deaths_assists(kills, deaths, assists),
             activity_duration_seconds,
             standing,
             team,
@@ -1636,8 +1548,7 @@ impl ActivityStoreInterface {
         let member_id: String = activity_row.try_get_unchecked("member_id")?;
         let character_id = activity_row.try_get_unchecked("character_id")?;
         let platform_id: i32 = activity_row.try_get_unchecked("platform_id")?;
-        let display_name: String =
-            activity_row.try_get_unchecked("display_name")?;
+        let display_name: String = activity_row.try_get_unchecked("display_name")?;
         let light_level: i32 = activity_row.try_get_unchecked("light_level")?;
         let class_type: i32 = activity_row.try_get_unchecked("class")?;
         let class_type = CharacterClass::from_id(class_type as u32);
@@ -1661,8 +1572,7 @@ impl ActivityStoreInterface {
         manifest: &mut ManifestInterface,
         activity_row: &sqlx::sqlite::SqliteRow,
     ) -> Result<CruciblePlayerActivityPerformance, Error> {
-        let activity_detail =
-            self.parse_activity(manifest, activity_row).await?;
+        let activity_detail = self.parse_activity(manifest, activity_row).await?;
         let stats = self.parse_crucible_stats(manifest, activity_row).await?;
         let player = self.parse_player(activity_row).await?;
 
