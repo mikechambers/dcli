@@ -67,7 +67,7 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia.exe . && strip dclia.exe && cp src/target/${TARGET_NAME}/release/dclic.exe . && strip dclic.exe  && cp src/target/${TARGET_NAME}/release/dcliad.exe . && strip dcliad.exe && cp src/target/${TARGET_NAME}/release/dclims.exe . && strip dclims.exe && cp src/target/${TARGET_NAME}/release/dclim.exe . && strip dclim.exe && cp src/target/${TARGET_NAME}/release/dclis.exe . && strip dclis.exe && cp src/target/${TARGET_NAME}/release/dclitime.exe . && strip dclitime.exe && cp src/target/${TARGET_NAME}/release/dcliah.exe . && strip dcliah.exe && cp src/target/${TARGET_NAME}/release/dclias.exe . && strip dclias.exe
+        run: rustup.exe update && echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia.exe . && strip dclia.exe && cp src/target/${TARGET_NAME}/release/dclic.exe . && strip dclic.exe  && cp src/target/${TARGET_NAME}/release/dcliad.exe . && strip dcliad.exe && cp src/target/${TARGET_NAME}/release/dclims.exe . && strip dclims.exe && cp src/target/${TARGET_NAME}/release/dclim.exe . && strip dclim.exe && cp src/target/${TARGET_NAME}/release/dclis.exe . && strip dclis.exe && cp src/target/${TARGET_NAME}/release/dclitime.exe . && strip dclitime.exe && cp src/target/${TARGET_NAME}/release/dcliah.exe . && strip dcliah.exe && cp src/target/${TARGET_NAME}/release/dclias.exe . && strip dclias.exe
         shell: bash
       - name: Package
         if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
@@ -114,7 +114,7 @@ jobs:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
           DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dcliad . && strip dcliad && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && cp src/target/${TARGET_NAME}/release/dclias . && strip dclias && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dclic dcliad dclims dclim dclis dclitime dcliah dclias
+        run: rustup update && echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dcliad . && strip dcliad && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && cp src/target/${TARGET_NAME}/release/dclias . && strip dclias && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dclic dcliad dclims dclim dclis dclitime dcliah dclias
         
       - name: Release
         uses: softprops/action-gh-release@v1

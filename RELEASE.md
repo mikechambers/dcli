@@ -1,9 +1,9 @@
 # dcli Release Notes
 
-## v0.5.62
+## v0.5.62 February 19, 2021
 * Fixed bug that could cause some activities to never sync property (and could throw RowNotFound error.) Requires all data to be re-synced.
 * Fixed issues where errors would occur if new data is found in API, and manifest hasnt been updated yet.
-* Updated required compiler version, and a number of libraries.
+* Updated required compiler version (1.50.0), and a number of libraries (tokio, sqlx, reqwest).
 
 ## v0.5.61 February 7, 2021
 * Added moment for Season of the Chosen
