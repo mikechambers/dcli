@@ -34,7 +34,7 @@ use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose};
 use manifest_info::ManifestInfo;
 use structopt::StructOpt;
-use tokio::prelude::*;
+use tokio::io::AsyncWriteExt;
 
 pub const MANIFEST_INFO_FILE_NAME: &str = "manifest_info.json";
 

@@ -1,7 +1,7 @@
 [package]
 name = "dcli"
 #version
-version = "0.5.61"
+version = "0.5.62"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
 edition = "2018"
 description = "Library for the dcli collection of command line tools for Destiny 2."
@@ -13,7 +13,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version="0.10.8"}
+reqwest = { version="0.11.1"}
 serde = "1.0.117"
 serde_derive = "1.0.117"
 serde_json = "1.0.59"
