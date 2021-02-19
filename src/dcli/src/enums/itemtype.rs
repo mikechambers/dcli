@@ -25,6 +25,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 #[derive(PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
 #[repr(i32)]
 pub enum ItemType {
+    Unknown = -1,
     None = 0,
     Currency = 1,
     Armor = 2,
@@ -57,6 +58,7 @@ pub enum ItemType {
 #[derive(PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
 #[repr(i32)]
 pub enum ItemSubType {
+    Unknown = -1,
     None = 0,
     Crucible = 1,
     Vanguard = 2,
@@ -93,6 +95,7 @@ impl std::fmt::Display for ItemSubType {
     // This trait requires `fmt` with this exact signature.
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let out = match self {
+            ItemSubType::Unknown => "Unknown".to_string(),
             ItemSubType::AutoRifle => "Auto Rifle".to_string(),
             ItemSubType::Machinegun => "Machine Gun".to_string(),
             ItemSubType::HandCannon => "Hand Cannon".to_string(),

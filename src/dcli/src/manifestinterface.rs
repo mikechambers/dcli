@@ -32,9 +32,8 @@ use std::collections::HashMap;
 
 use crate::error::Error;
 use crate::manifest::definitions::{
-    ActivityDefinitionData, ActivityTypeDefinitionData,
-    DestinationDefinitionData, DisplayPropertiesData,
-    HistoricalStatsDefinition, InventoryItemDefinitionData,
+    ActivityDefinitionData, ActivityTypeDefinitionData, DestinationDefinitionData,
+    DisplayPropertiesData, HistoricalStatsDefinition, InventoryItemDefinitionData,
     PlaceDefinitionData,
 };
 
@@ -55,15 +54,11 @@ pub struct ManifestInterface {
     manifest_db: SqliteConnection,
     activity_definition_cache: HashMap<i64, ActivityDefinitionData>,
     inventory_item_definition_cache: HashMap<i64, InventoryItemDefinitionData>,
-    historical_stats_definition_cache:
-        HashMap<String, HistoricalStatsDefinition>,
+    historical_stats_definition_cache: HashMap<String, HistoricalStatsDefinition>,
 }
 
 impl ManifestInterface {
-    pub async fn new(
-        manifest_dir: &PathBuf,
-        cache: bool,
-    ) -> Result<ManifestInterface, Error> {
+    pub async fn new(manifest_dir: &PathBuf, cache: bool) -> Result<ManifestInterface, Error> {
         let manifest_path = manifest_dir.join(MANIFEST_FILE_NAME);
 
         if !manifest_path.exists() {
@@ -165,8 +160,7 @@ impl ManifestInterface {
             //for some reason sqlx doesnt let you bind table names
             let q = format!("SELECT json FROM {} WHERE id=?", table);
 
-            let mut rows =
-                sqlx::query(&q).bind(id).fetch(&mut self.manifest_db);
+            let mut rows = sqlx::query(&q).bind(id).fetch(&mut self.manifest_db);
 
             while let Some(row) = rows.try_next().await? {
                 // map the row into a user-defined domain type
@@ -181,9 +175,7 @@ impl ManifestInterface {
         Ok(out)
     }
 
-    pub async fn get_tables_with_id_column(
-        &mut self,
-    ) -> Result<Vec<String>, Error> {
+    pub async fn get_tables_with_id_column(&mut self) -> Result<Vec<String>, Error> {
         let mut tables: Vec<String> = Vec::new();
 
         //select all of the tables which have an id column
@@ -200,9 +192,8 @@ impl ManifestInterface {
     pub async fn get_tables(&mut self) -> Result<Vec<String>, Error> {
         let mut tables: Vec<String> = Vec::new();
 
-        let mut rows =
-            sqlx::query("SELECT name FROM sqlite_master WHERE type='table'")
-                .fetch(&mut self.manifest_db);
+        let mut rows = sqlx::query("SELECT name FROM sqlite_master WHERE type='table'")
+            .fetch(&mut self.manifest_db);
 
         while let Some(row) = rows.try_next().await? {
             let name: &str = row.try_get("name")?;
@@ -215,22 +206,25 @@ impl ManifestInterface {
     pub async fn get_activity_definition(
         &mut self,
         id: u32,
-    ) -> Result<ActivityDefinitionData, Error> {
+    ) -> Result<Option<ActivityDefinitionData>, Error> {
         let id = convert_hash_to_id(id);
 
         if self.activity_definition_cache.contains_key(&id) {
             let out = self.activity_definition_cache.get(&id).unwrap();
 
-            return Ok(out.clone());
+            return Ok(Some(out.clone()));
         }
 
         let query = &format!(
             "SELECT json FROM DestinyActivityDefinition WHERE id = {}",
             id
         );
-        let data: ActivityDefinitionData = self.get_definition(query).await?;
+        let data: Option<ActivityDefinitionData> = self.get_definition(query).await?;
 
-        self.activity_definition_cache.insert(id, data.clone());
+        if data.is_some() {
+            self.activity_definition_cache
+                .insert(id, data.as_ref().unwrap().clone());
+        }
 
         Ok(data)
     }
@@ -239,24 +233,26 @@ impl ManifestInterface {
     pub async fn get_iventory_item_definition(
         &mut self,
         id: u32,
-    ) -> Result<InventoryItemDefinitionData, Error> {
+    ) -> Result<Option<InventoryItemDefinitionData>, Error> {
         let id = convert_hash_to_id(id);
 
         if self.inventory_item_definition_cache.contains_key(&id) {
             let out = self.inventory_item_definition_cache.get(&id).unwrap();
 
-            return Ok(out.clone());
+            return Ok(Some(out.clone()));
         }
 
         let query = &format!(
             "SELECT json FROM DestinyInventoryItemDefinition WHERE id = {}",
             id
         );
-        let data: InventoryItemDefinitionData =
-            self.get_definition(query).await?;
 
-        self.inventory_item_definition_cache
-            .insert(id, data.clone());
+        let data: Option<InventoryItemDefinitionData> = self.get_definition(query).await?;
+
+        if data.is_some() {
+            self.inventory_item_definition_cache
+                .insert(id, data.as_ref().unwrap().clone());
+        }
 
         Ok(data)
     }
@@ -264,12 +260,12 @@ impl ManifestInterface {
     pub async fn get_historical_stats_definition(
         &mut self,
         id: &str,
-    ) -> Result<HistoricalStatsDefinition, Error> {
+    ) -> Result<Option<HistoricalStatsDefinition>, Error> {
         //let key = &(*id).clone().to_string();
         let key = id;
         if self.historical_stats_definition_cache.contains_key(key) {
             let out = self.historical_stats_definition_cache.get(key).unwrap();
-            return Ok(out.clone());
+            return Ok(Some(out.clone()));
         }
 
         let query = &format!(
@@ -277,11 +273,12 @@ impl ManifestInterface {
             key
         );
 
-        let data: HistoricalStatsDefinition =
-            self.get_definition(query).await?;
+        let data: Option<HistoricalStatsDefinition> = self.get_definition(query).await?;
 
-        self.historical_stats_definition_cache
-            .insert(key.to_string(), data.clone());
+        if data.is_some() {
+            self.historical_stats_definition_cache
+                .insert(key.to_string(), data.as_ref().unwrap().clone());
+        }
 
         Ok(data)
     }
@@ -289,15 +286,14 @@ impl ManifestInterface {
     pub async fn get_destination_definition(
         &mut self,
         id: u32,
-    ) -> Result<DestinationDefinitionData, Error> {
+    ) -> Result<Option<DestinationDefinitionData>, Error> {
         let id = convert_hash_to_id(id);
 
         let query = &format!(
             "SELECT json FROM DestinyDestinationDefinition WHERE id = {}",
             id
         );
-        let data: DestinationDefinitionData =
-            self.get_definition(query).await?;
+        let data: Option<DestinationDefinitionData> = self.get_definition(query).await?;
 
         Ok(data)
     }
@@ -305,14 +301,11 @@ impl ManifestInterface {
     pub async fn get_place_definition(
         &mut self,
         id: u32,
-    ) -> Result<PlaceDefinitionData, Error> {
+    ) -> Result<Option<PlaceDefinitionData>, Error> {
         let id = convert_hash_to_id(id);
 
-        let query = &format!(
-            "SELECT json FROM DestinyPlaceDefinition WHERE id = {}",
-            id
-        );
-        let data: PlaceDefinitionData = self.get_definition(query).await?;
+        let query = &format!("SELECT json FROM DestinyPlaceDefinition WHERE id = {}", id);
+        let data: Option<PlaceDefinitionData> = self.get_definition(query).await?;
 
         Ok(data)
     }
@@ -320,15 +313,14 @@ impl ManifestInterface {
     pub async fn get_activity_type_definition(
         &mut self,
         id: u32,
-    ) -> Result<ActivityTypeDefinitionData, Error> {
+    ) -> Result<Option<ActivityTypeDefinitionData>, Error> {
         let id = convert_hash_to_id(id);
 
         let query = &format!(
             "SELECT json FROM DestinyActivityTypeDefinition WHERE id = {}",
             id
         );
-        let data: ActivityTypeDefinitionData =
-            self.get_definition(query).await?;
+        let data: Option<ActivityTypeDefinitionData> = self.get_definition(query).await?;
 
         Ok(data)
     }
@@ -336,18 +328,19 @@ impl ManifestInterface {
     async fn get_definition<T: serde::de::DeserializeOwned>(
         &mut self,
         query: &str,
-    ) -> Result<T, Error> {
-        let row = sqlx::query(query).fetch_one(&mut self.manifest_db).await?;
+    ) -> Result<Option<T>, Error> {
+        let rows = sqlx::query(query).fetch_all(&mut self.manifest_db).await?;
 
-        //TODO: check what happens if this returns nothing
-        //will throw an error if no results returned
-        //{ description: "sqlx::Error : no rows returned by a query that expected to return at least one row" }
+        if rows.is_empty() {
+            return Ok(None);
+        }
 
+        let row = &rows[0];
         let json: &str = row.try_get_unchecked("json")?;
 
         let data: T = serde_json::from_str(json)?;
 
-        Ok(data)
+        Ok(Some(data))
     }
 }
 

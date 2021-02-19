@@ -28,7 +28,12 @@ use chrono::{DateTime, Utc};
 
 use crate::{
     crucible::{CrucibleActivity, Team},
-    enums::{completionreason::CompletionReason, moment::DateTimePeriod, standing::Standing},
+    enums::{
+        completionreason::CompletionReason,
+        itemtype::{ItemSubType, ItemType},
+        moment::DateTimePeriod,
+        standing::Standing,
+    },
     response::pgcr::DestinyPostGameCarnageReportEntry,
 };
 use futures::TryStreamExt;
@@ -1338,11 +1343,16 @@ impl ActivityStoreInterface {
 
         let activity_definition = manifest.get_activity_definition(reference_id).await?;
 
+        let map_name = match activity_definition {
+            Some(e) => e.display_properties.name,
+            None => "Unknown".to_string(),
+        };
+
         let activity_detail = ActivityDetail {
             index_id,
             id: activity_id,
             period,
-            map_name: activity_definition.display_properties.name,
+            map_name,
             mode: Mode::from_id(mode_id as u32)?,
             platform: Platform::from_id(platform_id as u32),
             director_activity_hash,
@@ -1447,17 +1457,35 @@ impl ActivityStoreInterface {
 
             //TODO: catch error here if not found
 
-            let name: String = item_definition
-                .display_properties
-                .description
-                .unwrap_or_else(|| "".to_string());
+            let description: String;
+            let name: String;
+            let item_type: ItemType;
+            let item_sub_type: ItemSubType;
+
+            match item_definition {
+                Some(e) => {
+                    description = e
+                        .display_properties
+                        .description
+                        .unwrap_or_else(|| "".to_string());
+                    name = e.display_properties.name;
+                    item_type = e.item_type;
+                    item_sub_type = e.item_sub_type;
+                }
+                None => {
+                    name = "Unknown".to_string();
+                    description = "".to_string();
+                    item_type = ItemType::Unknown;
+                    item_sub_type = ItemSubType::Unknown;
+                }
+            };
 
             let item: Item = Item {
                 id: reference_id,
-                name: item_definition.display_properties.name,
-                description: name,
-                item_type: item_definition.item_type,
-                item_sub_type: item_definition.item_sub_type,
+                name,
+                description,
+                item_type,
+                item_sub_type,
             };
 
             let ws = WeaponStat {
@@ -1491,12 +1519,35 @@ impl ActivityStoreInterface {
                 .get_historical_stats_definition(&reference_id)
                 .await?;
 
+            let id: String;
+            let icon_image_path: Option<String>;
+            let tier: MedalTier;
+            let name: String;
+            let description: String;
+
+            match medal_definition {
+                Some(e) => {
+                    id = e.id;
+                    icon_image_path = e.icon_image_path;
+                    tier = e.medal_tier.unwrap_or(MedalTier::Unknown);
+                    name = e.name;
+                    description = e.description;
+                }
+                None => {
+                    id = reference_id;
+                    icon_image_path = None;
+                    tier = MedalTier::Unknown;
+                    name = "Unknown".to_string();
+                    description = "".to_string();
+                }
+            };
+
             let medal = Medal {
-                id: medal_definition.id,
-                icon_image_path: medal_definition.icon_image_path,
-                tier: medal_definition.medal_tier.unwrap_or(MedalTier::Unknown),
-                name: medal_definition.name,
-                description: medal_definition.description,
+                id,
+                icon_image_path,
+                tier,
+                name,
+                description,
             };
 
             let medal_stat = MedalStat { medal, count };

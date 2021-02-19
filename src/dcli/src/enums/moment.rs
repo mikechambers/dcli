@@ -93,7 +93,9 @@ impl Moment {
             Moment::SeasonOfTheForge => Utc.ymd(2018, 12, 4).and_hms(18, 0, 0),
             Moment::SeasonOfTheDrifter => Utc.ymd(2019, 3, 5).and_hms(18, 0, 0),
             Moment::SeasonOfOpulence => Utc.ymd(2019, 6, 4).and_hms(18, 0, 0),
-            Moment::SeasonOfTheUndying => Utc.ymd(2019, 10, 1).and_hms(18, 0, 0),
+            Moment::SeasonOfTheUndying => {
+                Utc.ymd(2019, 10, 1).and_hms(18, 0, 0)
+            }
             Moment::SeasonOfDawn => Utc.ymd(2019, 12, 10).and_hms(18, 0, 0),
             Moment::SeasonOfTheWorthy => Utc.ymd(2020, 3, 10).and_hms(18, 0, 0),
             Moment::SeasonOfArrivals => Utc.ymd(2020, 6, 9).and_hms(18, 0, 0),
@@ -201,7 +203,9 @@ impl DateTimePeriod {
         self.end
     }
 
-    pub fn with_start_time(start: DateTime<Utc>) -> Result<DateTimePeriod, Error> {
+    pub fn with_start_time(
+        start: DateTime<Utc>,
+    ) -> Result<DateTimePeriod, Error> {
         let end = Utc::now();
 
         if start > end {

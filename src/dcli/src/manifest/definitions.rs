@@ -27,10 +27,10 @@ pub struct InventoryItemDefinitionData {
     pub display_properties: DisplayPropertiesData,
 
     #[serde(rename = "itemTypeDisplayName")]
-    pub item_type_display_name: String,
+    pub item_type_display_name: Option<String>,
 
     #[serde(rename = "itemTypeAndTierDisplayName")]
-    pub item_type_and_tier_display_name: String,
+    pub item_type_and_tier_display_name: Option<String>,
 
     #[serde(rename = "itemType")]
     pub item_type: ItemType,
@@ -48,10 +48,7 @@ pub struct ActivityDefinitionData {
     pub display_properties: DisplayPropertiesData,
 
     #[serde(default)]
-    #[serde(
-        rename = "pgcrImage",
-        deserialize_with = "prepend_base_url_option"
-    )]
+    #[serde(rename = "pgcrImage", deserialize_with = "prepend_base_url_option")]
     pub pgcr_image: Option<String>,
 
     #[serde(rename = "destinationHash")]

@@ -155,7 +155,7 @@ async fn main() {
         ),
         opt.verbose,
     );
-    let activity_data_m: ActivityDefinitionData = match manifest
+    let activity_data_m: Option<ActivityDefinitionData> = match manifest
         .get_activity_definition(activity_data_a.current_activity_hash)
         .await
     {
@@ -165,6 +165,13 @@ async fn main() {
             std::process::exit(EXIT_FAILURE);
         }
     };
+
+    if activity_data_m.is_none() {
+        println!("Unknown activity. Make sure you have synced the latest version of the manifest using dclim.");
+        return;
+    }
+
+    let activity_data_m = activity_data_m.unwrap();
 
     if activity_data_m.place_hash == ORBIT_PLACE_HASH {
         match opt.output {
@@ -186,7 +193,7 @@ async fn main() {
         ),
         opt.verbose,
     );
-    let place_data_m: PlaceDefinitionData = match manifest
+    let place_data_m: Option<PlaceDefinitionData> = match manifest
         .get_place_definition(activity_data_m.place_hash)
         .await
     {
@@ -197,6 +204,12 @@ async fn main() {
         }
     };
 
+    if place_data_m.is_none() {
+        println!("Unknown location. Make sure you have synced the latest version of the manifest using dclim.");
+        return;
+    }
+    let place_data_m = place_data_m.unwrap();
+
     print_verbose(
         &format!(
             "Getting destination definition data from manifest : {}",
@@ -204,7 +217,7 @@ async fn main() {
         ),
         opt.verbose,
     );
-    let destination_data_m: DestinationDefinitionData = match manifest
+    let destination_data_m: Option<DestinationDefinitionData> = match manifest
         .get_destination_definition(activity_data_m.destination_hash)
         .await
     {
@@ -214,6 +227,13 @@ async fn main() {
             std::process::exit(EXIT_FAILURE);
         }
     };
+
+    if destination_data_m.is_none() {
+        println!("Unknown destination. Make sure you have synced the latest version of the manifest using dclim.");
+        return;
+    }
+
+    let destination_data_m = destination_data_m.unwrap();
 
     let mut mode = Mode::None;
 
@@ -244,7 +264,10 @@ async fn main() {
                 )
                 .await
             {
-                Ok(e) => e.display_properties.name,
+                Ok(e) => match e {
+                    Some(e) => e.display_properties.name,
+                    None => "Unknown".to_string(),
+                },
                 Err(e) => {
                     print_verbose(
                         &format!(
