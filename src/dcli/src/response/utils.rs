@@ -22,7 +22,7 @@
 
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::Deserialize;
-//use serde_derive::Deserialize;
+use serde_derive::Deserialize;
 
 use crate::apiutils::RESOURCE_BASE_URL;
 use crate::enums::standing::STANDING_UNKNOWN_MAGIC_NUMBER;
@@ -111,9 +111,7 @@ where
 
 //BUG: this doesnt get called if the property is not include in the JSON
 //https://github.com/serde-rs/json/issues/734
-pub fn property_to_option_float<'de, D>(
-    deserializer: D,
-) -> Result<Option<f32>, D::Error>
+pub fn property_to_option_float<'de, D>(deserializer: D) -> Result<Option<f32>, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
@@ -155,14 +153,11 @@ where
     })
 }
 
-pub fn prepend_base_url_option<'de, D>(
-    deserializer: D,
-) -> Result<Option<String>, D::Error>
+pub fn prepend_base_url_option<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
-    Option::<String>::deserialize(deserializer).map(|o: Option<String>| match o
-    {
+    Option::<String>::deserialize(deserializer).map(|o: Option<String>| match o {
         Some(e) => {
             let mut s = String::from(RESOURCE_BASE_URL);
             s.push_str(&e);
@@ -192,9 +187,7 @@ where
 }
 
 //str_to_datetime
-pub fn str_to_datetime<'de, D>(
-    deserializer: D,
-) -> Result<DateTime<Utc>, D::Error>
+pub fn str_to_datetime<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {

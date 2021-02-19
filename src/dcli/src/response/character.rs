@@ -21,8 +21,7 @@
 */
 
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-//use serde_derive::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 use crate::enums::character::{CharacterClass, CharacterGender, CharacterRace};
 
