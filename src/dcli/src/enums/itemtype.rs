@@ -103,7 +103,7 @@ impl std::fmt::Display for ItemSubType {
             ItemSubType::FusionRifle => "Fusion Rifle".to_string(),
             ItemSubType::SniperRifle => "Sniper Rifle".to_string(),
             ItemSubType::PulseRifle => "Pulse Rifle".to_string(),
-            ItemSubType::ScoutRifle => "Scount Rifle".to_string(),
+            ItemSubType::ScoutRifle => "Scout Rifle".to_string(),
             ItemSubType::FusionRifleLine => "Linear Fusion Rifle".to_string(),
             ItemSubType::GrenadeLauncher => "Grenade Launcher".to_string(),
             ItemSubType::SubmachineGun => "Submachine Gun".to_string(),
