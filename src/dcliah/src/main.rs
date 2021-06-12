@@ -543,7 +543,7 @@ struct Opt {
     /// season_of_the_outlaw, season_of_the_forge, season_of_the_drifter,
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
     /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
-    /// season_of_the_chosen.
+    /// season_of_the_chosen, season_of_the_splicer.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --custom-time argument.
@@ -570,7 +570,7 @@ struct Opt {
     /// season_of_the_outlaw, season_of_the_forge, season_of_the_drifter,
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
     /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
-    /// season_of_the_chosen.
+    /// season_of_the_chosen, season_of_the_splicer.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --end-custom-time argument.
