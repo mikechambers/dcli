@@ -2,6 +2,7 @@
 
 ## v0.5.63 June 11, 2021
 * Added Season of the Splicer moment.
+* Fixed typo for Scout Rifles. (Thanks alexcpsec for the patch).
 
 ## v0.5.62 February 19, 2021
 * Fixed bug that could cause some activities to never sync property (and could throw RowNotFound error.) Requires all data to be re-synced.
