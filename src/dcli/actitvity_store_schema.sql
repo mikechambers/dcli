@@ -19,10 +19,11 @@ CREATE TABLE IF NOT EXISTS "main"."version" (
     "version"   INTEGER NOT NULL UNIQUE
 );
 
-INSERT INTO "main"."version"("version") VALUES (6);
+INSERT INTO "main"."version"("version") VALUES (7);
 
 CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
     "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+    "synced" INTEGER NOT NULL DEFAULT 0,
     "activity_id" INTEGER NOT NULL,
     "character"	INTEGER NOT NULL,
     UNIQUE("activity_id", "character"),

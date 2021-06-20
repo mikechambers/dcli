@@ -2,6 +2,7 @@
 
 ## v0.6
 * Fixed bug which could cause activity sync to get in infinite loop if error occurs when saving activity data.
+* Added rust-toolchain.toml to force 1.50.0 version of rust when compiling. More recent versions of rust break some of the packages used and will not compile.
 
 ## v0.5.63 June 11, 2021
 * Added Season of the Splicer moment.

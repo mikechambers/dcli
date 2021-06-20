@@ -190,7 +190,12 @@ You can also log bugs and features requests on the [issues page](https://github.
 
 ## Compiling
 
-Tools are written and compiled in [Rust](https://www.rust-lang.org/).
+Tools are written and compiled in [Rust](https://www.rust-lang.org/). The 1.50.0 rust version is required, which can be installed and set via:
+
+```
+$ rustup toolchain install 1.50.0
+$ rustup override set 1.50.0
+```
 
 ![Build Status](https://github.com/mikechambers/dcli/workflows/dcli/badge.svg)
 
