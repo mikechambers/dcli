@@ -1,5 +1,8 @@
 # dcli Release Notes
 
+## v0.6
+* Fixed bug which could cause activity sync to get in infinite loop if error occurs when saving activity data.
+
 ## v0.5.63 June 11, 2021
 * Added Season of the Splicer moment.
 * Fixed typo for Scout Rifles. (Thanks alexcpsec for the patch).

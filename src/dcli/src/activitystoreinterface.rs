@@ -486,18 +486,18 @@ impl ActivityStoreInterface {
             .await
         {
             Ok(_e) => {
+                //If we have already synced it, remove it from queue
+                self.remove_from_activity_queue(
+                    &character_row_id,
+                    &data.activity_details.instance_id,
+                )
+                .await?;
+
                 return Ok(());
             }
             Err(_e) => (),
         };
 
-        //todo:if it already exists, what should we do? we have the data? do we need to remove
-        //from queue?
-        //TODO: we should exit out here if we already have the activity.
-        //maybe do a select first to see if we already have it? if so, remove it from the queue.
-        //otherwise, we can get into a weird state where it never adds it (will error each time)
-        //but also, will never remove from the queue.
-        //TODO: if this happens, you have to wipe DB.
         sqlx::query(
             r#"
             INSERT OR IGNORE INTO "main"."activity"
