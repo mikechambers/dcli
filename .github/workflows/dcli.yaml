@@ -67,7 +67,7 @@ jobs:
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
           TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
-        run: rustup.exe update && echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia.exe . && strip dclia.exe && cp src/target/${TARGET_NAME}/release/dclic.exe . && strip dclic.exe  && cp src/target/${TARGET_NAME}/release/dcliad.exe . && strip dcliad.exe && cp src/target/${TARGET_NAME}/release/dclims.exe . && strip dclims.exe && cp src/target/${TARGET_NAME}/release/dclim.exe . && strip dclim.exe && cp src/target/${TARGET_NAME}/release/dclis.exe . && strip dclis.exe && cp src/target/${TARGET_NAME}/release/dclitime.exe . && strip dclitime.exe && cp src/target/${TARGET_NAME}/release/dcliah.exe . && strip dcliah.exe && cp src/target/${TARGET_NAME}/release/dclias.exe . && strip dclias.exe
+        run: rustup.exe toolchain install 1.50.0 && rustup.exe override set 1.50.0 && echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia.exe . && strip dclia.exe && cp src/target/${TARGET_NAME}/release/dclic.exe . && strip dclic.exe  && cp src/target/${TARGET_NAME}/release/dcliad.exe . && strip dcliad.exe && cp src/target/${TARGET_NAME}/release/dclims.exe . && strip dclims.exe && cp src/target/${TARGET_NAME}/release/dclim.exe . && strip dclim.exe && cp src/target/${TARGET_NAME}/release/dclis.exe . && strip dclis.exe && cp src/target/${TARGET_NAME}/release/dclitime.exe . && strip dclitime.exe && cp src/target/${TARGET_NAME}/release/dcliah.exe . && strip dcliah.exe && cp src/target/${TARGET_NAME}/release/dclias.exe . && strip dclias.exe
         shell: bash
       - name: Package
         if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
