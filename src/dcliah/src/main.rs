@@ -370,18 +370,19 @@ fn print_default(
     println!();
 
     let wep_col = map_col_w + col_w;
+    let col_w_w = col_w + 2;
     let wep_header_str = format!(
         "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
         "WEAPON",
         "GAMES",
         "KILLS",
-        "% TOTAL",
         "K/Gk",
-        "K/Gt",
+        "% TOTAL",
+        "WIN %",
         "PREC",
         "% PREC",
         "TYPE",
-        col_w = col_w,
+        col_w = col_w_w,
         map_col_w = wep_col,
     );
 
@@ -414,15 +415,6 @@ fn print_default(
                 b_kpk.partial_cmp(&a_kpk).unwrap()
             });
         }
-        WeaponSort::KillsPerGameTotal => {
-            weapons.sort_by(|a, b| {
-                let a_kpg =
-                    calculate_ratio(a.kills, aggregate.total_activities);
-                let b_kpg =
-                    calculate_ratio(b.kills, aggregate.total_activities);
-                b_kpg.partial_cmp(&a_kpg).unwrap()
-            });
-        }
         WeaponSort::PrecisionTotal => {
             weapons.sort_by(|a, b| {
                 b.precision_kills.partial_cmp(&a.precision_kills).unwrap()
@@ -433,6 +425,13 @@ fn print_default(
                 b.precision_kills_percent
                     .partial_cmp(&a.precision_kills_percent)
                     .unwrap()
+            });
+        }
+        WeaponSort::WinPercent => {
+            weapons.sort_by(|a, b| {
+                let a_wp = calculate_percent(a.wins, a.activity_count);
+                let b_wp = calculate_percent(b.wins, b.activity_count);
+                b_wp.partial_cmp(&a_wp).unwrap()
             });
         }
         WeaponSort::Type => {
@@ -455,20 +454,20 @@ fn print_default(
             w.weapon.name,
             w.activity_count.to_formatted_string(&Locale::en),
             w.kills.to_formatted_string(&Locale::en),
-            format!("{}%", format_f32((w.kills as f32 / aggregate.kills as f32) * 100.0, 2)),
             format_f32(calculate_ratio(w.kills, w.activity_count), 2),
-            format_f32(calculate_ratio(w.kills, aggregate.total_activities), 2),
+            format!("{}%", format_f32((w.kills as f32 / aggregate.kills as f32) * 100.0, 2)),
+            format!("{}%", format_f32(calculate_percent(w.wins, w.activity_count), 2)),
             w.precision_kills.to_formatted_string(&Locale::en),
             format!("{}%", format_f32(w.precision_kills_percent, 2)),
             format!("{}", w.weapon.item_sub_type),
-            col_w = col_w,
+            col_w = col_w_w,
             map_col_w = wep_col,
         );
     }
     println!();
     println!("% TOTAL - Percentage of all kills");
-    println!("K/Gk - Kills per game with a kill with the weapon");
-    println!("K/Gt - Kills per game across all games ");
+    println!("K/Gk - Kills per game in games with a kill with the weapon");
+    println!("WIN % - Win percentage in games with a kill with the weapon.");
     println!();
 }
 
@@ -625,7 +624,7 @@ struct Opt {
     /// Specify weapon stats sort order
     ///
     /// Valid values include name, kills (default), games, kills_per_game_kills,
-    /// kills_per_game_total, precision_total, precision_percent, type
+    /// precision_total, precision_percent, type, wins_percent
     #[structopt(short = "W", long = "weapon-sort", default_value = "kills")]
     weapon_sort: WeaponSort,
 

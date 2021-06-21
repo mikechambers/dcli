@@ -29,9 +29,9 @@ pub enum WeaponSort {
     Kills,
     Games,
     KillsPerGameKills,
-    KillsPerGameTotal,
     PrecisionTotal,
     PrecisionPercent,
+    WinPercent,
     Type,
 }
 
@@ -48,9 +48,9 @@ impl FromStr for WeaponSort {
             "kills" => Ok(WeaponSort::Kills),
             "games" => Ok(WeaponSort::Games),
             "kills_per_game_kills" => Ok(WeaponSort::KillsPerGameKills),
-            "kills_per_game_total" => Ok(WeaponSort::KillsPerGameTotal),
             "precision_total" => Ok(WeaponSort::PrecisionTotal),
             "precision_percent" => Ok(WeaponSort::PrecisionPercent),
+            "wins_percent" => Ok(WeaponSort::WinPercent),
             "type" => Ok(WeaponSort::Type),
 
             _ => Err("Unknown WeaponSort type"),

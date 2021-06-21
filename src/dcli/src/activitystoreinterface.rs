@@ -1524,6 +1524,11 @@ impl ActivityStoreInterface {
         .fetch_all(&mut self.db)
         .await?;
 
+        let win_count: u32 = match standing {
+            Standing::Victory => 1,
+            _ => 0,
+        };
+
         let mut weapon_stats: Vec<WeaponStat> =
             Vec::with_capacity(weapon_rows.len());
         for weapon_row in &weapon_rows {
@@ -1578,6 +1583,7 @@ impl ActivityStoreInterface {
                 precision_kills,
                 precision_kills_percent,
                 activity_count: 1,
+                wins: win_count,
             };
 
             weapon_stats.push(ws);

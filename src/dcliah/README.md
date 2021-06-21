@@ -126,7 +126,7 @@ OPTIONS:
     -W, --weapon-sort <weapon-sort>            
             Specify weapon stats sort order
             
-            Valid values include name, kills (default), games, kills_per_game_kills, kills_per_game_total,
+            Valid values include name, kills (default), games, kills_per_game_kills, wins_percent,
             precision_total, precision_percent, type [default: kills]
 ```
 

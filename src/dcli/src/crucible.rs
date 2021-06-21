@@ -163,6 +163,7 @@ pub struct WeaponStat {
     pub precision_kills: u32,
     pub precision_kills_percent: f32,
     pub activity_count: u32,
+    pub wins: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -364,6 +365,7 @@ impl AggregateCruciblePerformances {
                             e.activity_count += 1;
                             e.kills += w.kills;
                             e.precision_kills += w.precision_kills;
+                            e.wins += w.wins;
                             e
                         }
                         None => {
