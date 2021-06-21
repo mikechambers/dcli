@@ -62,8 +62,6 @@ In general, there are 3 steps to take before you can begin getting data:
 2. Download the manifest (dclim) and sync your activities (dclias)
 3. View your stats (dcliah)
 
-
-
 ### Retrieve your member id, platform and character ids
 
 The first thing we will do is retrieve your Destiny member id and platform for your primary Destiny account. 
