@@ -507,9 +507,11 @@ impl ActivityStoreInterface {
             Err(_e) => (),
         };
 
+        //throw an error if we try to insert and it already exists. That should never
+        //happen since we check for that above.
         sqlx::query(
             r#"
-            INSERT OR IGNORE INTO "main"."activity"
+            INSERT INTO "main"."activity"
                 ("activity_id","period","mode","platform","director_activity_hash", "reference_id") 
             VALUES (?,?,?,?,?, ?)
         "#,
