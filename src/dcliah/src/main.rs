@@ -81,6 +81,7 @@ fn print_default(
     end_moment: &Moment,
     weapon_count: &u32,
     weapon_sort: &WeaponSort,
+    character_class_selection: &CharacterClassSelection,
 ) {
     //todo: might want to look at buffering output
     //https://rust-cli.github.io/book/tutorial/output.html
@@ -105,21 +106,31 @@ fn print_default(
     println!();
     println!();
 
+    let char_class = match character_class_selection {
+        CharacterClassSelection::Hunter => "Hunter",
+        CharacterClassSelection::Titan => "Titan",
+        CharacterClassSelection::Warlock => "Warlock",
+        CharacterClassSelection::All => "all characters",
+        CharacterClassSelection::LastActive => "last active character",
+    };
+
     let title = if end_moment == &Moment::Now {
         format!(
-            "{mode} activities since {start_time} ({moment})",
+            "{mode} activities for {char_class} since {start_time} ({moment})",
             mode = uppercase_first_char(&format!("{}", mode)),
             start_time = start_time_label,
             moment = moment,
+            char_class = char_class,
         )
     } else {
         format!(
-            "{mode} activities from {start_time} ({moment}) to {end_time} ({end_moment})",
+            "{mode} activities for {char_class} from {start_time} ({moment}) to {end_time} ({end_moment})",
             mode = uppercase_first_char(&format!("{}", mode)),
             start_time = start_time_label,
             moment = moment,
             end_time = end_time_label,
             end_moment = end_moment,
+            char_class = char_class,
         )
     };
 
@@ -748,5 +759,6 @@ async fn main() {
         &opt.end_moment,
         &opt.weapon_count,
         &opt.weapon_sort,
+        &opt.character_class_selection,
     );
 }
