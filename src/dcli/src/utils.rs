@@ -239,13 +239,13 @@ pub fn get_last_weekly_reset() -> DateTime<Utc> {
 
 pub fn get_last_friday_reset() -> DateTime<Utc> {
     //get a hardcoded past reset date / time (17:00 UTC every friday)
-    let past_reset: DateTime<Utc> = Utc.ymd(2020, 12, 4).and_hms(18, 0, 0);
+    let past_reset: DateTime<Utc> = Utc.ymd(2020, 12, 4).and_hms(17, 0, 0);
     find_previous_moment(past_reset, WEEK_IN_SECONDS)
 }
 
 pub fn get_last_daily_reset() -> DateTime<Utc> {
     //get a hardcoded past daily date / time (17:00 UTC every tuesday)
-    let past_reset: DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(18, 0, 0);
+    let past_reset: DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);
 
     find_previous_moment(past_reset, DAY_IN_SECONDS)
 }

@@ -88,22 +88,22 @@ impl Moment {
             Moment::Custom => Utc.ymd(0, 0, 0).and_hms(0, 0, 0),
 
             Moment::Launch => Utc.ymd(2017, 9, 6).and_hms(0, 0, 1),
-            Moment::CurseOfOsiris => Utc.ymd(2017, 12, 5).and_hms(18, 0, 0),
-            Moment::Warmind => Utc.ymd(2018, 5, 8).and_hms(18, 0, 0),
-            Moment::SeasonOfTheOutlaw => Utc.ymd(2018, 9, 4).and_hms(18, 0, 0),
-            Moment::SeasonOfTheForge => Utc.ymd(2018, 12, 4).and_hms(18, 0, 0),
-            Moment::SeasonOfTheDrifter => Utc.ymd(2019, 3, 5).and_hms(18, 0, 0),
-            Moment::SeasonOfOpulence => Utc.ymd(2019, 6, 4).and_hms(18, 0, 0),
+            Moment::CurseOfOsiris => Utc.ymd(2017, 12, 5).and_hms(17, 0, 0),
+            Moment::Warmind => Utc.ymd(2018, 5, 8).and_hms(17, 0, 0),
+            Moment::SeasonOfTheOutlaw => Utc.ymd(2018, 9, 4).and_hms(17, 0, 0),
+            Moment::SeasonOfTheForge => Utc.ymd(2018, 12, 4).and_hms(17, 0, 0),
+            Moment::SeasonOfTheDrifter => Utc.ymd(2019, 3, 5).and_hms(17, 0, 0),
+            Moment::SeasonOfOpulence => Utc.ymd(2019, 6, 4).and_hms(17, 0, 0),
             Moment::SeasonOfTheUndying => {
-                Utc.ymd(2019, 10, 1).and_hms(18, 0, 0)
+                Utc.ymd(2019, 10, 1).and_hms(17, 0, 0)
             }
-            Moment::SeasonOfDawn => Utc.ymd(2019, 12, 10).and_hms(18, 0, 0),
-            Moment::SeasonOfTheWorthy => Utc.ymd(2020, 3, 10).and_hms(18, 0, 0),
-            Moment::SeasonOfArrivals => Utc.ymd(2020, 6, 9).and_hms(18, 0, 0),
-            Moment::SeasonOfTheHunt => Utc.ymd(2020, 11, 10).and_hms(18, 0, 0),
-            Moment::SeasonOfTheChosen => Utc.ymd(2021, 2, 9).and_hms(18, 0, 0),
+            Moment::SeasonOfDawn => Utc.ymd(2019, 12, 10).and_hms(17, 0, 0),
+            Moment::SeasonOfTheWorthy => Utc.ymd(2020, 3, 10).and_hms(17, 0, 0),
+            Moment::SeasonOfArrivals => Utc.ymd(2020, 6, 9).and_hms(17, 0, 0),
+            Moment::SeasonOfTheHunt => Utc.ymd(2020, 11, 10).and_hms(17, 0, 0),
+            Moment::SeasonOfTheChosen => Utc.ymd(2021, 2, 9).and_hms(17, 0, 0),
             Moment::SeasonOfTheSplicer => {
-                Utc.ymd(2021, 5, 11).and_hms(18, 0, 0)
+                Utc.ymd(2021, 5, 11).and_hms(17, 0, 0)
             }
         }
     }
