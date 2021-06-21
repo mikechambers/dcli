@@ -16,12 +16,12 @@ jobs:
       - name: Build
         uses: stevenleadbeater/rust-musl-builder@master
         with:
-          args: /bin/bash -c "export DESTINY_API_KEY=${{ secrets.DESTINY_API_KEY }} && rustup toolchain install 1.50.0 && rustup target add x86_64-unknown-linux-musl && rustup override set 1.50.0 && cd src/ && cargo build --release --target=x86_64-unknown-linux-musl"
+          args: /bin/bash -c "export DESTINY_API_KEY=${{ secrets.DESTINY_API_KEY }} && rustup toolchain install 1.50.0 && rustup target add x86_64-unknown-linux-musl --toolchain-1.50.0 && rustup override set 1.50.0 && cd src/ && cargo build --release --target=x86_64-unknown-linux-musl"
       - name: Process and Package
         if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
-          TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
+          TARGET_NAM E: ${{ steps.config.outputs.TARGET_NAME }}
         run: echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dcliad . && strip dcliad && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && cp src/target/${TARGET_NAME}/release/dclias . && strip dclias && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dclic dcliad dclims dclim dclis dclitime dcliah dclias
         
       - name: Release
