@@ -86,6 +86,12 @@ fn print_default(
     //todo: might want to look at buffering output
     //https://rust-cli.github.io/book/tutorial/output.html
 
+    let player_name = if !data.is_empty() {
+        format!("{}", &data[0].performance.player.display_name)
+    } else {
+        "".to_string()
+    };
+
     let start_time = time_period.get_start();
     let end_time = time_period.get_end();
 
@@ -114,23 +120,26 @@ fn print_default(
         CharacterClassSelection::LastActive => "last active character",
     };
 
+    //todo: if player name is empty, then the sentence below will be a little weird
     let title = if end_moment == &Moment::Now {
         format!(
-            "{mode} activities for {char_class} since {start_time} ({moment})",
+            "{mode} activities for {player_name} on {char_class} since {start_time} ({moment})",
             mode = uppercase_first_char(&format!("{}", mode)),
             start_time = start_time_label,
             moment = moment,
             char_class = char_class,
+            player_name = player_name,
         )
     } else {
         format!(
-            "{mode} activities for {char_class} from {start_time} ({moment}) to {end_time} ({end_moment})",
+            "{mode} activities for {player_name} on {char_class} from {start_time} ({moment}) to {end_time} ({end_moment})",
             mode = uppercase_first_char(&format!("{}", mode)),
             start_time = start_time_label,
             moment = moment,
             end_time = end_time_label,
             end_moment = end_moment,
             char_class = char_class,
+            player_name = player_name,
         )
     };
 
