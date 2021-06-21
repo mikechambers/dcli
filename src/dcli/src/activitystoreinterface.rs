@@ -205,7 +205,12 @@ impl ActivityStoreInterface {
         {
             let mut rows = sqlx::query(
                 r#"
-                    SELECT "activity_id" from "activity_queue" where character = ?
+                    SELECT
+                        "activity_id"
+                    FROM
+                        "activity_queue"
+                    WHERE
+                        character = ? AND synced = 0
                 "#,
             )
             .bind(format!("{}", character_row_id))
@@ -415,6 +420,10 @@ impl ActivityStoreInterface {
 
             let instance_id = activity.details.instance_id;
 
+            //TODO: its possible we could insert the activity, and its already been
+            //synced for another character. we could potentially detect this, and when we
+            //insert it we flag it as already synced. Need to check if this would impact
+            //update logic for detecting new activities (seeing which was the latest synced)
             match sqlx::query(
                 "INSERT into activity_queue ('activity_id', 'character') VALUES (?, ?)",
             )
@@ -733,7 +742,9 @@ impl ActivityStoreInterface {
     ) -> Result<(), Error> {
         sqlx::query(
             r#"
-            DELETE FROM "main"."activity_queue" WHERE character = ? and activity_id = ?
+            UPDATE "main"."activity_queue"
+            SET synced = 1
+            WHERE character = ? and activity_id = ?
         "#,
         )
         .bind(character_row_id.to_string())
@@ -866,24 +877,28 @@ impl ActivityStoreInterface {
         let rows = sqlx::query(
             r#"
             SELECT
-                activity_id as max_activity_id
+                activity_queue.activity_id as max_activity_id
             FROM
-                "activity"
+                "activity_queue"
             INNER JOIN
+                activity ON activity_queue.activity_id = activity.activity_id,
                 character_activity_stats ON character_activity_stats.activity = activity.id,
                 character on character_activity_stats.character = character.id,
                 modes ON modes.activity = activity.id and modes.mode in (select mode from modes where mode = ?)
             WHERE
-                character_activity_stats.character = ?
-            ORDER BY period DESC LIMIT 1
+                character_activity_stats.character = ? AND
+                activity_queue.character = ?
+            ORDER BY activity.period DESC LIMIT 1
         "#,
         )
         .bind(mode.to_id().to_string())
+        .bind(character_row_id.to_string())
         .bind(character_row_id.to_string())
         .fetch_all(&mut self.db)
         .await?;
 
         if rows.is_empty() {
+            println!("NO PREVIOUS ITEMS RETURNING 0");
             return Ok(0);
         }
 
