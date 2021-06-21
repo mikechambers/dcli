@@ -16,7 +16,7 @@ jobs:
       - name: Build
         uses: stevenleadbeater/rust-musl-builder@master
         with:
-          args: /bin/bash -c "export DESTINY_API_KEY=${{ secrets.DESTINY_API_KEY }} && rustup toolchain install 1.50.0 && rustup target add x86_64-unknown-linux-musl --toolchain-1.50.0 && rustup override set 1.50.0 && cd src/ && cargo build --release --target=x86_64-unknown-linux-musl"
+          args: /bin/bash -c "export DESTINY_API_KEY=${{ secrets.DESTINY_API_KEY }} && rustup toolchain install 1.50.0 && rustup target add x86_64-unknown-linux-musl --toolchain=1.50.0 && rustup override set 1.50.0 && cd src/ && cargo build --release --target=x86_64-unknown-linux-musl"
       - name: Process and Package
         if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
