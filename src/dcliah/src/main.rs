@@ -476,7 +476,7 @@ fn print_default(
     println!();
     println!("% TOTAL - Percentage of all kills");
     println!("K/Gk - Kills per game in games with a kill with the weapon");
-    println!("WIN % - Win percentage in games with a kill with the weapon.");
+    println!("WIN % - Win percentage in games with a kill with the weapon");
     println!();
 }
 
