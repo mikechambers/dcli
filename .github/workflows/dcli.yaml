@@ -21,7 +21,7 @@ jobs:
         if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
-          TARGET_NAM E: ${{ steps.config.outputs.TARGET_NAME }}
+          TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
         run: echo SOURCE_TAG ${SOURCE_TAG} && echo TARGET_NAME ${TARGET_NAME} && ls -l src/target/ && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dclic . && strip dclic  && cp src/target/${TARGET_NAME}/release/dcliad . && strip dcliad && cp src/target/${TARGET_NAME}/release/dclims . && strip dclims && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclis . && strip dclis && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && cp src/target/${TARGET_NAME}/release/dclias . && strip dclias && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dclic dcliad dclims dclim dclis dclitime dcliah dclias
         
       - name: Release
