@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.6.3 Unreleased
+* Update compiler version to 1.53.0
+* Updated all crates to latest version
+
 ## v0.6.2 June 21, 2021
 * Added support for tracking data for multiple players. This requires all data to be re-synced.
 * Fixed bug which could cause activity sync to get in infinite loop if error occured when saving activity data.

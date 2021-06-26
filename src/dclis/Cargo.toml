@@ -13,12 +13,13 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-structopt = "0.3"
-tokio = { version="1.0.1", features=["full"] }
-serde = "1.0.117"
-serde_json = "1.0.59"
-serde_derive = "1.0.117"
+structopt = "0.3.21"
+tokio = { version="1.7.1", features=["full"] }
+serde = "1.0.126"
+serde_json = "1.0.64"
+serde_derive = "1.0.126"
 percent-encoding = "2.1.0"
-reqwest = { version="0.10.8"}
+reqwest = { version="0.11.4"}
+
 
 dcli = { path = "../dcli/"}

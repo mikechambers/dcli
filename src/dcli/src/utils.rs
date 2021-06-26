@@ -22,7 +22,7 @@
 
 use std::env;
 use std::ffi::OsStr;
-use std::io::{stdout, Write};
+use std::io::stdout;
 use std::path::Path;
 use std::path::PathBuf;
 

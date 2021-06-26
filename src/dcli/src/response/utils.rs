@@ -22,7 +22,7 @@
 
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::Deserialize;
-use serde_derive::Deserialize;
+//use serde_derive::Deserialize;
 
 use crate::apiutils::RESOURCE_BASE_URL;
 use crate::enums::standing::STANDING_UNKNOWN_MAGIC_NUMBER;
@@ -37,12 +37,12 @@ pub fn property_to_i32_value<'de, D>(deserializer: D) -> Result<i32, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
-    #[derive(Deserialize)]
+    #[derive(serde_derive::Deserialize)]
     struct Outer {
         pub basic: Inner,
     }
 
-    #[derive(Deserialize)]
+    #[derive(serde_derive::Deserialize)]
     struct Inner {
         pub value: f32,
     }
@@ -55,12 +55,12 @@ pub fn property_to_u32_value<'de, D>(deserializer: D) -> Result<u32, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
-    #[derive(Deserialize)]
+    #[derive(serde_derive::Deserialize)]
     struct Outer {
         pub basic: Inner,
     }
 
-    #[derive(Deserialize)]
+    #[derive(serde_derive::Deserialize)]
     struct Inner {
         pub value: f32,
     }
@@ -75,12 +75,12 @@ pub fn property_to_value<'de, D, T: serde::de::Deserialize<'de>>(
 where
     D: serde::de::Deserializer<'de>,
 {
-    #[derive(Deserialize)]
+    #[derive(serde_derive::Deserialize)]
     struct Outer<T> {
         pub basic: Inner<T>,
     }
 
-    #[derive(Deserialize)]
+    #[derive(serde_derive::Deserialize)]
     struct Inner<T> {
         pub value: T,
     }
@@ -94,12 +94,12 @@ pub fn property_to_standing<'de, D>(deserializer: D) -> Result<Standing, D::Erro
 where
     D: serde::de::Deserializer<'de>,
 {
-    #[derive(Deserialize)]
+    #[derive(serde_derive::Deserialize)]
     struct Outer {
         pub basic: Inner,
     }
 
-    #[derive(Deserialize)]
+    #[derive(serde_derive::Deserialize)]
     struct Inner {
         pub value: f32,
     }
@@ -117,12 +117,12 @@ pub fn property_to_option_float<'de, D>(
 where
     D: serde::de::Deserializer<'de>,
 {
-    #[derive(Deserialize, Debug)]
+    #[derive(serde_derive::Deserialize, Debug)]
     struct Outer {
         pub basic: Inner,
     }
 
-    #[derive(Deserialize, Debug)]
+    #[derive(serde_derive::Deserialize, Debug)]
     struct Inner {
         pub value: f32,
     }
