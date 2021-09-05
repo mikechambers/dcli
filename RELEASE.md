@@ -1,6 +1,6 @@
 # dcli Release Notes
 
-## v0.6.3 August 27, 2021
+## v0.6.3 September 5, 2021
 * Added support / moment for Season of the Lost (season_of_the_lost)
 * Update compiler version to 1.53.0
 * Updated all crates to latest version
