@@ -34,7 +34,7 @@ use crate::{
         moment::DateTimePeriod,
         standing::Standing,
     },
-    response::pgcr::DestinyPostGameCarnageReportEntry,
+    response::pgcr::{DestinyPostGameCarnageReportEntry, UserInfoCard},
 };
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
@@ -68,7 +68,7 @@ const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 //numer of simultaneous requests we make to server when retrieving activity history
 const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
 
-const DB_SCHEMA_VERSION: i32 = 7;
+const DB_SCHEMA_VERSION: i32 = 8;
 const NO_TEAMS_INDEX: i32 = 253;
 
 pub struct ActivityStoreInterface {
@@ -135,17 +135,14 @@ impl ActivityStoreInterface {
     ) -> Result<SyncResult, Error> {
         let api = ApiInterface::new(self.verbose)?;
 
+        //TODO: We may not need this call anymore
         //TODO: call API to get display name
         //https://www.bungie.net/Platform/Destiny2/1/Profile/4611686018429783292/?components=100,200
         let player_info = api.get_player_info(member_id, platform).await?;
 
         let characters = player_info.characters;
 
-        let display_name = player_info.user_info.display_name;
-
-        let member_row_id = self
-            .insert_member_id(&member_id, &platform, &display_name)
-            .await?;
+        let member_row_id = self.insert_member(&player_info.user_info).await?;
 
         let mut total_synced = 0;
         let mut total_in_queue = 0;
@@ -567,13 +564,8 @@ impl ActivityStoreInterface {
 
         for entry in &data.entries {
             //todo: not sure if we should use membership type of crosssave orveride
-            let member_row_id = self
-                .insert_member_id(
-                    &entry.player.user_info.membership_id,
-                    &entry.player.user_info.membership_type,
-                    &entry.player.user_info.display_name,
-                )
-                .await?;
+            let member_row_id =
+                self.insert_member(&entry.player.user_info).await?;
 
             let class_type = CharacterClass::from_hash(entry.player.class_hash);
 
@@ -802,25 +794,22 @@ impl ActivityStoreInterface {
         Ok(character_rowid)
     }
 
-    async fn insert_member_id(
+    async fn insert_member(
         &mut self,
-        member_id: &str,
-        platform: &Platform,
-        display_name: &str,
+        user_info: &UserInfoCard,
     ) -> Result<i32, Error> {
-        //we will use whatever the last display name that we find (since you can
-        //change it on PC)
         sqlx::query(
             r#"
-            INSERT into "member" ("member_id", "platform_id", "display_name") VALUES (?, ?, ?)
+            INSERT into "member" ("member_id", "platform_id", "display_name", "bungie_display_name", "bungie_display_name_code") VALUES (?, ?, ?, ?, ?)
             ON CONFLICT(member_id) DO UPDATE
             set display_name = ?
         "#,
         )
-        .bind(member_id.to_string())
-        .bind(platform.to_id().to_string())
-        .bind(display_name.to_string())
-        .bind(display_name.to_string())
+        .bind(user_info.membership_id.to_string())
+        .bind(user_info.membership_type.to_id().to_string())
+        .bind(&user_info.display_name)
+        .bind(&user_info.bungie_display_name)
+        .bind(&user_info.generate_bungie_display_name_code())
         .execute(&mut self.db)
         .await?;
 
@@ -829,8 +818,8 @@ impl ActivityStoreInterface {
             SELECT id from "member" where member_id=?
         "#,
         )
-        .bind(member_id.to_string())
-        .bind(format!("{}", platform.to_id()))
+        .bind(user_info.membership_id.to_string())
+        .bind(format!("{}", user_info.membership_type.to_id()))
         .fetch_one(&mut self.db)
         .await?;
 

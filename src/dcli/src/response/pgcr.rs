@@ -169,8 +169,42 @@ pub struct UserInfoCard {
     pub membership_id: String,
 
     #[serde(rename = "displayName")]
-    #[serde(default)]
-    pub display_name: String,
+    pub display_name: Option<String>,
+
+    #[serde(rename = "bungieGlobalDisplayName")]
+    pub bungie_display_name: Option<String>,
+
+    #[serde(rename = "bungieGlobalDisplayNameCode")]
+    pub bungie_display_name_code: Option<u32>,
+}
+
+impl UserInfoCard {
+    pub fn generate_bungie_display_name_code(&self) -> Option<String> {
+        match self.bungie_display_name_code {
+            Some(display_name_code) => {
+                Some(format!("{:0>4}", display_name_code))
+            }
+            None => None,
+        }
+    }
+
+    //TODO: we might not need these here, but somewhere else.
+    pub fn has_bungie_display_name_code(&self) -> bool {
+        return self.bungie_display_name_code.is_some();
+    }
+
+    /*
+    pub fn generate_full_name(&self) -> String {
+        //TODO: we can check if there is a bungie name, if not, use display name
+        let out = if self.has_bungie_display_name_code() {
+            format!("{}#{}", self.display_name, self.bungie_display_name_code)
+        } else {
+            self.bungie_display_name.to_string()
+        };
+
+        return out;
+    }
+    */
 }
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData
@@ -223,44 +257,3 @@ pub struct DestinyHistoricalWeaponsStatsValues {
     #[serde(default)]
     pub unique_weapon_kills_precision_kills: f32,
 }
-
-/*
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ExtendedActivityHistoricalStatsValues {
-    #[serde(rename = "allMedalsEarned", deserialize_with = "property_to_value")]
-    #[serde(default)]
-    pub all_medals_earned: f32,
-
-    /*
-    //TODO: these properties are dynamic, need to figure out how to parse /
-    //represent
-    pub medalAvenger:f32,
-    pub medalControlAdvantageStreak:f32,
-    pub medalControlMostAdvantage:f32,
-    pub medalDefeatHunterDodge:f32,
-    pub medalMatchMostDamage:f32,
-    pub medalMulti2x:f32,
-    pub medalPayback:f32,
-    pub medalStreak10x:f32,
-    pub medalStreak5x:f32,
-    pub medalStreakCombined:f32,
-    pub medalStreakTeam:f32,
-    pub medalWeaponHandCannon:f32,
-    pub medalWeaponSword:f32,
-    */
-    #[serde(rename = "precisionKills", deserialize_with = "property_to_value")]
-    pub precision_kills: f32,
-
-    #[serde(rename = "weaponKillsAbility", deserialize_with = "property_to_value")]
-    pub weapon_kills_ability: f32,
-
-    #[serde(rename = "weaponKillsGrenade", deserialize_with = "property_to_value")]
-    pub weapon_kills_grenade: f32,
-
-    #[serde(rename = "weaponKillsMelee", deserialize_with = "property_to_value")]
-    pub weapon_kills_melee: f32,
-
-    #[serde(rename = "weaponKillsSuper", deserialize_with = "property_to_value")]
-    pub weapon_kills_super: f32,
-}
-*/
