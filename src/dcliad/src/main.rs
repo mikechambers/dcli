@@ -222,7 +222,7 @@ fn print_default(
 
             let extended = p.stats.extended.as_ref().unwrap();
             println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-                truncate_ascii_string(&p.player.name.get_name(), name_col_w),
+                truncate_ascii_string(&p.player.name.get_short_name(), name_col_w),
                 p.stats.kills.to_string(),
                 p.stats.assists.to_string(),
                 p.stats.opponents_defeated.to_string(),

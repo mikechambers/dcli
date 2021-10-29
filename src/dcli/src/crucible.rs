@@ -159,21 +159,27 @@ impl Player {
 //TODO: might need to make the properties Options, or drop display_name
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PlayerName {
-    pub display_name: String,
-    pub bungie_display_name: String,
-    pub bungie_display_name_code: String,
+    pub display_name: Option<String>,
+    pub bungie_display_name: Option<String>,
+    pub bungie_display_name_code: Option<String>,
 }
 
 impl PlayerName {
-    pub fn get_name(&self) -> String {
-        format!("{}", self.bungie_display_name)
+    pub fn get_short_name(&self) -> String {
+        if self.bungie_display_name.is_some() {
+            self.bungie_display_name.as_deref().unwrap().to_string()
+        } else if self.display_name.is_some() {
+            self.display_name.as_deref().unwrap().to_string()
+        } else {
+            "UNKNOWN".to_string()
+        }
     }
 
-    pub fn get_full_id(&self) -> String {
-        format!(
-            "{}#{}",
-            self.bungie_display_name, self.bungie_display_name_code
-        )
+    pub fn get_bungie_display_name_code(&self) -> Option<String> {
+        match &self.bungie_display_name_code {
+            Some(e) => Some(format!("{:0>4}", e)),
+            None => None,
+        }
     }
 }
 

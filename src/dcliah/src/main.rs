@@ -87,7 +87,7 @@ fn print_default(
     //https://rust-cli.github.io/book/tutorial/output.html
 
     let player_name = if !data.is_empty() {
-        format!("{}", &data[0].performance.player.name.get_name())
+        format!("{}", &data[0].performance.player.name.get_short_name())
     } else {
         "".to_string()
     };

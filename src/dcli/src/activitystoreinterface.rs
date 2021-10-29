@@ -802,17 +802,21 @@ impl ActivityStoreInterface {
             r#"
             INSERT into "member" ("member_id", "platform_id", "display_name", "bungie_display_name", "bungie_display_name_code") VALUES (?, ?, ?, ?, ?)
             ON CONFLICT(member_id) DO UPDATE
-            set display_name = ?
+            set display_name = ?, bungie_display_name = ?, bungie_display_name_code = ?
         "#,
         )
         .bind(user_info.membership_id.to_string())
         .bind(user_info.membership_type.to_id().to_string())
-        .bind(&user_info.get_display_name())
-        .bind(&user_info.get_bungie_display_name())
-        .bind(&user_info.get_bungie_display_name_code())
-        .bind(&user_info.get_display_name())
+        .bind(&user_info.display_name)
+        .bind(&user_info.bungie_display_name)
+        .bind(&user_info.bungie_display_name_code)
+        .bind(&user_info.display_name)
+        .bind(&user_info.bungie_display_name)
+        .bind(&user_info.bungie_display_name_code)
         .execute(&mut self.db)
         .await?;
+
+        //TODO: what to do if exists? (on conflict)
 
         let row = sqlx::query(
             r#"
@@ -890,7 +894,6 @@ impl ActivityStoreInterface {
         .await?;
 
         if rows.is_empty() {
-            println!("NO PREVIOUS ITEMS RETURNING 0");
             return Ok(0);
         }
 
@@ -1684,13 +1687,13 @@ impl ActivityStoreInterface {
         let member_id: String = activity_row.try_get_unchecked("member_id")?;
         let character_id = activity_row.try_get_unchecked("character_id")?;
         let platform_id: u32 = activity_row.try_get_unchecked("platform_id")?;
-        let display_name: String =
+        let display_name: Option<String> =
             activity_row.try_get_unchecked("display_name")?;
 
-        let bungie_display_name: String =
+        let bungie_display_name: Option<String> =
             activity_row.try_get_unchecked("bungie_display_name")?;
 
-        let bungie_display_name_code: String =
+        let bungie_display_name_code: Option<String> =
             activity_row.try_get_unchecked("bungie_display_name_code")?;
 
         let light_level: i32 = activity_row.try_get_unchecked("light_level")?;

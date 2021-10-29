@@ -178,49 +178,6 @@ pub struct UserInfoCard {
     pub bungie_display_name_code: Option<u32>,
 }
 
-impl UserInfoCard {
-    pub fn get_bungie_display_name_code(&self) -> String {
-        match self.bungie_display_name_code {
-            Some(display_name_code) => {
-                format!("{:0>4}", display_name_code)
-            }
-            None => "0000".to_string(),
-        }
-    }
-
-    pub fn get_display_name(&self) -> String {
-        match &self.display_name {
-            Some(d) => d.to_string(),
-            None => "".to_string(),
-        }
-    }
-
-    pub fn get_bungie_display_name(&self) -> String {
-        match &self.bungie_display_name {
-            Some(d) => d.to_string(),
-            None => "".to_string(),
-        }
-    }
-
-    //TODO: we might not need these here, but somewhere else.
-    pub fn has_bungie_display_name_code(&self) -> bool {
-        return self.bungie_display_name_code.is_some();
-    }
-
-    /*
-    pub fn generate_full_name(&self) -> String {
-        //TODO: we can check if there is a bungie name, if not, use display name
-        let out = if self.has_bungie_display_name_code() {
-            format!("{}#{}", self.display_name, self.bungie_display_name_code)
-        } else {
-            self.bungie_display_name.to_string()
-        };
-
-        return out;
-    }
-    */
-}
-
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyPostGameCarnageReportExtendedData {
