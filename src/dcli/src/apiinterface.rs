@@ -28,8 +28,6 @@ use std::{
 use chrono::{DateTime, Utc};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
-use crate::enums::mode::Mode;
-use crate::enums::platform::Platform;
 use crate::error::Error;
 use crate::response::activities::{
     ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT,
@@ -37,6 +35,10 @@ use crate::response::activities::{
 use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::pgcr::{DestinyPostGameCarnageReportData, PGCRResponse};
+use crate::response::sdpr::{
+    DestinyLinkedProfilesResponse, LinkedProfilesResponse,
+    SearchDestinyPlayerResponse,
+};
 use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData,
     PvpStatsData,
@@ -46,6 +48,10 @@ use crate::{apiclient::ApiClient, crucible::Player};
 use crate::{
     apiutils::{API_BASE_URL, PGCR_BASE_URL},
     character::PlayerInfo,
+};
+use crate::{enums::mode::Mode, response::pgcr::UserInfoCard};
+use crate::{
+    enums::platform::Platform, response::pgcr::DestinyProfileUserInfoCard,
 };
 
 use crate::character::Characters;
@@ -118,6 +124,122 @@ impl ApiInterface {
 
         //return the raw data for the current activity
         Ok(current_activity)
+    }
+
+    pub async fn search_destiny_player(
+        &self,
+        bungie_name: &str,
+    ) -> Result<UserInfoCard, Error> {
+        let url = format!(
+            "{base}/Platform/Destiny2/SearchDestinyPlayer/-1/{bungie_name}/",
+            base = API_BASE_URL,
+            bungie_name = utf8_percent_encode(&bungie_name, NON_ALPHANUMERIC)
+        );
+
+        let profile: SearchDestinyPlayerResponse = self
+            .client
+            .call_and_parse::<SearchDestinyPlayerResponse>(&url)
+            .await?;
+
+        //will return none if no response data. No results will return empty vector
+        let mut response: Vec<UserInfoCard> = match profile.response {
+            Some(e) => e,
+            None => {
+                return Err(Error::ApiRequest {
+                    description: String::from(
+                        "No response data from API Call.",
+                    ),
+                })
+            }
+        };
+
+        if response.len() == 0 {
+            return Err(Error::BungieNameNotFound);
+        };
+
+        if response.len() == 1 {
+            return Ok(response.remove(0));
+        };
+
+        let mut cross_save_disabled_found: bool = false;
+        let mut cross_save_override_id: Platform = Platform::Unknown;
+
+        for user in response.iter() {
+            let tmp: Platform = user.cross_save_override;
+            if tmp == Platform::Unknown {
+                cross_save_disabled_found = true;
+            } else {
+                cross_save_override_id = tmp;
+            }
+        }
+
+        let out = if !cross_save_disabled_found {
+            let mut out: UserInfoCard = response.remove(0);
+            for user in response.into_iter() {
+                if user.cross_save_override == Platform::Unknown
+                    || user.membership_type == cross_save_override_id
+                {
+                    out = user;
+                }
+            }
+
+            out
+        } else {
+            let user_info = &response[0];
+            let linked_profiles: DestinyLinkedProfilesResponse = self
+                .retrieve_linked_profiles(
+                    &user_info.membership_id,
+                    &user_info.membership_type,
+                )
+                .await?;
+
+            //TODO: should we have an error here if no profiles are returned?
+            //that should not happen
+
+            let mut most_recent: &DestinyProfileUserInfoCard =
+                &linked_profiles.profiles[0];
+
+            for profile in linked_profiles.profiles.iter().skip(1) {
+                if profile.date_last_played.gt(&most_recent.date_last_played) {
+                    most_recent = profile;
+                }
+            }
+
+            most_recent.to_user_info_card()
+        };
+
+        Ok(out)
+    }
+
+    pub async fn retrieve_linked_profiles(
+        &self,
+        member_id: &str,
+        platform: &Platform,
+    ) -> Result<DestinyLinkedProfilesResponse, Error> {
+        let url = format!(
+            "{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/LinkedProfiles/",
+            base = API_BASE_URL,
+            platform_id = platform.to_id(),
+            member_id = utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
+        );
+
+        let profile: LinkedProfilesResponse = self
+            .client
+            .call_and_parse::<LinkedProfilesResponse>(&url)
+            .await?;
+
+        let response: DestinyLinkedProfilesResponse = match profile.response {
+            Some(e) => e,
+            None => {
+                return Err(Error::ApiRequest {
+                    description: String::from(
+                        "No response data from API Call.",
+                    ),
+                })
+            }
+        };
+
+        Ok(response)
     }
 
     pub async fn get_player_info(

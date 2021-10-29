@@ -178,6 +178,63 @@ pub struct UserInfoCard {
     pub bungie_display_name_code: Option<u32>,
 }
 
+//https://bungie-net.github.io/multi/schema_Destiny-Responses-DestinyProfileUserInfoCard.html#schema_Destiny-Responses-DestinyProfileUserInfoCard
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DestinyProfileUserInfoCard {
+    #[serde(rename = "iconPath")]
+    #[serde(default)]
+    pub icon_path: String,
+
+    #[serde(
+        rename = "dateLastPlayed",
+        skip_serializing,
+        deserialize_with = "str_to_datetime"
+    )]
+    pub date_last_played: DateTime<Utc>,
+
+    #[serde(rename = "crossSaveOverride")]
+    pub cross_save_override: Platform,
+
+    #[serde(rename = "applicableMembershipTypes")]
+    pub applicable_membership_types: Option<Vec<Platform>>,
+
+    #[serde(rename = "isPublic")]
+    pub is_public: bool,
+
+    #[serde(rename = "membershipType")]
+    pub membership_type: Platform,
+
+    #[serde(rename = "membershipId")]
+    pub membership_id: String,
+
+    #[serde(rename = "displayName")]
+    pub display_name: Option<String>,
+
+    #[serde(rename = "bungieGlobalDisplayName")]
+    pub bungie_display_name: Option<String>,
+
+    #[serde(rename = "bungieGlobalDisplayNameCode")]
+    pub bungie_display_name_code: Option<u32>,
+}
+
+impl DestinyProfileUserInfoCard {
+    pub fn to_user_info_card(&self) -> UserInfoCard {
+        UserInfoCard {
+            icon_path: self.icon_path.to_string(),
+            cross_save_override: self.cross_save_override,
+            applicable_membership_types: self
+                .applicable_membership_types
+                .clone(),
+            is_public: self.is_public,
+            membership_type: self.membership_type,
+            membership_id: self.membership_id.to_string(),
+            display_name: self.display_name.clone(),
+            bungie_display_name: self.bungie_display_name.clone(),
+            bungie_display_name_code: self.bungie_display_name_code,
+        }
+    }
+}
+
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportExtendedData
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyPostGameCarnageReportExtendedData {

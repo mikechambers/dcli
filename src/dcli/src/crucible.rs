@@ -181,6 +181,32 @@ impl PlayerName {
             None => None,
         }
     }
+
+    fn from_bungie_name(bungie_name: &str) -> Self {
+        let v: Vec<&str> = bungie_name.split("#").collect();
+
+        let display_name: Option<String> = None;
+        let mut bungie_display_name: Option<String> = None;
+        let mut bungie_display_name_code: Option<String> = None;
+
+        if v.len() == 2 {
+            bungie_display_name = Some(v[0].to_string());
+            bungie_display_name_code = Some(v[1].to_string());
+        };
+
+        PlayerName {
+            display_name,
+            bungie_display_name,
+            bungie_display_name_code,
+        }
+    }
+
+    pub fn is_valid_bungie_name(&self) -> bool {
+        //26 chars
+
+        //could either validate or check that both fields have Some
+        true
+    }
 }
 
 #[derive(Debug, Clone)]

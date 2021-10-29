@@ -65,6 +65,7 @@ pub enum Error {
     CharacterDoesNotExist,
     ActivityNotFound,
     DateTimePeriodOrder,
+    BungieNameNotFound,
 }
 
 impl Display for Error {
@@ -161,6 +162,9 @@ impl Display for Error {
             },
             Error::DateTimePeriodOrder  => {
                 write!(f, "Start date must be before end date.")
+            },
+            Error::BungieNameNotFound  => {
+                write!(f, "Bungie name not found.")
             },
         }
     }

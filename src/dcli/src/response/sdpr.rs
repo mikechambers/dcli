@@ -20,12 +20,44 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod activities;
-pub mod character;
-pub mod drs;
-pub mod gpr;
-pub mod manifest;
-pub mod pgcr;
-pub mod sdpr;
-pub mod stats;
-pub mod utils;
+use serde_derive::{Deserialize, Serialize};
+
+use super::{
+    drs::{DestinyResponseStatus, IsDestinyAPIResponse},
+    pgcr::{DestinyProfileUserInfoCard, UserInfoCard},
+};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SearchDestinyPlayerResponse {
+    #[serde(rename = "Response")]
+    pub response: Option<Vec<UserInfoCard>>,
+
+    #[serde(flatten)]
+    pub status: DestinyResponseStatus,
+}
+
+impl IsDestinyAPIResponse for SearchDestinyPlayerResponse {
+    fn get_status(&self) -> &DestinyResponseStatus {
+        &self.status
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LinkedProfilesResponse {
+    #[serde(rename = "Response")]
+    pub response: Option<DestinyLinkedProfilesResponse>,
+
+    #[serde(flatten)]
+    pub status: DestinyResponseStatus,
+}
+
+impl IsDestinyAPIResponse for LinkedProfilesResponse {
+    fn get_status(&self) -> &DestinyResponseStatus {
+        &self.status
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DestinyLinkedProfilesResponse {
+    pub profiles: Vec<DestinyProfileUserInfoCard>,
+}

@@ -32,6 +32,15 @@ CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
         ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS "sync" (
+    "id"            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+    "member"	    INTEGER NOT NULL,
+    "last_checked"   TEXT NOT NULL,
+    UNIQUE("member"),
+    FOREIGN KEY ("member")
+        REFERENCES "member" ("id")
+);
+
 CREATE TABLE IF NOT EXISTS  "member" (
     "id"            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
     "member_id"	    TEXT NOT NULL,

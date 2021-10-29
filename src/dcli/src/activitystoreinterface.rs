@@ -124,6 +124,20 @@ impl ActivityStoreInterface {
         Ok(ActivityStoreInterface { db, verbose, path })
     }
 
+    pub async fn sync_n(
+        &mut self,
+        bungie_name: &str,
+    ) -> Result<SyncResult, Error> {
+        let api = ApiInterface::new(self.verbose)?;
+        let user_info = api.search_destiny_player(bungie_name).await?;
+
+        let out = self
+            .sync(&user_info.membership_id, &user_info.membership_type)
+            .await?;
+
+        Ok(out)
+    }
+
     /// TODO currently no way to sync old / delete characters. would be easy to
     /// add by just moving the character sync into its own api sync_character(id, class_type)
     /// but not going to worry about it unless someone requests it
@@ -135,8 +149,15 @@ impl ActivityStoreInterface {
     ) -> Result<SyncResult, Error> {
         let api = ApiInterface::new(self.verbose)?;
 
-        //TODO: We may not need this call anymore
-        //TODO: call API to get display name
+        //take a PlayerName
+        //check if we have synced this player before, if so, get member data
+        //if we havent synced, search for player info
+        //create member entry
+        //add to sync table
+        //if we have synced, get member id / platform
+        //update last synced date
+
+        //Note, we need this call in case the user deletes and creates a new character
         //https://www.bungie.net/Platform/Destiny2/1/Profile/4611686018429783292/?components=100,200
         let player_info = api.get_player_info(member_id, platform).await?;
 
