@@ -143,7 +143,7 @@ pub struct Player {
     pub member_id: String,
     pub character_id: String,
     pub platform: Platform,
-    pub display_name: String,
+    pub name: PlayerName,
     pub light_level: i32,
     pub class_type: CharacterClass,
 }
@@ -153,6 +153,27 @@ impl Player {
         let mut s = DefaultHasher::new();
         self.hash(&mut s);
         s.finish()
+    }
+}
+
+//TODO: might need to make the properties Options, or drop display_name
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct PlayerName {
+    pub display_name: String,
+    pub bungie_display_name: String,
+    pub bungie_display_name_code: String,
+}
+
+impl PlayerName {
+    pub fn get_name(&self) -> String {
+        format!("{}", self.bungie_display_name)
+    }
+
+    pub fn get_full_id(&self) -> String {
+        format!(
+            "{}#{}",
+            self.bungie_display_name, self.bungie_display_name_code
+        )
     }
 }
 

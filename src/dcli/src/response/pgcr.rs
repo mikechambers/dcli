@@ -179,12 +179,26 @@ pub struct UserInfoCard {
 }
 
 impl UserInfoCard {
-    pub fn generate_bungie_display_name_code(&self) -> Option<String> {
+    pub fn get_bungie_display_name_code(&self) -> String {
         match self.bungie_display_name_code {
             Some(display_name_code) => {
-                Some(format!("{:0>4}", display_name_code))
+                format!("{:0>4}", display_name_code)
             }
-            None => None,
+            None => "0000".to_string(),
+        }
+    }
+
+    pub fn get_display_name(&self) -> String {
+        match &self.display_name {
+            Some(d) => d.to_string(),
+            None => "".to_string(),
+        }
+    }
+
+    pub fn get_bungie_display_name(&self) -> String {
+        match &self.bungie_display_name {
+            Some(d) => d.to_string(),
+            None => "".to_string(),
         }
     }
 

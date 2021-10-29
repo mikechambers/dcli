@@ -87,7 +87,7 @@ fn print_default(
     //https://rust-cli.github.io/book/tutorial/output.html
 
     let player_name = if !data.is_empty() {
-        format!("{}", &data[0].performance.player.display_name)
+        format!("{}", &data[0].performance.player.name.get_name())
     } else {
         "".to_string()
     };
@@ -722,6 +722,7 @@ async fn main() {
         match store.sync(&opt.member_id, &opt.platform).await {
             Ok(_e) => (),
             Err(e) => {
+                println!("ERROR CAUGHT HERE");
                 eprintln!("Could not sync activity store {}", e);
                 eprintln!("Using existing data");
             }

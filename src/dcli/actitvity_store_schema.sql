@@ -36,9 +36,9 @@ CREATE TABLE IF NOT EXISTS  "member" (
     "id"            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
     "member_id"	    TEXT NOT NULL,
     "platform_id"	INTEGER NOT NULL,
-    "display_name"  TEXT,
-    "bungie_display_name"  TEXT,
-    "bungie_display_name_code"  TEXT,
+    "display_name"  TEXT NOT NULL,
+    "bungie_display_name"  TEXT NOT NULL,
+    "bungie_display_name_code"  TEXT NOT NULL,
     UNIQUE("member_id")
 );
 

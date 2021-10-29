@@ -27,7 +27,7 @@ use std::str::FromStr;
 use chrono::{DateTime, Utc};
 
 use crate::{
-    crucible::{CrucibleActivity, Team},
+    crucible::{CrucibleActivity, PlayerName, Team},
     enums::{
         completionreason::CompletionReason,
         itemtype::{ItemSubType, ItemType},
@@ -807,9 +807,10 @@ impl ActivityStoreInterface {
         )
         .bind(user_info.membership_id.to_string())
         .bind(user_info.membership_type.to_id().to_string())
-        .bind(&user_info.display_name)
-        .bind(&user_info.bungie_display_name)
-        .bind(&user_info.generate_bungie_display_name_code())
+        .bind(&user_info.get_display_name())
+        .bind(&user_info.get_bungie_display_name())
+        .bind(&user_info.get_bungie_display_name_code())
+        .bind(&user_info.get_display_name())
         .execute(&mut self.db)
         .await?;
 
@@ -1685,17 +1686,30 @@ impl ActivityStoreInterface {
         let platform_id: u32 = activity_row.try_get_unchecked("platform_id")?;
         let display_name: String =
             activity_row.try_get_unchecked("display_name")?;
+
+        let bungie_display_name: String =
+            activity_row.try_get_unchecked("bungie_display_name")?;
+
+        let bungie_display_name_code: String =
+            activity_row.try_get_unchecked("bungie_display_name_code")?;
+
         let light_level: i32 = activity_row.try_get_unchecked("light_level")?;
         let class_type: u32 = activity_row.try_get_unchecked("class")?;
         let class_type: CharacterClass = CharacterClass::from_id(class_type);
 
         let platform = Platform::from_id(platform_id);
 
+        let name = PlayerName {
+            display_name,
+            bungie_display_name,
+            bungie_display_name_code,
+        };
+
         let player = Player {
             member_id,
             character_id,
             platform,
-            display_name,
+            name,
             light_level,
             class_type,
         };
