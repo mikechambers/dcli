@@ -1,5 +1,10 @@
 # dcli Release Notes
 
+## v0.7.0
+* Deprecated and removed dclic, dclims and dclis
+* Added support for specifying player via Bungie names
+* Removed support for specifying player by member id and platform (use Bungie name)
+
 ## v0.6.3 September 5, 2021
 * Added support / moment for Season of the Lost (season_of_the_lost)
 * Update compiler version to 1.53.0
