@@ -352,15 +352,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dclic"
-version = "0.7.0"
-dependencies = [
- "dcli",
- "structopt",
- "tokio",
-]
-
-[[package]]
 name = "dclim"
 version = "0.7.0"
 dependencies = [
@@ -372,29 +363,6 @@ dependencies = [
  "structopt",
  "tokio",
  "zip",
-]
-
-[[package]]
-name = "dclims"
-version = "0.7.0"
-dependencies = [
- "dcli",
- "structopt",
- "tokio",
-]
-
-[[package]]
-name = "dclis"
-version = "0.7.0"
-dependencies = [
- "dcli",
- "percent-encoding",
- "reqwest",
- "serde",
- "serde_derive",
- "serde_json",
- "structopt",
- "tokio",
 ]
 
 [[package]]
