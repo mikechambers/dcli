@@ -23,7 +23,7 @@
 use std::path::PathBuf;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
-use dcli::enums::platform::Platform;
+use dcli::crucible::PlayerName;
 use dcli::output::Output;
 use dcli::utils::{
     build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE,
@@ -75,18 +75,13 @@ struct Opt {
     #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
     data_dir: Option<PathBuf>,
 
-    /// Platform for specified id
+    /// Bungie name for player
     ///
-    /// Valid values are: xbox, playstation, stadia or steam.
-    #[structopt(short = "p", long = "platform", required = true)]
-    platform: Platform,
-
-    /// Destiny 2 API member id for the character to retrieve activities for.
-    ///
-    /// This is not the user name, but the member id
-    /// retrieved from the Destiny API.
-    #[structopt(short = "m", long = "member-id", required = true)]
-    member_id: String,
+    /// Name must be in the format of NAME#CODE. Example: foo#3280
+    /// You can find your name in game, or on Bungie's site at:
+    /// https://www.bungie.net/7/en/User/Account/IdentitySettings
+    #[structopt(long = "name", short = "n", required = true)]
+    name: PlayerName,
 }
 
 #[tokio::main]
@@ -113,7 +108,18 @@ async fn main() {
             }
         };
 
-    let results = match store.sync(&opt.member_id, &opt.platform).await {
+    let member = match store.get_member(&opt.name).await {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!(
+                    "Could not find bungie name. Please check name and try again. {}",
+                    e
+                );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
+    let results = match store.sync(&member).await {
         Ok(e) => e,
         Err(e) => {
             print_error("Error syncing ids.", e);

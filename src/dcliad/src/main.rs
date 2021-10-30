@@ -23,6 +23,8 @@
 use std::str::FromStr;
 use std::{collections::HashMap, path::PathBuf};
 
+use dcli::crucible::{Member, PlayerName};
+use dcli::utils::truncate_ascii_string;
 use dcli::{
     apiinterface::ApiInterface,
     crucible::{
@@ -32,7 +34,6 @@ use dcli::{
     enums::completionreason::CompletionReason,
     utils::{calculate_avg, f32_are_equal},
 };
-use dcli::{enums::platform::Platform, utils::truncate_ascii_string};
 
 use dcli::enums::mode::Mode;
 use dcli::manifestinterface::ManifestInterface;
@@ -113,11 +114,13 @@ async fn get_combat_ratings(
 fn print_default(
     data: &CrucibleActivity,
     elo_hash: &HashMap<u64, f32>,
-    member_id: &str,
+    member: &Member,
     details: bool,
     weapon_count: u32,
     verbose: bool,
 ) {
+    let member_id = &member.id;
+
     let col_w = 8;
     let name_col_w = 24;
 
@@ -496,17 +499,13 @@ fn print_default(
 ///
 /// Released under an MIT License.
 struct Opt {
-    /// Destiny 2 API member id
+    /// Bungie name for player
     ///
-    /// This is not the user name, but the member id retrieved from the Destiny API.
-    #[structopt(short = "m", long = "member-id", required = true)]
-    member_id: String,
-
-    /// Platform for specified id
-    ///
-    /// Valid values are: xbox, playstation, stadia or steam.
-    #[structopt(short = "p", long = "platform", required = true)]
-    platform: Platform,
+    /// Name must be in the format of NAME#CODE. Example: foo#3280
+    /// You can find your name in game, or on Bungie's site at:
+    /// https://www.bungie.net/7/en/User/Account/IdentitySettings
+    #[structopt(long = "name", short = "n", required = true)]
+    name: PlayerName,
 
     /// Activity mode from which to return last activity
     ///
@@ -604,8 +603,19 @@ async fn main() {
         }
     };
 
+    let member = match store.get_member(&opt.name).await {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!(
+                "Could not find bungie name. Please check name and try again. {}",
+                e
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
     if !opt.no_sync {
-        match store.sync(&opt.member_id, &opt.platform).await {
+        match store.sync(&member).await {
             Ok(_e) => (),
             Err(e) => {
                 eprintln!("Could not sync activity store {}", e);
@@ -619,8 +629,7 @@ async fn main() {
         None => {
             store
                 .retrieve_last_activity(
-                    &opt.member_id,
-                    &opt.platform,
+                    &member,
                     &opt.character_class_selection,
                     &opt.mode,
                     &mut manifest,
@@ -647,7 +656,7 @@ async fn main() {
     print_default(
         &data,
         &elo_hash,
-        &opt.member_id,
+        &member,
         opt.details,
         opt.weapon_count,
         opt.verbose,

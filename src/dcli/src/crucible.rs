@@ -30,6 +30,7 @@ use crate::enums::{
 use crate::enums::{completionreason::CompletionReason, medaltier::MedalTier};
 use chrono::{DateTime, Utc};
 
+use std::str::FromStr;
 use std::{cmp::max, collections::hash_map::DefaultHasher, hash::Hasher};
 use std::{collections::HashMap, hash::Hash};
 
@@ -223,10 +224,36 @@ impl PlayerName {
     }
 
     pub fn is_valid_bungie_name(&self) -> bool {
-        //26 chars
+        //note, limit is 26 chars, but we just do a simple check here
+        if self.bungie_display_name.is_none()
+            || self.bungie_display_name_code.is_none()
+        {
+            return false;
+        }
 
-        //could either validate or check that both fields have Some
+        if self.bungie_display_name.as_ref().unwrap().len() == 0 {
+            return false;
+        }
+
+        if self.bungie_display_name_code.as_ref().unwrap().len() != 4 {
+            return false;
+        }
+
         true
+    }
+}
+
+impl FromStr for PlayerName {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let name = PlayerName::from_bungie_name(s);
+
+        if !name.is_valid_bungie_name() {
+            return Err("Invalid Bungie Name. Format: NAME#CODE");
+        }
+
+        return Ok(name);
     }
 }
 

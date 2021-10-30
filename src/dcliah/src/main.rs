@@ -31,6 +31,7 @@ use dcli::enums::{
     moment::{DateTimePeriod, Moment},
 };
 use dcli::manifestinterface::ManifestInterface;
+use dcli::utils::calculate_percent;
 use dcli::{
     crucible::{
         AggregateCruciblePerformances, CruciblePlayerActivityPerformance,
@@ -39,7 +40,6 @@ use dcli::{
     enums::mode::Mode,
     utils::{calculate_ratio, human_duration},
 };
-use dcli::{enums::platform::Platform, utils::calculate_percent};
 
 use dcli::enums::character::CharacterClassSelection;
 use dcli::enums::weaponsort::WeaponSort;
@@ -517,17 +517,13 @@ fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
 ///
 /// Released under an MIT License.
 struct Opt {
-    /// Destiny 2 API member id
+    /// Bungie name for player
     ///
-    /// This is not the user name, but the member id retrieved from the Destiny API.
-    #[structopt(short = "m", long = "member-id", required = true)]
-    member_id: String,
-
-    /// Platform for specified id
-    ///
-    /// Valid values are: xbox, playstation, stadia or steam.
-    #[structopt(short = "p", long = "platform", required = true)]
-    platform: Platform,
+    /// Name must be in the format of NAME#CODE. Example: foo#3280
+    /// You can find your name in game, or on Bungie's site at:
+    /// https://www.bungie.net/7/en/User/Account/IdentitySettings
+    #[structopt(long = "name", short = "n", required = true)]
+    name: PlayerName,
 
     /// Custom start time in RFC 3339 date / time format
     ///
@@ -719,9 +715,7 @@ async fn main() {
         }
     };
 
-    let name: PlayerName = PlayerName::from_bungie_name("Labradorite#4136");
-
-    let member = match store.get_member(&name).await {
+    let member = match store.get_member(&opt.name).await {
         Ok(e) => e,
         Err(e) => {
             eprintln!(
