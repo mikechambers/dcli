@@ -156,6 +156,13 @@ impl Player {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Member {
+    pub name: PlayerName,
+    pub platform: Platform,
+    pub id: String,
+}
+
 //TODO: might need to make the properties Options, or drop display_name
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PlayerName {
@@ -182,7 +189,16 @@ impl PlayerName {
         }
     }
 
-    fn from_bungie_name(bungie_name: &str) -> Self {
+    //TODO: what to do if null entries?
+    pub fn get_bungie_name(&self) -> String {
+        format!(
+            "{}#{}",
+            self.bungie_display_name.as_ref().unwrap(),
+            self.get_bungie_display_name_code().unwrap()
+        )
+    }
+
+    pub fn from_bungie_name(bungie_name: &str) -> Self {
         let v: Vec<&str> = bungie_name.split("#").collect();
 
         let display_name: Option<String> = None;

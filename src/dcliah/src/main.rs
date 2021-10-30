@@ -24,6 +24,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
+use dcli::crucible::PlayerName;
 use dcli::enums::standing::Standing;
 use dcli::enums::{
     completionreason::CompletionReason,
@@ -718,8 +719,23 @@ async fn main() {
         }
     };
 
+    /*
     if !opt.no_sync {
         match store.sync(&opt.member_id, &opt.platform).await {
+            Ok(_e) => (),
+            Err(e) => {
+                println!("ERROR CAUGHT HERE");
+                eprintln!("Could not sync activity store {}", e);
+                eprintln!("Using existing data");
+            }
+        };
+    }
+    */
+
+    if !opt.no_sync {
+        let name: PlayerName = PlayerName::from_bungie_name("Labradorite#4136");
+
+        match store.sync_n(&name).await {
             Ok(_e) => (),
             Err(e) => {
                 println!("ERROR CAUGHT HERE");

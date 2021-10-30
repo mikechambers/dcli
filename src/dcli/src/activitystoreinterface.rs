@@ -27,7 +27,7 @@ use std::str::FromStr;
 use chrono::{DateTime, Utc};
 
 use crate::{
-    crucible::{CrucibleActivity, PlayerName, Team},
+    crucible::{CrucibleActivity, Member, PlayerName, Team},
     enums::{
         completionreason::CompletionReason,
         itemtype::{ItemSubType, ItemType},
@@ -124,16 +124,79 @@ impl ActivityStoreInterface {
         Ok(ActivityStoreInterface { db, verbose, path })
     }
 
+    //todo: this should take a PlayerName
+    pub async fn retrieve_member_by_name(
+        &mut self,
+        player_name: &PlayerName,
+    ) -> Result<Option<Member>, Error> {
+        //TODO: check name fields are not null / None
+
+        let row_option = sqlx::query(
+            r#"
+            SELECT "member_id", "platform_id", "display_name", "bungie_display_name", "bungie_display_name_code" from "member" where bungie_display_name= "?" and bungie_display_name_code = "?"
+        "#,
+        )
+        .bind(player_name.bungie_display_name.as_ref().unwrap())
+        .bind(player_name.bungie_display_name_code.as_ref().unwrap())
+        .fetch_optional(&mut self.db)
+        .await?;
+
+        //TODO: may want to use this in other areas
+        let row = match row_option {
+            Some(e) => e,
+            None => return Ok(None),
+        };
+
+        let member_id: String = row.try_get("member_id")?;
+        let platform_id: u32 = row.try_get("platform_id")?;
+        let display_name: Option<String> = row.try_get("display_name")?;
+        let bungie_display_name: Option<String> =
+            row.try_get("bungie_display_name")?;
+        let bungie_display_name_code: Option<String> =
+            row.try_get("bungie_display_name_code")?;
+
+        let name: PlayerName = PlayerName {
+            display_name,
+            bungie_display_name,
+            bungie_display_name_code,
+        };
+
+        let member: Member = Member {
+            name: name,
+            platform: Platform::from_id(platform_id),
+            id: member_id,
+        };
+
+        Ok(Some(member))
+    }
+
+    //todo: this should take a PlayerName
     pub async fn sync_n(
         &mut self,
-        bungie_name: &str,
+        player_name: &PlayerName,
     ) -> Result<SyncResult, Error> {
         let api = ApiInterface::new(self.verbose)?;
-        let user_info = api.search_destiny_player(bungie_name).await?;
 
-        let out = self
-            .sync(&user_info.membership_id, &user_info.membership_type)
-            .await?;
+        let member: Option<Member> =
+            self.retrieve_member_by_name(player_name).await?;
+
+        let out = match member {
+            Some(e) => self.sync(&e.id, &e.platform).await?,
+            None => {
+                let user_info = api
+                    .search_destiny_player(&player_name.get_bungie_name())
+                    .await?;
+
+                //TODO: store member name here.
+
+                self.sync(&user_info.membership_id, &user_info.membership_type)
+                    .await?
+            }
+        };
+
+        //update dd adding member
+
+        //update sync table
 
         Ok(out)
     }
@@ -815,6 +878,7 @@ impl ActivityStoreInterface {
         Ok(character_rowid)
     }
 
+    //TODO: have this take a member?
     async fn insert_member(
         &mut self,
         user_info: &UserInfoCard,
