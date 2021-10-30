@@ -198,6 +198,11 @@ impl PlayerName {
         )
     }
 
+    //TODO: need to clean up display name code handling / formating
+    pub fn format_bungie_display_name_code(code: u32) -> String {
+        format!("{:0>4}", code)
+    }
+
     pub fn from_bungie_name(bungie_name: &str) -> Self {
         let v: Vec<&str> = bungie_name.split("#").collect();
 

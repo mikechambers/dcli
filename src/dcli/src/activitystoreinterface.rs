@@ -34,7 +34,7 @@ use crate::{
         moment::DateTimePeriod,
         standing::Standing,
     },
-    response::pgcr::{DestinyPostGameCarnageReportEntry, UserInfoCard},
+    response::pgcr::DestinyPostGameCarnageReportEntry,
 };
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
@@ -125,7 +125,7 @@ impl ActivityStoreInterface {
     }
 
     //todo: this should take a PlayerName
-    pub async fn retrieve_member_by_name(
+    async fn retrieve_member_by_name(
         &mut self,
         player_name: &PlayerName,
     ) -> Result<Option<Member>, Error> {
@@ -170,63 +170,90 @@ impl ActivityStoreInterface {
         Ok(Some(member))
     }
 
-    //todo: this should take a PlayerName
-    pub async fn sync_n(
+    pub async fn update_sync_entry(
         &mut self,
-        player_name: &PlayerName,
-    ) -> Result<SyncResult, Error> {
-        let api = ApiInterface::new(self.verbose)?;
+        member_row_id: i32,
+    ) -> Result<i32, Error> {
+        let timestamp: String = Utc::now().to_rfc3339();
 
-        let member: Option<Member> =
-            self.retrieve_member_by_name(player_name).await?;
+        sqlx::query(
+            r#"
+            INSERT into "sync" ("member", "last_sync") VALUES (?, ?)
+            ON CONFLICT(member) DO UPDATE
+            set last_sync = ?
+        "#,
+        )
+        .bind(member_row_id)
+        .bind(&timestamp)
+        .bind(&timestamp)
+        .execute(&mut self.db)
+        .await?;
+
+        //TODO: what to do if exists? (on conflict)
+
+        let row = sqlx::query(
+            r#"
+            SELECT id from "sync" where member=?
+        "#,
+        )
+        .bind(member_row_id)
+        .fetch_one(&mut self.db)
+        .await?;
+
+        let rowid: i32 = row.try_get("id")?;
+
+        Ok(rowid)
+    }
+
+    pub async fn get_member(
+        &mut self,
+        name: &PlayerName,
+    ) -> Result<Member, Error> {
+        let member: Option<Member> = self.retrieve_member_by_name(name).await?;
 
         let out = match member {
-            Some(e) => self.sync(&e.id, &e.platform).await?,
+            Some(e) => e,
             None => {
-                let user_info = api
-                    .search_destiny_player(&player_name.get_bungie_name())
-                    .await?;
+                let api = ApiInterface::new(self.verbose)?;
+                let user_info =
+                    api.search_destiny_player(&name.get_bungie_name()).await?;
 
-                //TODO: store member name here.
+                let m: Member = user_info.to_member();
+                self.insert_member(&m).await?;
 
-                self.sync(&user_info.membership_id, &user_info.membership_type)
-                    .await?
+                m
             }
         };
 
-        //update dd adding member
-
-        //update sync table
-
         Ok(out)
     }
+    /*
+    pub async fn sync_member(&mut self, member:&Member) -> -> Result<SyncResult, Error> {
+
+    }
+
+    pub async fn sync_all(&mut self, member:&Member) -> -> Result<SyncResult, Error> {
+
+    }
+    */
 
     /// TODO currently no way to sync old / delete characters. would be easy to
     /// add by just moving the character sync into its own api sync_character(id, class_type)
     /// but not going to worry about it unless someone requests it
     /// retrieves and stores activity details for ids in activity queue
-    pub async fn sync(
-        &mut self,
-        member_id: &str,
-        platform: &Platform,
-    ) -> Result<SyncResult, Error> {
+    pub async fn sync(&mut self, member: &Member) -> Result<SyncResult, Error> {
         let api = ApiInterface::new(self.verbose)?;
-
-        //take a PlayerName
-        //check if we have synced this player before, if so, get member data
-        //if we havent synced, search for player info
-        //create member entry
-        //add to sync table
-        //if we have synced, get member id / platform
-        //update last synced date
 
         //Note, we need this call in case the user deletes and creates a new character
         //https://www.bungie.net/Platform/Destiny2/1/Profile/4611686018429783292/?components=100,200
-        let player_info = api.get_player_info(member_id, platform).await?;
+        let player_info =
+            api.get_player_info(&member.id, &member.platform).await?;
 
         let characters = player_info.characters;
 
-        let member_row_id = self.insert_member(&player_info.user_info).await?;
+        let member_row_id = self
+            .insert_member(&player_info.user_info.to_member())
+            .await?;
 
         let mut total_synced = 0;
         let mut total_in_queue = 0;
@@ -254,9 +281,9 @@ impl ActivityStoreInterface {
             let _b = self
                 .update_activity_queue(
                     character_row_id,
-                    member_id,
+                    &member.id,
                     character_id,
-                    platform,
+                    &member.platform,
                     &api,
                 )
                 .await?;
@@ -267,6 +294,8 @@ impl ActivityStoreInterface {
             total_in_queue += (a.total_available + c.total_available)
                 - (a.total_synced + c.total_synced);
         }
+
+        self.update_sync_entry(member_row_id).await?;
 
         Ok(SyncResult {
             total_synced,
@@ -648,8 +677,9 @@ impl ActivityStoreInterface {
 
         for entry in &data.entries {
             //todo: not sure if we should use membership type of crosssave orveride
-            let member_row_id =
-                self.insert_member(&entry.player.user_info).await?;
+            let member_row_id = self
+                .insert_member(&entry.player.user_info.to_member())
+                .await?;
 
             let class_type = CharacterClass::from_hash(entry.player.class_hash);
 
@@ -686,21 +716,34 @@ impl ActivityStoreInterface {
     ) -> Result<(), Error> {
         let char_data = entry;
 
-        let medal_hash: &HashMap<String, DestinyHistoricalStatsValue> =
-            &entry.extended.values;
+        //There are rare cases where no extended data will be included in a report
+        //when that happens we just enter 0 for everything
+        let mut precision_kills: u32 = 0;
+        let mut weapon_kills_ability: u32 = 0;
+        let mut weapon_kills_grenade: u32 = 0;
+        let mut weapon_kills_melee: u32 = 0;
+        let mut weapon_kills_super: u32 = 0;
+        let mut all_medals_earned: u32 = 0;
 
-        let precision_kills: u32 =
-            self.get_medal_hash_value("precisionKills", medal_hash);
-        let weapon_kills_ability: u32 =
-            self.get_medal_hash_value("weaponKillsAbility", medal_hash);
-        let weapon_kills_grenade: u32 =
-            self.get_medal_hash_value("weaponKillsGrenade", medal_hash);
-        let weapon_kills_melee: u32 =
-            self.get_medal_hash_value("weaponKillsMelee", medal_hash);
-        let weapon_kills_super: u32 =
-            self.get_medal_hash_value("weaponKillsSuper", medal_hash);
-        let all_medals_earned: u32 =
-            self.get_medal_hash_value("allMedalsEarned", medal_hash);
+        let mut medal_hash: &HashMap<String, DestinyHistoricalStatsValue> =
+            &HashMap::new();
+
+        if entry.extended.is_some() {
+            medal_hash = &entry.extended.as_ref().unwrap().values;
+
+            precision_kills =
+                self.get_medal_hash_value("precisionKills", medal_hash);
+            weapon_kills_ability =
+                self.get_medal_hash_value("weaponKillsAbility", medal_hash);
+            weapon_kills_grenade =
+                self.get_medal_hash_value("weaponKillsGrenade", medal_hash);
+            weapon_kills_melee =
+                self.get_medal_hash_value("weaponKillsMelee", medal_hash);
+            weapon_kills_super =
+                self.get_medal_hash_value("weaponKillsSuper", medal_hash);
+            all_medals_earned =
+                self.get_medal_hash_value("allMedalsEarned", medal_hash);
+        }
 
         sqlx::query(
             r#"
@@ -788,25 +831,28 @@ impl ActivityStoreInterface {
         }
 
         //ran into a case once where weapons was missing, so have to check here
-        if char_data.extended.weapons.is_some() {
-            let weapons = entry.extended.weapons.as_ref().unwrap();
-            for w in weapons {
-                sqlx::query(
-                    r#"
-                    INSERT INTO "main"."weapon_result"
-                    (
-                        "reference_id", "kills", "precision_kills", "kills_precision_kills_ratio", "character_activity_stats"
+        if entry.extended.is_some() {
+            let extended = char_data.extended.as_ref().unwrap();
+            if extended.weapons.is_some() {
+                let weapons = extended.weapons.as_ref().unwrap();
+                for w in weapons {
+                    sqlx::query(
+                        r#"
+                        INSERT INTO "main"."weapon_result"
+                        (
+                            "reference_id", "kills", "precision_kills", "kills_precision_kills_ratio", "character_activity_stats"
+                        )
+                        VALUES (?, ?, ?, ?, ?)
+                        "#,
                     )
-                    VALUES (?, ?, ?, ?, ?)
-                    "#,
-                )
-                .bind(format!("{}", w.reference_id)) //reference_id
-                .bind(format!("{}", w.values.unique_weapon_kills as u32)) //unique_weapon_kills
-                .bind(format!("{}", w.values.unique_weapon_precision_kills as u32)) //unique_weapon_precision_kills
-                .bind(format!("{}", w.values.unique_weapon_kills_precision_kills)) //unique_weapon_kills_precision_kills
-                .bind(character_activity_stats_id)
-                .execute(&mut self.db)
-                .await?;
+                    .bind(format!("{}", w.reference_id)) //reference_id
+                    .bind(format!("{}", w.values.unique_weapon_kills as u32)) //unique_weapon_kills
+                    .bind(format!("{}", w.values.unique_weapon_precision_kills as u32)) //unique_weapon_precision_kills
+                    .bind(format!("{}", w.values.unique_weapon_kills_precision_kills)) //unique_weapon_kills_precision_kills
+                    .bind(character_activity_stats_id)
+                    .execute(&mut self.db)
+                    .await?;
+                }
             }
         }
 
@@ -878,11 +924,7 @@ impl ActivityStoreInterface {
         Ok(character_rowid)
     }
 
-    //TODO: have this take a member?
-    async fn insert_member(
-        &mut self,
-        user_info: &UserInfoCard,
-    ) -> Result<i32, Error> {
+    async fn insert_member(&mut self, member: &Member) -> Result<i32, Error> {
         sqlx::query(
             r#"
             INSERT into "member" ("member_id", "platform_id", "display_name", "bungie_display_name", "bungie_display_name_code") VALUES (?, ?, ?, ?, ?)
@@ -890,14 +932,14 @@ impl ActivityStoreInterface {
             set display_name = ?, bungie_display_name = ?, bungie_display_name_code = ?
         "#,
         )
-        .bind(user_info.membership_id.to_string())
-        .bind(user_info.membership_type.to_id().to_string())
-        .bind(&user_info.display_name)
-        .bind(&user_info.bungie_display_name)
-        .bind(&user_info.bungie_display_name_code)
-        .bind(&user_info.display_name)
-        .bind(&user_info.bungie_display_name)
-        .bind(&user_info.bungie_display_name_code)
+        .bind(member.id.to_string())
+        .bind(member.platform.to_id().to_string())
+        .bind(&member.name.display_name)
+        .bind(&member.name.bungie_display_name)
+        .bind(&member.name.bungie_display_name_code)
+        .bind(&member.name.display_name)
+        .bind(&member.name.bungie_display_name)
+        .bind(&member.name.bungie_display_name_code)
         .execute(&mut self.db)
         .await?;
 
@@ -908,8 +950,7 @@ impl ActivityStoreInterface {
             SELECT id from "member" where member_id=?
         "#,
         )
-        .bind(user_info.membership_id.to_string())
-        .bind(format!("{}", user_info.membership_type.to_id()))
+        .bind(member.id.to_string())
         .fetch_one(&mut self.db)
         .await?;
 
@@ -1036,12 +1077,13 @@ impl ActivityStoreInterface {
 
     pub async fn retrieve_last_activity(
         &mut self,
-        member_id: &str,
-        platform: &Platform,
+        member: &Member,
         character_selection: &CharacterClassSelection,
         mode: &Mode,
         manifest: &mut ManifestInterface,
     ) -> Result<CrucibleActivity, Error> {
+        let member_id = &member.id;
+
         let activity_row = if character_selection
             == &CharacterClassSelection::All
         {
@@ -1084,11 +1126,7 @@ impl ActivityStoreInterface {
             }
         } else {
             let character_id = self
-                .retrieve_character_selection_id(
-                    member_id,
-                    platform,
-                    character_selection,
-                )
+                .retrieve_character_selection_id(member, character_selection)
                 .await?;
 
             match sqlx::query(
@@ -1256,10 +1294,12 @@ impl ActivityStoreInterface {
     //returns member_id if selection is ALL
     async fn retrieve_character_selection_id(
         &self,
-        member_id: &str,
-        platform: &Platform,
+        member: &Member,
         character_selection: &CharacterClassSelection,
     ) -> Result<String, Error> {
+        let member_id = &member.id;
+        let platform = &member.platform;
+
         let api = ApiInterface::new(self.verbose)?;
         //first, lets get all of the current characters for the member
         let characters = api
@@ -1300,13 +1340,14 @@ impl ActivityStoreInterface {
 
     pub async fn retrieve_activities_since(
         &mut self,
-        member_id: &str,
+        member: &Member,
         character_selection: &CharacterClassSelection,
-        platform: &Platform,
         mode: &Mode,
         time_period: &DateTimePeriod,
         manifest: &mut ManifestInterface,
     ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
+        let member_id = &member.id;
+
         let out = if character_selection == &CharacterClassSelection::All {
             self.retrieve_activities_for_member_since(
                 member_id,
@@ -1316,16 +1357,13 @@ impl ActivityStoreInterface {
             )
             .await?
         } else {
+            //TODO: change this to take a member
             let character_id = self
-                .retrieve_character_selection_id(
-                    member_id,
-                    platform,
-                    character_selection,
-                )
+                .retrieve_character_selection_id(&member, character_selection)
                 .await?;
 
             self.retrieve_activities_for_character(
-                member_id,
+                &member_id,
                 &character_id,
                 mode,
                 time_period,

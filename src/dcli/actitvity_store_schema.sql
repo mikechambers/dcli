@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
 CREATE TABLE IF NOT EXISTS "sync" (
     "id"            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
     "member"	    INTEGER NOT NULL,
-    "last_checked"   TEXT NOT NULL,
+    "last_sync"   TEXT NOT NULL,
     UNIQUE("member"),
     FOREIGN KEY ("member")
         REFERENCES "member" ("id")

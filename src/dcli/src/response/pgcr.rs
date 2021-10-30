@@ -23,6 +23,7 @@
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 
+use crate::crucible::{Member, PlayerName};
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
 use crate::response::utils::str_to_datetime;
 use crate::response::utils::{property_to_value, standing_default};
@@ -104,7 +105,7 @@ pub struct DestinyPostGameCarnageReportEntry {
     #[serde(rename = "characterId")]
     pub character_id: String,
 
-    pub extended: DestinyPostGameCarnageReportExtendedData,
+    pub extended: Option<DestinyPostGameCarnageReportExtendedData>,
 
     pub player: DestinyPlayer,
 
@@ -176,6 +177,27 @@ pub struct UserInfoCard {
 
     #[serde(rename = "bungieGlobalDisplayNameCode")]
     pub bungie_display_name_code: Option<u32>,
+}
+
+impl UserInfoCard {
+    pub fn to_member(&self) -> Member {
+        let code: Option<String> = match self.bungie_display_name_code {
+            Some(e) => Some(PlayerName::format_bungie_display_name_code(e)),
+            None => None,
+        };
+
+        let name: PlayerName = PlayerName {
+            display_name: self.display_name.clone(),
+            bungie_display_name: self.bungie_display_name.clone(),
+            bungie_display_name_code: code,
+        };
+
+        Member {
+            name,
+            platform: self.membership_type,
+            id: self.membership_id.to_string(),
+        }
+    }
 }
 
 //https://bungie-net.github.io/multi/schema_Destiny-Responses-DestinyProfileUserInfoCard.html#schema_Destiny-Responses-DestinyProfileUserInfoCard

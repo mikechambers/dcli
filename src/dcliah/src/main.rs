@@ -719,26 +719,23 @@ async fn main() {
         }
     };
 
-    /*
-    if !opt.no_sync {
-        match store.sync(&opt.member_id, &opt.platform).await {
-            Ok(_e) => (),
-            Err(e) => {
-                println!("ERROR CAUGHT HERE");
-                eprintln!("Could not sync activity store {}", e);
-                eprintln!("Using existing data");
-            }
-        };
-    }
-    */
+    let name: PlayerName = PlayerName::from_bungie_name("Labradorite#4136");
+
+    let member = match store.get_member(&name).await {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!(
+                "Could not find bungie name. Please check name and try again. {}",
+                e
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     if !opt.no_sync {
-        let name: PlayerName = PlayerName::from_bungie_name("Labradorite#4136");
-
-        match store.sync_n(&name).await {
+        match store.sync(&member).await {
             Ok(_e) => (),
             Err(e) => {
-                println!("ERROR CAUGHT HERE");
                 eprintln!("Could not sync activity store {}", e);
                 eprintln!("Using existing data");
             }
@@ -747,9 +744,8 @@ async fn main() {
 
     let data = match store
         .retrieve_activities_since(
-            &opt.member_id,
+            &member,
             &opt.character_class_selection,
-            &opt.platform,
             &opt.mode,
             &time_period,
             &mut manifest,
