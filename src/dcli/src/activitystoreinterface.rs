@@ -20,9 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use std::collections::HashMap;
-use std::path::PathBuf;
 use std::str::FromStr;
+use std::{collections::HashMap, path::Path};
 
 use chrono::{DateTime, Utc};
 
@@ -83,7 +82,7 @@ impl ActivityStoreInterface {
     }
 
     pub async fn init_with_path(
-        store_dir: &PathBuf,
+        store_dir: &Path,
         verbose: bool,
     ) -> Result<ActivityStoreInterface, Error> {
         let path = store_dir.join(STORE_FILE_NAME).display().to_string();
@@ -121,7 +120,11 @@ impl ActivityStoreInterface {
             sqlx::query(STORE_DB_SCHEMA).execute(&mut db).await?;
         }
 
-        Ok(ActivityStoreInterface { db, verbose, path })
+        Ok(ActivityStoreInterface {
+            db,
+            verbose,
+            path: path.to_string(),
+        })
     }
 
     //todo: this should take a PlayerName
@@ -162,7 +165,7 @@ impl ActivityStoreInterface {
         };
 
         let member: Member = Member {
-            name: name,
+            name,
             platform: Platform::from_id(platform_id),
             id: member_id,
         };
@@ -421,8 +424,8 @@ impl ActivityStoreInterface {
         );
 
         Ok(SyncResult {
-            total_synced,
             total_available,
+            total_synced,
         })
     }
 
@@ -1218,8 +1221,8 @@ impl ActivityStoreInterface {
                 team_names.pop().unwrap_or_else(|| "".to_string());
 
             let team = Team {
-                standing,
                 id,
+                standing,
                 score,
                 player_performances,
                 display_name,
@@ -1271,7 +1274,7 @@ impl ActivityStoreInterface {
 
             let player = self.parse_player(&c_row).await?;
 
-            let cpp = CruciblePlayerPerformance { stats, player };
+            let cpp = CruciblePlayerPerformance { player, stats };
 
             let index = if no_teams {
                 NO_TEAMS_INDEX

@@ -20,7 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use std::path::PathBuf;
+use std::path::Path;
 use std::str::FromStr;
 
 use futures::TryStreamExt;
@@ -61,7 +61,7 @@ pub struct ManifestInterface {
 
 impl ManifestInterface {
     pub async fn new(
-        manifest_dir: &PathBuf,
+        manifest_dir: &Path,
         cache: bool,
     ) -> Result<ManifestInterface, Error> {
         let manifest_path = manifest_dir.join(MANIFEST_FILE_NAME);

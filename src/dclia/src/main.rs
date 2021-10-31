@@ -373,16 +373,16 @@ fn print_tsv(
         )
     };
 
-    let mut name_values: Vec<(&str, String)> = Vec::new();
-
-    name_values.push(("in_activity", in_activity.to_string()));
-    name_values.push(("activity_type_name", activity_type_name.to_string()));
-    name_values.push(("activity_name", activity_name.to_string()));
-    name_values.push(("place_name", place_name.to_string()));
-    name_values.push(("destination_name", destination_name.to_string()));
-    name_values.push(("description", description.to_string()));
-    name_values.push(("human_status", human_status));
-    name_values.push(("is_crucible", mode.is_crucible().to_string()));
+    let name_values: Vec<(&str, String)> = vec![
+        ("in_activity", in_activity.to_string()),
+        ("activity_type_name", activity_type_name.to_string()),
+        ("activity_name", activity_name.to_string()),
+        ("place_name", place_name.to_string()),
+        ("destination_name", destination_name.to_string()),
+        ("description", description.to_string()),
+        ("human_status", human_status),
+        ("is_crucible", mode.is_crucible().to_string()),
+    ];
 
     print!("{}", build_tsv(name_values));
 }

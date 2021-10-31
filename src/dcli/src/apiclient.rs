@@ -55,7 +55,7 @@ impl ApiClient {
             .timeout(std::time::Duration::from_secs(API_TIMEOUT))
             .build()?;
 
-        Ok(ApiClient { client, verbose })
+        Ok(ApiClient { verbose, client })
     }
 
     pub async fn call(&self, url: &str) -> Result<reqwest::Response, Error> {

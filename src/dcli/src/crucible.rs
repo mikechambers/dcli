@@ -205,7 +205,7 @@ impl PlayerName {
     }
 
     pub fn from_bungie_name(bungie_name: &str) -> Self {
-        let v: Vec<&str> = bungie_name.split("#").collect();
+        let v: Vec<&str> = bungie_name.split('#').collect();
 
         let display_name: Option<String> = None;
         let mut bungie_display_name: Option<String> = None;
@@ -231,7 +231,7 @@ impl PlayerName {
             return false;
         }
 
-        if self.bungie_display_name.as_ref().unwrap().len() == 0 {
+        if self.bungie_display_name.as_ref().unwrap().is_empty() {
             return false;
         }
 
@@ -253,7 +253,7 @@ impl FromStr for PlayerName {
             return Err("Invalid Bungie Name. Format: NAME#CODE");
         }
 
-        return Ok(name);
+        Ok(name)
     }
 }
 
@@ -293,21 +293,20 @@ pub struct Medal {
 
 impl Medal {
     pub fn is_gold(&self) -> bool {
-
-        self.id.eq("Medals_pvp_medal_streak_extra_absurd_b") ||
-        self.id.eq("medalStreak7x") ||
-        self.id.eq("medalMatchUndefeated") ||
-        self.id.eq("medalMultiEntireTeam") ||
-        self.id.eq("medalStreakAbsurd") ||
-        self.id.eq("Medals_pvp_medal_streak_no_damage") ||
-        self.id.eq("medalControlPowerPlayWipe") ||
-        self.id.eq("medalCountdownPerfect") ||
-        self.id.eq("medalMayhemKillStreak") ||
-        self.id.eq("Medals_pvp_medal_lockdown_3a") ||
-        self.id.eq("medalRumbleBetterThanAllCombined") ||
-        self.id.eq("medalShowdownUndefeated") ||
-        self.id.eq("medalSupremacyPerfectSecureRate") ||
-        self.id.eq("medalSurvivalTeamUndefeated") 
+        self.id.eq("Medals_pvp_medal_streak_extra_absurd_b")
+            || self.id.eq("medalStreak7x")
+            || self.id.eq("medalMatchUndefeated")
+            || self.id.eq("medalMultiEntireTeam")
+            || self.id.eq("medalStreakAbsurd")
+            || self.id.eq("Medals_pvp_medal_streak_no_damage")
+            || self.id.eq("medalControlPowerPlayWipe")
+            || self.id.eq("medalCountdownPerfect")
+            || self.id.eq("medalMayhemKillStreak")
+            || self.id.eq("Medals_pvp_medal_lockdown_3a")
+            || self.id.eq("medalRumbleBetterThanAllCombined")
+            || self.id.eq("medalShowdownUndefeated")
+            || self.id.eq("medalSupremacyPerfectSecureRate")
+            || self.id.eq("medalSurvivalTeamUndefeated")
     }
 }
 

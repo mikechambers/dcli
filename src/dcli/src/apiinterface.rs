@@ -153,7 +153,7 @@ impl ApiInterface {
             }
         };
 
-        if response.len() == 0 {
+        if response.is_empty() {
             return Err(Error::BungieNameNotFound);
         };
 

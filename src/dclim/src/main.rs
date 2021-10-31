@@ -23,7 +23,7 @@
 mod manifest_info;
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
@@ -58,7 +58,7 @@ async fn retrieve_manifest_info(
 
 fn save_manifest_info(
     manifest_info: &ManifestInfo,
-    path: &PathBuf,
+    path: &Path,
 ) -> Result<(), Error> {
     let json = manifest_info.to_json()?;
 
@@ -69,7 +69,7 @@ fn save_manifest_info(
     Ok(())
 }
 
-fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
+fn load_manifest_info(path: &Path) -> Result<ManifestInfo, Error> {
     let json = fs::read_to_string(path)?;
     let m = ManifestInfo::from_json(&json)?;
 
@@ -79,7 +79,7 @@ fn load_manifest_info(path: &PathBuf) -> Result<ManifestInfo, Error> {
 //should this move to ApiClient?
 async fn download_manifest(
     url: &str,
-    path: &PathBuf,
+    path: &Path,
     print_url: bool,
 ) -> Result<(), Error> {
     let client: ApiClient = ApiClient::new(print_url)?;

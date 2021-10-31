@@ -138,11 +138,11 @@ async fn main() {
 }
 
 fn print_tsv(results: &SyncResult, store: &ActivityStoreInterface) {
-    let mut name_values: Vec<(&str, String)> = Vec::new();
-
-    name_values.push(("total_synced", results.total_synced.to_string()));
-    name_values.push(("total_available", results.total_available.to_string()));
-    name_values.push(("path", store.get_storage_path()));
+    let name_values: Vec<(&str, String)> = vec![
+        ("total_synced", results.total_synced.to_string()),
+        ("total_available", results.total_available.to_string()),
+        ("path", store.get_storage_path()),
+    ];
 
     print!("{}", build_tsv(name_values));
 }
