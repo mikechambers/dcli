@@ -184,6 +184,7 @@ impl PlayerName {
     }
 
     pub fn get_bungie_display_name_code(&self) -> Option<String> {
+        #[allow(clippy::manual_map)]
         match &self.bungie_display_name_code {
             Some(e) => Some(format!("{:0>4}", e)),
             None => None,

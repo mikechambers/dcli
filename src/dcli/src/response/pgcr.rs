@@ -181,10 +181,19 @@ pub struct UserInfoCard {
 
 impl UserInfoCard {
     pub fn to_member(&self) -> Member {
+        #[allow(clippy::manual_map)]
         let code: Option<String> = match self.bungie_display_name_code {
             Some(e) => Some(PlayerName::format_bungie_display_name_code(e)),
             None => None,
         };
+
+        /*
+        //clippy wants us to do this, but its a bit harder to read so not doing
+        //it right now
+        let code: Option<String> = self
+            .bungie_display_name_code
+            .map(PlayerName::format_bungie_display_name_code);
+        */
 
         let name: PlayerName = PlayerName {
             display_name: self.display_name.clone(),

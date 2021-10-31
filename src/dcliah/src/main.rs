@@ -67,6 +67,7 @@ fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
     Ok(mode)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn print_default(
     member: &Member,
     data: &[CruciblePlayerActivityPerformance],

@@ -520,6 +520,8 @@ impl ActivityStoreInterface {
             //matches
             //TODO: can rewrite this to short circuit when first result found
             //if !(director_activity_hash != 2526740498 && director_activity_hash != 248695599)
+
+            #[allow(clippy::nonminimal_bool)]
             if director_activity_hash == 2526740498
                 || director_activity_hash == 248695599
                 || director_activity_hash == 248695599
