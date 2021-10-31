@@ -211,7 +211,7 @@ fn print_default(
 
         &performances[..*activity_limit as usize]
     } else {
-        &performances[..]
+        &performances
     };
 
     let mut last_mode = Mode::None;
@@ -498,44 +498,44 @@ fn print_default(
         let med_divider_len = wep_divider_len;
         let med_divider = repeat_str(&"=", med_divider_len);
 
-        println!("{}", med_header_str);
-        println!("{}", med_divider);
-
         let mut medals = extended.medals.clone();
-
         medals.retain(|m| {
             m.medal.tier != dcli::enums::medaltier::MedalTier::Unknown
         });
 
-        medals.sort_by(|a, b| {
-            let a_gold = a.medal.is_gold();
-            let b_gold = b.medal.is_gold();
+        println!("{}", med_header_str);
+        println!("{}", med_divider);
 
-            if b_gold == a_gold {
-                return b.count.cmp(&a.count);
-            }
+        if !medals.is_empty() {
+            medals.sort_by(|a, b| {
+                let a_gold = a.medal.is_gold();
+                let b_gold = b.medal.is_gold();
 
-            if b_gold && !a_gold {
-                return Ordering::Greater;
-            }
+                if b_gold == a_gold {
+                    return b.count.cmp(&a.count);
+                }
 
-            return Ordering::Less;
-        });
+                if b_gold && !a_gold {
+                    return Ordering::Greater;
+                }
 
-        //TODO: can make this an option
-        let max_medals = std::cmp::min(*medal_count as usize, medals.len());
+                Ordering::Less
+            });
 
-        for m in &medals[..max_medals] {
-            let gold = if m.medal.is_gold() { "Gold" } else { "" };
+            //TODO: can make this an option
+            let max_medals = std::cmp::min(*medal_count as usize, medals.len());
 
-            let gm = (activity_count as f32 / m.count as f32).ceil();
+            for m in &medals[..max_medals] {
+                let gold = if m.medal.is_gold() { "Gold" } else { "" };
 
-            println!(
+                let gm = (activity_count as f32 / m.count as f32).ceil();
+
+                println!(
             "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:>0col_w$}",
             m.medal.name,
             gold,
             m.count.to_string(),
-            format!("{}", format_f32(m.count as f32 / activity_count as f32, 2)),
+            format_f32(m.count as f32 / activity_count as f32, 2),
             format!("{}", gm),
             "",
             truncate_ascii_string(&m.medal.description, med_divider_len - (wep_col + (col_w_w * 3) + col_w_h * 2)),
@@ -543,7 +543,11 @@ fn print_default(
             map_col_w = wep_col,
             col_w_h = col_w_h
         );
+            }
+        } else {
+            println!("No medals");
         }
+
         println!();
         println!("M/G - Medals per game");
         println!("G/M - Number of games to get one medal");
