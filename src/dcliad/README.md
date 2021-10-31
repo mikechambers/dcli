@@ -4,7 +4,7 @@ Command line tool for retrieving and viewing Destiny 2 Crucible activity / match
 
 By default the details on the last activity will be displayed, with options (`--mode`) to specify the mode from which to retrieve the last activity.
 
-You can also specify the specific activity via the `--activity-index` argument. The index can be retrieved from dcliah, as well as directly from the sqlite datastor (activity.id).
+You can also specify the specific activity via the `--activity-index` argument. The index can be retrieved from dcliah.
 
 By default, the app will display summary data for the match, including each player and an overview of weapon usage. By passing in the `--details` flag, per user weapon usage and stats will be displayed.
 
@@ -23,7 +23,7 @@ The tool expects that the manifest has been downloaded and synced using [dclim](
 ## USAGE
 ```
 USAGE:
-    dcliad [FLAGS] [OPTIONS] --member-id <member-id> --platform <platform>
+    dcliad [FLAGS] [OPTIONS] --name <name>
 
 FLAGS:
     -d, --details    
@@ -59,12 +59,7 @@ OPTIONS:
     -D, --data-dir <data-dir>                  
             Directory where Destiny 2 manifest and activity database files are stored. (optional)
             
-            This will normally be downloaded using the dclim tool, and uses a system appropriate directory
-            by default.
-    -m, --member-id <member-id>                
-            Destiny 2 API member id
-            
-            This is not the user name, but the member id retrieved from the Destiny API.
+            This will normally be downloaded using the dclim tool, and uses a system appropriate directory by default.
     -M, --mode <mode>                          
             Activity mode from which to return last activity
             
@@ -74,10 +69,11 @@ OPTIONS:
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
             private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched,
             scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
-    -p, --platform <platform>                  
-            Platform for specified id
+    -n, --name <name>                          
+            Bungie name for player
             
-            Valid values are: xbox, playstation, stadia or steam.
+            Name must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
+            site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
     -w, --weapon-count <weapon-count>          
             The number of weapons to display details for [default: 5]
 ```
@@ -85,7 +81,6 @@ OPTIONS:
 
 | ARGUMENT | OPTIONS |
 |---|---|
-| --platform | xbox, playstation, stadia, steam |
 | --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
    
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
