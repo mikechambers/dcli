@@ -12,7 +12,7 @@ The too expects that the manifest has been downloaded and synced to the default 
 ## USAGE
 ```
 USAGE:
-    dclia [FLAGS] [OPTIONS] --member-id <member-id> --platform <platform>
+    dclia [FLAGS] [OPTIONS] --name <name>
 
 FLAGS:
     -h, --help       
@@ -32,10 +32,11 @@ OPTIONS:
             
             This will normally be downloaded using the dclim tool, and stored in a file named manifest.sqlite3 (in the
             manifest directory specified when running dclim).
-    -m, --member-id <member-id>     
-            Destiny 2 API member id
+    -n, --name <name>               
+            Bungie name for player
             
-            This is not the user name, but the member id retrieved from the Destiny API.
+            Name must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
+            site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
     -O, --output-format <output>    
             Format for command output
             
@@ -43,16 +44,7 @@ OPTIONS:
             
             tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
             (\n). [default: default]
-    -p, --platform <platform>       
-            Platform for specified id
-            
-            Valid values are: xbox, playstation, stadia or steam.
 ```
-
-| ARGUMENT | OPTIONS |
-|---|---|
-| --platform | xbox, playstation, stadia or steam |
-
 
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 

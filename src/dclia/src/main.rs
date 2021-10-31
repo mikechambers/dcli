@@ -22,13 +22,14 @@
 
 use std::path::PathBuf;
 
+use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::apiinterface::ApiInterface;
+use dcli::crucible::{Member, PlayerName};
 use dcli::manifest::definitions::{
     ActivityDefinitionData, DestinationDefinitionData, PlaceDefinitionData,
 };
 //use dcli::error::Error;
 use dcli::enums::mode::Mode;
-use dcli::enums::platform::Platform;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::output::Output;
 use dcli::response::gpr::CharacterActivitiesData;
@@ -53,17 +54,13 @@ const ORBIT_PLACE_HASH: u32 = 2961497387;
 ///
 /// Released under an MIT License.
 struct Opt {
-    /// Platform for specified id
+    /// Bungie name for player
     ///
-    /// Valid values are: xbox, playstation, stadia or steam.
-    #[structopt(short = "p", long = "platform", required = true)]
-    platform: Platform,
-
-    /// Destiny 2 API member id
-    ///
-    /// This is not the user name, but the member id retrieved from the Destiny API.
-    #[structopt(short = "m", long = "member-id", required = true)]
-    member_id: String,
+    /// Name must be in the format of NAME#CODE. Example: foo#3280
+    /// You can find your name in game, or on Bungie's site at:
+    /// https://www.bungie.net/7/en/User/Account/IdentitySettings
+    #[structopt(long = "name", short = "n", required = true)]
+    name: PlayerName,
 
     ///Print out additional information
     ///
@@ -106,6 +103,31 @@ async fn main() {
         }
     };
 
+    let mut store =
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
+            .await
+        {
+            Ok(e) => e,
+            Err(e) => {
+                print_error(
+                    "Could not initialize activity store. Have you run dclias?",
+                    e,
+                );
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
+
+    let member: Member = match store.get_member(&opt.name).await {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!(
+                "Could not find bungie name. Please check name and try again. {}",
+                e
+            );
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
     let client = match ApiInterface::new(opt.verbose) {
         Ok(e) => e,
         Err(e) => {
@@ -115,7 +137,7 @@ async fn main() {
     };
 
     let activities_data: Option<CharacterActivitiesData> = match client
-        .retrieve_current_activity(opt.member_id, opt.platform)
+        .retrieve_current_activity(member.id, member.platform)
         .await
     {
         Ok(e) => e,
