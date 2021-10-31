@@ -2,7 +2,7 @@
 
 Command line tool for viewing Destiny 2 Crucible activity history and stats.
 
-The application will display individual game results and stats, aggregate game results and stats, as well as individual weapon stats. You can specify specific crucible game modes, as well as time periods to create custom reports. Private and non-private stats are seperated from each other.
+The application will display individual game results and stats, aggregate game results and stats, as well as individual weapon and medal stats. You can specify specific crucible game modes, as well as time periods to create custom reports. Private and non-private stats are seperated from each other.
 
 dcliah pulls its data from the local Destiny 2 activity database store. By default, dcliah will create and update this file with the latest activity data, but it can also be seperately managed using [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias).
 
@@ -19,7 +19,7 @@ The tool expects that the manifest has been downloaded and synced using [dclim](
 ## USAGE
 ```
 USAGE:
-    dcliah [FLAGS] [OPTIONS] --member-id <member-id> --platform <platform>
+    dcliah [FLAGS] [OPTIONS] --name <name>
 
 FLAGS:
     -h, --help       
@@ -58,8 +58,7 @@ OPTIONS:
     -D, --data-dir <data-dir>                  
             Directory where Destiny 2 manifest and activity database files are stored. (optional)
             
-            This will normally be downloaded using the dclim and dclias tools, and uses a system appropriate directory
-            by default.
+            This will normally be downloaded using the dclim tool, and uses a system appropriate directory by default.
     -e, --end-custom-time <end-custom-time>    
             Custom end time in RFC 3339 date / time format
             
@@ -86,10 +85,9 @@ OPTIONS:
             time argument.
             
             For example: --moment custom --end-custom-time 2020-12-08T17:00:00.774187+00:00 [default: now]
-    -m, --member-id <member-id>                
-            Destiny 2 API member id
-            
-            This is not the user name, but the member id retrieved from the Destiny API.
+    -m, --medal-count <medal-count>            
+            The number of medals to display details for. Gold medals will be listed first [default: 5]
+
     -M, --mode <mode>                          
             Activity mode to return stats for
             
@@ -116,24 +114,24 @@ OPTIONS:
             argument.
             
             For example: --moment custom --custom-time 2020-12-08T17:00:00.774187+00:00 [default: week]
-    -p, --platform <platform>                  
-            Platform for specified id
+    -n, --name <name>                          
+            Bungie name for player
             
-            Valid values are: xbox, playstation, stadia or steam.
+            Name must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
+            site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
     -w, --weapon-count <weapon-count>          
             The number of weapons to display details for [default: 5]
 
     -W, --weapon-sort <weapon-sort>            
             Specify weapon stats sort order
             
-            Valid values include name, kills (default), games, kills_per_game_kills, wins_percent,
-            precision_total, precision_percent, type [default: kills]
+            Valid values include name, kills (default), games, kills_per_game_kills, precision_total, precision_percent,
+            type, wins_percent [default: kills]
 ```
 
 
 | ARGUMENT | OPTIONS |
 |---|---|
-| --platform | xbox, playstation, stadia, steam |
 | --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
 | --moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer |
 | --end-moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer, season_of_the_lost |
@@ -143,50 +141,50 @@ Manifest can be downloaded and synced with from [dclim](https://github.com/mikec
 
 Activity data store can be created and synced seperately using [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias).
 
-**NOTE** : Currently, due to a [bug](https://github.com/Bungie-net/api/issues/1386) in the Destiny 2 API, you will only get results for private matches when specifying *all_private*. The other options are still included in case the bug is fixed. If viewing private match stats is important to you, please leave a comment [here](https://github.com/mikechambers/dcli/issues/10).
+**NOTE** : Currently, due to a [bug](https://github.com/Bungie-net/api/issues/1386) in the Destiny 2 API, you will only get results for private matches when specifying *all_private*. The other options are still included in case the bug is fixed.
 
 ### Examples
 
 #### Retrieve all activities for past month for the most recently played character
 
 ```
-$ dcliah --member-id 4611686018429783292 --platform xbox --moment month
+$ dcliah --name mesh#3230 --moment month
 ```
 
 #### Retrieve all Trials of Osiris stats for the Titan since the weekend reset
 
 ```
-$ dcliah --member-id 4611686018429783292 --platform xbox --moment weekend --class titan --mode trials_of_osiris
+$ dcliah --name mesh#3230 --moment weekend --class titan --mode trials_of_osiris
 ```
 
 #### Retrieve all stats for Season of Arrivals
 
 ```
-$ dcliah --member-id 4611686018429783292 --platform xbox --moment season_of_arrivals --end-moment season_of_the_hunt
+$ dcliah --name mesh#3230 --moment season_of_arrivals --end-moment season_of_the_hunt
 ```
 
 #### Retrieve all stats for all time for all characters
 
 ```
-$ dcliah --member-id 4611686018429783292 --platform xbox --moment all_time --class all
+$ dcliah --name mesh#3230 --moment all_time --class all
 ```
 
 #### Use dclitime to track all stats from a specific time (on unix based systems)
 
 ```
 $ export SESSION_START=$(dclitime)
-$ dcliah --member-id 4611686018429783292 --platform xbox --moment custom --custom-time $SESSION_START
+$ dcliah --name mesh#3230 --moment custom --custom-time $SESSION_START
 ```
 
 #### View all time stats for Hand Canons
 ```
-& dcliah --member-id $MEMBER_ID --platform $PLATFORM --mode all_pvp --moment all_time --weapon-count 10000 | grep "Hand Cannon"
+& dcliah --name mesh#3230 --mode all_pvp --moment all_time --weapon-count 10000 | grep "Hand Cannon"
 ```
 
 or in Windows Powershell
 
 ```
-& dcliah.exe --member-id $env:MEMBER_ID --platform $env:PLATFORM --mode all_pvp --moment all_time --weapon-count 10000 | Select-String "Hand Cannon"
+& dcliah.exe --name mesh#3230 --mode all_pvp --moment all_time --weapon-count 10000 | Select-String "Hand Cannon"
 ```
 
 ## Questions, Feature Requests, Feedback

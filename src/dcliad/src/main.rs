@@ -560,7 +560,7 @@ struct Opt {
 
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
-    /// This will normally be downloaded using the dclim and dclias tools, and uses
+    /// This will normally be downloaded using the dclim tool, and uses
     /// a system appropriate directory by default.
     #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
     data_dir: Option<PathBuf>,

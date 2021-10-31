@@ -52,7 +52,7 @@ while ($true) {
         }
 
         # assumes dclia is in your path
-        $activity = (dclia --member-id $member_id --platform $platform) -join "`n"
+        $activity = (dclia --name mesh#3230) -join "`n"
         $skip_notification = (($activity -eq "Not currently in an activity") -or ($activity -eq "Currently sitting in Orbit"))
     
         #dont send notification the first time we run

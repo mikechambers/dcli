@@ -79,7 +79,7 @@ OPTIONS:
 #### Download and store all Crucible activity history for all characters
 
 ```
-$ dclias --member-id 4611686018429783292 --platform xbox
+$ dclias --name mesh#3230
 ```
 
 Outputs:

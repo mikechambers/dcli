@@ -62,7 +62,7 @@ Manifest can be downloaded and synced with from [dclim](https://github.com/mikec
 
 
 ```
-$ dclia --member-id 4611686018429783292 --platform xbox
+$ dclia --name mesh#3230
 ```
 
 outputs:
@@ -74,7 +74,7 @@ Playing Deep Stone Crypt Raid on Castalia Macula, Europa
 #### Check for current activity with tab seperated output:
 
 ```
-$ dclia --member-id 4611686018429783292 --platform xbox --output-format tsv
+$ dclia --name mesh#3230 --output-format tsv
 ```
 
 outputs:

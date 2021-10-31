@@ -21,7 +21,7 @@ call dclim.exe
 
 echo ------------- RUNNING dclic.exe--------------
 
-call dclic.exe --member-id 4611686018429783292 --platform xbox
+call dclic.exe --name mesh#3230
 
 echo ------------- RUNNING dclims.exe--------------
 
@@ -29,15 +29,15 @@ call dclims.exe --hash 3260604718
 
 echo ------------- RUNNING dclia.exe--------------
 
-call dclia.exe --member-id 4611686018429783292 --platform xbox
+call dclia.exe --name mesh#3230
 
 echo ------------- RUNNING dcliah.exe --------------
 
-dcliah.exe --member-id 4611686018429783292 --platform xbox
+dcliah.exe --name mesh#3230
 
 echo ------------- RUNNING dcliad.exe --------------
 
-dcliad.exe --member-id 4611686018429783292 --platform xbox
+dcliad.exe --name mesh#3230
 
 echo ------------- RUNNING dclitime.exe ---------------
 

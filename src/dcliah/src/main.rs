@@ -253,8 +253,6 @@ fn print_default(
         */
         map_name = truncate_ascii_string(&map_name, map_col_w);
 
-
-
         let extended = activity.performance.stats.extended.as_ref().unwrap();
         let supers = extended.weapon_kills_super;
         let grenades = extended.weapon_kills_grenade;
@@ -373,6 +371,7 @@ fn print_default(
     println!();
     println!();
 
+    //we have to calculate this even though we might not display weapons as the medal output needs this data
     let wep_col = map_col_w + col_w;
     let col_w_w = col_w + 2;
     let wep_header_str = format!(
@@ -393,68 +392,69 @@ fn print_default(
     let wep_divider_len = wep_header_str.chars().count();
     let wep_divider = repeat_str(&"=", wep_divider_len);
 
-    println!("{}", wep_header_str);
-    println!("{}", wep_divider);
+    if weapon_count > &0 {
+        println!("{}", wep_header_str);
+        println!("{}", wep_divider);
 
-    let mut weapons = extended.weapons.clone();
-    match weapon_sort {
-        WeaponSort::Name => {
-            weapons.sort_by(|a, b| {
-                a.weapon
-                    .name
-                    .to_lowercase()
-                    .cmp(&b.weapon.name.to_lowercase())
-            });
-        }
-        WeaponSort::Kills => {
-            //sorted by kills by default so we dont need to sort again
-            //weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
-        }
-        WeaponSort::Games => {
-            weapons.sort_by(|a, b| b.activity_count.cmp(&a.activity_count));
-        }
-        WeaponSort::KillsPerGameKills => {
-            weapons.sort_by(|a, b| {
-                let a_kpk = calculate_ratio(a.kills, a.activity_count);
-                let b_kpk = calculate_ratio(b.kills, b.activity_count);
-                b_kpk.partial_cmp(&a_kpk).unwrap()
-            });
-        }
-        WeaponSort::PrecisionTotal => {
-            weapons.sort_by(|a, b| {
-                b.precision_kills.partial_cmp(&a.precision_kills).unwrap()
-            });
-        }
-        WeaponSort::PrecisionPercent => {
-            weapons.sort_by(|a, b| {
-                b.precision_kills_percent
-                    .partial_cmp(&a.precision_kills_percent)
-                    .unwrap()
-            });
-        }
-        WeaponSort::WinPercent => {
-            weapons.sort_by(|a, b| {
-                let a_wp = calculate_percent(a.wins, a.activity_count);
-                let b_wp = calculate_percent(b.wins, b.activity_count);
-                b_wp.partial_cmp(&a_wp).unwrap()
-            });
-        }
-        WeaponSort::Type => {
-            weapons.sort_by(|a, b| {
-                let a_type =
-                    format!("{}", a.weapon.item_sub_type).to_lowercase();
-                let b_type =
-                    format!("{}", b.weapon.item_sub_type).to_lowercase();
+        let mut weapons = extended.weapons.clone();
+        match weapon_sort {
+            WeaponSort::Name => {
+                weapons.sort_by(|a, b| {
+                    a.weapon
+                        .name
+                        .to_lowercase()
+                        .cmp(&b.weapon.name.to_lowercase())
+                });
+            }
+            WeaponSort::Kills => {
+                //sorted by kills by default so we dont need to sort again
+                //weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
+            }
+            WeaponSort::Games => {
+                weapons.sort_by(|a, b| b.activity_count.cmp(&a.activity_count));
+            }
+            WeaponSort::KillsPerGameKills => {
+                weapons.sort_by(|a, b| {
+                    let a_kpk = calculate_ratio(a.kills, a.activity_count);
+                    let b_kpk = calculate_ratio(b.kills, b.activity_count);
+                    b_kpk.partial_cmp(&a_kpk).unwrap()
+                });
+            }
+            WeaponSort::PrecisionTotal => {
+                weapons.sort_by(|a, b| {
+                    b.precision_kills.partial_cmp(&a.precision_kills).unwrap()
+                });
+            }
+            WeaponSort::PrecisionPercent => {
+                weapons.sort_by(|a, b| {
+                    b.precision_kills_percent
+                        .partial_cmp(&a.precision_kills_percent)
+                        .unwrap()
+                });
+            }
+            WeaponSort::WinPercent => {
+                weapons.sort_by(|a, b| {
+                    let a_wp = calculate_percent(a.wins, a.activity_count);
+                    let b_wp = calculate_percent(b.wins, b.activity_count);
+                    b_wp.partial_cmp(&a_wp).unwrap()
+                });
+            }
+            WeaponSort::Type => {
+                weapons.sort_by(|a, b| {
+                    let a_type =
+                        format!("{}", a.weapon.item_sub_type).to_lowercase();
+                    let b_type =
+                        format!("{}", b.weapon.item_sub_type).to_lowercase();
 
-                a_type.cmp(&b_type)
-            });
+                    a_type.cmp(&b_type)
+                });
+            }
         }
-    }
 
-    let max_weps = std::cmp::min(*weapon_count as usize, weapons.len());
+        let max_weps = std::cmp::min(*weapon_count as usize, weapons.len());
 
-    for w in &weapons[..max_weps] {
-        println!(
+        for w in &weapons[..max_weps] {
+            println!(
             "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
             w.weapon.name,
             w.activity_count.to_formatted_string(&Locale::en),
@@ -468,19 +468,22 @@ fn print_default(
             col_w = col_w_w,
             map_col_w = wep_col,
         );
-    }
-    println!();
-    println!("% TOTAL - Percentage of all kills");
-    println!("K/Gk - Kills per game in games with a kill with the weapon");
-    println!("WIN % - Win percentage in games with a kill with the weapon");
-    
-    println!();
-    println!();
+        }
+        println!();
+        println!("% TOTAL - Percentage of all kills");
+        println!("K/Gk - Kills per game in games with a kill with the weapon");
+        println!("WIN % - Win percentage in games with a kill with the weapon");
 
-    let med_col = map_col_w + col_w;
-    let col_w_w = col_w + 2;
-    let med_header_str = format!(
-        "{:<0map_col_w$}{:<0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        println!();
+        println!();
+    }
+
+    if medal_count > &0 {
+        let med_col = map_col_w + col_w;
+        let col_w_w = col_w + 2;
+        let col_w_h = col_w / 2;
+        let med_header_str = format!(
+        "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:>0col_w$}",
         "MEDAL",
         "GOLD",
         "COUNT",
@@ -489,62 +492,58 @@ fn print_default(
         "DESCRIPTION",
         col_w = col_w_w,
         map_col_w = med_col,
-    );
+        col_w_h = col_w_h);
 
-    let med_divider_len = wep_divider_len + col_w;
-    let med_divider = repeat_str(&"=", med_divider_len);
+        let med_divider_len = wep_divider_len;
+        let med_divider = repeat_str(&"=", med_divider_len);
 
-    println!("{}", med_header_str);
-    println!("{}", med_divider);
+        println!("{}", med_header_str);
+        println!("{}", med_divider);
 
-    let mut medals = extended.medals.clone();
+        let mut medals = extended.medals.clone();
 
-    medals.retain(|m| m.medal.tier != dcli::enums::medaltier::MedalTier::Unknown);
+        medals.retain(|m| {
+            m.medal.tier != dcli::enums::medaltier::MedalTier::Unknown
+        });
 
-    medals.sort_by(|a, b| {
+        medals.sort_by(|a, b| {
+            let a_gold = a.medal.is_gold();
+            let b_gold = b.medal.is_gold();
 
-        let a_gold = a.medal.is_gold();
-        let b_gold = b.medal.is_gold();
+            if b_gold == a_gold {
+                return b.count.cmp(&a.count);
+            }
 
-        if b_gold == a_gold {
-            return b.count.cmp(&a.count);
-        }
+            if b_gold && !a_gold {
+                return Ordering::Greater;
+            }
 
-        if b_gold && !a_gold {
-            return Ordering::Greater;
-        }
+            return Ordering::Less;
+        });
 
-        return Ordering::Less;
-    });
+        //TODO: can make this an option
+        let max_medals = std::cmp::min(*medal_count as usize, medals.len());
 
-    //TODO: can make this an option
-    let max_medals = std::cmp::min(*medal_count as usize, medals.len());
+        for m in &medals[..max_medals] {
+            let gold = if m.medal.is_gold() { "X" } else { "" };
 
-    for m in &medals[..max_medals] {
-
-        let gold = if m.medal.is_gold() {
-            "X"
-        } else {
-            ""
-        };
-
-        let col_w_h = col_w / 2;
-        println!(
-            "{:<0map_col_w$}{:<0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            println!(
+            "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:>0col_w$}",
             m.medal.name,
             gold,
             m.count.to_string(),
             format!("{}", format_f32(m.count as f32 / activity_count as f32, 2)),
             "",
-            truncate_ascii_string(&m.medal.description, med_divider_len - (wep_col + col_w_w * 4)),
+            truncate_ascii_string(&m.medal.description, med_divider_len - (wep_col + (col_w_w * 2) + col_w_h * 2)),
             col_w = col_w_w,
-            map_col_w = wep_col
+            map_col_w = wep_col,
+            col_w_h = col_w_h
         );
+        }
+
+        println!();
+        println!();
     }
-
-    println!();
-    println!();
-
 }
 
 fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
@@ -632,8 +631,7 @@ struct Opt {
     ///
     /// For example:
     /// --moment custom --custom-time 2020-12-08T17:00:00.774187+00:00
-    #[structopt(long = "moment", 
-        short = "T", default_value = "week")]
+    #[structopt(long = "moment", short = "T", default_value = "week")]
     moment: Moment,
 
     /// End moment from which to pull activities from
@@ -659,8 +657,7 @@ struct Opt {
     ///
     /// For example:
     /// --moment custom --end-custom-time 2020-12-08T17:00:00.774187+00:00
-    #[structopt(long = "end-moment", 
-        short = "E", default_value = "now")]
+    #[structopt(long = "end-moment", short = "E", default_value = "now")]
     end_moment: Moment,
 
     /// Activity mode to return stats for
@@ -719,7 +716,7 @@ struct Opt {
 
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
-    /// This will normally be downloaded using the dclim and dclias tools, and uses
+    /// This will normally be downloaded using the dclim tool, and uses
     /// a system appropriate directory by default.
     #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
     data_dir: Option<PathBuf>,
@@ -785,7 +782,7 @@ async fn main() {
         }
     };
 
-    let member:Member = match store.get_member(&opt.name).await {
+    let member: Member = match store.get_member(&opt.name).await {
         Ok(e) => e,
         Err(e) => {
             eprintln!(

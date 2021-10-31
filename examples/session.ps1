@@ -47,7 +47,7 @@ while ($true) {
 
 
     # assumes dcliah.exe is in your path
-    $activity = (dcliah.exe --member-id $member_id --platform $platform `
+    $activity = (dcliah.exe --name mesh#3230 `
 	--mode $mode --moment custom --custom-time $session_start 2>$null)  -join "`n"
 	#note, to view any errors that might occur, remove 2>$null (this will print
 	#extra output though, or change to 2>err.txt and it will write to a text file)

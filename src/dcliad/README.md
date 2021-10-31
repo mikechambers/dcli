@@ -59,7 +59,7 @@ OPTIONS:
     -D, --data-dir <data-dir>                  
             Directory where Destiny 2 manifest and activity database files are stored. (optional)
             
-            This will normally be downloaded using the dclim and dclias tools, and uses a system appropriate directory
+            This will normally be downloaded using the dclim tool, and uses a system appropriate directory
             by default.
     -m, --member-id <member-id>                
             Destiny 2 API member id
@@ -99,25 +99,25 @@ Activity data store can be created and synced seperately using [dclias](https://
 #### View details for last activity played
 
 ```
-$ dcliad --member-id 4611686018429783292 --platform xbox
+$ dcliad --name mesh#3230
 ```
 
 #### View details for last Iron Banner match played on hunter class
 
 ```
-$ dcliad --member-id 4611686018429783292 --platform xbox --mode iron_banner --class hunter
+$ dcliad --name mesh#3230 --mode iron_banner --class hunter
 ```
 
 #### View details for last activity played displaying extended details 
 
 ```
-$ dcliad --member-id 4611686018429783292 --platform xbox --details
+$ dcliad --name mesh#3230 --details
 ```
 
 #### View details for a specific activity via its index (retrieved from dcliah)
 
 ```
-$ dcliad --member-id 4611686018429783292 --platform xbox --activity-index 7329
+$ dcliad --name mesh#3230 --activity-index 7329
 ```
 
 ## Questions, Feature Requests, Feedback

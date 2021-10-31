@@ -18,19 +18,19 @@ echo "------------- RUNNING dclim--------------"
 dclim
 
 echo "------------- RUNNING dclic--------------"
-dclic --member-id 4611686018429783292 --platform xbox
+dclic --name mesh#3230
 
 echo "------------- RUNNING dclims--------------"
 dclims --hash 3260604718
 
 echo "------------- RUNNING dclia--------------"
-dclia --member-id 4611686018429783292 --platform xbox
+dclia --name mesh#3230
 
 echo "------------- RUNNING dclitime--------------"
 dclitime
 
 echo "------------- RUNNING dcliah --------------"
-dcliah --member-id 4611686018429783292 --platform xbox
+dcliah --name mesh#3230
 
 echo "------------- RUNNING dcliad --------------"
-dcliad --member-id 4611686018429783292 --platform xbox
+dcliad --name mesh#3230
