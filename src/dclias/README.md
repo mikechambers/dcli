@@ -20,13 +20,10 @@ If any errors occur while downloading activity details (step 3), then that speci
 
 Depending on the number of activities, the initial sync can take a couple of minutes. Subsequent synces should be much faster.
 
-The tool stores match data for the specified character. It does not store match results for the other players in the match.
-
-
 ## USAGE
 ```
 USAGE:
-    dclias [FLAGS] [OPTIONS] --character-id <character-id> --member-id <member-id> --platform <platform>
+    dclias [FLAGS] [OPTIONS] --name <name>
 
 FLAGS:
     -h, --help       
@@ -41,37 +38,24 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-    -c, --character-id <character-id>    
-            Destiny 2 API character id
-            
-            Destiny 2 API character id for the character to retrieve activities for.
-    -D, --data-dir <data-dir>            
+    -D, --data-dir <data-dir>       
             Directory where activity sqlite3 database will be stored. (optional)
             
             By default data will be loaded from and stored in the appropriate system local storage directory. Data will
             be stored in a sqlite3 database file named dcli.sqlite3
-    -m, --member-id <member-id>          
-            Destiny 2 API member id
+    -n, --name <name>               
+            Bungie name for player
             
-            This is not the user name, but the member id retrieved from the Destiny API.
-    -O, --output-format <output>         
+            Name must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
+            site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
+    -O, --output-format <output>    
             Format for command output
             
             Valid values are default (Default) and tsv.
             
             tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
             (\n). [default: default]
-    -p, --platform <platform>            
-            Platform for specified id
-            
-            Valid values are: xbox, playstation, stadia or steam.
 ```
-
-
-| ARGUMENT | OPTIONS |
-|---|---|
-| --platform | xbox, playstation, stadia, steam |
-
  
 
 ### Examples
@@ -96,8 +80,6 @@ Each dot represents 50 activities
 Sync complete. Database stored at:
 /home/mesh/.local/share/dcli/dcli.sqlite3
 ```
-
-This assumes sqlite3 is installed on the system.
 
 ## Questions, Feature Requests, Feedback
 
