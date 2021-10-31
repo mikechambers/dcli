@@ -20,18 +20,19 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use std::cmp::Ordering;
 use std::path::PathBuf;
 use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
-use dcli::crucible::PlayerName;
+use dcli::crucible::{Member, PlayerName};
 use dcli::enums::standing::Standing;
 use dcli::enums::{
     completionreason::CompletionReason,
     moment::{DateTimePeriod, Moment},
 };
 use dcli::manifestinterface::ManifestInterface;
-use dcli::utils::calculate_percent;
+use dcli::utils::{calculate_percent, truncate_ascii_string};
 use dcli::{
     crucible::{
         AggregateCruciblePerformances, CruciblePlayerActivityPerformance,
@@ -50,7 +51,7 @@ use dcli::utils::{
     determine_data_dir, format_f32, human_date_format, repeat_str,
     uppercase_first_char,
 };
-//use dcli::utils::EXIT_FAILURE;
+
 use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
 use num_format::{Locale, ToFormattedString};
@@ -66,14 +67,8 @@ fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
     Ok(mode)
 }
 
-//TODO: we may not need custom validation here now
-fn parse_and_validate_moment(src: &str) -> Result<Moment, String> {
-    let moment = Moment::from_str(src)?;
-
-    Ok(moment)
-}
-
 fn print_default(
+    member: &Member,
     data: &[CruciblePlayerActivityPerformance],
     activity_limit: &u32,
     mode: &Mode,
@@ -82,16 +77,10 @@ fn print_default(
     end_moment: &Moment,
     weapon_count: &u32,
     weapon_sort: &WeaponSort,
+    medal_count: &u32,
     character_class_selection: &CharacterClassSelection,
 ) {
-    //todo: might want to look at buffering output
-    //https://rust-cli.github.io/book/tutorial/output.html
-
-    let player_name = if !data.is_empty() {
-        format!("{}", &data[0].performance.player.name.get_short_name())
-    } else {
-        "".to_string()
-    };
+    let player_name = member.name.get_bungie_name();
 
     let start_time = time_period.get_start();
     let end_time = time_period.get_end();
@@ -256,10 +245,15 @@ fn print_default(
         let mut map_name = activity.activity_detail.map_name.clone();
 
         //todo: move this into reusable util function
+        /*
         if map_name.chars().count() > map_col_w - 1 {
             map_name = map_name[..(col_w - 3)].to_string();
             map_name.push_str("..")
         }
+        */
+        map_name = truncate_ascii_string(&map_name, map_col_w);
+
+
 
         let extended = activity.performance.stats.extended.as_ref().unwrap();
         let supers = extended.weapon_kills_super;
@@ -396,7 +390,8 @@ fn print_default(
         map_col_w = wep_col,
     );
 
-    let wep_divider = repeat_str(&"=", wep_header_str.chars().count());
+    let wep_divider_len = wep_header_str.chars().count();
+    let wep_divider = repeat_str(&"=", wep_divider_len);
 
     println!("{}", wep_header_str);
     println!("{}", wep_divider);
@@ -478,7 +473,78 @@ fn print_default(
     println!("% TOTAL - Percentage of all kills");
     println!("K/Gk - Kills per game in games with a kill with the weapon");
     println!("WIN % - Win percentage in games with a kill with the weapon");
+    
     println!();
+    println!();
+
+    let med_col = map_col_w + col_w;
+    let col_w_w = col_w + 2;
+    let med_header_str = format!(
+        "{:<0map_col_w$}{:<0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        "MEDAL",
+        "GOLD",
+        "COUNT",
+        "M/G",
+        "",
+        "DESCRIPTION",
+        col_w = col_w_w,
+        map_col_w = med_col,
+    );
+
+    let med_divider_len = wep_divider_len + col_w;
+    let med_divider = repeat_str(&"=", med_divider_len);
+
+    println!("{}", med_header_str);
+    println!("{}", med_divider);
+
+    let mut medals = extended.medals.clone();
+
+    medals.retain(|m| m.medal.tier != dcli::enums::medaltier::MedalTier::Unknown);
+
+    medals.sort_by(|a, b| {
+
+        let a_gold = a.medal.is_gold();
+        let b_gold = b.medal.is_gold();
+
+        if b_gold == a_gold {
+            return b.count.cmp(&a.count);
+        }
+
+        if b_gold && !a_gold {
+            return Ordering::Greater;
+        }
+
+        return Ordering::Less;
+    });
+
+    //TODO: can make this an option
+    let max_medals = std::cmp::min(*medal_count as usize, medals.len());
+
+    for m in &medals[..max_medals] {
+
+        let gold = if m.medal.is_gold() {
+            "X"
+        } else {
+            ""
+        };
+
+        let col_w_h = col_w / 2;
+        println!(
+            "{:<0map_col_w$}{:<0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            m.medal.name,
+            gold,
+            m.count.to_string(),
+            format!("{}", format_f32(m.count as f32 / activity_count as f32, 2)),
+            "",
+            truncate_ascii_string(&m.medal.description, med_divider_len - (wep_col + col_w_w * 4)),
+            col_w = col_w_w,
+            map_col_w = wep_col
+        );
+    }
+
+    println!();
+    println!();
+
 }
 
 fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
@@ -566,7 +632,7 @@ struct Opt {
     ///
     /// For example:
     /// --moment custom --custom-time 2020-12-08T17:00:00.774187+00:00
-    #[structopt(long = "moment", parse(try_from_str=parse_and_validate_moment), 
+    #[structopt(long = "moment", 
         short = "T", default_value = "week")]
     moment: Moment,
 
@@ -593,7 +659,7 @@ struct Opt {
     ///
     /// For example:
     /// --moment custom --end-custom-time 2020-12-08T17:00:00.774187+00:00
-    #[structopt(long = "end-moment", parse(try_from_str=parse_and_validate_moment), 
+    #[structopt(long = "end-moment", 
         short = "E", default_value = "now")]
     end_moment: Moment,
 
@@ -620,6 +686,10 @@ struct Opt {
     /// The number of weapons to display details for
     #[structopt(long = "weapon-count", short = "w", default_value = "5")]
     weapon_count: u32,
+
+    /// The number of medals to display details for. Gold medals will be listed first.
+    #[structopt(long = "medal-count", short = "m", default_value = "5")]
+    medal_count: u32,
 
     /// Character to retrieve data for
     ///
@@ -715,7 +785,7 @@ async fn main() {
         }
     };
 
-    let member = match store.get_member(&opt.name).await {
+    let member:Member = match store.get_member(&opt.name).await {
         Ok(e) => e,
         Err(e) => {
             eprintln!(
@@ -766,6 +836,7 @@ async fn main() {
     }
 
     print_default(
+        &member,
         &data,
         &opt.activity_limit,
         &opt.mode,
@@ -774,6 +845,7 @@ async fn main() {
         &opt.end_moment,
         &opt.weapon_count,
         &opt.weapon_sort,
+        &opt.medal_count,
         &opt.character_class_selection,
     );
 }

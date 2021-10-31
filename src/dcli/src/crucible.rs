@@ -291,6 +291,26 @@ pub struct Medal {
     pub description: String,
 }
 
+impl Medal {
+    pub fn is_gold(&self) -> bool {
+
+        self.id.eq("Medals_pvp_medal_streak_extra_absurd_b") ||
+        self.id.eq("medalStreak7x") ||
+        self.id.eq("medalMatchUndefeated") ||
+        self.id.eq("medalMultiEntireTeam") ||
+        self.id.eq("medalStreakAbsurd") ||
+        self.id.eq("Medals_pvp_medal_streak_no_damage") ||
+        self.id.eq("medalControlPowerPlayWipe") ||
+        self.id.eq("medalCountdownPerfect") ||
+        self.id.eq("medalMayhemKillStreak") ||
+        self.id.eq("Medals_pvp_medal_lockdown_3a") ||
+        self.id.eq("medalRumbleBetterThanAllCombined") ||
+        self.id.eq("medalShowdownUndefeated") ||
+        self.id.eq("medalSupremacyPerfectSecureRate") ||
+        self.id.eq("medalSurvivalTeamUndefeated") 
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct AggregateCruciblePerformances {
     pub total_activities: u32,
