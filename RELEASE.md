@@ -1,7 +1,7 @@
 # dcli Release Notes
 
 ## v0.7.0 October 32, 2021
-* Deprecated and removed dclics, dclims and dclis
+* Deprecated and removed dclics, dclims, dclic and dclis
 * Added support for specifying player via Bungie names
 * Removed support for specifying player by member id and platform (use Bungie name instead)
 * Added support for displaying medal info in dcliah
