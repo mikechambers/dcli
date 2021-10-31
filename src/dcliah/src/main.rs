@@ -485,7 +485,7 @@ fn print_default(
         let med_header_str = format!(
         "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:>0col_w$}",
         "MEDAL",
-        "GOLD",
+        "",
         "COUNT",
         "M/G",
         "",
@@ -525,7 +525,7 @@ fn print_default(
         let max_medals = std::cmp::min(*medal_count as usize, medals.len());
 
         for m in &medals[..max_medals] {
-            let gold = if m.medal.is_gold() { "X" } else { "" };
+            let gold = if m.medal.is_gold() { "Gold" } else { "" };
 
             println!(
             "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:>0col_w$}",
