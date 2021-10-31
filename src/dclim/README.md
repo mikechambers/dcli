@@ -4,7 +4,7 @@ Command line tool for retrieving and managing the Destiny 2 manifest database.
 
 When running the utility will check whether a more current version of the Destiny 2 API manifest database is avaliable (comparing it to the last version which has been downloaded). If a new version is found, it will download the database, uncompress it, and save it to the directory specified when calling the utility. It will also save a file containting metadata about the current version, which is used for future checks for updates.
 
-Manifest is stored in the system specific local app data directory with the file name:
+The manifest is stored in the system specific local app data directory with the file name:
 manifest.sqlite3, along with meta-data with information about the downloaded
 version. This is used to to determine whether the remote version has been updated.
 
