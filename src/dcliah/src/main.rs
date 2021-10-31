@@ -546,7 +546,7 @@ fn print_default(
         }
         println!();
         println!("M/G - Medals per game");
-        println!("G/M - Number of game to get one medal");
+        println!("G/M - Number of games to get one medal");
 
         println!();
         println!();
