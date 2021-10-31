@@ -149,6 +149,7 @@ which will place the compiled tools in *src/target/release*
 
 ## Known Issues
 
+* Bungie names with certain characters will cause an error on first sync. More info [here](https://github.com/Bungie-net/api/issues/1528). Workaround is to manually add member entry in database.
 * Tied matches are not displayed correctly, and are treated as a Victory.
 
 ## License
