@@ -92,7 +92,7 @@ Lets see all of our Crucible stats since the weekly reset on Tuesday for our las
 $ dcliah --name mesh#3230 --moment weekly
 ```
 
-Lets view our historic Crucible stats across all of our characters for all time:
+Let's view our historic Crucible stats across all of our characters for all time:
 
 ```
 $ dcliah --name mesh#3230 --mode all_pvp --moment all_time -class all
