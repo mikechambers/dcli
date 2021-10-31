@@ -72,11 +72,7 @@ OPTIONS:
 |---|---|
 | --platform | xbox, playstation, stadia, steam |
 
-
-
-member-id and platform can be retrieved with [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis).   
-character-id can be retrieved with [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic).   
-
+ 
 
 ### Examples
 

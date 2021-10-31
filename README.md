@@ -13,11 +13,8 @@ If you run into any issues, have any ideas, or just want to chat, please post in
 ### Utilities
 | TOOL | DESCRIPTION |
 | --- | --- |
-| [dclis](https://github.com/mikechambers/dcli/tree/main/src/dclis) | Retrieves primary platform and membership ids for Destiny 2 players |
 | [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) | Manages and syncs the remote Destiny 2 API manifest database |
 | [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file |
-| [dclic](https://github.com/mikechambers/dcli/tree/main/src/dclic) | Retrieves character ids for the specified member |
-| [dclims](https://github.com/mikechambers/dcli/tree/main/src/dclims) | Searches the Destiny 2 manifest by hash ids (from API calls) |
 | [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments |
 
 
@@ -56,65 +53,12 @@ To get started, download the release (or compile from source), and place the exe
 
 If you are running on Mac, make sure to [read this article](https://github.com/mikechambers/dcli/wiki/Running-dcli-tools-on-Mac-OS-X) to ensure everything will run correctly.
 
-In general, there are 3 steps to take before you can begin getting data:
+Before viewing your stats you need to first sync the manifest (which contains information about weapons, maps, etc...).
 
-1. Get your member id and platform (dclis)
-2. Download the manifest (dclim) and sync your activities (dclias)
-3. View your stats (dcliah)
-
-### Retrieve your member id, platform and character ids
-
-The first thing we will do is retrieve your Destiny member id and platform for your primary Destiny account. 
-```
-$ dclis --name mesh --platform xbox
-```
-
-This will output something like:
-
-```
-Display Name   mesh
-id             4611686018429783292
-Platform       Xbox
-Platform Id    1
-```
-
-Note that the platform may be different that what you entered depending on whether you have set up cross save.
-
-Most of the apps that call the API will require you to pass in your member id and platform.
-
-### (Optional) Save data in environment variables
-
-One useful trick, is to store some of the data you need to reuse, such your member id, in environment variables.
-
-For example, on Linux / Mac OS X, I have this placed in my `.profile` file:
-
-```
-export MEMBER_ID=4611686018429783292
-export PLATFORM=xbox
-```
-
-Then, I can just use `$MEMBER_ID` whenever you need to use it.
-
-Here are some resources going over how to set environment variables on [Mac OS X](https://apple.stackexchange.com/questions/106778/how-do-i-set-environment-variables-on-os-x), [Linux](https://www.serverlab.ca/tutorials/linux/administration-linux/how-to-set-environment-variables-in-linux/) and [Windows](https://support.shotgunsoftware.com/hc/en-us/articles/114094235653-Setting-global-environment-variables-on-Windows).
-
-
-At this point, we have all of our data setup, and can access it via environment variables like so:
-
-```
-$ echo $MEMBER_ID
-```
-
-or on Windows
-
-```
-$ echo $env:MEMBER_ID
-```
-
-Storing this data in enviroment variables is not required but makes it much easier to use the apps. The examples below will assume you are using environment variables (if not you can just enter the actual data values in place of the variables).
 
 ### Download the manifest
 
-The next thing we need to do is to download the Destiny 2 manifest database using dclim. This contains information about all of the items and activities in Destiny 2, and is updated periodically.
+You can download the latest Destiny 2 manifest database using dclim. This contains information about all of the items and activities in Destiny 2, and is updated periodically.
 
 Just run:
 
@@ -129,8 +73,12 @@ and the manifest file will be downloaded and saved in a system appropriate direc
 Next, lets sync all of our activity history to a local database. This data will be used by other apps, such as dcliah to generate and display stats.
 
 ```
-$ dclias --member-id $MEMBER_ID --platform $PLATFORM
+$ dclias --name mesh#3230
 ```
+
+Replacing mesh#3230 with your own Bungie name.
+
+You can find your Bungie name in game, or on Bungie's site at [https://www.bungie.net/7/en/User/Account/IdentitySettings](https://www.bungie.net/7/en/User/Account/IdentitySettings).
 
 The first time you run this, it may take a couple of minutes to load all of your data (depending on the number of activities that you have). If any errors occur while syncing, just re-run the app when its done. It is smart enough to only sync the acitivties that it missed the first time.
 
@@ -138,24 +86,16 @@ Once you have done the initial sync, subsequent activity syncs should be very fa
 
 ### Grabbing data
 
-Now that we have everything set up, we can now start using the apps to view our data.
-
-Let's start getting some data. Lets see whether we are playing Destiny 2, and if so, which activity:
-
-```
-$ dclia --member-id $MEMBER_ID --platform $PLATFORM
-```
-
 Lets see all of our Crucible stats since the weekly reset on Tuesday for our last played character:
 
 ```
-$ dcliah --member-id $MEMBER_ID --platform $PLATFORM --moment weekly
+$ dcliah --name mesh#3230 --moment weekly
 ```
 
 Lets view our historic Crucible stats across all of our characters for all time:
 
 ```
-$ dcliah --member-id $MEMBER_ID --platform xbox --mode all_pvp --moment all_time -class all
+$ dcliah --name mesh#3230 --mode all_pvp --moment all_time -class all
 ```
 
 ### Putting it all together
