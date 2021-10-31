@@ -483,11 +483,12 @@ fn print_default(
         let col_w_w = col_w + 2;
         let col_w_h = col_w / 2;
         let med_header_str = format!(
-        "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:>0col_w$}",
+        "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:>0col_w$}",
         "MEDAL",
         "",
         "COUNT",
         "M/G",
+        "G/M",
         "",
         "DESCRIPTION",
         col_w = col_w_w,
@@ -527,19 +528,25 @@ fn print_default(
         for m in &medals[..max_medals] {
             let gold = if m.medal.is_gold() { "Gold" } else { "" };
 
+            let gm = (activity_count as f32 / m.count as f32).ceil();
+
             println!(
-            "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:>0col_w$}",
+            "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:>0col_w$}",
             m.medal.name,
             gold,
             m.count.to_string(),
             format!("{}", format_f32(m.count as f32 / activity_count as f32, 2)),
+            format!("{}", gm),
             "",
-            truncate_ascii_string(&m.medal.description, med_divider_len - (wep_col + (col_w_w * 2) + col_w_h * 2)),
+            truncate_ascii_string(&m.medal.description, med_divider_len - (wep_col + (col_w_w * 3) + col_w_h * 2)),
             col_w = col_w_w,
             map_col_w = wep_col,
             col_w_h = col_w_h
         );
         }
+        println!();
+        println!("M/G - Medals per game");
+        println!("G/M - Number of game to get one medal");
 
         println!();
         println!();
