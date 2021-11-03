@@ -1,6 +1,9 @@
 # dcli Release Notes
 
-## v0.7.0 October 32, 2021
+## v0.7.1 November 2, 2021
+* Added support for Iron Banner gold medals
+
+## v0.7.0 October 31, 2021
 * Deprecated and removed dclics, dclims, dclic and dclis
 * Added support for specifying player via Bungie names
 * Removed support for specifying player by member id and platform (use Bungie name instead)
