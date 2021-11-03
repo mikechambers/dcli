@@ -308,6 +308,16 @@ impl Medal {
             || self.id.eq("medalShowdownUndefeated")
             || self.id.eq("medalSupremacyPerfectSecureRate")
             || self.id.eq("medalSurvivalTeamUndefeated")
+
+            //iron banner
+            || self.id.eq("Medals_pvp_medal_ib_streak_lg")
+            || self.id.eq("Medals_pvp_medal_ib_control_3b")
+            || self.id.eq("Medals_pvp_medal_ib_multi_entire_team")
+            || self.id.eq("Medals_pvp_medal_ib_multi_7x")
+            || self.id.eq("Medals_pvp_medal_ib_match_undefeated")
+            || self.id.eq("Medals_pvp_medal_ib_streak_shutdown_large")
+            || self.id.eq("Medals_pvp_medal_ib_streak_huge")
+            || self.id.eq("Medals_pvp_medal_ib_streak_no_damage")
     }
 }
 
