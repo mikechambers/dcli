@@ -254,6 +254,7 @@ impl Mode {
             || *self == Mode::ControlCompetitive
             || *self == Mode::TrialsOfOsiris
             || *self == Mode::Momentum
+            || *self == Mode::Elimination
     }
 
     pub fn is_private(&self) -> bool {
