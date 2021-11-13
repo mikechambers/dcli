@@ -32,7 +32,10 @@ use dcli::enums::{
     moment::{DateTimePeriod, Moment},
 };
 use dcli::manifestinterface::ManifestInterface;
-use dcli::utils::{calculate_percent, truncate_ascii_string};
+use dcli::utils::{
+    calculate_percent, create_db_path, create_manifest_path,
+    truncate_ascii_string,
+};
 use dcli::{
     crucible::{
         AggregateCruciblePerformances, CruciblePlayerActivityPerformance,
@@ -746,6 +749,8 @@ async fn main() {
         }
     };
 
+    let db_path = create_db_path(&data_dir);
+
     let start_time = match opt.moment {
         Moment::Custom => {
             opt.custom_time.unwrap() //note, this should be ok, because struct opt should ensure valid value
@@ -770,7 +775,7 @@ async fn main() {
         };
 
     let mut store =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
+        match ActivityStoreInterface::init_with_path(&db_path, opt.verbose)
             .await
         {
             Ok(e) => e,
@@ -783,16 +788,19 @@ async fn main() {
             }
         };
 
-    let mut manifest = match ManifestInterface::new(&data_dir, false).await {
-        Ok(e) => e,
-        Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
-                e,
-            );
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+    let manifest_path = create_manifest_path(&data_dir);
+
+    let mut manifest =
+        match ManifestInterface::init_with_path(&manifest_path).await {
+            Ok(e) => e,
+            Err(e) => {
+                print_error(
+                    "Could not initialize manifest. Have you run dclim?",
+                    e,
+                );
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
 
     let member: Member = match store.get_member(&opt.name).await {
         Ok(e) => e,

@@ -22,12 +22,12 @@
 
 mod manifest_info;
 
+use dcli::utils::create_manifest_path;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use dcli::apiclient::ApiClient;
 use dcli::error::Error;
-use dcli::manifestinterface::MANIFEST_FILE_NAME;
 use dcli::output::Output;
 use dcli::response::manifest::ManifestResponse;
 use dcli::utils::EXIT_FAILURE;
@@ -180,7 +180,7 @@ async fn main() {
         }
     };
 
-    let m_path = data_dir.join(MANIFEST_FILE_NAME);
+    let m_path = create_manifest_path(&data_dir);
     let m_info_path = data_dir.join(MANIFEST_INFO_FILE_NAME);
 
     let remote_manifest_info = match retrieve_manifest_info(opt.verbose).await {

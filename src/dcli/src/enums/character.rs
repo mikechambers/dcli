@@ -64,7 +64,7 @@ pub enum CharacterGender {
 }
 
 impl CharacterGender {
-    pub fn to_id(&self) -> u32 {
+    pub fn as_id(&self) -> u32 {
         *self as u32
     }
 
@@ -101,7 +101,7 @@ pub enum CharacterClass {
 }
 
 impl CharacterClass {
-    pub fn to_id(&self) -> u32 {
+    pub fn as_id(&self) -> u32 {
         *self as u32
     }
 
@@ -155,7 +155,7 @@ pub enum CharacterRace {
 }
 
 impl CharacterRace {
-    pub fn to_id(&self) -> u32 {
+    pub fn as_id(&self) -> u32 {
         *self as u32
     }
 
