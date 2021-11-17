@@ -35,7 +35,7 @@ pub enum CompletionReason {
 }
 
 impl CompletionReason {
-    pub fn as_id(&self) -> u32 {
+    pub fn to_id(&self) -> u32 {
         *self as u32
     }
 

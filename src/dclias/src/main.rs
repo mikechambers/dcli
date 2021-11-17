@@ -26,8 +26,7 @@ use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::crucible::PlayerName;
 use dcli::output::Output;
 use dcli::utils::{
-    build_tsv, create_db_path, determine_data_dir, print_error, print_verbose,
-    EXIT_FAILURE,
+    build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE,
 };
 use structopt::StructOpt;
 
@@ -98,10 +97,8 @@ async fn main() {
         }
     };
 
-    let db_path = create_db_path(&data_dir);
-
     let mut store: ActivityStoreInterface =
-        match ActivityStoreInterface::init_with_path(&db_path, opt.verbose)
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
             .await
         {
             Ok(e) => e,
@@ -130,28 +127,27 @@ async fn main() {
         }
     };
 
-    let path = db_path.display().to_string();
     match opt.output {
         Output::Default => {
-            print_default(&results, &path);
+            print_default(&results, &store);
         }
         Output::Tsv => {
-            print_tsv(&results, &path);
+            print_tsv(&results, &store);
         }
     }
 }
 
-fn print_tsv(results: &SyncResult, path: &str) {
+fn print_tsv(results: &SyncResult, store: &ActivityStoreInterface) {
     let name_values: Vec<(&str, String)> = vec![
         ("total_synced", results.total_synced.to_string()),
         ("total_available", results.total_available.to_string()),
-        ("path", path.to_string()),
+        ("path", store.get_storage_path()),
     ];
 
     print!("{}", build_tsv(name_values));
 }
 
-fn print_default(results: &SyncResult, path: &str) {
+fn print_default(results: &SyncResult, store: &ActivityStoreInterface) {
     println!();
     println!("{}", "Activity sync complete".to_string().to_uppercase());
     println!("------------------------------------------------");
@@ -179,5 +175,5 @@ fn print_default(results: &SyncResult, path: &str) {
 
     println!("{}", queue_str);
 
-    println!("Database stored at: {}", path);
+    println!("Database stored at: {}", store.get_storage_path());
 }

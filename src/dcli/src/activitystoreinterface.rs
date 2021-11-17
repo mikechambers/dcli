@@ -25,8 +25,6 @@ use std::{collections::HashMap, path::Path};
 
 use chrono::{DateTime, Utc};
 
-use sqlx::pool::PoolConnection;
-
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
     enums::{
@@ -39,8 +37,8 @@ use crate::{
 };
 use futures::TryStreamExt;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
-use sqlx::{Pool, SqlitePool};
-use sqlx::{Row, Sqlite};
+use sqlx::Row;
+use sqlx::{ConnectOptions, SqliteConnection};
 
 use crate::crucible::{
     ActivityDetail, CruciblePlayerActivityPerformance,
@@ -63,6 +61,7 @@ use crate::{
     },
 };
 
+const STORE_FILE_NAME: &str = "dcli.sqlite3";
 const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 
 //numer of simultaneous requests we make to server when retrieving activity history
@@ -73,49 +72,46 @@ const NO_TEAMS_INDEX: i32 = 253;
 
 pub struct ActivityStoreInterface {
     verbose: bool,
-    db: sqlx::pool::PoolConnection<Sqlite>,
+    db: SqliteConnection,
+    path: String,
 }
 
 impl ActivityStoreInterface {
-    pub async fn init_with_connection(
-        connection: PoolConnection<Sqlite>,
-        verbose: bool,
-    ) -> Result<ActivityStoreInterface, Error> {
-        Ok(ActivityStoreInterface {
-            db: connection,
-            verbose,
-        })
+    pub fn get_storage_path(&self) -> String {
+        self.path.clone()
     }
 
-    pub async fn create_pool(db_path: &Path) -> Result<Pool<Sqlite>, Error> {
-        let connection_string = db_path.display().to_string();
+    pub async fn init_with_path(
+        store_dir: &Path,
+        verbose: bool,
+    ) -> Result<ActivityStoreInterface, Error> {
+        let path = store_dir.join(STORE_FILE_NAME).display().to_string();
 
-        let pool = SqlitePool::connect_with(
-            SqliteConnectOptions::from_str(&connection_string)?
-                .journal_mode(SqliteJournalMode::Wal)
-                .create_if_missing(true)
-                .read_only(false),
-        )
-        .await
-        .unwrap();
+        let read_only = false;
+        let connection_string: &str = &path;
 
-        let mut db = pool.acquire().await?;
+        //TODO: Is this still the correct / best journal mode for us?
+        let mut db = SqliteConnectOptions::from_str(&connection_string)?
+            .journal_mode(SqliteJournalMode::Wal)
+            .create_if_missing(true)
+            .read_only(read_only)
+            .connect()
+            .await?;
+
+        //is this an existing db, or a completly new one / first time?
 
         let should_update_schema = match sqlx::query(
             r#"
             SELECT max(version) as max_version FROM version
         "#,
         )
-        .fetch_optional(&mut db)
+        .fetch_one(&mut db)
         .await
         {
-            Ok(e) => match e {
-                Some(ee) => {
-                    let version: i32 = ee.try_get("max_version").unwrap_or(-1);
-                    version != DB_SCHEMA_VERSION
-                }
-                None => true,
-            },
+            Ok(e) => {
+                let version: i32 = e.try_get("max_version").unwrap_or(-1);
+                version != DB_SCHEMA_VERSION
+            }
             Err(_e) => true,
         };
 
@@ -124,18 +120,11 @@ impl ActivityStoreInterface {
             sqlx::query(STORE_DB_SCHEMA).execute(&mut db).await?;
         }
 
-        Ok(pool)
-    }
-
-    pub async fn init_with_path(
-        db_path: &Path,
-        verbose: bool,
-    ) -> Result<ActivityStoreInterface, Error> {
-        let pool = ActivityStoreInterface::create_pool(db_path).await?;
-
-        let db = pool.acquire().await?;
-
-        Ok(ActivityStoreInterface { verbose, db })
+        Ok(ActivityStoreInterface {
+            db,
+            verbose,
+            path: path.to_string(),
+        })
     }
 
     //todo: this should take a PlayerName
@@ -565,7 +554,6 @@ impl ActivityStoreInterface {
                 }
             };
         }
-
         sqlx::query("COMMIT;").execute(&mut self.db).await?;
 
         Ok(SyncResult {
@@ -645,8 +633,8 @@ impl ActivityStoreInterface {
         )
         .bind(data.activity_details.instance_id) //activity_id
         .bind(data.period.to_rfc3339()) //period
-        .bind(data.activity_details.mode.as_id().to_string()) //mode
-        .bind(data.activity_details.membership_type.as_id().to_string()) //platform
+        .bind(data.activity_details.mode.to_id().to_string()) //mode
+        .bind(data.activity_details.membership_type.to_id().to_string()) //platform
         .bind(data.activity_details.director_activity_hash.to_string()) //director_activity_hash
         .bind(data.activity_details.reference_id.to_string()) //reference_id
         .execute(&mut self.db)
@@ -686,7 +674,7 @@ impl ActivityStoreInterface {
                 VALUES(?,?)
                 "#,
             )
-            .bind(mode.as_id().to_string())
+            .bind(mode.to_id().to_string())
             .bind(activity_row_id)
             .execute(&mut self.db)
             .await?;
@@ -950,7 +938,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(member.id.to_string())
-        .bind(member.platform.as_id().to_string())
+        .bind(member.platform.to_id().to_string())
         .bind(&member.name.display_name)
         .bind(&member.name.bungie_display_name)
         .bind(&member.name.bungie_display_name_code)
@@ -989,7 +977,7 @@ impl ActivityStoreInterface {
         )
         .bind(character_id.to_string())
         .bind(member_rowid)
-        .bind(class_type.as_id().to_string())
+        .bind(class_type.to_id().to_string())
         .execute(&mut self.db)
         .await?;
 
@@ -1030,7 +1018,7 @@ impl ActivityStoreInterface {
             ORDER BY activity.period DESC LIMIT 1
         "#,
         )
-        .bind(mode.as_id().to_string())
+        .bind(mode.to_id().to_string())
         .bind(character_row_id.to_string())
         .bind(character_row_id.to_string())
         .fetch_all(&mut self.db)
@@ -1127,7 +1115,7 @@ impl ActivityStoreInterface {
                 "#,
             )
             .bind(member_id.to_string())
-            .bind(mode.as_id().to_string())
+            .bind(mode.to_id().to_string())
             .fetch_one(&mut self.db)
             .await
             {
@@ -1167,7 +1155,7 @@ impl ActivityStoreInterface {
                         period DESC LIMIT 1
                     "#
                 ).bind(character_id.to_string())
-                .bind(mode.as_id().to_string())
+                .bind(mode.to_id().to_string())
                 .fetch_one(&mut self.db)
                 .await
                 {
@@ -1404,7 +1392,7 @@ impl ActivityStoreInterface {
             -1
         } else {
             //if not private, then we dont include any results that are private
-            Mode::PrivateMatchesAll.as_id() as i32
+            Mode::PrivateMatchesAll.to_id() as i32
         };
 
         //this is running about 550ms
@@ -1440,7 +1428,7 @@ impl ActivityStoreInterface {
         .bind(member_id.to_string())
         .bind(time_period.get_start().to_rfc3339())
         .bind(time_period.get_end().to_rfc3339())
-        .bind(mode.as_id().to_string())
+        .bind(mode.to_id().to_string())
         .bind(restrict_mode_id.to_string())
         .fetch_all(&mut self.db)
         .await?;
@@ -1472,7 +1460,7 @@ impl ActivityStoreInterface {
             -1
         } else {
             //if not private, then we dont include any results that are private
-            Mode::PrivateMatchesAll.as_id() as i32
+            Mode::PrivateMatchesAll.to_id() as i32
         };
 
         //let now = std::time::Instant::now();
@@ -1503,7 +1491,7 @@ impl ActivityStoreInterface {
         )
         .bind(time_period.get_start().to_rfc3339())
         .bind(time_period.get_end().to_rfc3339())
-        .bind(mode.as_id().to_string())
+        .bind(mode.to_id().to_string())
         .bind(restrict_mode_id.to_string())
         .bind(character_index.to_string())
         .fetch_all(&mut self.db)

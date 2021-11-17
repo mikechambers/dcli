@@ -44,17 +44,6 @@ pub const TSV_DELIM: &str = "\t";
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub const MANIFEST_FILE_NAME: &str = "manifest.sqlite3";
-pub const STORE_FILE_NAME: &str = "dcli.sqlite3";
-
-pub fn create_manifest_path(data_dir: &Path) -> PathBuf {
-    data_dir.join(MANIFEST_FILE_NAME)
-}
-
-pub fn create_db_path(data_dir: &Path) -> PathBuf {
-    data_dir.join(STORE_FILE_NAME)
-}
-
 pub fn f32_are_equal(a: f32, b: f32) -> bool {
     (a - b).abs() < f32::EPSILON
 }

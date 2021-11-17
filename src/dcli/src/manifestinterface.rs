@@ -26,8 +26,8 @@ use std::str::FromStr;
 use futures::TryStreamExt;
 use serde_derive::{Deserialize, Serialize};
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
-
-use sqlx::{Pool, Row, Sqlite, SqlitePool};
+use sqlx::Row;
+use sqlx::{ConnectOptions, Connection, SqliteConnection};
 use std::collections::HashMap;
 
 use crate::error::Error;
@@ -37,6 +37,8 @@ use crate::manifest::definitions::{
     HistoricalStatsDefinition, InventoryItemDefinitionData,
     PlaceDefinitionData,
 };
+
+pub const MANIFEST_FILE_NAME: &str = "manifest.sqlite3";
 
 /// Takes a Destiny 2 API has and converts it to a Destiny 2 manifest db index value
 pub fn convert_hash_to_id(hash: u32) -> i64 {
@@ -50,7 +52,7 @@ pub fn convert_hash_to_id(hash: u32) -> i64 {
 }
 
 pub struct ManifestInterface {
-    manifest_db: sqlx::pool::PoolConnection<Sqlite>,
+    manifest_db: SqliteConnection,
     activity_definition_cache: HashMap<i64, ActivityDefinitionData>,
     inventory_item_definition_cache: HashMap<i64, InventoryItemDefinitionData>,
     historical_stats_definition_cache:
@@ -58,47 +60,6 @@ pub struct ManifestInterface {
 }
 
 impl ManifestInterface {
-    pub async fn create_pool(
-        manifest_path: &Path,
-    ) -> Result<Pool<Sqlite>, Error> {
-        if !manifest_path.exists() {
-            return Err(Error::IoFileDoesNotExist {
-                description: format!(
-                    "Manifest path points to non-existent file. {}",
-                    manifest_path.display()
-                ),
-            });
-        }
-
-        let connection_string = manifest_path.display().to_string();
-
-        let pool = SqlitePool::connect_with(
-            SqliteConnectOptions::from_str(&connection_string)?
-                .journal_mode(SqliteJournalMode::Memory)
-                .read_only(true),
-        )
-        .await
-        .unwrap();
-
-        Ok(pool)
-    }
-
-    pub async fn init_with_path(
-        manifest_path: &Path,
-    ) -> Result<ManifestInterface, Error> {
-        let pool = ManifestInterface::create_pool(manifest_path).await?;
-
-        let db = pool.acquire().await?;
-
-        Ok(ManifestInterface {
-            manifest_db: db,
-            activity_definition_cache: HashMap::new(),
-            inventory_item_definition_cache: HashMap::new(),
-            historical_stats_definition_cache: HashMap::new(),
-        })
-    }
-
-    /*
     pub async fn new(
         manifest_dir: &Path,
         cache: bool,
@@ -181,7 +142,15 @@ impl ManifestInterface {
             historical_stats_definition_cache: HashMap::new(),
         })
     }
-    */
+
+    ///closes the database connection and takes ownership of self
+    pub async fn close(self) -> Result<(), Error> {
+        //can call ping to see if its still open? but that throws an error if it
+        //isnt, so we can just try and close
+        //TODO: should we bubble the error? or just silently fail?
+        self.manifest_db.close().await?;
+        Ok(())
+    }
 
     /// Searches entire manifest for id, and returns associated data for it.
     /// returns an error if more that one result found.

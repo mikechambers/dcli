@@ -33,10 +33,8 @@ use dcli::enums::mode::Mode;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::output::Output;
 use dcli::response::gpr::CharacterActivitiesData;
-use dcli::utils::{
-    build_tsv, create_db_path, determine_data_dir, print_error, print_verbose,
-};
-use dcli::utils::{create_manifest_path, EXIT_FAILURE};
+use dcli::utils::EXIT_FAILURE;
+use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose};
 use structopt::StructOpt;
 
 const ORBIT_PLACE_HASH: u32 = 2961497387;
@@ -105,10 +103,8 @@ async fn main() {
         }
     };
 
-    let db_path = create_db_path(&data_dir);
-
     let mut store =
-        match ActivityStoreInterface::init_with_path(&db_path, opt.verbose)
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
             .await
         {
             Ok(e) => e,
@@ -166,15 +162,13 @@ async fn main() {
         }
     };
 
-    let manifest_path = create_manifest_path(&data_dir);
-    let mut manifest =
-        match ManifestInterface::init_with_path(&manifest_path).await {
-            Ok(e) => e,
-            Err(e) => {
-                print_error("Manifest Error", e);
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+    let mut manifest = match ManifestInterface::new(&data_dir, false).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Manifest Error", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     print_verbose(
         &format!(
