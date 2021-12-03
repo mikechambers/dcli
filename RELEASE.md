@@ -1,5 +1,8 @@
 # dcli Release Notes
 
+## v0.7.2 December 3, 2021
+* Fixed bug where Elimination mode was not supported
+
 ## v0.7.1 November 2, 2021
 * Added support for Iron Banner gold medals
 
