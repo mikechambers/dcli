@@ -633,8 +633,8 @@ impl ActivityStoreInterface {
         )
         .bind(data.activity_details.instance_id) //activity_id
         .bind(data.period.to_rfc3339()) //period
-        .bind(data.activity_details.mode.to_id().to_string()) //mode
-        .bind(data.activity_details.membership_type.to_id().to_string()) //platform
+        .bind(data.activity_details.mode.as_id().to_string()) //mode
+        .bind(data.activity_details.membership_type.as_id().to_string()) //platform
         .bind(data.activity_details.director_activity_hash.to_string()) //director_activity_hash
         .bind(data.activity_details.reference_id.to_string()) //reference_id
         .execute(&mut self.db)
@@ -674,7 +674,7 @@ impl ActivityStoreInterface {
                 VALUES(?,?)
                 "#,
             )
-            .bind(mode.to_id().to_string())
+            .bind(mode.as_id().to_string())
             .bind(activity_row_id)
             .execute(&mut self.db)
             .await?;
@@ -938,7 +938,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(member.id.to_string())
-        .bind(member.platform.to_id().to_string())
+        .bind(member.platform.as_id().to_string())
         .bind(&member.name.display_name)
         .bind(&member.name.bungie_display_name)
         .bind(&member.name.bungie_display_name_code)
@@ -977,7 +977,7 @@ impl ActivityStoreInterface {
         )
         .bind(character_id.to_string())
         .bind(member_rowid)
-        .bind(class_type.to_id().to_string())
+        .bind(class_type.as_id().to_string())
         .execute(&mut self.db)
         .await?;
 
@@ -1018,7 +1018,7 @@ impl ActivityStoreInterface {
             ORDER BY activity.period DESC LIMIT 1
         "#,
         )
-        .bind(mode.to_id().to_string())
+        .bind(mode.as_id().to_string())
         .bind(character_row_id.to_string())
         .bind(character_row_id.to_string())
         .fetch_all(&mut self.db)
@@ -1115,7 +1115,7 @@ impl ActivityStoreInterface {
                 "#,
             )
             .bind(member_id.to_string())
-            .bind(mode.to_id().to_string())
+            .bind(mode.as_id().to_string())
             .fetch_one(&mut self.db)
             .await
             {
@@ -1155,7 +1155,7 @@ impl ActivityStoreInterface {
                         period DESC LIMIT 1
                     "#
                 ).bind(character_id.to_string())
-                .bind(mode.to_id().to_string())
+                .bind(mode.as_id().to_string())
                 .fetch_one(&mut self.db)
                 .await
                 {
@@ -1392,7 +1392,7 @@ impl ActivityStoreInterface {
             -1
         } else {
             //if not private, then we dont include any results that are private
-            Mode::PrivateMatchesAll.to_id() as i32
+            Mode::PrivateMatchesAll.as_id() as i32
         };
 
         //this is running about 550ms
@@ -1428,7 +1428,7 @@ impl ActivityStoreInterface {
         .bind(member_id.to_string())
         .bind(time_period.get_start().to_rfc3339())
         .bind(time_period.get_end().to_rfc3339())
-        .bind(mode.to_id().to_string())
+        .bind(mode.as_id().to_string())
         .bind(restrict_mode_id.to_string())
         .fetch_all(&mut self.db)
         .await?;
@@ -1460,7 +1460,7 @@ impl ActivityStoreInterface {
             -1
         } else {
             //if not private, then we dont include any results that are private
-            Mode::PrivateMatchesAll.to_id() as i32
+            Mode::PrivateMatchesAll.as_id() as i32
         };
 
         //let now = std::time::Instant::now();
@@ -1491,7 +1491,7 @@ impl ActivityStoreInterface {
         )
         .bind(time_period.get_start().to_rfc3339())
         .bind(time_period.get_end().to_rfc3339())
-        .bind(mode.to_id().to_string())
+        .bind(mode.as_id().to_string())
         .bind(restrict_mode_id.to_string())
         .bind(character_index.to_string())
         .fetch_all(&mut self.db)
