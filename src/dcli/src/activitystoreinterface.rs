@@ -61,7 +61,6 @@ use crate::{
     },
 };
 
-const STORE_FILE_NAME: &str = "dcli.sqlite3";
 const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 
 //numer of simultaneous requests we make to server when retrieving activity history
@@ -71,9 +70,8 @@ const DB_SCHEMA_VERSION: i32 = 8;
 const NO_TEAMS_INDEX: i32 = 253;
 
 pub struct ActivityStoreInterface {
-    verbose: bool,
-    db: SqliteConnection,
-    path: String,
+    pub verbose: bool,
+    pub path: String,
 }
 
 impl ActivityStoreInterface {
@@ -81,6 +79,31 @@ impl ActivityStoreInterface {
         self.path.clone()
     }
 
+    pub async fn check_schema(db: &mut SqliteConnection) -> Result<(), Error> {
+        let should_update_schema = match sqlx::query(
+            r#"
+            SELECT max(version) as max_version FROM version
+        "#,
+        )
+        .fetch_one(&mut *db)
+        .await
+        {
+            Ok(e) => {
+                let version: i32 = e.try_get("max_version").unwrap_or(-1);
+                version != DB_SCHEMA_VERSION
+            }
+            Err(_e) => true,
+        };
+
+        if should_update_schema {
+            eprintln!("Data store needs to be updated.");
+            sqlx::query(STORE_DB_SCHEMA).execute(db).await?;
+        }
+
+        Ok(())
+    }
+
+    /*
     pub async fn init_with_path(
         store_dir: &Path,
         verbose: bool,
@@ -125,11 +148,14 @@ impl ActivityStoreInterface {
             verbose,
             path: path.to_string(),
         })
+
     }
+    */
 
     //todo: this should take a PlayerName
     async fn retrieve_member_by_name(
         &mut self,
+        db: &mut SqliteConnection,
         player_name: &PlayerName,
     ) -> Result<Option<Member>, Error> {
         //TODO: check name fields are not null / None
@@ -141,7 +167,7 @@ impl ActivityStoreInterface {
         )
         .bind(player_name.bungie_display_name.as_ref().unwrap())
         .bind(player_name.bungie_display_name_code.as_ref().unwrap())
-        .fetch_optional(&mut self.db)
+        .fetch_optional(db)
         .await?;
 
         //TODO: may want to use this in other areas
@@ -175,6 +201,7 @@ impl ActivityStoreInterface {
 
     pub async fn update_sync_entry(
         &mut self,
+        db: &mut SqliteConnection,
         member_row_id: i32,
     ) -> Result<i32, Error> {
         let timestamp: String = Utc::now().to_rfc3339();
@@ -189,7 +216,7 @@ impl ActivityStoreInterface {
         .bind(member_row_id)
         .bind(&timestamp)
         .bind(&timestamp)
-        .execute(&mut self.db)
+        .execute(&mut *db)
         .await?;
 
         //TODO: what to do if exists? (on conflict)
@@ -200,7 +227,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(member_row_id)
-        .fetch_one(&mut self.db)
+        .fetch_one(db)
         .await?;
 
         let rowid: i32 = row.try_get("id")?;
@@ -210,9 +237,11 @@ impl ActivityStoreInterface {
 
     pub async fn get_member(
         &mut self,
+        db: &mut SqliteConnection,
         name: &PlayerName,
     ) -> Result<Member, Error> {
-        let member: Option<Member> = self.retrieve_member_by_name(name).await?;
+        let member: Option<Member> =
+            self.retrieve_member_by_name(db, name).await?;
 
         let out = match member {
             Some(e) => e,
@@ -222,7 +251,7 @@ impl ActivityStoreInterface {
                     api.search_destiny_player(&name.get_bungie_name()).await?;
 
                 let m: Member = user_info.to_member();
-                self.insert_member(&m).await?;
+                self.insert_member(db, &m).await?;
 
                 m
             }
@@ -244,7 +273,11 @@ impl ActivityStoreInterface {
     /// add by just moving the character sync into its own api sync_character(id, class_type)
     /// but not going to worry about it unless someone requests it
     /// retrieves and stores activity details for ids in activity queue
-    pub async fn sync(&mut self, member: &Member) -> Result<SyncResult, Error> {
+    pub async fn sync(
+        &mut self,
+        db: &mut SqliteConnection,
+        member: &Member,
+    ) -> Result<SyncResult, Error> {
         let api = ApiInterface::new(self.verbose)?;
 
         //Note, we need this call in case the user deletes and creates a new character
@@ -255,7 +288,7 @@ impl ActivityStoreInterface {
         let characters = player_info.characters;
 
         let member_row_id = self
-            .insert_member(&player_info.user_info.to_member())
+            .insert_member(db, &player_info.user_info.to_member())
             .await?;
 
         let mut total_synced = 0;
@@ -271,7 +304,7 @@ impl ActivityStoreInterface {
         for c in characters.characters {
             let character_id = &c.id;
             let character_row_id = self
-                .insert_character_id(&c.id, &c.class_type, member_row_id)
+                .insert_character_id(db, &c.id, &c.class_type, member_row_id)
                 .await?;
             eprintln!("{}", format!("{}", c.class_type).to_uppercase());
 
@@ -279,10 +312,11 @@ impl ActivityStoreInterface {
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
             //some extra calls to the DB
 
-            let a = self.sync_activities(character_row_id, &api).await?;
+            let a = self.sync_activities(db, character_row_id, &api).await?;
 
             let _b = self
                 .update_activity_queue(
+                    db,
                     character_row_id,
                     &member.id,
                     character_id,
@@ -291,14 +325,14 @@ impl ActivityStoreInterface {
                 )
                 .await?;
 
-            let c = self.sync_activities(character_row_id, &api).await?;
+            let c = self.sync_activities(db, character_row_id, &api).await?;
 
             total_synced += a.total_synced + c.total_synced;
             total_in_queue += (a.total_available + c.total_available)
                 - (a.total_synced + c.total_synced);
         }
 
-        self.update_sync_entry(member_row_id).await?;
+        self.update_sync_entry(db, member_row_id).await?;
 
         Ok(SyncResult {
             total_synced,
@@ -309,6 +343,7 @@ impl ActivityStoreInterface {
     /// download results from ids in queue, and return number of items synced
     async fn sync_activities(
         &mut self,
+        db: &mut SqliteConnection,
         character_row_id: i32,
         api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
@@ -327,7 +362,7 @@ impl ActivityStoreInterface {
                 "#,
             )
             .bind(format!("{}", character_row_id))
-            .fetch(&mut self.db);
+            .fetch(&mut *db);
 
             while let Some(row) = rows.try_next().await? {
                 let activity_id: i64 = row.try_get("activity_id")?;
@@ -377,7 +412,7 @@ impl ActivityStoreInterface {
                     Ok(e) => {
                         match e {
                             Some(e) => match self
-                                .insert_activity(&e, character_row_id)
+                                .insert_activity(&mut *db, &e, character_row_id)
                                 .await
                             {
                                 Ok(_e) => {
@@ -431,6 +466,7 @@ impl ActivityStoreInterface {
 
     async fn update_activity_queue(
         &mut self,
+        db: &mut SqliteConnection,
         character_row_id: i32,
         member_id: &str,
         character_id: &str,
@@ -440,6 +476,7 @@ impl ActivityStoreInterface {
         //TODO catch errors so we can continue?
         let prv_result = self
             ._update_activity_queue(
+                db,
                 character_row_id,
                 member_id,
                 character_id,
@@ -451,6 +488,7 @@ impl ActivityStoreInterface {
 
         let pub_result = self
             ._update_activity_queue(
+                db,
                 character_row_id,
                 member_id,
                 character_id,
@@ -466,6 +504,7 @@ impl ActivityStoreInterface {
     //updates activity id queue with ids which have not been synced
     async fn _update_activity_queue(
         &mut self,
+        db: &mut SqliteConnection,
         character_row_id: i32,
         member_id: &str,
         character_id: &str,
@@ -474,7 +513,7 @@ impl ActivityStoreInterface {
         api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
         let max_id: i64 =
-            self.get_max_activity_id(character_row_id, mode).await?;
+            self.get_max_activity_id(db, character_row_id, mode).await?;
 
         let result = api
             .retrieve_activities_since_id(
@@ -506,9 +545,7 @@ impl ActivityStoreInterface {
         // come across some data that causes a bug inserting, then nothing would ever be inserted
         // (until we fixed the bug). Probably shouldnt be an issue, since any weird stuff with
         // api data should be caught by the json deserializer in apiinterface
-        sqlx::query("BEGIN TRANSACTION;")
-            .execute(&mut self.db)
-            .await?;
+        sqlx::query("BEGIN TRANSACTION;").execute(&mut *db).await?;
 
         let mut total = 0;
 
@@ -544,17 +581,17 @@ impl ActivityStoreInterface {
             )
             .bind(instance_id)
             .bind(character_row_id)
-            .execute(&mut self.db)
+            .execute(&mut *db)
             .await
             {
                 Ok(_e) => (),
                 Err(e) => {
-                    sqlx::query("ROLLBACK;").execute(&mut self.db).await?;
+                    sqlx::query("ROLLBACK;").execute(db).await?;
                     return Err(Error::from(e));
                 }
             };
         }
-        sqlx::query("COMMIT;").execute(&mut self.db).await?;
+        sqlx::query("COMMIT;").execute(db).await?;
 
         Ok(SyncResult {
             total_available: total,
@@ -564,24 +601,24 @@ impl ActivityStoreInterface {
 
     async fn insert_activity(
         &mut self,
+        db: &mut SqliteConnection,
         data: &DestinyPostGameCarnageReportData,
         character_row_id: i32,
     ) -> Result<(), Error> {
-        sqlx::query("BEGIN TRANSACTION;")
-            .execute(&mut self.db)
-            .await?;
+        sqlx::query("BEGIN TRANSACTION;").execute(&mut *db).await?;
 
-        match self._insert_activity(data, character_row_id).await {
+        match self
+            ._insert_activity(&mut *db, data, character_row_id)
+            .await
+        {
             Ok(_e) => {
-                sqlx::query("COMMIT;").execute(&mut self.db).await?;
-                sqlx::query("PRAGMA OPTIMIZE;")
-                    .execute(&mut self.db)
-                    .await?;
+                sqlx::query("COMMIT;").execute(&mut *db).await?;
+                sqlx::query("PRAGMA OPTIMIZE;").execute(&mut *db).await?;
 
                 Ok(())
             }
             Err(e) => {
-                sqlx::query("ROLLBACK;").execute(&mut self.db).await?;
+                sqlx::query("ROLLBACK;").execute(db).await?;
                 Err(e)
             }
         }
@@ -601,17 +638,19 @@ impl ActivityStoreInterface {
 
     async fn _insert_activity(
         &mut self,
+        db: &mut SqliteConnection,
         data: &DestinyPostGameCarnageReportData,
         character_row_id: i32,
     ) -> Result<(), Error> {
         //see if we already have this activity
         match self
-            .get_activity_row_id(data.activity_details.instance_id)
+            .get_activity_row_id(db, data.activity_details.instance_id)
             .await
         {
             Ok(_e) => {
                 //If we have already synced it, remove it from queue
                 self.remove_from_activity_queue(
+                    db,
                     &character_row_id,
                     &data.activity_details.instance_id,
                 )
@@ -637,11 +676,11 @@ impl ActivityStoreInterface {
         .bind(data.activity_details.membership_type.as_id().to_string()) //platform
         .bind(data.activity_details.director_activity_hash.to_string()) //director_activity_hash
         .bind(data.activity_details.reference_id.to_string()) //reference_id
-        .execute(&mut self.db)
+        .execute(&mut *db)
         .await?;
 
         let activity_row_id = self
-            .get_activity_row_id(data.activity_details.instance_id)
+            .get_activity_row_id(db, data.activity_details.instance_id)
             .await?;
 
         for team in &data.teams {
@@ -658,7 +697,7 @@ impl ActivityStoreInterface {
             .bind(team.score as i32)
             .bind(team.standing as i32)
             .bind(activity_row_id)
-            .execute(&mut self.db)
+            .execute(&mut *db)
             .await?;
         }
 
@@ -676,20 +715,21 @@ impl ActivityStoreInterface {
             )
             .bind(mode.as_id().to_string())
             .bind(activity_row_id)
-            .execute(&mut self.db)
+            .execute(&mut *db)
             .await?;
         }
 
         for entry in &data.entries {
             //todo: not sure if we should use membership type of crosssave orveride
             let member_row_id = self
-                .insert_member(&entry.player.user_info.to_member())
+                .insert_member(db, &entry.player.user_info.to_member())
                 .await?;
 
             let class_type = CharacterClass::from_hash(entry.player.class_hash);
 
             let character_row_id = self
                 .insert_character_id(
+                    db,
                     &entry.character_id,
                     &class_type,
                     member_row_id,
@@ -697,6 +737,7 @@ impl ActivityStoreInterface {
                 .await?;
 
             self._insert_character_activity_stats(
+                db,
                 &entry,
                 character_row_id,
                 activity_row_id,
@@ -705,6 +746,7 @@ impl ActivityStoreInterface {
         }
 
         self.remove_from_activity_queue(
+            db,
             &character_row_id,
             &data.activity_details.instance_id,
         )
@@ -715,6 +757,7 @@ impl ActivityStoreInterface {
 
     async fn _insert_character_activity_stats(
         &mut self,
+        db: &mut SqliteConnection,
         entry: &DestinyPostGameCarnageReportEntry,
         character_row_id: i32,
         activity_row_id: i32,
@@ -799,7 +842,7 @@ impl ActivityStoreInterface {
         .bind(all_medals_earned as i32) //weapon_kills_super
         .bind(char_data.player.light_level) //activity
         .bind(activity_row_id) //activity
-        .execute(&mut self.db)
+        .execute(&mut *db)
         .await?;
 
         //character_activity_stats
@@ -811,7 +854,7 @@ impl ActivityStoreInterface {
         )
         .bind(activity_row_id)
         .bind(character_row_id)
-        .fetch_one(&mut self.db)
+        .fetch_one(&mut *db)
         .await?;
 
         let character_activity_stats_id: i32 = row.try_get("id")?;
@@ -831,7 +874,7 @@ impl ActivityStoreInterface {
             .bind(key) //reference_id
             .bind(format!("{}", value.basic.value as u32)) //unique_weapon_kills
             .bind(character_activity_stats_id)
-            .execute(&mut self.db)
+            .execute(&mut *db)
             .await?;
         }
 
@@ -855,7 +898,7 @@ impl ActivityStoreInterface {
                     .bind(format!("{}", w.values.unique_weapon_precision_kills as u32)) //unique_weapon_precision_kills
                     .bind(format!("{}", w.values.unique_weapon_kills_precision_kills)) //unique_weapon_kills_precision_kills
                     .bind(character_activity_stats_id)
-                    .execute(&mut self.db)
+                    .execute(&mut *db)
                     .await?;
                 }
             }
@@ -866,6 +909,7 @@ impl ActivityStoreInterface {
 
     async fn remove_from_activity_queue(
         &mut self,
+        db: &mut SqliteConnection,
         character_row_id: &i32,
         instance_id: &i64,
     ) -> Result<(), Error> {
@@ -878,7 +922,7 @@ impl ActivityStoreInterface {
         )
         .bind(character_row_id.to_string())
         .bind(instance_id)
-        .execute(&mut self.db)
+        .execute(db)
         .await?;
 
         Ok(())
@@ -886,6 +930,7 @@ impl ActivityStoreInterface {
 
     async fn get_activity_row_id(
         &mut self,
+        db: &mut SqliteConnection,
         instance_id: i64,
     ) -> Result<i32, Error> {
         let row = sqlx::query(
@@ -894,7 +939,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(instance_id.to_string())
-        .fetch_one(&mut self.db)
+        .fetch_one(db)
         .await?;
 
         let id: i32 = row.try_get("id")?;
@@ -904,6 +949,7 @@ impl ActivityStoreInterface {
 
     async fn get_character_row_id(
         &mut self,
+        db: &mut SqliteConnection,
         member_id: &str,
         character_id: &str,
     ) -> Result<i32, Error> {
@@ -921,7 +967,7 @@ impl ActivityStoreInterface {
         )
         .bind(member_id.to_string())
         .bind(character_id.to_string())
-        .fetch_one(&mut self.db)
+        .fetch_one(db)
         .await?;
 
         let character_rowid: i32 = row.try_get("id")?;
@@ -929,7 +975,11 @@ impl ActivityStoreInterface {
         Ok(character_rowid)
     }
 
-    async fn insert_member(&mut self, member: &Member) -> Result<i32, Error> {
+    async fn insert_member(
+        &mut self,
+        db: &mut SqliteConnection,
+        member: &Member,
+    ) -> Result<i32, Error> {
         sqlx::query(
             r#"
             INSERT into "member" ("member_id", "platform_id", "display_name", "bungie_display_name", "bungie_display_name_code") VALUES (?, ?, ?, ?, ?)
@@ -945,7 +995,7 @@ impl ActivityStoreInterface {
         .bind(&member.name.display_name)
         .bind(&member.name.bungie_display_name)
         .bind(&member.name.bungie_display_name_code)
-        .execute(&mut self.db)
+        .execute(&mut *db)
         .await?;
 
         //TODO: what to do if exists? (on conflict)
@@ -956,7 +1006,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(member.id.to_string())
-        .fetch_one(&mut self.db)
+        .fetch_one(db)
         .await?;
 
         let rowid: i32 = row.try_get("id")?;
@@ -966,6 +1016,7 @@ impl ActivityStoreInterface {
 
     async fn insert_character_id(
         &mut self,
+        db: &mut SqliteConnection,
         character_id: &str,
         class_type: &CharacterClass,
         member_rowid: i32,
@@ -978,7 +1029,7 @@ impl ActivityStoreInterface {
         .bind(character_id.to_string())
         .bind(member_rowid)
         .bind(class_type.as_id().to_string())
-        .execute(&mut self.db)
+        .execute(&mut *db)
         .await?;
 
         let row = sqlx::query(
@@ -988,7 +1039,7 @@ impl ActivityStoreInterface {
         )
         .bind(character_id.to_string())
         .bind(format!("{}", member_rowid))
-        .fetch_one(&mut self.db)
+        .fetch_one(db)
         .await?;
 
         let rowid: i32 = row.try_get("id")?;
@@ -998,6 +1049,7 @@ impl ActivityStoreInterface {
 
     async fn get_max_activity_id(
         &mut self,
+        db: &mut SqliteConnection,
         character_row_id: i32,
         mode: &Mode,
     ) -> Result<i64, Error> {
@@ -1021,7 +1073,7 @@ impl ActivityStoreInterface {
         .bind(mode.as_id().to_string())
         .bind(character_row_id.to_string())
         .bind(character_row_id.to_string())
-        .fetch_all(&mut self.db)
+        .fetch_all(db)
         .await?;
 
         if rows.is_empty() {
@@ -1035,6 +1087,7 @@ impl ActivityStoreInterface {
 
     pub async fn retrieve_activity_by_index(
         &mut self,
+        db: &mut SqliteConnection,
         activity_index: u32,
         manifest: &mut ManifestInterface,
     ) -> Result<CrucibleActivity, Error> {
@@ -1061,7 +1114,7 @@ impl ActivityStoreInterface {
             "#,
         )
         .bind(activity_index.to_string())
-        .fetch_one(&mut self.db)
+        .fetch_one(&mut *db)
         .await
         {
             Ok(e) => e,
@@ -1075,13 +1128,15 @@ impl ActivityStoreInterface {
             },
         };
 
-        let crucible_activity =
-            self.populate_activity_data(&activity_row, manifest).await?;
+        let crucible_activity = self
+            .populate_activity_data(db, &activity_row, manifest)
+            .await?;
         Ok(crucible_activity)
     }
 
     pub async fn retrieve_last_activity(
         &mut self,
+        db: &mut SqliteConnection,
         member: &Member,
         character_selection: &CharacterClassSelection,
         mode: &Mode,
@@ -1116,7 +1171,7 @@ impl ActivityStoreInterface {
             )
             .bind(member_id.to_string())
             .bind(mode.as_id().to_string())
-            .fetch_one(&mut self.db)
+            .fetch_one(&mut *db)
             .await
             {
                 Ok(e) => e,
@@ -1131,7 +1186,11 @@ impl ActivityStoreInterface {
             }
         } else {
             let character_id = self
-                .retrieve_character_selection_id(member, character_selection)
+                .retrieve_character_selection_id(
+                    db,
+                    member,
+                    character_selection,
+                )
                 .await?;
 
             match sqlx::query(
@@ -1156,7 +1215,7 @@ impl ActivityStoreInterface {
                     "#
                 ).bind(character_id.to_string())
                 .bind(mode.as_id().to_string())
-                .fetch_one(&mut self.db)
+                .fetch_one(&mut *db)
                 .await
                 {
                     Ok(e) => e,
@@ -1171,13 +1230,15 @@ impl ActivityStoreInterface {
                 }
         };
 
-        let crucible_activity =
-            self.populate_activity_data(&activity_row, manifest).await?;
+        let crucible_activity = self
+            .populate_activity_data(db, &activity_row, manifest)
+            .await?;
         Ok(crucible_activity)
     }
 
     async fn populate_activity_data(
         &mut self,
+        db: &mut SqliteConnection,
         activity_row: &sqlx::sqlite::SqliteRow,
         manifest: &mut ManifestInterface,
     ) -> Result<CrucibleActivity, Error> {
@@ -1194,7 +1255,7 @@ impl ActivityStoreInterface {
             "#,
         )
         .bind(activity_row_id)
-        .fetch_all(&mut self.db)
+        .fetch_all(&mut *db)
         .await?;
 
         let mut teams: HashMap<i32, Team> = HashMap::new();
@@ -1268,11 +1329,11 @@ impl ActivityStoreInterface {
             "#,
         )
         .bind(activity_row_id)
-        .fetch_all(&mut self.db)
+        .fetch_all(&mut *db)
         .await?;
 
         for c_row in character_rows {
-            let stats = self.parse_crucible_stats(manifest, &c_row).await?;
+            let stats = self.parse_crucible_stats(db, manifest, &c_row).await?;
 
             let player = self.parse_player(&c_row).await?;
 
@@ -1299,6 +1360,7 @@ impl ActivityStoreInterface {
     //returns member_id if selection is ALL
     async fn retrieve_character_selection_id(
         &self,
+        db: &mut SqliteConnection,
         member: &Member,
         character_selection: &CharacterClassSelection,
     ) -> Result<String, Error> {
@@ -1345,6 +1407,7 @@ impl ActivityStoreInterface {
 
     pub async fn retrieve_activities_since(
         &mut self,
+        db: &mut SqliteConnection,
         member: &Member,
         character_selection: &CharacterClassSelection,
         mode: &Mode,
@@ -1355,6 +1418,7 @@ impl ActivityStoreInterface {
 
         let out = if character_selection == &CharacterClassSelection::All {
             self.retrieve_activities_for_member_since(
+                db,
                 member_id,
                 mode,
                 time_period,
@@ -1364,10 +1428,15 @@ impl ActivityStoreInterface {
         } else {
             //TODO: change this to take a member
             let character_id = self
-                .retrieve_character_selection_id(&member, character_selection)
+                .retrieve_character_selection_id(
+                    db,
+                    &member,
+                    character_selection,
+                )
                 .await?;
 
             self.retrieve_activities_for_character(
+                db,
                 &member_id,
                 &character_id,
                 mode,
@@ -1382,6 +1451,7 @@ impl ActivityStoreInterface {
 
     pub async fn retrieve_activities_for_member_since(
         &mut self,
+        db: &mut SqliteConnection,
         member_id: &str,
         mode: &Mode,
         time_period: &DateTimePeriod,
@@ -1430,7 +1500,7 @@ impl ActivityStoreInterface {
         .bind(time_period.get_end().to_rfc3339())
         .bind(mode.as_id().to_string())
         .bind(restrict_mode_id.to_string())
-        .fetch_all(&mut self.db)
+        .fetch_all(&mut *db)
         .await?;
 
         if activity_rows.is_empty() {
@@ -1438,7 +1508,7 @@ impl ActivityStoreInterface {
         }
 
         let p = self
-            .parse_individual_performance_rows(manifest, &activity_rows)
+            .parse_individual_performance_rows(db, manifest, &activity_rows)
             .await?;
 
         Ok(Some(p))
@@ -1446,14 +1516,16 @@ impl ActivityStoreInterface {
 
     pub async fn retrieve_activities_for_character(
         &mut self,
+        db: &mut SqliteConnection,
         member_id: &str,
         character_id: &str,
         mode: &Mode,
         time_period: &DateTimePeriod,
         manifest: &mut ManifestInterface,
     ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
-        let character_index =
-            self.get_character_row_id(member_id, character_id).await?;
+        let character_index = self
+            .get_character_row_id(db, member_id, character_id)
+            .await?;
 
         //if mode if private, we dont restrict results
         let restrict_mode_id = if mode.is_private() {
@@ -1494,7 +1566,7 @@ impl ActivityStoreInterface {
         .bind(mode.as_id().to_string())
         .bind(restrict_mode_id.to_string())
         .bind(character_index.to_string())
-        .fetch_all(&mut self.db)
+        .fetch_all(&mut *db)
         .await?;
 
         if activity_rows.is_empty() {
@@ -1502,7 +1574,7 @@ impl ActivityStoreInterface {
         }
 
         let p = self
-            .parse_individual_performance_rows(manifest, &activity_rows)
+            .parse_individual_performance_rows(db, manifest, &activity_rows)
             .await?;
 
         Ok(Some(p))
@@ -1510,6 +1582,7 @@ impl ActivityStoreInterface {
 
     async fn parse_individual_performance_rows(
         &mut self,
+        db: &mut SqliteConnection,
         manifest: &mut ManifestInterface,
         activity_rows: &[sqlx::sqlite::SqliteRow],
     ) -> Result<Vec<CruciblePlayerActivityPerformance>, Error> {
@@ -1518,7 +1591,7 @@ impl ActivityStoreInterface {
 
         for activity_row in activity_rows {
             let player_performance = self
-                .parse_individual_performance_row(manifest, &activity_row)
+                .parse_individual_performance_row(db, manifest, &activity_row)
                 .await?;
 
             performances.push(player_performance);
@@ -1576,6 +1649,7 @@ impl ActivityStoreInterface {
 
     async fn parse_crucible_stats(
         &mut self,
+        db: &mut SqliteConnection,
         manifest: &mut ManifestInterface,
         activity_row: &sqlx::sqlite::SqliteRow,
     ) -> Result<CrucibleStats, Error> {
@@ -1644,7 +1718,7 @@ impl ActivityStoreInterface {
        "#,
         )
         .bind(character_activity_stats_index)
-        .fetch_all(&mut self.db)
+        .fetch_all(&mut *db)
         .await?;
 
         let win_count: u32 = match standing {
@@ -1718,7 +1792,7 @@ impl ActivityStoreInterface {
        "#,
         )
         .bind(character_activity_stats_index)
-        .fetch_all(&mut self.db)
+        .fetch_all(db)
         .await?;
 
         let mut medal_stats: Vec<MedalStat> =
@@ -1850,12 +1924,15 @@ impl ActivityStoreInterface {
 
     async fn parse_individual_performance_row(
         &mut self,
+        db: &mut SqliteConnection,
         manifest: &mut ManifestInterface,
         activity_row: &sqlx::sqlite::SqliteRow,
     ) -> Result<CruciblePlayerActivityPerformance, Error> {
         let activity_detail =
             self.parse_activity(manifest, activity_row).await?;
-        let stats = self.parse_crucible_stats(manifest, activity_row).await?;
+        let stats = self
+            .parse_crucible_stats(db, manifest, activity_row)
+            .await?;
         let player = self.parse_player(activity_row).await?;
 
         let performance = CruciblePlayerPerformance { player, stats };

@@ -25,10 +25,16 @@ use std::ffi::OsStr;
 use std::io::stdout;
 use std::path::Path;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use chrono::{DateTime, Datelike, Duration, Local, TimeZone, Timelike, Utc};
 use crossterm::{execute, terminal};
+use sqlx::sqlite::SqliteConnectOptions;
+use sqlx::sqlite::SqliteJournalMode;
+use sqlx::ConnectOptions;
+use sqlx::SqliteConnection;
 
+use crate::activitystoreinterface::ActivityStoreInterface;
 use crate::error::Error;
 
 //use chrono::prelude::*;
@@ -42,7 +48,31 @@ pub const DAY_IN_SECONDS: i64 = 86400;
 pub const TSV_EOL: &str = "\n";
 pub const TSV_DELIM: &str = "\t";
 
+pub const STORE_FILE_NAME: &str = "dcli.sqlite3";
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+pub fn get_store_path(store_dir: &Path) -> PathBuf {
+    store_dir.join(STORE_FILE_NAME)
+}
+
+pub async fn get_store_db(
+    store_path: &Path,
+) -> Result<SqliteConnection, Error> {
+    let read_only = false;
+    let connection_string: &str = &store_path.display().to_string();
+
+    let mut db = SqliteConnectOptions::from_str(&connection_string)?
+        .journal_mode(SqliteJournalMode::Wal)
+        .create_if_missing(true)
+        .read_only(read_only)
+        .connect()
+        .await?;
+
+    ActivityStoreInterface::check_schema(&mut db).await?;
+
+    Ok(db)
+}
 
 pub fn f32_are_equal(a: f32, b: f32) -> bool {
     (a - b).abs() < f32::EPSILON

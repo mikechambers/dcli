@@ -32,7 +32,9 @@ use dcli::enums::{
     moment::{DateTimePeriod, Moment},
 };
 use dcli::manifestinterface::ManifestInterface;
-use dcli::utils::{calculate_percent, truncate_ascii_string};
+use dcli::utils::{
+    calculate_percent, get_store_db, get_store_path, truncate_ascii_string,
+};
 use dcli::{
     crucible::{
         AggregateCruciblePerformances, CruciblePlayerActivityPerformance,
@@ -769,6 +771,22 @@ async fn main() {
             }
         };
 
+    let store_path = get_store_path(&data_dir);
+
+    let mut db = match get_store_db(&store_path).await {
+        Ok(e) => e,
+        Err(e) => {
+            print_error("Could not initialize activity store database.", e);
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
+
+    let mut store = ActivityStoreInterface {
+        verbose: opt.verbose,
+        path: store_path.display().to_string(),
+    };
+
+    /*
     let mut store =
         match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
             .await
@@ -782,6 +800,7 @@ async fn main() {
                 std::process::exit(EXIT_FAILURE);
             }
         };
+    */
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
@@ -794,7 +813,7 @@ async fn main() {
         }
     };
 
-    let member: Member = match store.get_member(&opt.name).await {
+    let member: Member = match store.get_member(&mut db, &opt.name).await {
         Ok(e) => e,
         Err(e) => {
             eprintln!(
@@ -806,7 +825,7 @@ async fn main() {
     };
 
     if !opt.no_sync {
-        match store.sync(&member).await {
+        match store.sync(&mut db, &member).await {
             Ok(_e) => (),
             Err(e) => {
                 eprintln!("Could not sync activity store {}", e);
@@ -817,6 +836,7 @@ async fn main() {
 
     let data = match store
         .retrieve_activities_since(
+            &mut db,
             &member,
             &opt.character_class_selection,
             &opt.mode,
