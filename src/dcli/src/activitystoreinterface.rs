@@ -1426,7 +1426,9 @@ impl ActivityStoreInterface {
             )
             .await?
         } else {
-            //TODO: change this to take a member
+            //TODO: this call goes to the server for some reason.
+            //We csan just update to use the member ID and character selection
+            //to get what we need. THis can be super simplified.
             let character_id = self
                 .retrieve_character_selection_id(
                     db,

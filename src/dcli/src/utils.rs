@@ -31,6 +31,7 @@ use chrono::{DateTime, Datelike, Duration, Local, TimeZone, Timelike, Utc};
 use crossterm::{execute, terminal};
 use sqlx::sqlite::SqliteConnectOptions;
 use sqlx::sqlite::SqliteJournalMode;
+use sqlx::sqlite::SqlitePoolOptions;
 use sqlx::ConnectOptions;
 use sqlx::SqliteConnection;
 
@@ -72,6 +73,32 @@ pub async fn get_store_db(
     ActivityStoreInterface::check_schema(&mut db).await?;
 
     Ok(db)
+}
+
+pub async fn get_store_db_pool(
+    store_path: &Path,
+) -> Result<SqliteConnectionPool, Error> {
+    let read_only = false;
+    let connection_string: &str = &store_path.display().to_string();
+
+    let pool = SqlitePoolOptions::new()
+        .max_connections(5)
+        .journal_mode(SqliteJournalMode::Wal)
+        .create_if_missing(true)
+        .read_only(read_only)
+        .connect("postgres://postgres:password@localhost/test")
+        .await?;
+
+    /*
+    let mut pool = SqlitePoolOptions::from_str(&connection_string)?
+        .journal_mode(SqliteJournalMode::Wal)
+        .create_if_missing(true)
+        .read_only(read_only)
+        .connect()
+        .await?;
+        */
+
+    Ok(pool)
 }
 
 pub fn f32_are_equal(a: f32, b: f32) -> bool {
