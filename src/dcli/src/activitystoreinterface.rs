@@ -1315,11 +1315,7 @@ impl ActivityStoreInterface {
 
         let out = match character_selection {
             CharacterClassSelection::All => {
-                return Err(Error::InvalidArgument {
-                    description: String::from(
-                        "CharacterClassSelection::All is not supported.",
-                    ),
-                });
+                panic!("CharacterClassSelection::All pass to retrieve_character_selection_data which is not supported.");
             }
             CharacterClassSelection::Hunter => {
                 match characters.get_by_class(CharacterClass::Hunter) {
