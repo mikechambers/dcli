@@ -66,6 +66,7 @@ pub enum Error {
     ActivityNotFound,
     DateTimePeriodOrder,
     BungieNameNotFound,
+    InvalidArgument { description: String },
 }
 
 impl Display for Error {
@@ -73,6 +74,9 @@ impl Display for Error {
         match self {
             Error::ApiRequest { description } => {
                 write!(f, "Error calling Destiny 2 API. {}", description)
+            },
+            Error::InvalidArgument { description } => {
+                write!(f, "Invalid Argument. {}", description)
             },
             Error::ApiStatus { description } => {
                 write!(f, "Destiny 2 API call returned an error. {}", description)

@@ -41,6 +41,31 @@ impl Characters {
         out
     }
 
+    pub fn get_by_class(
+        &self,
+        class_type: CharacterClass,
+    ) -> Option<CharacterData> {
+        if self.characters.is_empty() {
+            return None;
+        }
+
+        for c in &self.characters {
+            if c.class_type == class_type {
+                return Some(c.clone());
+            }
+        }
+
+        None
+    }
+
+    pub fn get_last_active(&self) -> Option<CharacterData> {
+        if self.characters.is_empty() {
+            return None;
+        }
+
+        Some(self.characters[0].clone())
+    }
+
     pub fn get_by_class_ref(
         &self,
         class_type: CharacterClass,

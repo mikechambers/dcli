@@ -25,6 +25,7 @@ use std::{collections::HashMap, path::Path};
 
 use chrono::{DateTime, Utc};
 
+use crate::response::character::CharacterData;
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
     enums::{
@@ -1130,8 +1131,8 @@ impl ActivityStoreInterface {
                 },
             }
         } else {
-            let character_id = self
-                .retrieve_character_selection_id(member, character_selection)
+            let character_data = self
+                .retrieve_character_selection_data(member, character_selection)
                 .await?;
 
             match sqlx::query(
@@ -1154,7 +1155,7 @@ impl ActivityStoreInterface {
                     ORDER BY
                         period DESC LIMIT 1
                     "#
-                ).bind(character_id.to_string())
+                ).bind(character_data.id.to_string())
                 .bind(mode.as_id().to_string())
                 .fetch_one(&mut self.db)
                 .await
@@ -1297,11 +1298,11 @@ impl ActivityStoreInterface {
 
     //returns character_id for specified character class selection
     //returns member_id if selection is ALL
-    async fn retrieve_character_selection_id(
+    async fn retrieve_character_selection_data(
         &self,
         member: &Member,
         character_selection: &CharacterClassSelection,
-    ) -> Result<String, Error> {
+    ) -> Result<CharacterData, Error> {
         let member_id = &member.id;
         let platform = &member.platform;
 
@@ -1313,28 +1314,34 @@ impl ActivityStoreInterface {
             .ok_or(Error::NoCharacters)?;
 
         let out = match character_selection {
-            CharacterClassSelection::All => member_id.to_string(),
+            CharacterClassSelection::All => {
+                return Err(Error::InvalidArgument {
+                    description: String::from(
+                        "CharacterClassSelection::All is not supported.",
+                    ),
+                });
+            }
             CharacterClassSelection::Hunter => {
-                match characters.get_by_class_ref(CharacterClass::Hunter) {
-                    Some(e) => e.id.to_string(),
+                match characters.get_by_class(CharacterClass::Hunter) {
+                    Some(e) => e,
                     None => return Err(Error::CharacterDoesNotExist),
                 }
             }
             CharacterClassSelection::Titan => {
-                match characters.get_by_class_ref(CharacterClass::Titan) {
-                    Some(e) => e.id.to_string(),
+                match characters.get_by_class(CharacterClass::Titan) {
+                    Some(e) => e,
                     None => return Err(Error::CharacterDoesNotExist),
                 }
             }
             CharacterClassSelection::Warlock => {
-                match characters.get_by_class_ref(CharacterClass::Warlock) {
-                    Some(e) => e.id.to_string(),
+                match characters.get_by_class(CharacterClass::Warlock) {
+                    Some(e) => e,
                     None => return Err(Error::CharacterDoesNotExist),
                 }
             }
             CharacterClassSelection::LastActive => {
-                match characters.get_last_active_ref() {
-                    Some(e) => e.id.to_string(),
+                match characters.get_last_active() {
+                    Some(e) => e,
                     None => return Err(Error::CharacterDoesNotExist),
                 }
             }
@@ -1347,42 +1354,6 @@ impl ActivityStoreInterface {
         &mut self,
         member: &Member,
         character_selection: &CharacterClassSelection,
-        mode: &Mode,
-        time_period: &DateTimePeriod,
-        manifest: &mut ManifestInterface,
-    ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
-        let member_id = &member.id;
-
-        let out = if character_selection == &CharacterClassSelection::All {
-            self.retrieve_activities_for_member_since(
-                member_id,
-                mode,
-                time_period,
-                manifest,
-            )
-            .await?
-        } else {
-            //TODO: change this to take a member
-            let character_id = self
-                .retrieve_character_selection_id(&member, character_selection)
-                .await?;
-
-            self.retrieve_activities_for_character(
-                &member_id,
-                &character_id,
-                mode,
-                time_period,
-                manifest,
-            )
-            .await?
-        };
-
-        Ok(out)
-    }
-
-    pub async fn retrieve_activities_for_member_since(
-        &mut self,
-        member_id: &str,
         mode: &Mode,
         time_period: &DateTimePeriod,
         manifest: &mut ManifestInterface,
@@ -1402,7 +1373,10 @@ impl ActivityStoreInterface {
         //if bungie fixes this and starts include additional mode data (i.e. private control)
         //then this will start to mix private and all when searching for control.
         //need to see if its a private or non-private and then exclude others.
-        let activity_rows = sqlx::query(
+        let activity_rows = if character_selection
+            == &CharacterClassSelection::All
+        {
+            sqlx::query(
             r#"
             SELECT
                 *,
@@ -1425,47 +1399,21 @@ impl ActivityStoreInterface {
                 activity.period DESC
             "#,
         )
-        .bind(member_id.to_string())
+        .bind(member.id.to_string())
         .bind(time_period.get_start().to_rfc3339())
         .bind(time_period.get_end().to_rfc3339())
         .bind(mode.as_id().to_string())
         .bind(restrict_mode_id.to_string())
         .fetch_all(&mut self.db)
-        .await?;
-
-        if activity_rows.is_empty() {
-            return Ok(None);
-        }
-
-        let p = self
-            .parse_individual_performance_rows(manifest, &activity_rows)
-            .await?;
-
-        Ok(Some(p))
-    }
-
-    pub async fn retrieve_activities_for_character(
-        &mut self,
-        member_id: &str,
-        character_id: &str,
-        mode: &Mode,
-        time_period: &DateTimePeriod,
-        manifest: &mut ManifestInterface,
-    ) -> Result<Option<Vec<CruciblePlayerActivityPerformance>>, Error> {
-        let character_index =
-            self.get_character_row_id(member_id, character_id).await?;
-
-        //if mode if private, we dont restrict results
-        let restrict_mode_id = if mode.is_private() {
-            -1
+        .await?
         } else {
-            //if not private, then we dont include any results that are private
-            Mode::PrivateMatchesAll.as_id() as i32
-        };
+            let character_data = self
+                .retrieve_character_selection_data(&member, character_selection)
+                .await?;
 
-        //let now = std::time::Instant::now();
-        //this is running about 550ms
-        let activity_rows = sqlx::query(
+            //todo: note, this might break if user has multiple characters of the same
+            //class. need to test
+            sqlx::query(
             r#"
             SELECT
                 *,
@@ -1479,23 +1427,26 @@ impl ActivityStoreInterface {
                 character on character_activity_stats.character = character.id,
                 member on member.id = character.member
             WHERE
+                member.id = (select id from member where member_id = ?) AND
                 activity.period > ? AND
                 activity.period < ? AND
                 exists (select 1 from modes where activity = activity.id and mode = ?) AND
                 not exists (select 1 from modes where activity = activity.id and mode = ?) AND
-                character_activity_stats.character = ?
+                character_activity_stats.character = character.id AND
+                character.class = ?
             ORDER BY
                 activity.period DESC
-
-        "#,
+            "#,
         )
+        .bind(member.id.to_string())
         .bind(time_period.get_start().to_rfc3339())
         .bind(time_period.get_end().to_rfc3339())
         .bind(mode.as_id().to_string())
         .bind(restrict_mode_id.to_string())
-        .bind(character_index.to_string())
+        .bind(character_data.class_type.as_id())
         .fetch_all(&mut self.db)
-        .await?;
+        .await?
+        };
 
         if activity_rows.is_empty() {
             return Ok(None);
