@@ -903,33 +903,6 @@ impl ActivityStoreInterface {
         Ok(id)
     }
 
-    async fn get_character_row_id(
-        &mut self,
-        member_id: &str,
-        character_id: &str,
-    ) -> Result<i32, Error> {
-        let row = sqlx::query(
-            r#"
-            SELECT
-                character.id as id 
-            FROM
-                "character"
-            JOIN
-                member on character.member = member.id and member.member_id = ?
-            WHERE
-                character_id = ?
-        "#,
-        )
-        .bind(member_id.to_string())
-        .bind(character_id.to_string())
-        .fetch_one(&mut self.db)
-        .await?;
-
-        let character_rowid: i32 = row.try_get("id")?;
-
-        Ok(character_rowid)
-    }
-
     async fn insert_member(&mut self, member: &Member) -> Result<i32, Error> {
         sqlx::query(
             r#"
