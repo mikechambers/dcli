@@ -27,6 +27,22 @@ use super::{
     pgcr::{DestinyProfileUserInfoCard, UserInfoCard},
 };
 
+#[derive(Serialize, Debug)]
+pub struct SearchDestinyPlayerPostData {
+    #[serde(rename = "displayName")]
+    pub display_name: String,
+
+    #[serde(rename = "displayNameCode")]
+    pub display_name_code: String,
+}
+
+impl SearchDestinyPlayerPostData {
+    pub fn to_json(&self) -> Result<String, serde_json::error::Error> {
+        let out = serde_json::to_string(&self)?;
+        Ok(out)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SearchDestinyPlayerResponse {
     #[serde(rename = "Response")]

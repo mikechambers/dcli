@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.8.0 December 3, 2021
+* Update database to store additional game data (emblem hash for players and fireteamId). This will require a database update and data to be rsynced.
+* Use new bungie api to search for player name.
+
 ## v0.7.2 December 3, 2021
 * Fixed bug where Elimination mode was not supported
 

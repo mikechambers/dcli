@@ -219,8 +219,7 @@ impl ActivityStoreInterface {
             Some(e) => e,
             None => {
                 let api = ApiInterface::new(self.verbose)?;
-                let user_info =
-                    api.search_destiny_player(&name.get_bungie_name()).await?;
+                let user_info = api.search_destiny_player(name).await?;
 
                 let m: Member = user_info.to_member();
                 self.insert_member(&m).await?;

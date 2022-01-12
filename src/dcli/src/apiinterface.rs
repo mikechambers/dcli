@@ -28,10 +28,6 @@ use std::{
 use chrono::{DateTime, Utc};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
-use crate::error::Error;
-use crate::response::activities::{
-    ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT,
-};
 use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::pgcr::{DestinyPostGameCarnageReportData, PGCRResponse};
@@ -43,12 +39,17 @@ use crate::response::stats::{
     AllTimePvPStatsResponse, DailyPvPStatsResponse, DailyPvPStatsValuesData,
     PvpStatsData,
 };
+use crate::response::{
+    activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT},
+    sdpr::SearchDestinyPlayerPostData,
+};
 use crate::utils::Period;
 use crate::{apiclient::ApiClient, crucible::Player};
 use crate::{
     apiutils::{API_BASE_URL, PGCR_BASE_URL},
     character::PlayerInfo,
 };
+use crate::{crucible::PlayerName, error::Error};
 use crate::{enums::mode::Mode, response::pgcr::UserInfoCard};
 use crate::{
     enums::platform::Platform, response::pgcr::DestinyProfileUserInfoCard,
@@ -128,17 +129,37 @@ impl ApiInterface {
 
     pub async fn search_destiny_player(
         &self,
-        bungie_name: &str,
+        name: &PlayerName,
     ) -> Result<UserInfoCard, Error> {
         let url = format!(
-            "{base}/Platform/Destiny2/SearchDestinyPlayer/-1/{bungie_name}/",
-            base = API_BASE_URL,
-            bungie_name = utf8_percent_encode(&bungie_name, NON_ALPHANUMERIC)
+            "{base}/Platform/Destiny2/SearchDestinyPlayerByBungieName/-1/",
+            base = API_BASE_URL
         );
+
+        let display_name = match &name.bungie_display_name {
+            Some(e) => e.to_string(),
+            None => "".to_string(),
+        };
+
+        let display_name_code = match &name.bungie_display_name_code {
+            Some(e) => e.to_string(),
+            None => "".to_string(),
+        };
+
+        let post_data = SearchDestinyPlayerPostData {
+            display_name,
+            display_name_code,
+        };
+
+        //this throws an error if it cant be serialized to json
+        let post_data_json = post_data.to_json()?;
 
         let profile: SearchDestinyPlayerResponse = self
             .client
-            .call_and_parse::<SearchDestinyPlayerResponse>(&url)
+            .call_post_and_parse::<SearchDestinyPlayerResponse>(
+                &url,
+                &post_data_json,
+            )
             .await?;
 
         //will return none if no response data. No results will return empty vector

@@ -108,4 +108,60 @@ impl ApiClient {
 
         Ok(r)
     }
+
+    pub async fn call_post(
+        &self,
+        url: &str,
+        post_data: &str,
+    ) -> Result<reqwest::Response, Error> {
+        let url = Url::parse(&url).unwrap();
+
+        print_verbose(&format!("{}", url), self.verbose);
+
+        let response = self
+            .client
+            .post(url)
+            .body(post_data.to_string())
+            .send()
+            .await?; //this either returns a reqwest::Response for an Error which is returned
+
+        Ok(response)
+    }
+
+    pub async fn call_post_and_parse<
+        T: serde::de::DeserializeOwned + IsDestinyAPIResponse,
+    >(
+        &self,
+        url: &str,
+        post_data: &str,
+    ) -> Result<T, Error> {
+        let body = match self.call_post(url, post_data).await {
+            Ok(e) => {
+                //println!("{:?}", e.headers());
+                e.text().await?
+            }
+            Err(e) => return Err(e),
+        };
+
+        if self.verbose {
+            let len = body.chars().count();
+            const MAX: usize = 200;
+            let limit = std::cmp::min(len, MAX);
+
+            println!(
+                "---------Begin API response : First {}  chars---------",
+                limit
+            );
+            println!("{}", &body[..limit]);
+            println!("---------End API response---------");
+        }
+
+        //we split the parsing from the request so we can capture the body and
+        //print it out if we need to
+        let r = serde_json::from_str::<T>(&body)?;
+
+        check_destiny_response_status(r.get_status())?;
+
+        Ok(r)
+    }
 }
