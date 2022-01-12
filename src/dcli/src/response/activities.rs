@@ -47,7 +47,7 @@ pub struct Activity {
     pub values: ActivityHistoricalStatsValues,
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ActivityHistoricalStatsValues {
     #[serde(deserialize_with = "property_to_value")]
     pub assists: f32,
@@ -133,6 +133,9 @@ pub struct ActivityHistoricalStatsValues {
 
     #[serde(rename = "teamScore", deserialize_with = "property_to_value")]
     pub team_score: f32,
+
+    #[serde(rename = "fireteamId", deserialize_with = "property_to_value")]
+    pub fireteam_id: f64,
 }
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity.html#schema_Destiny-HistoricalStats-DestinyHistoricalStatsActivity

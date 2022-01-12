@@ -68,7 +68,7 @@ const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 //numer of simultaneous requests we make to server when retrieving activity history
 const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
 
-const DB_SCHEMA_VERSION: i32 = 8;
+const DB_SCHEMA_VERSION: i32 = 9;
 const NO_TEAMS_INDEX: i32 = 253;
 
 pub struct ActivityStoreInterface {
@@ -761,11 +761,11 @@ impl ActivityStoreInterface {
                 "team", "completion_reason", "start_seconds", "time_played_seconds", 
                 "player_count", "team_score", "precision_kills", "weapon_kills_ability", 
                 "weapon_kills_grenade", "weapon_kills_melee", "weapon_kills_super", 
-                "all_medals_earned", "light_level", "activity"
+                "all_medals_earned", "light_level", "activity", "fireteam_id", "emblem_hash"
             )
             VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ? )
+                ?, ?, ?, ? )
             "#,
         )
         //we for through format, as otherwise we have to cast to i32, and while
@@ -799,7 +799,9 @@ impl ActivityStoreInterface {
         .bind(weapon_kills_super as i32) //weapon_kills_super
         .bind(all_medals_earned as i32) //weapon_kills_super
         .bind(char_data.player.light_level) //activity
-        .bind(activity_row_id) //activity
+        .bind(activity_row_id)
+        .bind(char_data.values.fireteam_id.to_string())
+        .bind(char_data.player.emblem_hash) //activity
         .execute(&mut self.db)
         .await?;
 

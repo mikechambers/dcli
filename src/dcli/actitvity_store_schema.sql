@@ -7,19 +7,21 @@ DROP TABLE IF EXISTS "medal_result";
 DROP TABLE IF EXISTS "activity_queue";
 DROP TABLE IF EXISTS "character_activity_stats";
 DROP TABLE IF EXISTS "activity";
-DROP TABLE IF EXISTS "version";
 DROP TABLE IF EXISTS "character";
+DROP TABLE IF EXISTS "sync";
 DROP TABLE IF EXISTS "member";
+DROP TABLE IF EXISTS "version";
 
 DROP INDEX IF EXISTS "modes_activity_index";
 DROP INDEX IF EXISTS "character_activity_stats_char_index";
 DROP INDEX IF EXISTS "activity_period_index";
 
+
 CREATE TABLE IF NOT EXISTS "main"."version" (
     "version"   INTEGER NOT NULL UNIQUE
 );
 
-INSERT INTO "main"."version"("version") VALUES (8);
+INSERT INTO "main"."version"("version") VALUES (9);
 
 CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
     "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -131,7 +133,6 @@ CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
     "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
     "character"                 INTEGER NOT NULL,
     "activity"	                INTEGER NOT NULL,
-
     "assists"                   INTEGER NOT NULL,
     "score"                     INTEGER NOT NULL,
     "kills"                     INTEGER NOT NULL,
@@ -155,6 +156,8 @@ CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
     "weapon_kills_super"        INTEGER NOT NULL,
     "all_medals_earned"         INTEGER NOT NULL,
     "light_level"               INTEGER NOT NULL,
+    "emblem_hash"               INTEGER NOT NULL,
+    "fireteam_id"               TEXT NOT NULL,
 
     UNIQUE("activity", "character"),
 
