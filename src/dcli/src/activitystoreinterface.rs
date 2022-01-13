@@ -230,7 +230,62 @@ impl ActivityStoreInterface {
 
         Ok(out)
     }
+
+    pub async fn add_player_to_sync(
+        &mut self,
+        player: &PlayerName,
+    ) -> Result<(), Error> {
+        //do this in a transaction?
+
+        let member = match self.get_member(player).await {
+            Ok(e) => e,
+            Err(e) => self.get_member(player).await?,
+        };
+
+        self.begin_transaction().await?;
+        let member_row_id = match self.insert_member(&member).await {
+            Ok(e) => e,
+            Err(e) => {
+                self.rollback_transaction().await?;
+
+                //return custom err with name
+                return Err(e);
+            }
+        };
+
+        match self.update_sync_entry(member_row_id).await {
+            Ok(e) => e,
+            Err(e) => {
+                self.rollback_transaction().await?;
+
+                //return custom err with name
+                return Err(e);
+            }
+        };
+
+        //TODO: need to catch errors above to rollback
+        self.commit_transaction().await?;
+
+        Ok(())
+    }
+
     /*
+    pub async fn add_players_to_sync(
+        &mut self,
+        players: &[PlayerName],
+    ) -> Result<(), Error> {
+        for player in players.iter() {
+            self.add_player_to_sync(player).await?
+        }
+
+        Ok(())
+    }
+    */
+
+    /*
+
+
+
     pub async fn sync_member(&mut self, member:&Member) -> -> Result<SyncResult, Error> {
 
     }
@@ -461,6 +516,26 @@ impl ActivityStoreInterface {
             .await?;
 
         Ok(pub_result + prv_result)
+    }
+
+    async fn begin_transaction(&mut self) -> Result<(), Error> {
+        sqlx::query("BEGIN TRANSACTION;")
+            .execute(&mut self.db)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn commit_transaction(&mut self) -> Result<(), Error> {
+        sqlx::query("COMMIT;").execute(&mut self.db).await?;
+
+        Ok(())
+    }
+
+    async fn rollback_transaction(&mut self) -> Result<(), Error> {
+        sqlx::query("ROLLBACK;").execute(&mut self.db).await?;
+
+        Ok(())
     }
 
     //updates activity id queue with ids which have not been synced

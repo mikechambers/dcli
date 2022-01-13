@@ -108,14 +108,6 @@ async fn main() {
         println!("No valid arguments");
     }
 
-    //add api key
-
-    println!("{:#?}", opt.remove);
-
-    //if called with no args, will sync all chars
-    //otherwise will
-
-    /*
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
@@ -134,6 +126,28 @@ async fn main() {
                 std::process::exit(EXIT_FAILURE);
             }
         };
+
+    if opt.add.is_some() {
+        let players = opt.add.unwrap();
+
+        for player in players.iter() {
+            match store.add_player_to_sync(&player).await {
+                Ok(e) => println!("{} added.", player.get_bungie_name()),
+                Err(e) => {
+                    println!(
+                        "Error adding {}. {}",
+                        player.get_bungie_name(),
+                        e
+                    );
+                }
+            }
+        }
+    }
+
+    /*
+
+
+
 
     let member = match store.get_member(&opt.name).await {
         Ok(e) => e,
