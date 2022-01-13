@@ -132,10 +132,27 @@ async fn main() {
 
         for player in players.iter() {
             match store.add_player_to_sync(&player).await {
-                Ok(e) => println!("{} added.", player.get_bungie_name()),
+                Ok(_) => println!("{} added.", player.get_bungie_name()),
                 Err(e) => {
                     println!(
                         "Error adding {}. {}",
+                        player.get_bungie_name(),
+                        e
+                    );
+                }
+            }
+        }
+    }
+
+    if opt.remove.is_some() {
+        let players = opt.remove.unwrap();
+
+        for player in players.iter() {
+            match store.remove_player_from_sync(&player).await {
+                Ok(_) => println!("{} Removed.", player.get_bungie_name()),
+                Err(e) => {
+                    println!(
+                        "Error removing {}. {}",
                         player.get_bungie_name(),
                         e
                     );

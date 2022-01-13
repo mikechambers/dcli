@@ -137,7 +137,7 @@ impl ActivityStoreInterface {
 
         let row_option = sqlx::query(
             r#"
-            SELECT "member_id", "platform_id", "display_name", "bungie_display_name", "bungie_display_name_code" from "member" where bungie_display_name= "?" and bungie_display_name_code = "?"
+            SELECT "member_id", "platform_id", "display_name", "bungie_display_name", "bungie_display_name_code" from "member" where bungie_display_name= ? and bungie_display_name_code = ?
         "#,
         )
         .bind(player_name.bungie_display_name.as_ref().unwrap())
@@ -231,6 +231,48 @@ impl ActivityStoreInterface {
         Ok(out)
     }
 
+    pub async fn remove_player_from_sync(
+        &mut self,
+        player: &PlayerName,
+    ) -> Result<(), Error> {
+        let row_option = sqlx::query(
+            r#"
+            SELECT "id" from "member" 
+            where bungie_display_name = ? and bungie_display_name_code = ?
+        "#,
+        )
+        .bind(player.bungie_display_name.as_ref().unwrap())
+        .bind(player.bungie_display_name_code.as_ref().unwrap())
+        .fetch_optional(&mut self.db)
+        .await?;
+
+        println!("{}", player.bungie_display_name.as_ref().unwrap());
+        println!("{}", player.bungie_display_name_code.as_ref().unwrap());
+
+        //TODO: may want to use this in other areas
+        let id: u32 = match row_option {
+            Some(e) => {
+                let id: u32 = e.try_get("id")?;
+                id
+            }
+            None => {
+                println!("Not found");
+                return Ok(());
+            }
+        };
+
+        sqlx::query(
+            r#"
+            delete from "sync" where member = ?
+        "#,
+        )
+        .bind(id)
+        .execute(&mut self.db)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn add_player_to_sync(
         &mut self,
         player: &PlayerName,
@@ -239,7 +281,7 @@ impl ActivityStoreInterface {
 
         let member = match self.get_member(player).await {
             Ok(e) => e,
-            Err(e) => self.get_member(player).await?,
+            Err(_) => self.get_member(player).await?,
         };
 
         self.begin_transaction().await?;
