@@ -54,19 +54,6 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    /// Format for command output
-    ///
-    /// Valid values are default (Default) and tsv.
-    ///
-    /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
-    /// ending in a new line character (\n).
-    #[structopt(
-        short = "O",
-        long = "output-format",
-        default_value = "default"
-    )]
-    output: Output,
-
     /// Directory where activity sqlite3 database will be stored. (optional)
     ///
     /// By default data will be loaded from and stored in the appropriate system
@@ -80,8 +67,32 @@ struct Opt {
     /// Name must be in the format of NAME#CODE. Example: foo#3280
     /// You can find your name in game, or on Bungie's site at:
     /// https://www.bungie.net/7/en/User/Account/IdentitySettings
-    #[structopt(long = "name", short = "n", required = true)]
-    name: PlayerName,
+    #[structopt(
+        long = "sync",
+        short = "n",
+        conflicts_with_all = &["add", "remove", "list"]
+    )]
+    sync: Option<Vec<PlayerName>>,
+
+    /// Bungie name for player
+    ///
+    /// Name must be in the format of NAME#CODE. Example: foo#3280
+    /// You can find your name in game, or on Bungie's site at:
+    /// https://www.bungie.net/7/en/User/Account/IdentitySettings
+    #[structopt(long = "add", short = "a", conflicts_with_all = &["sync", "remove", "list"])]
+    add: Option<Vec<PlayerName>>,
+
+    /// Bungie name for player
+    ///
+    /// Name must be in the format of NAME#CODE. Example: foo#3280
+    /// You can find your name in game, or on Bungie's site at:
+    /// https://www.bungie.net/7/en/User/Account/IdentitySettings
+    #[structopt(long = "remove", short = "r", conflicts_with_all = &["sync", "add", "list"])]
+    remove: Option<Vec<PlayerName>>,
+
+    //todo: add --list argument
+    #[structopt(short = "l", long = "list", conflicts_with_all = &["sync", "add", "remove"])]
+    list: bool,
 }
 
 #[tokio::main]
@@ -89,6 +100,22 @@ async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
+    if (!opt.list
+        && opt.remove.is_none()
+        && opt.add.is_none()
+        && opt.sync.is_none())
+    {
+        println!("No valid arguments");
+    }
+
+    //add api key
+
+    println!("{:#?}", opt.remove);
+
+    //if called with no args, will sync all chars
+    //otherwise will
+
+    /*
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
@@ -126,15 +153,7 @@ async fn main() {
             std::process::exit(EXIT_FAILURE);
         }
     };
-
-    match opt.output {
-        Output::Default => {
-            print_default(&results, &store);
-        }
-        Output::Tsv => {
-            print_tsv(&results, &store);
-        }
-    }
+    */
 }
 
 fn print_tsv(results: &SyncResult, store: &ActivityStoreInterface) {

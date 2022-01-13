@@ -8,13 +8,13 @@ You can also specify the specific activity via the `--activity-index` argument. 
 
 By default, the app will display summary data for the match, including each player and an overview of weapon usage. By passing in the `--details` flag, per user weapon usage and stats will be displayed.
 
-dcliad pulls its data from the local Destiny 2 activity database store. By default, dcliad will create and update this file with the latest activity data, but it can also be seperately managed using [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias).
+dcliad pulls its data from the local Destiny 2 activity database store. By default, dcliad will create and update this file with the latest activity data, but it can also be seperately managed using [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync).
 
 The first time the database downloads activity data may take a couple of minutes (depending on bandwidth and number of activities). However, subsequent syncs should be very quick.
 
 It supports storing and tracking stats for multiple players and characters.
 
-If you want to sync the database seperately via dclias, you can pass the `--no-sync` flag to dcliad and it will not update the activity store.
+If you want to sync the database seperately via dclisync, you can pass the `--no-sync` flag to dcliad and it will not update the activity store.
 
 The tool expects that the manifest has been downloaded and synced using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
@@ -85,7 +85,7 @@ OPTIONS:
    
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
-Activity data store can be created and synced seperately using [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias).
+Activity data store can be created and synced seperately using [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync).
 
 **NOTE** : Currently, due to a [bug](https://github.com/Bungie-net/api/issues/1386) in the Destiny 2 API, you will only get results for private matches when specifying *all_private*. The other options are still included in case the bug is fixed. If viewing private match stats is important to you, please leave a comment [here](https://github.com/mikechambers/dcli/issues/10).
 

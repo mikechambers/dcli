@@ -343,15 +343,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dclias"
-version = "0.8.0"
-dependencies = [
- "dcli",
- "structopt",
- "tokio",
-]
-
-[[package]]
 name = "dclim"
 version = "0.8.0"
 dependencies = [
@@ -363,6 +354,15 @@ dependencies = [
  "structopt",
  "tokio",
  "zip",
+]
+
+[[package]]
+name = "dclisync"
+version = "0.8.0"
+dependencies = [
+ "dcli",
+ "structopt",
+ "tokio",
 ]
 
 [[package]]

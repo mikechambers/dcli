@@ -1,4 +1,4 @@
-# dclias
+# dclisync
 
 Command line tool for downloading and syncing Destiny 2 Crucible activity history.
 
@@ -23,7 +23,7 @@ Depending on the number of activities, the initial sync can take a couple of min
 ## USAGE
 ```
 USAGE:
-    dclias [FLAGS] [OPTIONS] --name <name>
+    dclisync [FLAGS] [OPTIONS] --name <name>
 
 FLAGS:
     -h, --help       
@@ -63,7 +63,7 @@ OPTIONS:
 #### Download and store all Crucible activity history for all characters
 
 ```
-$ dclias --name mesh#3230
+$ dclisync --name mesh#3230
 ```
 
 Outputs:

@@ -14,7 +14,7 @@ If you run into any issues, have any ideas, or just want to chat, please post in
 | TOOL | DESCRIPTION |
 | --- | --- |
 | [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) | Manages and syncs the remote Destiny 2 API manifest database |
-| [dclias](https://github.com/mikechambers/dcli/tree/main/src/dclias) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file |
+| [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file |
 | [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments |
 
 
@@ -73,7 +73,7 @@ and the manifest file will be downloaded and saved in a system appropriate direc
 Next, lets sync all of our activity history to a local database. This data will be used by other apps, such as dcliah to generate and display stats.
 
 ```
-$ dclias --name mesh#3230
+$ dclisync --name mesh#3230
 ```
 
 Replacing mesh#3230 with your own Bungie name.

@@ -1,5 +1,5 @@
 [package]
-name = "dclias"
+name = "dclisync"
 #version
 version = "0.8.0"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]

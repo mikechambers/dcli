@@ -91,7 +91,7 @@
 ## v0.3.0 : December 30, 2020
 
 * Refactored dcliah to use local data.
-* Added dclias.
+* Added dclisync.
 * Deprecated dclics.
 * Added default storage locations for data storage. No longer need to specify manifest-dir for apps.
 * Simplified and standardized argument names. Please review docs.
