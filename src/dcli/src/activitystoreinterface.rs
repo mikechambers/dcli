@@ -75,6 +75,7 @@ pub struct ActivityStoreInterface {
     verbose: bool,
     db: SqliteConnection,
     path: String,
+    api_interface: ApiInterface,
 }
 
 impl ActivityStoreInterface {
@@ -85,6 +86,7 @@ impl ActivityStoreInterface {
     pub async fn init_with_path(
         store_dir: &Path,
         verbose: bool,
+        key: Option<String>,
     ) -> Result<ActivityStoreInterface, Error> {
         let path = store_dir.join(STORE_FILE_NAME).display().to_string();
 
@@ -121,10 +123,16 @@ impl ActivityStoreInterface {
             sqlx::query(STORE_DB_SCHEMA).execute(&mut db).await?;
         }
 
+        let api_interface = match key {
+            Some(e) => ApiInterface::new_with_key(verbose, &e)?,
+            None => ApiInterface::new(verbose)?,
+        };
+
         Ok(ActivityStoreInterface {
             db,
             verbose,
             path: path.to_string(),
+            api_interface,
         })
     }
 
@@ -229,8 +237,9 @@ impl ActivityStoreInterface {
         let out = match member {
             Some(e) => e,
             None => {
-                let api = ApiInterface::new(self.verbose)?;
-                let user_info = api.search_destiny_player(name).await?;
+                //let api = ApiInterface::new(self.verbose)?;
+                let user_info =
+                    self.api_interface.search_destiny_player(name).await?;
 
                 let m: Member = user_info.to_member();
 
@@ -400,12 +409,14 @@ impl ActivityStoreInterface {
         &mut self,
         member: &Member,
     ) -> Result<SyncResult, Error> {
-        let api = ApiInterface::new(self.verbose)?;
+        //let api = ApiInterface::new(self.verbose)?;
 
         //Note, we need this call in case the user deletes and creates a new character
         //https://www.bungie.net/Platform/Destiny2/1/Profile/4611686018429783292/?components=100,200
-        let player_info =
-            api.get_player_info(&member.id, &member.platform).await?;
+        let player_info = self
+            .api_interface
+            .get_player_info(&member.id, &member.platform)
+            .await?;
 
         let characters = player_info.characters;
 
@@ -419,8 +430,8 @@ impl ActivityStoreInterface {
         eprintln!();
 
         eprintln!(
-            "{}",
-            "Checking for new activities (public and private)".to_uppercase()
+            "CHECKING FOR NEW ACTIVITIES FOR {}(PUBLIC AND PRIVATE)",
+            member.name.get_bungie_name()
         );
         eprintln!("This may take a few minutes depending on the number of activities.");
         for c in characters.characters {
@@ -434,7 +445,7 @@ impl ActivityStoreInterface {
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
             //some extra calls to the DB
 
-            let a = self.sync_activities(character_row_id, &api).await?;
+            let a = self.sync_activities(character_row_id).await?;
 
             let _b = self
                 .update_activity_queue(
@@ -442,11 +453,10 @@ impl ActivityStoreInterface {
                     &member.id,
                     character_id,
                     &member.platform,
-                    &api,
                 )
                 .await?;
 
-            let c = self.sync_activities(character_row_id, &api).await?;
+            let c = self.sync_activities(character_row_id).await?;
 
             total_synced += a.total_synced + c.total_synced;
             total_in_queue += (a.total_available + c.total_available)
@@ -465,7 +475,6 @@ impl ActivityStoreInterface {
     async fn sync_activities(
         &mut self,
         character_row_id: i32,
-        api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
         let mut ids: Vec<i64> = Vec::new();
 
@@ -516,7 +525,9 @@ impl ActivityStoreInterface {
 
             for c in id_chunks {
                 //this is saving the future, call hasnt been made yet
-                f.push(api.retrieve_post_game_carnage_report(*c));
+                f.push(
+                    self.api_interface.retrieve_post_game_carnage_report(*c),
+                );
             }
 
             eprint!(".");
@@ -590,7 +601,6 @@ impl ActivityStoreInterface {
         member_id: &str,
         character_id: &str,
         platform: &Platform,
-        api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
         //TODO catch errors so we can continue?
         let prv_result = self
@@ -600,7 +610,6 @@ impl ActivityStoreInterface {
                 character_id,
                 platform,
                 &Mode::PrivateMatchesAll,
-                &api,
             )
             .await?;
 
@@ -611,7 +620,6 @@ impl ActivityStoreInterface {
                 character_id,
                 platform,
                 &Mode::AllPvP,
-                &api,
             )
             .await?;
 
@@ -646,12 +654,12 @@ impl ActivityStoreInterface {
         character_id: &str,
         platform: &Platform,
         mode: &Mode,
-        api: &ApiInterface,
     ) -> Result<SyncResult, Error> {
         let max_id: i64 =
             self.get_max_activity_id(character_row_id, mode).await?;
 
-        let result = api
+        let result = self
+            .api_interface
             .retrieve_activities_since_id(
                 member_id,
                 character_id,

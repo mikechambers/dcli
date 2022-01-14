@@ -69,6 +69,7 @@ struct Opt {
         short = "n",
         //conflicts_with_all = &["add", "remove", "list"],
         //required_unless_one=&["list", "add", "remove"],
+        required_unless_one = &["list", "add", "remove"],
         requires="key"
     )]
     sync: Option<Vec<PlayerName>>,
@@ -120,9 +121,14 @@ async fn main() {
         }
     };
 
+    //NOTE: if a key is not provided StructOpt should reject input
     let mut store: ActivityStoreInterface =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
-            .await
+        match ActivityStoreInterface::init_with_path(
+            &data_dir,
+            opt.verbose,
+            Some(opt.key.unwrap()),
+        )
+        .await
         {
             Ok(e) => e,
             Err(e) => {

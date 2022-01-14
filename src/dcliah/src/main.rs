@@ -732,6 +732,9 @@ struct Opt {
     /// a system appropriate directory by default.
     #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
     data_dir: Option<PathBuf>,
+
+    #[structopt(short = "k", long = "key", env = "DESTINY_API_KEY")]
+    key: Option<String>,
 }
 #[tokio::main]
 async fn main() {
@@ -769,19 +772,22 @@ async fn main() {
             }
         };
 
-    let mut store =
-        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
-            .await
-        {
-            Ok(e) => e,
-            Err(e) => {
-                print_error(
+    let mut store = match ActivityStoreInterface::init_with_path(
+        &data_dir,
+        opt.verbose,
+        opt.key,
+    )
+    .await
+    {
+        Ok(e) => e,
+        Err(e) => {
+            print_error(
                 "Could not initialize activity store. Have you run dclisync?",
                 e,
             );
-                std::process::exit(EXIT_FAILURE);
-            }
-        };
+            std::process::exit(EXIT_FAILURE);
+        }
+    };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
@@ -794,7 +800,7 @@ async fn main() {
         }
     };
 
-    let member: Member = match store.find_member(&opt.name).await {
+    let member: Member = match store.find_member(&opt.name, true).await {
         Ok(e) => e,
         Err(e) => {
             eprintln!(

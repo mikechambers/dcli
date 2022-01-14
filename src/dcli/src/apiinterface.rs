@@ -65,6 +65,14 @@ impl ApiInterface {
     pub fn new(print_url: bool) -> Result<ApiInterface, Error> {
         let client = ApiClient::new(print_url)?;
         Ok(ApiInterface { client })
+    }
+
+    pub fn new_with_key(
+        print_url: bool,
+        key: &str,
+    ) -> Result<ApiInterface, Error> {
+        let client = ApiClient::new_with_key(print_url, key)?;
+        Ok(ApiInterface { client })
 
         //Have an option on to take a manifest, if manifest is avaliable it will use it
         //some methods may require it and will throw errors if its not set

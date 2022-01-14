@@ -42,13 +42,18 @@ pub struct ApiClient {
 
 impl ApiClient {
     pub fn new(verbose: bool) -> Result<ApiClient, Error> {
+        ApiClient::new_with_key(verbose, DESTINY_API_KEY)
+    }
+
+    pub fn new_with_key(verbose: bool, key: &str) -> Result<ApiClient, Error> {
         let mut headers = HeaderMap::new();
         headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
         headers.insert(
             "Keep-Alive",
             HeaderValue::from_static("timeout=10, max=1000"),
         );
-        headers.insert("X-API-Key", HeaderValue::from_static(DESTINY_API_KEY));
+
+        headers.insert("X-API-Key", HeaderValue::from_str(key).unwrap());
 
         let client = Client::builder()
             .default_headers(headers)
