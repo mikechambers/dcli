@@ -26,6 +26,7 @@ use std::{collections::HashMap, path::Path};
 use chrono::{DateTime, Utc};
 
 use crate::response::character::CharacterData;
+use crate::utils::calculate_percent;
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
     enums::{
@@ -430,7 +431,7 @@ impl ActivityStoreInterface {
         eprintln!();
 
         eprintln!(
-            "CHECKING FOR NEW ACTIVITIES FOR {}(PUBLIC AND PRIVATE)",
+            "CHECKING FOR NEW ACTIVITIES FOR {} (PUBLIC AND PRIVATE)",
             member.name.get_bungie_name()
         );
         eprintln!("This may take a few minutes depending on the number of activities.");
@@ -505,6 +506,22 @@ impl ActivityStoreInterface {
                 total_synced: 0,
             });
         }
+
+        let mut filtered_ids = Vec::new();
+
+        //remove ids to sync for activities we have already synced
+        for id in ids {
+            match self.get_activity_row_id(id).await {
+                Ok(_) => {
+                    let _ = self
+                        .remove_from_activity_queue(&character_row_id, &id)
+                        .await?;
+                    continue;
+                }
+                Err(_) => filtered_ids.push(id),
+            }
+        }
+        ids = filtered_ids;
 
         let total_available = ids.len() as u32;
         let mut total_synced = 0;
@@ -581,12 +598,18 @@ impl ActivityStoreInterface {
             }
         }
 
+        if !ids.is_empty() {
+            sqlx::query("PRAGMA OPTIMIZE;")
+                .execute(&mut self.db)
+                .await?;
+        }
+
         eprintln!("]");
         eprintln!(
             "{} of {} synced ({}%)",
             total_synced,
             total_available,
-            ((total_synced as f32 / total_available as f32) * 100.0).floor()
+            calculate_percent(total_synced, total_available).floor()
         );
 
         Ok(SyncResult {
@@ -745,31 +768,6 @@ impl ActivityStoreInterface {
         })
     }
 
-    async fn insert_activity(
-        &mut self,
-        data: &DestinyPostGameCarnageReportData,
-        character_row_id: i32,
-    ) -> Result<(), Error> {
-        sqlx::query("BEGIN TRANSACTION;")
-            .execute(&mut self.db)
-            .await?;
-
-        match self._insert_activity(data, character_row_id).await {
-            Ok(_e) => {
-                sqlx::query("COMMIT;").execute(&mut self.db).await?;
-                sqlx::query("PRAGMA OPTIMIZE;")
-                    .execute(&mut self.db)
-                    .await?;
-
-                Ok(())
-            }
-            Err(e) => {
-                sqlx::query("ROLLBACK;").execute(&mut self.db).await?;
-                Err(e)
-            }
-        }
-    }
-
     //todo: this doesnt need to be an instance fn, not sure if it matters
     fn get_medal_hash_value(
         &self,
@@ -782,12 +780,37 @@ impl ActivityStoreInterface {
         }
     }
 
+    async fn insert_activity(
+        &mut self,
+        data: &DestinyPostGameCarnageReportData,
+        character_row_id: i32,
+    ) -> Result<(), Error> {
+        sqlx::query("BEGIN TRANSACTION;")
+            .execute(&mut self.db)
+            .await?;
+
+        match self._insert_activity(data, character_row_id).await {
+            Ok(_e) => {
+                sqlx::query("COMMIT;").execute(&mut self.db).await?;
+                Ok(())
+            }
+            Err(e) => {
+                sqlx::query("ROLLBACK;").execute(&mut self.db).await?;
+                Err(e)
+            }
+        }
+    }
+
     async fn _insert_activity(
         &mut self,
         data: &DestinyPostGameCarnageReportData,
         character_row_id: i32,
     ) -> Result<(), Error> {
-        //see if we already have this activity
+        //NOTE: We shouldnt need the check below, as we check for this before
+        //we retrieve activites. But right now, keeping it here just as extra safety
+        //so data doesn't get in some weird state.
+        //this means we have an extra DB call (get_activity_row) for each insert
+        /*
         match self
             .get_activity_row_id(data.activity_details.instance_id)
             .await
@@ -804,12 +827,15 @@ impl ActivityStoreInterface {
             }
             Err(_e) => (),
         };
+        */
 
         //throw an error if we try to insert and it already exists. That should never
         //happen since we check for that above.
+        //NOTE we added OR IGNORE to call calls before. should never need it, since
+        //we should never try to insert duplicates
         sqlx::query(
             r#"
-            INSERT INTO "main"."activity"
+            INSERT OR IGNORE INTO "main"."activity"
                 ("activity_id","period","mode","platform","director_activity_hash", "reference_id") 
             VALUES (?,?,?,?,?, ?)
         "#,
@@ -830,7 +856,7 @@ impl ActivityStoreInterface {
         for team in &data.teams {
             sqlx::query(
                 r#"
-                INSERT INTO "main"."team_result"
+                INSERT OR IGNORE INTO "main"."team_result"
                 (
                     "team_id", "score", "standing", "activity"
                 )
@@ -850,7 +876,7 @@ impl ActivityStoreInterface {
         for mode in &data.activity_details.modes {
             sqlx::query(
                 r#"
-                INSERT INTO "main"."modes"
+                INSERT OR IGNORE INTO "main"."modes"
                 (
                     "mode", "activity"
                 )
