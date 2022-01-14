@@ -20,13 +20,32 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod activities;
-pub mod character;
-pub mod drs;
-pub mod ggms;
-pub mod gpr;
-pub mod manifest;
-pub mod pgcr;
-pub mod sdpr;
-pub mod stats;
-pub mod utils;
+use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
+use crate::response::pgcr::UserInfoCard;
+use serde_derive::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetGroupMemberResponse {
+    #[serde(rename = "Response")]
+    pub response: Option<GroupMemberResponse>, //should this be an option?
+
+    #[serde(flatten)]
+    pub status: DestinyResponseStatus,
+}
+
+impl IsDestinyAPIResponse for GetGroupMemberResponse {
+    fn get_status(&self) -> &DestinyResponseStatus {
+        &self.status
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GroupMemberResponse {
+    pub results: Vec<GroupMemberInfo>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GroupMemberInfo {
+    #[serde(rename = "destinyUserInfo")]
+    pub destiny_user_info: UserInfoCard,
+}

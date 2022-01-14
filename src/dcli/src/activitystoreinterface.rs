@@ -355,35 +355,16 @@ impl ActivityStoreInterface {
         Ok(())
     }
 
-    pub async fn add_player_to_sync(
+    pub async fn add_member_to_sync(
         &mut self,
-        player: &PlayerName,
+        member: &Member,
     ) -> Result<(), Error> {
         self.begin_transaction().await?;
-
-        let member = match self.find_member(player, true).await {
+        let row_id = match self.insert_member(member).await {
             Ok(e) => e,
             Err(e) => {
                 self.rollback_transaction().await?;
-
-                //return custom err with name
                 return Err(e);
-            }
-        };
-
-        let row_id: i32 = match sqlx::query(
-            r#"
-            SELECT id from "member" where member_id=?
-        "#,
-        )
-        .bind(member.id)
-        .fetch_one(&mut self.db)
-        .await
-        {
-            Ok(e) => e.try_get("id")?,
-            Err(e) => {
-                self.rollback_transaction().await?;
-                return Err(Error::from(e));
             }
         };
 
@@ -391,13 +372,27 @@ impl ActivityStoreInterface {
             Ok(e) => e,
             Err(e) => {
                 self.rollback_transaction().await?;
-
-                //return custom err with name
                 return Err(e);
             }
         };
 
         self.commit_transaction().await?;
+
+        Ok(())
+    }
+
+    pub async fn add_player_to_sync(
+        &mut self,
+        player: &PlayerName,
+    ) -> Result<(), Error> {
+        let member = match self.find_member(player, false).await {
+            Ok(e) => e,
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        self.add_member_to_sync(&member).await?;
 
         Ok(())
     }

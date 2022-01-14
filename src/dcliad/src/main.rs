@@ -565,8 +565,8 @@ struct Opt {
     #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
     data_dir: Option<PathBuf>,
 
-    #[structopt(short = "k", long = "key", env = "DESTINY_API_KEY")]
-    key: Option<String>,
+    #[structopt(short = "k", long = "api-key", env = "DESTINY_API_KEY")]
+    api_key: Option<String>,
 }
 #[tokio::main]
 async fn main() {
@@ -584,7 +584,7 @@ async fn main() {
     let mut store = match ActivityStoreInterface::init_with_path(
         &data_dir,
         opt.verbose,
-        opt.key,
+        opt.api_key,
     )
     .await
     {

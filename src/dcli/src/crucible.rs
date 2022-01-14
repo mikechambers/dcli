@@ -191,13 +191,18 @@ impl PlayerName {
         }
     }
 
-    //TODO: what to do if null entries?
     pub fn get_bungie_name(&self) -> String {
-        format!(
-            "{}#{}",
-            self.bungie_display_name.as_ref().unwrap(),
-            self.get_bungie_display_name_code().unwrap()
-        )
+        let n = match self.bungie_display_name.as_ref() {
+            Some(e) => e.to_string(),
+            None => "".to_string(),
+        };
+
+        let c = match self.bungie_display_name_code.as_ref() {
+            Some(e) => e.to_string(),
+            None => "".to_string(),
+        };
+
+        format!("{}#{}", n, c)
     }
 
     //TODO: need to clean up display name code handling / formating

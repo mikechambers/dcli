@@ -23,7 +23,8 @@
 use std::path::PathBuf;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
-use dcli::crucible::PlayerName;
+use dcli::apiinterface::ApiInterface;
+use dcli::crucible::{Member, PlayerName};
 use dcli::utils::{
     determine_data_dir, print_error, print_verbose, EXIT_FAILURE, EXIT_SUCCESS,
 };
@@ -69,8 +70,8 @@ struct Opt {
         short = "n",
         //conflicts_with_all = &["add", "remove", "list"],
         //required_unless_one=&["list", "add", "remove"],
-        required_unless_one = &["list", "add", "remove"],
-        requires="key"
+        required_unless_one = &["list", "add", "remove", "import"],
+        requires="api-key"
     )]
     sync: Option<Vec<PlayerName>>,
 
@@ -82,7 +83,7 @@ struct Opt {
     #[structopt(long = "add", short = "a", 
         //conflicts_with_all = &["sync", "remove"], 
         //required_unless_one=&["sync", "list", "remove"]
-        requires="key"
+        requires="api-key"
     )]
     add: Option<Vec<PlayerName>>,
 
@@ -104,8 +105,12 @@ struct Opt {
     )]
     list: bool,
 
-    #[structopt(short = "k", long = "key", env = "DESTINY_API_KEY")]
-    key: Option<String>,
+    //todo: add --list argument
+    #[structopt(short = "i", long = "import", requires = "api-key")]
+    import: Option<u32>,
+
+    #[structopt(short = "k", long = "api-key", env = "DESTINY_API_KEY")]
+    api_key: Option<String>,
 }
 
 #[tokio::main]
@@ -121,12 +126,17 @@ async fn main() {
         }
     };
 
+    let key = match opt.api_key {
+        Some(e) => e,
+        None => "".to_string(),
+    };
+
     //NOTE: if a key is not provided StructOpt should reject input
     let mut store: ActivityStoreInterface =
         match ActivityStoreInterface::init_with_path(
             &data_dir,
             opt.verbose,
-            Some(opt.key.unwrap()),
+            Some(key.to_string()),
         )
         .await
         {
@@ -136,6 +146,42 @@ async fn main() {
                 std::process::exit(EXIT_FAILURE);
             }
         };
+
+    if opt.import.is_some() {
+        let group_id = opt.import.unwrap();
+
+        println!("Import Group ID : {}", group_id);
+
+        let api = match ApiInterface::new_with_key(opt.verbose, &key) {
+            Ok(e) => e,
+            Err(e) => {
+                print_error("Error creating interface.", e);
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
+
+        let members: Vec<Member> =
+            match api.retrieve_group_members(group_id).await {
+                Ok(e) => e,
+                Err(e) => {
+                    print_error("Error creating interface.", e);
+                    std::process::exit(EXIT_FAILURE);
+                }
+            };
+
+        for m in members.iter() {
+            match store.add_member_to_sync(&m).await {
+                Ok(_) => println!("{}", m.name.get_bungie_name()),
+                Err(e) => {
+                    println!(
+                        "Error adding {}. Skipping. {}",
+                        m.name.get_bungie_name(),
+                        e
+                    );
+                }
+            }
+        }
+    }
 
     if opt.add.is_some() {
         let players = opt.add.unwrap();

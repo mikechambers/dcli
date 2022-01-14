@@ -28,7 +28,7 @@ use std::{
 use chrono::{DateTime, Utc};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
-use crate::response::drs::API_RESPONSE_STATUS_SUCCESS;
+use crate::response::ggms::{GetGroupMemberResponse, GroupMemberResponse};
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::pgcr::{DestinyPostGameCarnageReportData, PGCRResponse};
 use crate::response::sdpr::{
@@ -49,6 +49,7 @@ use crate::{
     apiutils::{API_BASE_URL, PGCR_BASE_URL},
     character::PlayerInfo,
 };
+use crate::{crucible::Member, response::drs::API_RESPONSE_STATUS_SUCCESS};
 use crate::{crucible::PlayerName, error::Error};
 use crate::{enums::mode::Mode, response::pgcr::UserInfoCard};
 use crate::{
@@ -76,6 +77,40 @@ impl ApiInterface {
 
         //Have an option on to take a manifest, if manifest is avaliable it will use it
         //some methods may require it and will throw errors if its not set
+    }
+
+    pub async fn retrieve_group_members(
+        &self,
+        group_id: u32,
+    ) -> Result<Vec<Member>, Error> {
+        let url = format!(
+            "{base}/Platform/GroupV2/{group_id}/Members/",
+            base = API_BASE_URL,
+            group_id = group_id
+        );
+
+        let r: GetGroupMemberResponse = self
+            .client
+            .call_and_parse::<GetGroupMemberResponse>(&url)
+            .await?;
+
+        let response: GroupMemberResponse = match r.response {
+            Some(e) => e,
+            None => {
+                return Err(Error::ApiRequest {
+                    description: String::from(
+                        "No response data from API Call.",
+                    ),
+                })
+            }
+        };
+
+        let mut out: Vec<Member> = Vec::new();
+        for info in response.results.iter() {
+            out.push(info.destiny_user_info.to_member());
+        }
+
+        Ok(out)
     }
 
     /// Retrieves characters for specified member_id and platform
