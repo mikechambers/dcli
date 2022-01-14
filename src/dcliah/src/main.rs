@@ -769,21 +769,19 @@ async fn main() {
             }
         };
 
-    let mut store = match ActivityStoreInterface::init_with_path(
-        &data_dir,
-        opt.verbose,
-    )
-    .await
-    {
-        Ok(e) => e,
-        Err(e) => {
-            print_error(
+    let mut store =
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.verbose)
+            .await
+        {
+            Ok(e) => e,
+            Err(e) => {
+                print_error(
                 "Could not initialize activity store. Have you run dclisync?",
                 e,
             );
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
@@ -796,7 +794,7 @@ async fn main() {
         }
     };
 
-    let member: Member = match store.get_member(&opt.name).await {
+    let member: Member = match store.find_member(&opt.name).await {
         Ok(e) => e,
         Err(e) => {
             eprintln!(
@@ -808,7 +806,7 @@ async fn main() {
     };
 
     if !opt.no_sync {
-        match store.sync(&member).await {
+        match store.sync_member(&member).await {
             Ok(_e) => (),
             Err(e) => {
                 eprintln!("Could not sync activity store {}", e);

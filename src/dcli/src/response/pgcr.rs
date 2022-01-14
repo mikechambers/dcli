@@ -55,9 +55,10 @@ impl IsDestinyAPIResponse for PGCRResponse {
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportData
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DestinyPostGameCarnageReportData {
-    #[serde(rename = "startingPhaseIndex")]
-    pub starting_phase_index: i32,
-
+    //commenting out as we dont use this. Note, that I have hit cases where
+    //this is not in data, (rare) so if we re-use, will need to make in an Option
+    //#[serde(rename = "startingPhaseIndex")]
+    //pub starting_phase_index: i32,
     #[serde(rename = "activityDetails")]
     pub activity_details: DestinyHistoricalStatsActivity,
 

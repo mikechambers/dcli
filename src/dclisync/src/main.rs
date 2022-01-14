@@ -24,13 +24,10 @@ use std::path::PathBuf;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::crucible::PlayerName;
-use dcli::output::Output;
 use dcli::utils::{
-    build_tsv, determine_data_dir, print_error, print_verbose, EXIT_FAILURE,
+    determine_data_dir, print_error, print_verbose, EXIT_FAILURE, EXIT_SUCCESS,
 };
 use structopt::StructOpt;
-
-use dcli::activitystoreinterface::SyncResult;
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
@@ -70,7 +67,9 @@ struct Opt {
     #[structopt(
         long = "sync",
         short = "n",
-        conflicts_with_all = &["add", "remove", "list"]
+        //conflicts_with_all = &["add", "remove", "list"],
+        //required_unless_one=&["list", "add", "remove"],
+        requires="key"
     )]
     sync: Option<Vec<PlayerName>>,
 
@@ -79,7 +78,11 @@ struct Opt {
     /// Name must be in the format of NAME#CODE. Example: foo#3280
     /// You can find your name in game, or on Bungie's site at:
     /// https://www.bungie.net/7/en/User/Account/IdentitySettings
-    #[structopt(long = "add", short = "a", conflicts_with_all = &["sync", "remove", "list"])]
+    #[structopt(long = "add", short = "a", 
+        //conflicts_with_all = &["sync", "remove"], 
+        //required_unless_one=&["sync", "list", "remove"]
+        requires="key"
+    )]
     add: Option<Vec<PlayerName>>,
 
     /// Bungie name for player
@@ -87,26 +90,27 @@ struct Opt {
     /// Name must be in the format of NAME#CODE. Example: foo#3280
     /// You can find your name in game, or on Bungie's site at:
     /// https://www.bungie.net/7/en/User/Account/IdentitySettings
-    #[structopt(long = "remove", short = "r", conflicts_with_all = &["sync", "add", "list"])]
+    #[structopt(long = "remove", short = "r", 
+        //required_unless_one = &["sync", "add", "list"], 
+        //conflicts_with_all = &["sync", "add"],
+    )]
     remove: Option<Vec<PlayerName>>,
 
     //todo: add --list argument
-    #[structopt(short = "l", long = "list", conflicts_with_all = &["sync", "add", "remove"])]
+    #[structopt(short = "l", long = "list", 
+        //required_unless_one = &["sync", "add", "remove"], 
+        //conflicts_with_all = &["sync"]
+    )]
     list: bool,
+
+    #[structopt(short = "k", long = "key", env = "DESTINY_API_KEY")]
+    key: Option<String>,
 }
 
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
     print_verbose(&format!("{:#?}", opt), opt.verbose);
-
-    if (!opt.list
-        && opt.remove.is_none()
-        && opt.add.is_none()
-        && opt.sync.is_none())
-    {
-        println!("No valid arguments");
-    }
 
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
@@ -130,9 +134,11 @@ async fn main() {
     if opt.add.is_some() {
         let players = opt.add.unwrap();
 
+        println!("Added");
+        println!("-------------");
         for player in players.iter() {
             match store.add_player_to_sync(&player).await {
-                Ok(_) => println!("{} added.", player.get_bungie_name()),
+                Ok(_) => println!("{}", player.get_bungie_name()),
                 Err(e) => {
                     println!(
                         "Error adding {}. {}",
@@ -142,14 +148,17 @@ async fn main() {
                 }
             }
         }
+        println!();
     }
 
     if opt.remove.is_some() {
         let players = opt.remove.unwrap();
 
+        println!("Removed");
+        println!("-------------");
         for player in players.iter() {
             match store.remove_player_from_sync(&player).await {
-                Ok(_) => println!("{} Removed.", player.get_bungie_name()),
+                Ok(_) => println!("{}", player.get_bungie_name()),
                 Err(e) => {
                     println!(
                         "Error removing {}. {}",
@@ -159,8 +168,50 @@ async fn main() {
                 }
             }
         }
+        println!();
     }
 
+    if opt.sync.is_some() {
+        let players = opt.sync.unwrap();
+
+        if players.is_empty() {
+            match store.sync_all().await {
+                Ok(_) => {}
+                Err(e) => {
+                    print_error("Error syncing.", e);
+                    std::process::exit(EXIT_FAILURE);
+                }
+            }
+        } else {
+            match store.sync_players(&players).await {
+                Ok(_) => {}
+                Err(e) => {
+                    print_error("Error syncing.", e);
+                    std::process::exit(EXIT_FAILURE);
+                }
+            }
+        }
+
+        println!("Sync Complete");
+        std::process::exit(EXIT_SUCCESS);
+    }
+
+    if opt.list {
+        let members = match store.get_sync_members().await {
+            Ok(m) => m,
+            Err(e) => {
+                print_error("Error syncing.", e);
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
+
+        println!("Synced Players");
+        println!("-------------");
+        for member in members.iter() {
+            println!("{}", member.name.get_bungie_name());
+        }
+        println!();
+    }
     /*
 
 
@@ -186,17 +237,7 @@ async fn main() {
     };
     */
 }
-
-fn print_tsv(results: &SyncResult, store: &ActivityStoreInterface) {
-    let name_values: Vec<(&str, String)> = vec![
-        ("total_synced", results.total_synced.to_string()),
-        ("total_available", results.total_available.to_string()),
-        ("path", store.get_storage_path()),
-    ];
-
-    print!("{}", build_tsv(name_values));
-}
-
+/*
 fn print_default(results: &SyncResult, store: &ActivityStoreInterface) {
     println!();
     println!("{}", "Activity sync complete".to_string().to_uppercase());
@@ -227,3 +268,4 @@ fn print_default(results: &SyncResult, store: &ActivityStoreInterface) {
 
     println!("Database stored at: {}", store.get_storage_path());
 }
+*/

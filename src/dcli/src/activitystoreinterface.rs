@@ -151,13 +151,23 @@ impl ActivityStoreInterface {
             None => return Ok(None),
         };
 
-        let member_id: String = row.try_get("member_id")?;
-        let platform_id: u32 = row.try_get("platform_id")?;
-        let display_name: Option<String> = row.try_get("display_name")?;
+        let member = self.parse_member_row(&row)?;
+
+        Ok(Some(member))
+    }
+
+    fn parse_member_row(
+        &mut self,
+        member_row: &sqlx::sqlite::SqliteRow,
+    ) -> Result<Member, Error> {
+        let member_id: String = member_row.try_get("member_id")?;
+        let platform_id: u32 = member_row.try_get("platform_id")?;
+        let display_name: Option<String> =
+            member_row.try_get("display_name")?;
         let bungie_display_name: Option<String> =
-            row.try_get("bungie_display_name")?;
+            member_row.try_get("bungie_display_name")?;
         let bungie_display_name_code: Option<String> =
-            row.try_get("bungie_display_name_code")?;
+            member_row.try_get("bungie_display_name_code")?;
 
         let name: PlayerName = PlayerName {
             display_name,
@@ -171,7 +181,7 @@ impl ActivityStoreInterface {
             id: member_id,
         };
 
-        Ok(Some(member))
+        Ok(member)
     }
 
     pub async fn update_sync_entry(
@@ -209,9 +219,10 @@ impl ActivityStoreInterface {
         Ok(rowid)
     }
 
-    pub async fn get_member(
+    pub async fn find_member(
         &mut self,
         name: &PlayerName,
+        store: bool,
     ) -> Result<Member, Error> {
         let member: Option<Member> = self.retrieve_member_by_name(name).await?;
 
@@ -222,7 +233,10 @@ impl ActivityStoreInterface {
                 let user_info = api.search_destiny_player(name).await?;
 
                 let m: Member = user_info.to_member();
-                self.insert_member(&m).await?;
+
+                if store {
+                    self.insert_member(&m).await?;
+                }
 
                 m
             }
@@ -230,6 +244,69 @@ impl ActivityStoreInterface {
 
         Ok(out)
     }
+
+    pub async fn sync_players(
+        &mut self,
+        players: &[PlayerName],
+    ) -> Result<(), Error> {
+        for player in players.iter() {
+            self.sync_player(&player).await?;
+        }
+
+        Ok(())
+    }
+
+    //todo: rename sync to sync member
+    pub async fn sync_player(
+        &mut self,
+        player: &PlayerName,
+    ) -> Result<SyncResult, Error> {
+        let member = self.find_member(&player, false).await?;
+
+        let out = self.sync_member(&member).await?;
+        Ok(out)
+    }
+
+    //select all members where sync member = memberid
+    pub async fn sync_all(&mut self) -> Result<(), Error> {
+        let members: Vec<Member> = self.get_sync_members().await?;
+
+        for member in members.iter() {
+            self.sync_member(&member).await?;
+        }
+
+        Ok(())
+    }
+
+    pub async fn get_sync_members(&mut self) -> Result<Vec<Member>, Error> {
+        let rows = sqlx::query(
+            r#"
+            SELECT
+                member.id, member_id, platform_id, display_name, 
+                bungie_display_name, bungie_display_name_code
+            FROM
+                member
+            INNER JOIN
+                sync on member.id = sync.member
+        "#,
+        )
+        .fetch_all(&mut self.db)
+        .await?;
+
+        let mut out: Vec<Member> = Vec::new();
+        for row in rows.iter() {
+            let member = self.parse_member_row(&row)?;
+            out.push(member);
+        }
+
+        Ok(out)
+    }
+
+    /*
+        select member.id, member_id, platform_id, display_name, bungie_display_name, bungie_display_name_code from member
+    INNER JOIN
+    sync on member.id = sync.member
+     */
 
     pub async fn remove_player_from_sync(
         &mut self,
@@ -246,17 +323,12 @@ impl ActivityStoreInterface {
         .fetch_optional(&mut self.db)
         .await?;
 
-        println!("{}", player.bungie_display_name.as_ref().unwrap());
-        println!("{}", player.bungie_display_name_code.as_ref().unwrap());
-
-        //TODO: may want to use this in other areas
         let id: u32 = match row_option {
             Some(e) => {
                 let id: u32 = e.try_get("id")?;
                 id
             }
             None => {
-                println!("Not found");
                 return Ok(());
             }
         };
@@ -277,15 +349,9 @@ impl ActivityStoreInterface {
         &mut self,
         player: &PlayerName,
     ) -> Result<(), Error> {
-        //do this in a transaction?
-
-        let member = match self.get_member(player).await {
-            Ok(e) => e,
-            Err(_) => self.get_member(player).await?,
-        };
-
         self.begin_transaction().await?;
-        let member_row_id = match self.insert_member(&member).await {
+
+        let member = match self.find_member(player, true).await {
             Ok(e) => e,
             Err(e) => {
                 self.rollback_transaction().await?;
@@ -295,7 +361,23 @@ impl ActivityStoreInterface {
             }
         };
 
-        match self.update_sync_entry(member_row_id).await {
+        let row_id: i32 = match sqlx::query(
+            r#"
+            SELECT id from "member" where member_id=?
+        "#,
+        )
+        .bind(member.id)
+        .fetch_one(&mut self.db)
+        .await
+        {
+            Ok(e) => e.try_get("id")?,
+            Err(e) => {
+                self.rollback_transaction().await?;
+                return Err(Error::from(e));
+            }
+        };
+
+        match self.update_sync_entry(row_id).await {
             Ok(e) => e,
             Err(e) => {
                 self.rollback_transaction().await?;
@@ -305,43 +387,19 @@ impl ActivityStoreInterface {
             }
         };
 
-        //TODO: need to catch errors above to rollback
         self.commit_transaction().await?;
 
         Ok(())
     }
 
-    /*
-    pub async fn add_players_to_sync(
-        &mut self,
-        players: &[PlayerName],
-    ) -> Result<(), Error> {
-        for player in players.iter() {
-            self.add_player_to_sync(player).await?
-        }
-
-        Ok(())
-    }
-    */
-
-    /*
-
-
-
-    pub async fn sync_member(&mut self, member:&Member) -> -> Result<SyncResult, Error> {
-
-    }
-
-    pub async fn sync_all(&mut self, member:&Member) -> -> Result<SyncResult, Error> {
-
-    }
-    */
-
     /// TODO currently no way to sync old / delete characters. would be easy to
     /// add by just moving the character sync into its own api sync_character(id, class_type)
     /// but not going to worry about it unless someone requests it
     /// retrieves and stores activity details for ids in activity queue
-    pub async fn sync(&mut self, member: &Member) -> Result<SyncResult, Error> {
+    pub async fn sync_member(
+        &mut self,
+        member: &Member,
+    ) -> Result<SyncResult, Error> {
         let api = ApiInterface::new(self.verbose)?;
 
         //Note, we need this call in case the user deletes and creates a new character
