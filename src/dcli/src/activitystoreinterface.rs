@@ -260,7 +260,19 @@ impl ActivityStoreInterface {
         players: &[PlayerName],
     ) -> Result<(), Error> {
         for player in players.iter() {
-            self.sync_player(&player).await?;
+            match self.sync_player(&player).await {
+                Ok(_) => {}
+                Err(e) => {
+                    if e == Error::BungieNameNotFound {
+                        println!(
+                            "Name not found: {}. Skipping.",
+                            player.get_bungie_name()
+                        );
+                    } else {
+                        return Err(e);
+                    }
+                }
+            };
         }
 
         Ok(())
