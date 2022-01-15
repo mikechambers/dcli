@@ -3,15 +3,12 @@
 Command line tool for downloading and syncing Destiny 2 Crucible activity
 history to a sqlite3 database file.
 
-You may add and remove users via the --add and --remove flags, as well as import
-all clan members via the --import-group flag.
+Users may be added and removed via the --add and --remove flags, and clans can be imported via the --import-group flag.
 
 If multiple flags are specified, they will be run in the following order:
 import, add, remove, sync, list
 
-Some options require that a Bungie API key is specified via the --api-key KEY flag, or DESTINY_API_KEY environment variable.
-
-You can obtain a key from [https://www.bungie.net/en/Application](https://www.bungie.net/en/Application)
+Some options require that a Bungie API key is specified via the --api-key KEY flag, or DESTINY_API_KEY environment variable. You can obtain a key from [https://www.bungie.net/en/Application](https://www.bungie.net/en/Application)
 
 On initial sync, the tool will download all Crucible activity history and data for the specified players(s), and store it in a [sqlite3](https://www.sqlite.org/index.html) database file. On subseqent runs, it will download any new activities since the last sync.
 
