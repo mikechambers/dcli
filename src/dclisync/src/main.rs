@@ -90,7 +90,7 @@ struct Opt {
         short = "s",
         //conflicts_with_all = &["add", "remove", "list"],
         //required_unless_one=&["list", "add", "remove"],`
-        required_unless_one = &["list", "add", "remove", "import"],
+        required_unless_one = &["list", "add", "remove", "import-group"],
         requires="api-key"
     )]
     sync: Option<Vec<PlayerName>>,
