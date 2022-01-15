@@ -70,10 +70,10 @@ and the manifest file will be downloaded and saved in a system appropriate direc
 
 ### Sync your activities
 
-Next, lets sync all of our activity history to a local database. This data will be used by other apps, such as dcliah to generate and display stats.
+Next, lets sync all of our activity history to a local database and view data. This data will be used by other apps, such as dcliah to generate and display stats.
 
 ```
-$ dclisync --name mesh#3230
+$ dcliah --name mesh#3230 
 ```
 
 Replacing mesh#3230 with your own Bungie name.
@@ -83,6 +83,8 @@ You can find your Bungie name in game, or on Bungie's site at [https://www.bungi
 The first time you run this, it may take a couple of minutes to load all of your data (depending on the number of activities that you have). If any errors occur while syncing, just re-run the app when its done. It is smart enough to only sync the acitivties that it missed the first time.
 
 Once you have done the initial sync, subsequent activity syncs should be very fast. You can periodically re-run the app to keep things in sync, or have dcliah / dcliad automatically sync before it displays your stats.
+
+If you just want to sync data and not view it, use [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync).
 
 ### Grabbing data
 
