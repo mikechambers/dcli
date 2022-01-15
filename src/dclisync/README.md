@@ -127,6 +127,8 @@ $ dclisync --remove mesh#3230 BUNGIENAME#3450
 $ dclisync --import-group 4571679 --api-key YOUR_DESTINY_API_KEY
 ```
 
+You can get your groupid for your clan from the Bungie clan page: https://www.bungie.net/en/ClanV2/MyClans . Click your clan, then copy the group id from the URL.
+
 API key may also be spcified via the DESTINY_API_KEY environment variable.
 
 You can obtain an api key from https://www.bungie.net/en/Application
