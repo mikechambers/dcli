@@ -43,6 +43,13 @@ OPTIONS:
             Limit the number of activity details that will be displayed
             
             Summary information will be generated based on all activities. [default: 10]
+    -k, --api-key <api-key>                    
+            API key from Bungie required for some actions.
+            
+            If specified the key will be passed to all Destiny API calls.
+            
+            You can obtain a key from https://www.bungie.net/en/Application [env:
+            DESTINY_API_KEY=8eacb6527ea648fbbd8106990231c21c]
     -C, --class <character-class-selection>    
             Character to retrieve data for
             

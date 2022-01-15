@@ -1,12 +1,25 @@
 # dclisync
 
-Command line tool for downloading and syncing Destiny 2 Crucible activity history.
+Command line tool for downloading and syncing Destiny 2 Crucible activity
+history to a sqlite3 database file.
 
-On initial run, the tool will download all Crucible activity history and data for the specified character, and store it in a [sqlite3](https://www.sqlite.org/index.html) database file. On subseqent runs, it will download any new activities since the last sync.
+You may add and remove users via the --add and --remove flags, as well as import
+all clan members via the --import-group flag.
+
+If multiple flags are specified, they will be run in the following order:
+import, add, remove, sync, list
+
+Some options require that a Bungie API key is specified via the --api-key KEY flag, or DESTINY_API_KEY environment variable.
+
+You can obtain a key from [https://www.bungie.net/en/Application](https://www.bungie.net/en/Application)
+
+On initial sync, the tool will download all Crucible activity history and data for the specified players(s), and store it in a [sqlite3](https://www.sqlite.org/index.html) database file. On subseqent runs, it will download any new activities since the last sync.
 
 This provides a local sqlite3 database that contains all crucible matches and individual stats for the specified player. It can be used with other dcli apps, or you can make custom queries against the database.
 
-The app has support for storing data across multiple players and characters.
+Depending on the number of activities, the initial sync may take a couple of minutes to run for each player. Subsequent syncs should be much faster.
+
+The app will download and store all public and privsate PVP activities for all currently active characters.
 
 The app syncs in 3 stages:
 
@@ -18,16 +31,17 @@ If an error occurs when downloading the list of activities (step 2), then the ap
 
 If any errors occur while downloading activity details (step 3), then that specific activity will be skipped, and saved to retry the next time there is a sync.
 
-Depending on the number of activities, the initial sync can take a couple of minutes. Subsequent synces should be much faster.
-
 ## USAGE
 ```
 USAGE:
-    dclisync [FLAGS] [OPTIONS] --name <name>
+    dclisync [FLAGS] [OPTIONS] --api-key <api-key> --sync <sync>...
 
 FLAGS:
     -h, --help       
             Prints help information
+
+    -l, --list       
+            List all Bungie names which are flagged to be synced
 
     -V, --version    
             Prints version information
@@ -38,48 +52,106 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-    -D, --data-dir <data-dir>       
+    -A, --add <add>...                   
+            Add specified player(s) to have their activities synced the next time the database is synced.
+            
+            Name(s) must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
+            site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
+            
+            Requires that a Bungie API key is specified via the --api-key KEY flag, or DESTINY_API_KEY environment
+            variable.
+            
+            You can obtain a key from https://www.bungie.net/en/Application
+    -k, --api-key <api-key>              
+            API key from Bungie required for some actions.
+            
+            You can obtain a key from https://www.bungie.net/en/Application [env:
+            DESTINY_API_KEY=8eacb6527ea648fbbd8106990231c21c]
+    -D, --data-dir <data-dir>            
             Directory where activity sqlite3 database will be stored. (optional)
             
             By default data will be loaded from and stored in the appropriate system local storage directory. Data will
             be stored in a sqlite3 database file named dcli.sqlite3
-    -n, --name <name>               
-            Bungie name for player
+    -i, --import-group <import-group>    
+            Import all players for specified Destiny 2 Group / clan.
             
-            Name must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
+            You can get your groupid for your clan from the Bungie clan page: https://www.bungie.net/en/ClanV2/MyClans
+            Click your clan, then copy the group id from the URL.
+            
+            Requires that a Bungie API key is specified via the --api-key KEY flag, or DESTINY_API_KEY environment
+            variable.
+            
+            You can obtain a key from https://www.bungie.net/en/Application
+    -r, --remove <remove>...             
+            Remove specified player(s) from having their acitivities synced.
+            
+            Note, player data will still be contained in the database, but no new activities will be synced for the
+            player(s)
+            
+            Name(s) must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
             site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
-    -O, --output-format <output>    
-            Format for command output
+    -s, --sync <sync>...                 
+            Sync player activities.
             
-            Valid values are default (Default) and tsv.
+            If no arguments are provided, all players will be synced. Optionally, you can pass in one or more space
+            seperated Bungie names and codes. If a name has a space in it, you must the entire name in quotes.
             
-            tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
-            (\n). [default: default]
+            Name(s) must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
+            site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
+            
+            Requires that a Bungie API key is specified via the --api-key KEY flag, or DESTINY_API_KEY environment
+            variable.
+            
+            You can obtain an api key from https://www.bungie.net/en/Application
 ```
  
 
 ### Examples
 
-#### Download and store all Crucible activity history for all characters
+#### Add players to sync
 
 ```
-$ dclisync --name mesh#3230
+$ dclisync --add mesh#3230 BUNGIENAME#3450 --api-key YOUR_DESTINY_API_KEY
 ```
 
-Outputs:
+API key may also be spcified via the DESTINY_API_KEY environment variable.
+
+You can obtain an api key from https://www.bungie.net/en/Application
+
+#### Remove players from syncing
 
 ```
-Checking for new activities.
-This may take a moment depending on the number of activities.
-[............................]
-6778 new activities found.
-Retrieving details for 6778 activities.
-This may take a few minutes depending on the number of activities.
-Each dot represents 50 activities
-[........................................................................................................................................]
-Sync complete. Database stored at:
-/home/mesh/.local/share/dcli/dcli.sqlite3
+$ dclisync --remove mesh#3230 BUNGIENAME#3450
 ```
+
+#### Import Clan / Group members
+
+```
+$ dclisync --import-group 4571679 --api-key YOUR_DESTINY_API_KEY
+```
+
+API key may also be spcified via the DESTINY_API_KEY environment variable.
+
+You can obtain an api key from https://www.bungie.net/en/Application
+
+#### Sync activities for all players
+
+```
+$ dclisync --sync --api-key YOUR_DESTINY_API_KEY
+```
+
+API key may also be spcified via the DESTINY_API_KEY environment variable.
+
+You can obtain an api key from https://www.bungie.net/en/Application
+
+#### Sync activities for specific players
+
+```
+$ dclisync --sync mesh#3230 --api-key YOUR_DESTINY_API_KEY
+```
+API key may also be spcified via the DESTINY_API_KEY environment variable.
+
+You can obtain an api key from https://www.bungie.net/en/Application
 
 ## Questions, Feature Requests, Feedback
 
