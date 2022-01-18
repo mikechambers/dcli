@@ -1,5 +1,5 @@
 /*
-* Copyright 2021 Mike Chambers
+* Copyright 2022 Mike Chambers
 * https://github.com/mikechambers/dcli
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -260,7 +260,19 @@ impl ActivityStoreInterface {
         players: &[PlayerName],
     ) -> Result<(), Error> {
         for player in players.iter() {
-            self.sync_player(&player).await?;
+            match self.sync_player(&player).await {
+                Ok(_) => {}
+                Err(e) => {
+                    if e == Error::BungieNameNotFound {
+                        println!(
+                            "Name not found: {}. Skipping.",
+                            player.get_bungie_name()
+                        );
+                    } else {
+                        return Err(e);
+                    }
+                }
+            };
         }
 
         Ok(())

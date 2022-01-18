@@ -52,6 +52,13 @@ OPTIONS:
             
             By default, the last activity will be displayed. The index can be retrieved from other dcli apps, such as
             dcliah, or directly from the sqlite datastore.
+    -k, --api-key <api-key>                    
+            API key from Bungie required for some actions.
+            
+            If specified the key will be passed to all Destiny API calls.
+            
+            You can obtain a key from https://www.bungie.net/en/Application [env:
+            DESTINY_API_KEY=8eacb6527ea648fbbd8106990231c21c]
     -C, --class <character-class-selection>    
             Character class to retrieve data for
             

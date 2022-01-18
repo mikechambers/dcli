@@ -1,5 +1,5 @@
 /*
-* Copyright 2021 Mike Chambers
+* Copyright 2022 Mike Chambers
 * https://github.com/mikechambers/dcli
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -35,6 +35,17 @@ use structopt::StructOpt;
 /// Command line tool for downloading and syncing Destiny 2 Crucible activity
 /// history to a sqlite3 database file.
 ///
+/// You may add and remove users via the --add and --remove flags, as well as import
+/// all clan members via the --import flag.
+///
+/// If multiple flags are specified, they will be run in the following order:
+/// import, add, remove, sync, list
+///
+/// Some options require that a Bungie API key is specified via the --api-key KEY flag,
+/// or DESTINY_API_KEY environment variable.
+///
+/// You can obtain a key from https://www.bungie.net/en/Application
+///
 /// Created by Mike Chambers.
 /// https://www.mikechambers.com
 ///
@@ -60,36 +71,54 @@ struct Opt {
     #[structopt(short = "D", long = "data-dir", parse(from_os_str))]
     data_dir: Option<PathBuf>,
 
-    /// Bungie name for player
+    /// Sync player activities.
     ///
-    /// Name must be in the format of NAME#CODE. Example: foo#3280
+    /// If no arguments are provided, all players will be synced. Optionally,
+    /// you can pass in one or more space seperated Bungie names and codes.
+    /// If a name has a space in it, you must the entire name in quotes.
+    ///
+    /// Name(s) must be in the format of NAME#CODE. Example: foo#3280
     /// You can find your name in game, or on Bungie's site at:
     /// https://www.bungie.net/7/en/User/Account/IdentitySettings
+    ///
+    /// Requires that a Bungie API key is specified via the --api-key KEY flag,
+    /// or DESTINY_API_KEY environment variable.
+    ///
+    /// You can obtain a key from https://www.bungie.net/en/Application
     #[structopt(
         long = "sync",
-        short = "n",
+        short = "s",
         //conflicts_with_all = &["add", "remove", "list"],
-        //required_unless_one=&["list", "add", "remove"],
-        required_unless_one = &["list", "add", "remove", "import"],
+        //required_unless_one=&["list", "add", "remove"],`
+        required_unless_one = &["list", "add", "remove", "import-group"],
         requires="api-key"
     )]
     sync: Option<Vec<PlayerName>>,
 
-    /// Bungie name for player
+    /// Add specified player(s) to have their activities synced the next time
+    /// the database is synced.
     ///
-    /// Name must be in the format of NAME#CODE. Example: foo#3280
+    /// Name(s) must be in the format of NAME#CODE. Example: foo#3280
     /// You can find your name in game, or on Bungie's site at:
     /// https://www.bungie.net/7/en/User/Account/IdentitySettings
-    #[structopt(long = "add", short = "a", 
+    ///
+    /// Requires that a Bungie API key is specified via the --api-key KEY flag,
+    /// or DESTINY_API_KEY environment variable.
+    ///
+    /// You can obtain a key from https://www.bungie.net/en/Application
+    #[structopt(long = "add", short = "A", 
         //conflicts_with_all = &["sync", "remove"], 
         //required_unless_one=&["sync", "list", "remove"]
         requires="api-key"
     )]
     add: Option<Vec<PlayerName>>,
 
-    /// Bungie name for player
+    /// Remove specified player(s) from having their acitivities synced.
     ///
-    /// Name must be in the format of NAME#CODE. Example: foo#3280
+    /// Note, player data will still be contained in the database, but no new
+    /// activities will be synced for the player(s)
+    ///
+    /// Name(s) must be in the format of NAME#CODE. Example: foo#3280
     /// You can find your name in game, or on Bungie's site at:
     /// https://www.bungie.net/7/en/User/Account/IdentitySettings
     #[structopt(long = "remove", short = "r", 
@@ -98,17 +127,29 @@ struct Opt {
     )]
     remove: Option<Vec<PlayerName>>,
 
-    //todo: add --list argument
+    ///List all Bungie names which are flagged to be synced.
     #[structopt(short = "l", long = "list", 
         //required_unless_one = &["sync", "add", "remove"], 
         //conflicts_with_all = &["sync"]
     )]
     list: bool,
 
-    //todo: add --list argument
-    #[structopt(short = "i", long = "import", requires = "api-key")]
-    import: Option<u32>,
+    /// Import all players for specified Destiny 2 Group / clan.
+    ///
+    /// You can get your groupid for your clan from the Bungie clan page:
+    /// https://www.bungie.net/en/ClanV2/MyClans
+    /// Click your clan, then copy the group id from the URL.
+    ///
+    /// Requires that a Bungie API key is specified via the --api-key KEY flag,
+    /// or DESTINY_API_KEY environment variable.
+    ///
+    /// You can obtain a key from https://www.bungie.net/en/Application
+    #[structopt(short = "i", long = "import-group", requires = "api-key")]
+    import_group: Option<u32>,
 
+    /// API key from Bungie required for some actions.
+    ///
+    /// You can obtain a key from https://www.bungie.net/en/Application
     #[structopt(short = "k", long = "api-key", env = "DESTINY_API_KEY")]
     api_key: Option<String>,
 }
@@ -147,8 +188,8 @@ async fn main() {
             }
         };
 
-    if opt.import.is_some() {
-        let group_id = opt.import.unwrap();
+    if opt.import_group.is_some() {
+        let group_id = opt.import_group.unwrap();
 
         println!("Import Group ID : {}", group_id);
 

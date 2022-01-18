@@ -27,6 +27,13 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
+    -k, --api-key <api-key>         
+            API key from Bungie required for some actions.
+            
+            If specified the key will be passed to all Destiny API calls.
+            
+            You can obtain a key from https://www.bungie.net/en/Application [env:
+            DESTINY_API_KEY=8eacb6527ea648fbbd8106990231c21c]
     -D, --data-dir <data-dir>       
             Directory where Destiny 2 manifest database file is stored. (optional)
             
@@ -44,6 +51,7 @@ OPTIONS:
             
             tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
             (\n). [default: default]
+
 ```
 
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).

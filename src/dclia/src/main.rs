@@ -1,5 +1,5 @@
 /*
-* Copyright 2021 Mike Chambers
+* Copyright 2022 Mike Chambers
 * https://github.com/mikechambers/dcli
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -89,6 +89,11 @@ struct Opt {
     )]
     output: Output,
 
+    /// API key from Bungie required for some actions.
+    ///
+    /// If specified the key will be passed to all Destiny API calls.
+    ///
+    /// You can obtain a key from https://www.bungie.net/en/Application
     #[structopt(short = "k", long = "api-key", env = "DESTINY_API_KEY")]
     api_key: Option<String>,
 }
