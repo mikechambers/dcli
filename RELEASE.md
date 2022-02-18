@@ -1,6 +1,9 @@
 # dcli Release Notes
 
-## v0.8.0 January, 15 2022
+## v0.8.01 February 17, 2022
+* Added season_of_the_risen, witch_queen moments.
+
+## v0.8.0 January 15, 2022
 * Update database to store additional game data (emblem hash for players and fireteamId). This will require a database update and data to be resynced
 * Use new bungie api to search for player name, which fixes issue of some names not being able to be synced
 * Renamed dclias to dclisync
