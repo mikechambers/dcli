@@ -21,80 +21,80 @@ The tool expects that the manifest has been downloaded and synced using [dclim](
 [![Image of dcliah](../../images/dcliad_sm.png)](../../images/dcliad.png)
 
 ## USAGE
+
 ```
 USAGE:
     dcliad [FLAGS] [OPTIONS] --name <name>
 
 FLAGS:
-    -d, --details    
+    -d, --details
             Display extended activity details
-            
+
             If flag is set, additional information will be displayed, including per user weapon stats.
-    -h, --help       
+    -h, --help
             Prints help information
 
-    -N, --no-sync    
+    -N, --no-sync
             Don't sync activities
-            
+
             If flag is set, activities will not be retrieved before displaying stats. This is useful in case you are
             syncing activities in a seperate process.
-    -V, --version    
+    -V, --version
             Prints version information
 
-    -v, --verbose    
+    -v, --verbose
             Print out additional information
-            
+
             Output is printed to stderr.
 
 OPTIONS:
-    -a, --activity-index <activity-index>      
+    -a, --activity-index <activity-index>
             The index of the activity to display data about
-            
+
             By default, the last activity will be displayed. The index can be retrieved from other dcli apps, such as
             dcliah, or directly from the sqlite datastore.
-    -k, --api-key <api-key>                    
+    -k, --api-key <api-key>
             API key from Bungie required for some actions.
-            
+
             If specified the key will be passed to all Destiny API calls.
-            
+
             You can obtain a key from https://www.bungie.net/en/Application [env:
             DESTINY_API_KEY=8eacb6527ea648fbbd8106990231c21c]
-    -C, --class <character-class-selection>    
+    -C, --class <character-class-selection>
             Character class to retrieve data for
-            
+
             Valid values include hunter, titan, warlock, last_active and all. [default: last_active]
-    -D, --data-dir <data-dir>                  
+    -D, --data-dir <data-dir>
             Directory where Destiny 2 manifest and activity database files are stored. (optional)
-            
+
             This will normally be downloaded using the dclim tool, and uses a system appropriate directory by default.
-    -M, --mode <mode>                          
+    -M, --mode <mode>
             Activity mode from which to return last activity
-            
+
             Supported values are all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private,
             rumble, pvp_competitive, quickplay and trials_of_osiris.
-            
+
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
-            private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched,
+            private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, rift, iron_banner_rift
             scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
-    -n, --name <name>                          
+    -n, --name <name>
             Bungie name for player
-            
+
             Name must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
             site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
-    -w, --weapon-count <weapon-count>          
+    -w, --weapon-count <weapon-count>
             The number of weapons to display details for [default: 5]
 ```
 
+| ARGUMENT | OPTIONS                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --mode   | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, rift, iron_banner_rift, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
 
-| ARGUMENT | OPTIONS |
-|---|---|
-| --mode | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
-   
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
 Activity data store can be created and synced seperately using [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync).
 
-**NOTE** : Currently, due to a [bug](https://github.com/Bungie-net/api/issues/1386) in the Destiny 2 API, you will only get results for private matches when specifying *all_private*. The other options are still included in case the bug is fixed. If viewing private match stats is important to you, please leave a comment [here](https://github.com/mikechambers/dcli/issues/10).
+**NOTE** : Currently, due to a [bug](https://github.com/Bungie-net/api/issues/1386) in the Destiny 2 API, you will only get results for private matches when specifying _all_private_. The other options are still included in case the bug is fixed. If viewing private match stats is important to you, please leave a comment [here](https://github.com/mikechambers/dcli/issues/10).
 
 ### Examples
 
@@ -110,7 +110,7 @@ $ dcliad --name mesh#3230
 $ dcliad --name mesh#3230 --mode iron_banner --class hunter
 ```
 
-#### View details for last activity played displaying extended details 
+#### View details for last activity played displaying extended details
 
 ```
 $ dcliad --name mesh#3230 --details
@@ -128,7 +128,6 @@ If you have any questions, feature requests, need help, are running into issues,
 
 You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
 
-
 ## Compiling
 
 This utility is written and compiled in [Rust](https://www.rust-lang.org/).
@@ -141,4 +140,4 @@ To compile, switch to the `src/` directory and run:
 $ cargo build --release
 ```
 
-which will place the compiled tools in *src/target/release*
+which will place the compiled tools in _src/target/release_

@@ -1,7 +1,8 @@
 [package]
 name = "dclia"
 #version
-version = "0.8.0"
+#version
+version = "0.8.2"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
 description = "Command line tool for retrieving information on current activity for specified player character."
 homepage = "https://www.mikechambers.com"

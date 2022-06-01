@@ -69,6 +69,7 @@ pub enum Moment {
     SeasonOfTheLost,
     SeasonOfTheRisen,
     WitchQueen,
+    SeasonOfTheHaunted,
 }
 
 impl Moment {
@@ -111,6 +112,9 @@ impl Moment {
             Moment::SeasonOfTheLost => Utc.ymd(2021, 8, 24).and_hms(17, 0, 0),
             Moment::SeasonOfTheRisen => Utc.ymd(2022, 2, 22).and_hms(17, 0, 0),
             Moment::WitchQueen => Utc.ymd(2022, 2, 22).and_hms(17, 0, 0),
+            Moment::SeasonOfTheHaunted => {
+                Utc.ymd(2022, 5, 24).and_hms(17, 0, 0)
+            }
         }
     }
 }
@@ -157,6 +161,7 @@ impl FromStr for Moment {
             "season_of_the_lost" => Ok(Moment::SeasonOfTheLost),
             "season_of_the_risen" => Ok(Moment::SeasonOfTheRisen),
             "witch_queen" => Ok(Moment::WitchQueen),
+            "season_of_the_haunted" => Ok(Moment::SeasonOfTheHaunted),
 
             _ => Err("Unknown Moment type"),
         }
@@ -200,6 +205,7 @@ impl fmt::Display for Moment {
             Moment::SeasonOfTheLost => "Season of the Lost",
             Moment::SeasonOfTheRisen => "Season of the Risen",
             Moment::WitchQueen => "The Witch Queen",
+            Moment::SeasonOfTheHaunted => "Season of the Haunted",
         };
 
         write!(f, "{}", out)

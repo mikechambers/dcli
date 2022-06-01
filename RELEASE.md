@@ -1,5 +1,10 @@
 # dcli Release Notes
 
+## v0.8.2 May 31, 2022
+
+- Added support for Iron Banner Rift ("iron_banner_rift") and Rift modes.
+- Added support for Season of the Haunted ("season_of_the_haunted") moment.
+
 ## v0.8.01 February 18, 2022
 
 - Added season_of_the_risen, witch_queen moments.
