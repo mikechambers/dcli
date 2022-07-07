@@ -53,6 +53,7 @@ pub enum ItemType {
     Wrapper = 27,
     SeasonalArtifact = 28,
     Finisher = 29,
+    Pattern = 30,
 }
 
 #[derive(PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
@@ -89,6 +90,7 @@ pub enum ItemSubType {
     ClassArmor = 30,
     Bow = 31,
     DummyRepeatableBounty = 32,
+    Glaive = 33,
 }
 
 impl std::fmt::Display for ItemSubType {
@@ -108,6 +110,7 @@ impl std::fmt::Display for ItemSubType {
             ItemSubType::GrenadeLauncher => "Grenade Launcher".to_string(),
             ItemSubType::SubmachineGun => "Submachine Gun".to_string(),
             ItemSubType::TraceRifle => "Trace Rifle".to_string(),
+            ItemSubType::Glaive => "Glaive".to_string(),
             ItemSubType::HelmetArmor => "Helmet".to_string(),
             ItemSubType::GauntletsArmor => "Gauntlets".to_string(),
             ItemSubType::ChestArmor => "Chest".to_string(),
