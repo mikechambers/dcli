@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.8.3 July 7, 2022
+
+- Fixed crashed when viewing an activity using Glaives. Thank you @BinarMorker!
+
 ## v0.8.2 May 31, 2022
 
 - Added support for Iron Banner Rift ("iron_banner_rift") and Rift modes.
