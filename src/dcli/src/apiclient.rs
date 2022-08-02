@@ -97,11 +97,12 @@ impl ApiClient {
             const MAX: usize = 200;
             let limit = std::cmp::min(len, MAX);
 
+            let string: String = body.chars().take(limit).skip(0).collect();
             println!(
                 "---------Begin API response : First {}  chars---------",
                 limit
             );
-            println!("{}", &body[..limit]);
+            println!("{}", string);
             println!("---------End API response---------");
         }
 

@@ -1,5 +1,10 @@
 # dcli Release Notes
 
+## v0.8.4 August 1, 2022
+
+- Fixed data parsing error that could occur due to wrong data type in code
+- Fixed crash that could occur in verbose mode with http responses containing unicode characters.
+
 ## v0.8.3 July 7, 2022
 
 - Fixed crashed when viewing an activity using Glaives. Thank you @BinarMorker!

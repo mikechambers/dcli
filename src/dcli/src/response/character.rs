@@ -69,23 +69,23 @@ pub struct CharacterData {
 #[derive(PartialEq, Eq, Serialize, Deserialize, Debug, Clone)]
 pub struct CharacterStatsData {
     #[serde(rename = "1935470627")]
-    pub power: u32,
+    pub power: i32,
 
     #[serde(rename = "2996146975")]
-    pub mobility: u32,
+    pub mobility: i32,
 
     #[serde(rename = "392767087")]
-    pub resilience: u32,
+    pub resilience: i32,
 
     #[serde(rename = "1943323491")]
-    pub recovery: u32,
+    pub recovery: i32,
 
     #[serde(rename = "1735777505")]
-    pub discipline: u32,
+    pub discipline: i32,
 
     #[serde(rename = "144602215")]
-    pub intellect: u32,
+    pub intellect: i32,
 
     #[serde(rename = "4244567218")]
-    pub strength: u32,
+    pub strength: i32,
 }
