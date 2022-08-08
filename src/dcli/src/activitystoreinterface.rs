@@ -26,7 +26,6 @@ use std::{collections::HashMap, path::Path};
 use chrono::{DateTime, Utc};
 
 use crate::response::character::CharacterData;
-use crate::response::gmd::UserMembershipData;
 use crate::utils::calculate_percent;
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
@@ -64,8 +63,12 @@ use crate::{
     },
 };
 
+use std::env;
+
 const STORE_FILE_NAME: &str = "dcli.sqlite3";
 const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
+
+const DCLI_FIX_DATA: &str = "DCLI_FIX_DATA";
 
 //numer of simultaneous requests we make to server when retrieving activity history
 const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
@@ -78,6 +81,7 @@ pub struct ActivityStoreInterface {
     db: SqliteConnection,
     path: String,
     api_interface: ApiInterface,
+    fix_corrupt_data: bool,
 }
 
 impl ActivityStoreInterface {
@@ -91,6 +95,18 @@ impl ActivityStoreInterface {
         key: Option<String>,
     ) -> Result<ActivityStoreInterface, Error> {
         let path = store_dir.join(STORE_FILE_NAME).display().to_string();
+
+        let fix_corrupt_data = match env::var(DCLI_FIX_DATA) {
+            Ok(v) => v.to_lowercase() == "true",
+            Err(_e) => false,
+        };
+
+        if verbose {
+            println!(
+                "DCLI_FIX_DATA environment variable enabled : {}",
+                fix_corrupt_data
+            );
+        }
 
         let read_only = false;
         let connection_string: &str = &path;
@@ -135,6 +151,7 @@ impl ActivityStoreInterface {
             verbose,
             path: path.to_string(),
             api_interface,
+            fix_corrupt_data,
         })
     }
 
@@ -1125,11 +1142,11 @@ impl ActivityStoreInterface {
         let mut member = mem;
         let mut m = None;
         //check and see if data is missing (happens a lot with the API)
-        if member.name.display_name.is_none()
+        if member.name.bungie_display_name.is_none()
             || member.name.bungie_display_name_code.is_none()
             || member.platform == Platform::Unknown
         {
-            //if some data is missing, the see if we already have info on
+            //if some data is missing, we see if we already have info on
             //this member stored.
 
             let row_id: i32 = match self.get_member_row_id(member).await {
@@ -1143,27 +1160,33 @@ impl ActivityStoreInterface {
                 return Ok(row_id);
             }
 
-            //need to catch and ignore error here
-            let card_result = self
-                .api_interface
-                .retrieve_player_info_by_id(&member.id)
-                .await;
+            //if the DCLI_FIX_DATA environemnt variable is set to true
+            //the code will try and fix corrupt data with additional API
+            //calls. This can dramatically slow down the first time data is
+            //synced, but can help fix missing data
+            if self.fix_corrupt_data {
+                //need to catch and ignore error here
+                let card_result = self
+                    .api_interface
+                    .retrieve_player_info_by_id(&member.id)
+                    .await;
 
-            if card_result.is_ok() {
-                let c = card_result.unwrap();
-                let cards = c.destiny_memberships;
+                if card_result.is_ok() {
+                    let c = card_result.unwrap();
+                    let cards = c.destiny_memberships;
 
-                for card in cards.iter() {
-                    if card.cross_save_override == card.membership_type {
-                        m = Some(card.to_member());
-                        break;
+                    for card in cards.iter() {
+                        if card.cross_save_override == card.membership_type {
+                            m = Some(card.to_member());
+                            break;
+                        }
                     }
-                }
 
-                //if we get here, then we need to go to the server to try and get the
-                //data
-                if m.is_some() {
-                    member = m.as_ref().unwrap();
+                    //if we get here, then we need to go to the server to try and get the
+                    //data
+                    if m.is_some() {
+                        member = m.as_ref().unwrap();
+                    }
                 }
             }
         }
@@ -1172,7 +1195,7 @@ impl ActivityStoreInterface {
             r#"
             INSERT into "member" ("member_id", "platform_id", "display_name", "bungie_display_name", "bungie_display_name_code") VALUES (?, ?, ?, ?, ?)
             ON CONFLICT(member_id) DO UPDATE
-            set display_name = ?, bungie_display_name = ?, bungie_display_name_code = ?
+            set display_name = ?, bungie_display_name = ?, bungie_display_name_code = ?, platform_id = ?
         "#,
         )
         .bind(member.id.to_string())
@@ -1183,6 +1206,7 @@ impl ActivityStoreInterface {
         .bind(&member.name.display_name)
         .bind(&member.name.bungie_display_name)
         .bind(&member.name.bungie_display_name_code)
+        .bind(member.platform.as_id().to_string())
         .execute(&mut self.db)
         .await?;
 

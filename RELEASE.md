@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.8.5 August 7, 2022
+
+- Improved how corrupted data from Bungie is handled. Now, if data is corrupted, we check for existing data before updating. If the DCLI_FIX_DATA environment variable is set to true, then if there is not already a local, non-corrupt version of the data, we will go back to Bungie to retrieve updated data. Note, this can significantly slow down initial syncs.
+
 ## v0.8.4 August 1, 2022
 
 - Fixed data parsing error that could occur due to wrong data type in code

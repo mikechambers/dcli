@@ -7,28 +7,28 @@ dcli (Destiny Command Line Interface) is a collection of utilities and apps that
 
 If you run into any issues, have any ideas, or just want to chat, please post in [issues](https://github.com/mikechambers/dcli/issues) or share on [Discord](https://discord.gg/2Y8bV2Mq3p)
 
-
 ## Apps
 
 ### Utilities
-| TOOL | DESCRIPTION |
-| --- | --- |
-| [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim) | Manages and syncs the remote Destiny 2 API manifest database |
-| [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file |
-| [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments |
 
+| TOOL                                                                    | DESCRIPTION                                                                                |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim)       | Manages and syncs the remote Destiny 2 API manifest database                               |
+| [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync) | Downloads and syncs Destiny 2 Crucible activity history into a local sqlite3 database file |
+| [dclitime](https://github.com/mikechambers/dcli/tree/main/src/dclitime) | Generates date / time stamps for Destiny 2 weekly event moments                            |
 
 ### Apps
-| TOOL | DESCRIPTION |
-| --- | --- |
-| [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia) | Displays information on player's current activity within Destiny 2 |
-| [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) | Displays Destiny 2 activity history and stats |
-| [dcliad](https://github.com/mikechambers/dcli/tree/main/src/dcliad) | Displays Destiny 2 Crucible activity / match details |
 
+| TOOL                                                                | DESCRIPTION                                                        |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia)   | Displays information on player's current activity within Destiny 2 |
+| [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) | Displays Destiny 2 activity history and stats                      |
+| [dcliad](https://github.com/mikechambers/dcli/tree/main/src/dcliad) | Displays Destiny 2 Crucible activity / match details               |
 
 ### Libraries
-| TOOL | DESCRIPTION |
-| --- | --- |
+
+| TOOL                                                            | DESCRIPTION                              |
+| --------------------------------------------------------------- | ---------------------------------------- |
 | [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) | Library used across all of the dcli apps |
 
 Each tool page contains additional tool specific information and usage examples.
@@ -55,7 +55,6 @@ If you are running on Mac, make sure to [read this article](https://github.com/m
 
 Before viewing your stats you need to first sync the manifest (which contains information about weapons, maps, etc...).
 
-
 ### Download the manifest
 
 You can download the latest Destiny 2 manifest database using dclim. This contains information about all of the items and activities in Destiny 2, and is updated periodically.
@@ -73,7 +72,7 @@ and the manifest file will be downloaded and saved in a system appropriate direc
 Next, lets sync all of our activity history to a local database and view data. This data will be used by other apps, such as dcliah to generate and display stats.
 
 ```
-$ dcliah --name mesh#3230 
+$ dcliah --name mesh#3230
 ```
 
 Replacing mesh#3230 with your own Bungie name.
@@ -106,15 +105,15 @@ These can be useful on their own, but where they can be really powerful is when 
 
 There are a couple of examples in the [examples directory](https://github.com/mikechambers/dcli/tree/main/examples):
 
-* Send a notification when you load into a new activity (particularly useful when playing crucible so you can see which map you are loading into)
-* Automatically generate weekly reports on your Crucible stats and email them to yourself
-* Track your Crucible stats per game play session
+- Send a notification when you load into a new activity (particularly useful when playing crucible so you can see which map you are loading into)
+- Automatically generate weekly reports on your Crucible stats and email them to yourself
+- Track your Crucible stats per game play session
 
 As you can see, right now, a lot of the functionality is Crucible based. If you would like to see other functionality, make sure you requests it in the [issues](https://github.com/mikechambers/dcli/issues), or [Discord](https://discord.gg/2Y8bV2Mq3p).
 
 ### Learning More
 
-At anytime, you can see which arguments and options are avaliable by passing the *--help* argument:
+At anytime, you can see which arguments and options are avaliable by passing the _--help_ argument:
 
 ```
 $ dcliah --help
@@ -127,6 +126,12 @@ You can also find additional documentation and examples on the [individual app p
 If you have any questions, feature requests, need help, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
 
 You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
+
+### Environment Variables
+
+If the `DCLI_FIX_DATA` environment variable is set to `TRUE` then when corrupt or missing data is returned from the Bungie API, and there is not a valid local version, DCLI will attempt to retrieve updated, non-corrupt data from Bungie. (This sometimes happens if a lot of people leave a game, and no player names will be returned from the server).
+
+Setting this to true can significantly slow down sync time, especially the initial sync, and in general, is meant to be used when using DCLI to create datastores for larger applications.
 
 ## Compiling
 
@@ -147,11 +152,11 @@ To compile, switch to the `src/` directory and run:
 $ cargo build --release
 ```
 
-which will place the compiled tools in *src/target/release*
+which will place the compiled tools in _src/target/release_
 
 ## Known Issues
 
-* Tied matches are not displayed correctly, and are treated as a Victory.
+- Tied matches are not displayed correctly, and are treated as a Victory.
 
 ## License
 
