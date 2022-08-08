@@ -31,21 +31,13 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 )]
 #[repr(i32)]
 pub enum Platform {
-    ///Xbox
-    Xbox = 1,
-
-    ///Playstation
-    Playstation = 2,
-
-    ///Steam
-    Steam = 3,
-
-    ///Stadia
-    Stadia = 5,
-
-    Blizzard = 4,
-
+    //API will return Unknown a lot
     Unknown = 0,
+    Xbox = 1,
+    Playstation = 2,
+    Steam = 3,
+    Blizzard = 4,
+    Stadia = 5,
 }
 
 /*

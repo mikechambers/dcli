@@ -28,7 +28,7 @@ use std::{
 use chrono::{DateTime, Utc};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
-use crate::response::ggms::{GetGroupMemberResponse, GroupMemberResponse};
+use crate::response::gmd::GetMembershipData;
 use crate::response::gpr::{CharacterActivitiesData, GetProfileResponse};
 use crate::response::pgcr::{DestinyPostGameCarnageReportData, PGCRResponse};
 use crate::response::sdpr::{
@@ -42,6 +42,10 @@ use crate::response::stats::{
 use crate::response::{
     activities::{ActivitiesResponse, Activity, MAX_ACTIVITIES_REQUEST_COUNT},
     sdpr::SearchDestinyPlayerPostData,
+};
+use crate::response::{
+    ggms::{GetGroupMemberResponse, GroupMemberResponse},
+    gmd::UserMembershipData,
 };
 use crate::utils::Period;
 use crate::{apiclient::ApiClient, crucible::Player};
@@ -293,6 +297,35 @@ impl ApiInterface {
             .await?;
 
         let response: DestinyLinkedProfilesResponse = match profile.response {
+            Some(e) => e,
+            None => {
+                return Err(Error::ApiRequest {
+                    description: String::from(
+                        "No response data from API Call.",
+                    ),
+                })
+            }
+        };
+
+        Ok(response)
+    }
+
+    pub async fn retrieve_player_info_by_id(
+        &self,
+        member_id: &str,
+    ) -> Result<UserMembershipData, Error> {
+        let url = format!(
+            "{base}/Platform/User/GetMembershipsById/{member_id}/-1/",
+            base = API_BASE_URL,
+            member_id = utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
+        );
+
+        let profile: GetMembershipData = self
+            .client
+            .call_and_parse::<GetMembershipData>(&url)
+            .await?;
+
+        let response = match profile.response {
             Some(e) => e,
             None => {
                 return Err(Error::ApiRequest {

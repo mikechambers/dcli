@@ -26,6 +26,7 @@ use std::{collections::HashMap, path::Path};
 use chrono::{DateTime, Utc};
 
 use crate::response::character::CharacterData;
+use crate::response::gmd::UserMembershipData;
 use crate::utils::calculate_percent;
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
@@ -1120,7 +1121,53 @@ impl ActivityStoreInterface {
         Ok(id)
     }
 
-    async fn insert_member(&mut self, member: &Member) -> Result<i32, Error> {
+    async fn insert_member(&mut self, mem: &Member) -> Result<i32, Error> {
+        let mut member = mem;
+        let mut m = None;
+        //check and see if data is missing (happens a lot with the API)
+        if member.name.display_name.is_none()
+            || member.name.bungie_display_name_code.is_none()
+            || member.platform == Platform::Unknown
+        {
+            //if some data is missing, the see if we already have info on
+            //this member stored.
+
+            let row_id: i32 = match self.get_member_row_id(member).await {
+                Ok(e) => e,
+                Err(_e) => -1,
+            };
+
+            //if we do have something stored, just return that entry, otherwise,
+            //add it to the DB, even though the name info in missing
+            if row_id != -1 {
+                return Ok(row_id);
+            }
+
+            //need to catch and ignore error here
+            let card_result = self
+                .api_interface
+                .retrieve_player_info_by_id(&member.id)
+                .await;
+
+            if card_result.is_ok() {
+                let c = card_result.unwrap();
+                let cards = c.destiny_memberships;
+
+                for card in cards.iter() {
+                    if card.cross_save_override == card.membership_type {
+                        m = Some(card.to_member());
+                        break;
+                    }
+                }
+
+                //if we get here, then we need to go to the server to try and get the
+                //data
+                if m.is_some() {
+                    member = m.as_ref().unwrap();
+                }
+            }
+        }
+
         sqlx::query(
             r#"
             INSERT into "member" ("member_id", "platform_id", "display_name", "bungie_display_name", "bungie_display_name_code") VALUES (?, ?, ?, ?, ?)
@@ -1139,8 +1186,15 @@ impl ActivityStoreInterface {
         .execute(&mut self.db)
         .await?;
 
-        //TODO: what to do if exists? (on conflict)
+        let rowid: i32 = self.get_member_row_id(member).await?;
 
+        Ok(rowid)
+    }
+
+    async fn get_member_row_id(
+        &mut self,
+        member: &Member,
+    ) -> Result<i32, Error> {
         let row = sqlx::query(
             r#"
             SELECT id from "member" where member_id=?

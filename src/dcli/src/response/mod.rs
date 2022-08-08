@@ -24,6 +24,7 @@ pub mod activities;
 pub mod character;
 pub mod drs;
 pub mod ggms;
+pub mod gmd;
 pub mod gpr;
 pub mod manifest;
 pub mod pgcr;
