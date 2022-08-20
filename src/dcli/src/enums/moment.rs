@@ -118,7 +118,7 @@ impl Moment {
             }
 
             Moment::SeasonOfThePlunder => {
-                Utc.ymd(2022, 8, 23).and_hms(17, 0, 0)
+                Utc.ymd(2022, 8, 26).and_hms(17, 0, 0)
             }
         }
     }
