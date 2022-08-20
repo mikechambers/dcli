@@ -1,4 +1,4 @@
-# dcliastat
+# dclistat
 
 Command line tool for querying Destiny 2 PVP stats.
 
@@ -123,7 +123,11 @@ OPTIONS:
     -x, --stat <stat>...
             Stat to retrieve data for
 
-            Valid values include kd, kda, efficiency, kills, opponents_defeated, deaths, assists, kills_avg, opponents_defeated_avg, deaths_avg, assists_avg, kd_max, kda_max, efficiency_max, kills_max, opponents_defeated_max, deaths_max, games, wins, losses, mercies.
+            Valid values include kd, kda, efficiency, kills,
+            opponents_defeated, deaths, assists, kills_avg,
+            opponents_defeated_avg, deaths_avg, assists_avg, kd_max, kda_max,
+            efficiency_max, kills_max, opponents_defeated_max, deaths_max,
+            games, wins, losses, mercies.
 ```
 
 | ARGUMENT     | OPTIONS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -141,7 +145,7 @@ Activity data store can be created and synced seperately using [dclisync](https:
 
 ### Examples
 
-#### Retrieve all KD for Trials of Osiris for the current weekend
+#### Retrieve KD for Trials of Osiris for the current weekend
 
 ```
 $ dclistat --name mesh#3230 --moment weekend --mode trials_of_osiris --stat kd --no-sync
