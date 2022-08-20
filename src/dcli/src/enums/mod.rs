@@ -28,4 +28,5 @@ pub mod mode;
 pub mod moment;
 pub mod platform;
 pub mod standing;
+pub mod stat;
 pub mod weaponsort;

@@ -296,7 +296,7 @@ dependencies = [
 
 [[package]]
 name = "dcli"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "chrono",
  "crossterm",
@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "dclia"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "dcli",
  "structopt",
@@ -324,7 +324,7 @@ dependencies = [
 
 [[package]]
 name = "dcliad"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "dcli",
  "structopt",
@@ -333,7 +333,7 @@ dependencies = [
 
 [[package]]
 name = "dcliah"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "chrono",
  "dcli",
@@ -344,7 +344,7 @@ dependencies = [
 
 [[package]]
 name = "dclim"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "dcli",
  "reqwest",
@@ -357,8 +357,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "dclistat"
+version = "0.8.6"
+dependencies = [
+ "chrono",
+ "dcli",
+ "num-format",
+ "structopt",
+ "tokio",
+]
+
+[[package]]
 name = "dclisync"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "dcli",
  "structopt",
@@ -367,7 +378,7 @@ dependencies = [
 
 [[package]]
 name = "dclitime"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "chrono",
  "dcli",

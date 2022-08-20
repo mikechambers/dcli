@@ -19,11 +19,12 @@ If you run into any issues, have any ideas, or just want to chat, please post in
 
 ### Apps
 
-| TOOL                                                                | DESCRIPTION                                                        |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia)   | Displays information on player's current activity within Destiny 2 |
-| [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah) | Displays Destiny 2 activity history and stats                      |
-| [dcliad](https://github.com/mikechambers/dcli/tree/main/src/dcliad) | Displays Destiny 2 Crucible activity / match details               |
+| TOOL                                                                    | DESCRIPTION                                                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [dclia](https://github.com/mikechambers/dcli/tree/main/src/dclia)       | Displays information on player's current activity within Destiny 2 |
+| [dcliah](https://github.com/mikechambers/dcli/tree/main/src/dcliah)     | Displays Destiny 2 activity history and stats                      |
+| [dcliad](https://github.com/mikechambers/dcli/tree/main/src/dcliad)     | Displays Destiny 2 Crucible activity / match details               |
+| [dclistat](https://github.com/mikechambers/dcli/tree/main/src/dclistat) | Displays specified Destiny 2 PVP stats                             |
 
 ### Libraries
 
@@ -72,7 +73,8 @@ and the manifest file will be downloaded and saved in a system appropriate direc
 Next, lets sync all of our activity history to a local database and view data. This data will be used by other apps, such as dcliah to generate and display stats.
 
 ```
-$ dcliah --name mesh#3230
+$ dclisync --add mesh#3230
+$ dclisync --sync
 ```
 
 Replacing mesh#3230 with your own Bungie name.
@@ -82,8 +84,6 @@ You can find your Bungie name in game, or on Bungie's site at [https://www.bungi
 The first time you run this, it may take a couple of minutes to load all of your data (depending on the number of activities that you have). If any errors occur while syncing, just re-run the app when its done. It is smart enough to only sync the acitivties that it missed the first time.
 
 Once you have done the initial sync, subsequent activity syncs should be very fast. You can periodically re-run the app to keep things in sync, or have dcliah / dcliad automatically sync before it displays your stats.
-
-If you just want to sync data and not view it, use [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync).
 
 ### Grabbing data
 
@@ -108,8 +108,6 @@ There are a couple of examples in the [examples directory](https://github.com/mi
 - Send a notification when you load into a new activity (particularly useful when playing crucible so you can see which map you are loading into)
 - Automatically generate weekly reports on your Crucible stats and email them to yourself
 - Track your Crucible stats per game play session
-
-As you can see, right now, a lot of the functionality is Crucible based. If you would like to see other functionality, make sure you requests it in the [issues](https://github.com/mikechambers/dcli/issues), or [Discord](https://discord.gg/2Y8bV2Mq3p).
 
 ### Learning More
 

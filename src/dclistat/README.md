@@ -1,8 +1,8 @@
-# dcliah
+# dcliastat
 
-Command line tool for viewing Destiny 2 Crucible activity history and stats.
+Command line tool for querying Destiny 2 PVP stats.
 
-The application will display individual game results and stats, aggregate game results and stats, as well as individual weapon and medal stats. You can specify specific crucible game modes, as well as time periods to create custom reports. Private and non-private stats are seperated from each other.
+The application takes a list of stat types and returns a comma seperated list of the corresponding data for that stat and the specificed parameters.
 
 dcliah pulls its data from the local Destiny 2 activity database store. By default, dcliah will create and update this file with the latest activity data, but it can also be seperately managed using [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync).
 
@@ -10,17 +10,15 @@ The first time the database downloads activity data may take a couple of minutes
 
 It supports storing and tracking stats for multiple players and characters.
 
-If you want to sync the database seperately via dclisync, you can pass the `-no-sync` flag to dcliah and it will not update the activity store.
+If you want to sync the database seperately via dclisync, you can pass the `-no-sync` flag to dclistat and it will not update the activity store.
 
 The tool expects that the manifest has been downloaded and synced using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
-
-[![Image of dcliah](../../images/dcliah_sm.png)](../../images/dcliah.png)
 
 ## USAGE
 
 ```
 USAGE:
-    dcliah [FLAGS] [OPTIONS] --name <name>
+    dclistat [FLAGS] [OPTIONS] --name <name> --stat <stat>...
 
 FLAGS:
     -h, --help
@@ -40,10 +38,6 @@ FLAGS:
             Output is printed to stderr.
 
 OPTIONS:
-    -L, --activity-limit <activity-limit>
-            Limit the number of activity details that will be displayed
-
-            Summary information will be generated based on all activities. [default: 10]
     -k, --api-key <api-key>
             API key from Bungie required for some actions.
 
@@ -87,15 +81,13 @@ OPTIONS:
             reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom as well as the
             following season moments launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge,
             season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy,
-            season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen, witch_queen.
+            season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer, season_of_the_lost,
+            season_of_the_risen, witch_queen, season_of_the_haunted, season_of_the_plunder.
 
             When custom is specified, the custom start date in RFC3339 format must be specified with the --end-custom-
             time argument.
 
             For example: --moment custom --end-custom-time 2020-12-08T17:00:00.774187+00:00 [default: now]
-    -m, --medal-count <medal-count>
-            The number of medals to display details for. Gold medals will be listed first [default: 5]
-
     -M, --mode <mode>
             Activity mode to return stats for
 
@@ -103,8 +95,8 @@ OPTIONS:
             rumble, pvp_competitive, quickplay and trials_of_osiris.
 
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
-            private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, rift, iron_banner_rift,
-            scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
+            private_clash, private_control, private_survival, private_rumble, showdown, lockdown, iron_banner_rift,
+            rift, scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
     -T, --moment <moment>
             Start moment from which to pull activities from
 
@@ -116,7 +108,8 @@ OPTIONS:
             reset on Tuesday), day (last day), week (last week), month (last month), all_time and custom as well as the
             following season moments launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge,
             season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy,
-            season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen, witch_queen.
+            season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer, season_of_the_lost,
+            season_of_the_risen, witch_queen, season_of_the_haunted, season_of_the_plunder.
 
             When custom is specified, the custom start date in RFC3339 format must be specified with the --custom-time
             argument.
@@ -127,22 +120,18 @@ OPTIONS:
 
             Name must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
             site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
-    -w, --weapon-count <weapon-count>
-            The number of weapons to display details for [default: 5]
+    -x, --stat <stat>...
+            Stat to retrieve data for
 
-    -W, --weapon-sort <weapon-sort>
-            Specify weapon stats sort order
-
-            Valid values include name, kills (default), games, kills_per_game_kills, precision_total, precision_percent,
-            type, wins_percent [default: kills]
+            Valid values include kd, kda, efficiency, kills, opponents_defeated, deaths, assists, kills_avg, opponents_defeated_avg, deaths_avg, assists_avg, kd_max, kda_max, efficiency_max, kills_max, opponents_defeated_max, deaths_max, games, wins, losses, mercies.
 ```
 
-| ARGUMENT      | OPTIONS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| --mode        | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, rift, iron_banner_rift, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine                                                                                                                                                     |
-| --moment      | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen, witch_queen, season_of_the_haunted, season_of_the_plunder |
-| --end-moment  | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen, witch_queen, season_of_the_haunted, season_of_the_plunder |
-| --weapon-sort | name, kills (default), games, kills_per_game_kills kills_per_game_total, precision_total, precision_percent, type                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ARGUMENT     | OPTIONS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --mode       | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, rift, iron_banner_rift, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine                                                                                                                                                     |
+| --moment     | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen, witch_queen, season_of_the_haunted, season_of_the_plunder |
+| --end-moment | daily (last daily reset), weekend (last weekend reset on Friday), weekly (last weekly reset on Tuesday), day (last day), week (last week), month (last month), all_time, custom, launch, curse_of_osiris, warmind, season_of_the_outlaw, season_of_the_forge, season_of_the_drifter, season_of_opulence, season_of_the_undying, season_of_dawn, season_of_the_worthy, season_of_arrivals, season_of_the_hunt, season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen, witch_queen, season_of_the_haunted, season_of_the_plunder |
+| --stat       | kd, kda, efficiency, kills, opponents_defeated, deaths, assists, kills_avg, opponents_defeated_avg, deaths_avg, assists_avg, kd_max, kda_max, efficiency_max, kills_max, opponents_defeated_max, deaths_max, games, wins, losses, mercies                                                                                                                                                                                                                                                                                                                     |
 
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
@@ -152,47 +141,28 @@ Activity data store can be created and synced seperately using [dclisync](https:
 
 ### Examples
 
-#### Retrieve all activities for past month for the most recently played character
+#### Retrieve all KD for Trials of Osiris for the current weekend
 
 ```
-$ dcliah --name mesh#3230 --moment month
+$ dclistat --name mesh#3230 --moment weekend --mode trials_of_osiris --stat kd --no-sync
 ```
 
-#### Retrieve all Trials of Osiris stats for the Titan since the weekend reset
+Outputs:
 
 ```
-$ dcliah --name mesh#3230 --moment weekend --class titan --mode trials_of_osiris
+1.39
 ```
 
-#### Retrieve all stats for Season of Arrivals
+#### Retrieve total kills, kills per game, and highest kills in a game for all pvp matches in Season of the Haunted
 
 ```
-$ dcliah --name mesh#3230 --moment season_of_arrivals --end-moment season_of_the_hunt
+$ dclistat --name mesh#3230 --moment season_of_the_haunted --mode all_pvp --stat kills kills_avg kills_max --no-sync
 ```
 
-#### Retrieve all stats for all time for all characters
+Outputs:
 
 ```
-$ dcliah --name mesh#3230 --moment all_time --class all
-```
-
-#### Use dclitime to track all stats from a specific time (on unix based systems)
-
-```
-$ export SESSION_START=$(dclitime)
-$ dcliah --name mesh#3230 --moment custom --custom-time $SESSION_START
-```
-
-#### View all time stats for Hand Canons
-
-```
-& dcliah --name mesh#3230 --mode all_pvp --moment all_time --weapon-count 10000 | grep "Hand Cannon"
-```
-
-or in Windows Powershell
-
-```
-& dcliah.exe --name mesh#3230 --mode all_pvp --moment all_time --weapon-count 10000 | Select-String "Hand Cannon"
+10858,7.19,31
 ```
 
 ## Questions, Feature Requests, Feedback

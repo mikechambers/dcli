@@ -26,8 +26,10 @@ use std::io::stdout;
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::enums::mode::Mode;
 use chrono::{DateTime, Datelike, Duration, Local, TimeZone, Timelike, Utc};
 use crossterm::{execute, terminal};
+use std::str::FromStr;
 
 use crate::error::Error;
 
@@ -309,4 +311,33 @@ pub fn truncate_ascii_string(input: &str, max_len: usize) -> String {
     }
 
     format!("{:.len$}...", input, len = max_len - 3)
+}
+
+pub fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
+    let d =
+        match DateTime::parse_from_rfc3339(src) {
+            Ok(e) => e,
+            Err(_e) => return Err(
+                "Invalid RFC 3339 Date / Time String : Example : 2020-12-08T17:00:00.774187+00:00"
+                    .to_string(),
+            ),
+        };
+
+    let d = d.with_timezone(&Utc);
+
+    if d > Utc::now() {
+        return Err("start-date must be in the past.".to_string());
+    }
+
+    Ok(d)
+}
+
+pub fn parse_and_validate_crucible_mode(src: &str) -> Result<Mode, String> {
+    let mode = Mode::from_str(src)?;
+
+    if !mode.is_crucible() {
+        return Err(format!("Unsupported mode specified : {}", src));
+    }
+
+    Ok(mode)
 }

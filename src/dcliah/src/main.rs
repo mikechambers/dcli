@@ -25,6 +25,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
+
 use dcli::crucible::{Member, PlayerName};
 use dcli::enums::standing::Standing;
 use dcli::enums::{
@@ -32,7 +33,10 @@ use dcli::enums::{
     moment::{DateTimePeriod, Moment},
 };
 use dcli::manifestinterface::ManifestInterface;
-use dcli::utils::{calculate_percent, truncate_ascii_string};
+use dcli::utils::{
+    calculate_percent, parse_and_validate_crucible_mode, parse_rfc3339,
+    truncate_ascii_string,
+};
 use dcli::{
     crucible::{
         AggregateCruciblePerformances, CruciblePlayerActivityPerformance,
@@ -56,16 +60,6 @@ use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
 use num_format::{Locale, ToFormattedString};
 use structopt::StructOpt;
-
-fn parse_and_validate_mode(src: &str) -> Result<Mode, String> {
-    let mode = Mode::from_str(src)?;
-
-    if !mode.is_crucible() {
-        return Err(format!("Unsupported mode specified : {}", src));
-    }
-
-    Ok(mode)
-}
 
 #[allow(clippy::too_many_arguments)]
 fn print_default(
@@ -558,24 +552,6 @@ fn print_default(
     }
 }
 
-fn parse_rfc3339(src: &str) -> Result<DateTime<Utc>, String> {
-    let d =
-        match DateTime::parse_from_rfc3339(src) {
-            Ok(e) => e,
-            Err(_e) => return Err(
-                "Invalid RFC 3339 Date / Time String : Example : 2020-12-08T17:00:00.774187+00:00"
-                    .to_string(),
-            ),
-        };
-
-    let d = d.with_timezone(&Utc);
-
-    if d > Utc::now() {
-        return Err("start-date must be in the past.".to_string());
-    }
-
-    Ok(d)
-}
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
 /// Command line tool for retrieving and viewing Destiny 2 Crucible activity history.
@@ -637,7 +613,7 @@ struct Opt {
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
     /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
     /// season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen,
-    /// witch_queen.
+    /// witch_queen, season_of_the_haunted, season_of_the_plunder.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --custom-time argument.
@@ -664,7 +640,7 @@ struct Opt {
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
     /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
     /// season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen,
-    /// witch_queen.
+    /// witch_queen, season_of_the_haunted, season_of_the_plunder.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --end-custom-time argument.
@@ -685,7 +661,7 @@ struct Opt {
     /// private_survival, private_rumble, showdown, lockdown, iron_banner_rift, rift,
     /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine
     #[structopt(long = "mode", short = "M", 
-        parse(try_from_str=parse_and_validate_mode), default_value = "all_pvp")]
+        parse(try_from_str=parse_and_validate_crucible_mode), default_value = "all_pvp")]
     mode: Mode,
 
     /// Limit the number of activity details that will be displayed
