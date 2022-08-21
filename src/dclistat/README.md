@@ -4,13 +4,7 @@ Command line tool for querying Destiny 2 PVP stats.
 
 The application takes a list of stat types and returns a comma seperated list of the corresponding data for that stat and the specificed parameters.
 
-dcliah pulls its data from the local Destiny 2 activity database store. By default, dcliah will create and update this file with the latest activity data, but it can also be seperately managed using [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync).
-
-The first time the database downloads activity data may take a couple of minutes (depending on bandwidth and number of activities). However, subsequent syncs should be very quick.
-
-It supports storing and tracking stats for multiple players and characters.
-
-If you want to sync the database seperately via dclisync, you can pass the `-no-sync` flag to dclistat and it will not update the activity store.
+dclistat pulls its data from the local Destiny 2 activity database store. Data can be synced using using [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync) or by passing the --sync flag to dclistat.
 
 The tool expects that the manifest has been downloaded and synced using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 
@@ -24,11 +18,9 @@ FLAGS:
     -h, --help
             Prints help information
 
-    -N, --no-sync
-            Don't sync activities
+    -s, --sync
+            Sync activities for specified user
 
-            If flag is set, activities will not be retrieved before displaying stats. This is useful in case you are
-            syncing activities in a seperate process.
     -V, --version
             Prints version information
 
@@ -148,7 +140,7 @@ Activity data store can be created and synced seperately using [dclisync](https:
 #### Retrieve KD for Trials of Osiris for the current weekend
 
 ```
-$ dclistat --name mesh#3230 --moment weekend --mode trials_of_osiris --stat kd --no-sync
+$ dclistat --name mesh#3230 --moment weekend --mode trials_of_osiris --stat kd
 ```
 
 Outputs:
@@ -160,7 +152,7 @@ Outputs:
 #### Retrieve total kills, kills per game, and highest kills in a game for all pvp matches in Season of the Haunted
 
 ```
-$ dclistat --name mesh#3230 --moment season_of_the_haunted --mode all_pvp --stat kills kills_avg kills_max --no-sync
+$ dclistat --name mesh#3230 --moment season_of_the_haunted --mode all_pvp --stat kills kills_avg kills_max
 ```
 
 Outputs:

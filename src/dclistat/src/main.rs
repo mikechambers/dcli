@@ -237,12 +237,9 @@ struct Opt {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    /// Don't sync activities
-    ///
-    /// If flag is set, activities will not be retrieved before displaying stats.
-    /// This is useful in case you are syncing activities in a seperate process.
-    #[structopt(short = "N", long = "no-sync")]
-    no_sync: bool,
+    /// Sync player activities
+    #[structopt(long = "sync", short = "s")]
+    sync: bool,
 
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
@@ -334,7 +331,7 @@ async fn main() {
         }
     };
 
-    if !opt.no_sync {
+    if opt.sync {
         match store.sync_member(&member).await {
             Ok(_e) => (),
             Err(e) => {
