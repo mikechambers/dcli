@@ -3,7 +3,7 @@
 ## v0.8.6 August 26, 2022
 
 - Added dclistat app to query specific stats.
-- Added new Moment for Season of the Plunder.
+- Added new Moment for Season of the Plunder ("season_of_the_plunder").
 - Replaced --no-sync option in dcliad and dcliah with --sync, and no longer sync data by default.
 
 ## v0.8.5 August 7, 2022
