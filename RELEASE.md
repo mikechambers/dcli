@@ -1,6 +1,6 @@
 # dcli Release Notes
 
-## v0.8.6 August 26, 2022
+## v0.8.6 August 23, 2022
 
 - Added dclistat app to query specific stats.
 - Added new Moment for Season of the Plunder ("season_of_the_plunder").
