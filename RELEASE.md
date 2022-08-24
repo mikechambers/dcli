@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.8.7 August 23, 2022
+
+- Added support for players playing through Epic games platform
+
 ## v0.8.6 August 23, 2022
 
 - Added dclistat app to query specific stats.

@@ -38,6 +38,7 @@ pub enum Platform {
     Steam = 3,
     Blizzard = 4,
     Stadia = 5,
+    Epic = 6,
 }
 
 /*
@@ -48,6 +49,7 @@ pub enum Platform {
     TigerSteam: 3
     TigerBlizzard: 4
     TigerStadia: 5
+    Epic : 6
     TigerDemon: 10
     BungieNext: 254
 */
@@ -63,6 +65,7 @@ impl Platform {
             3 => Platform::Steam,
             4 => Platform::Blizzard,
             5 => Platform::Stadia,
+            6 => Platform::Epic,
             _ => Platform::Unknown,
         }
     }
@@ -82,6 +85,7 @@ impl FromStr for Platform {
             "steam" => Ok(Platform::Steam),
             "stadia" => Ok(Platform::Stadia),
             "blizzard" => Ok(Platform::Blizzard),
+            "epic" => Ok(Platform::Epic),
             _ => Err("Unknown platform type"),
         }
     }
@@ -95,6 +99,7 @@ impl fmt::Display for Platform {
             Platform::Steam => "Steam",
             Platform::Stadia => "Stadia",
             Platform::Blizzard => "Blizzard",
+            Platform::Epic => "Epic",
             Platform::Unknown => "Unknown",
         };
 
