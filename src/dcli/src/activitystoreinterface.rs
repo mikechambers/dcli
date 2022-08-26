@@ -286,6 +286,11 @@ impl ActivityStoreInterface {
                             "Name not found: {}. Skipping.",
                             player.get_bungie_name()
                         );
+                    } else if e == Error::RequestTimedOut {
+                        println!(
+                            "Request timed out. Aborting syncing player: {}",
+                            player.get_bungie_name()
+                        );
                     } else {
                         return Err(e);
                     }
@@ -312,7 +317,19 @@ impl ActivityStoreInterface {
         let members: Vec<Member> = self.get_sync_members().await?;
 
         for member in members.iter() {
-            self.sync_member(&member).await?;
+            match self.sync_member(&member).await {
+                Ok(_) => {}
+                Err(e) => {
+                    if e == Error::RequestTimedOut {
+                        println!(
+                            "Request timed out. Aborting syncing player: {}",
+                            member.name.get_bungie_name()
+                        );
+                    } else {
+                        return Err(e);
+                    }
+                }
+            };
         }
 
         Ok(())
