@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.8.8 August 26, 2022
+
+- Better recovery when api calls fail when retrieving list of activities when syncing
+
 ## v0.8.7 August 23, 2022
 
 - Added support for players playing through Epic games platform
