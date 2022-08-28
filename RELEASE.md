@@ -1,6 +1,8 @@
 # dcli Release Notes
 
-- dclisync when adding members via group-id / clan, skip members who do not have a valid Bungie name / code.
+## v0.8.8 August 26, 2022
+
+- Better recovery when api calls fail when retrieving list of activities when syncing
 
 ## v0.8.7 August 23, 2022
 
