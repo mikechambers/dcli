@@ -1,5 +1,7 @@
 # dcli Release Notes
 
+- dclisync when adding members via group-id / clan, skip members who do not have a valid Bungie name / code.
+
 ## v0.8.7 August 23, 2022
 
 - Added support for players playing through Epic games platform

@@ -211,6 +211,15 @@ async fn main() {
             };
 
         for m in members.iter() {
+            //if they dont have a valid bungie name / id, then skip
+            if !m.name.is_valid_bungie_name() {
+                println!(
+                    "No valid bungie name and code. Skipping. : {}",
+                    m.name.get_short_name()
+                );
+                continue;
+            }
+
             match store.add_member_to_sync(&m).await {
                 Ok(_) => println!("{}", m.name.get_bungie_name()),
                 Err(e) => {
