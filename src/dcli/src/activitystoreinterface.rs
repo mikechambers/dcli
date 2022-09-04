@@ -1375,10 +1375,9 @@ impl ActivityStoreInterface {
     ) -> Result<CrucibleActivity, Error> {
         let member_id = &member.id;
 
-        let activity_row = if character_selection
-            == &CharacterClassSelection::All
-        {
-            match sqlx::query(
+        let class_id = self.get_sql_character_class_id(member, character_selection).await?;
+
+        let activity_row = match sqlx::query(
                 r#"
                 SELECT
                     activity.id as activity_index_id,
@@ -1395,13 +1394,16 @@ impl ActivityStoreInterface {
                     character on character_activity_stats.character = character.id,
                     member on character.member = member.id AND member.member_id = ?
                 WHERE
-                    exists (select 1 from modes where activity = activity.id and mode = ?)
+                    exists (select 1 from modes where activity = activity.id and mode = ?) AND
+                    (character.class = ? OR 4 = ?) 
                 ORDER BY
                     period DESC LIMIT 1
                 "#,
             )
             .bind(member_id.to_string())
             .bind(mode.as_id().to_string())
+            .bind(class_id)
+            .bind(class_id)
             .fetch_one(&mut self.db)
             .await
             {
@@ -1414,48 +1416,8 @@ impl ActivityStoreInterface {
                         return Err(Error::from(e));
                     }
                 },
-            }
-        } else {
-            let character_data = self
-                .retrieve_character_selection_data(member, character_selection)
-                .await?;
+            };
 
-            match sqlx::query(
-                    r#"
-                    SELECT
-                        activity.id as activity_index_id,
-                        activity.activity_id,
-                        activity.period,
-                        activity.mode as activity_mode,
-                        activity.director_activity_hash,
-                        activity.reference_id,
-                        activity.platform
-                    FROM
-                        activity
-                    INNER JOIN
-                        character_activity_stats on character_activity_stats.activity = activity.id,
-                        character on character_activity_stats.character = character.id AND character.character_id = ?
-                    WHERE
-                        exists (select 1 from modes where activity = activity.id and mode = ?)
-                    ORDER BY
-                        period DESC LIMIT 1
-                    "#
-                ).bind(character_data.id.to_string())
-                .bind(mode.as_id().to_string())
-                .fetch_one(&mut self.db)
-                .await
-                {
-                    Ok(e) => e,
-                    Err(e) => match e {
-                        sqlx::Error::RowNotFound => {
-                            return Err(Error::ActivityNotFound);
-                        }
-                        _ => {
-                            return Err(Error::from(e));
-                        }
-                    },
-                }
-        };
 
         let crucible_activity =
             self.populate_activity_data(&activity_row, manifest).await?;
@@ -1581,54 +1543,54 @@ impl ActivityStoreInterface {
         Ok(CrucibleActivity { details, teams })
     }
 
-    //returns character_id for specified character class selection
-    //returns member_id if selection is ALL
-    async fn retrieve_character_selection_data(
-        &self,
+    //returns the last played class for the specified member for activties
+    //that have been synced
+    pub async fn retrieve_last_active_class(
+        &mut self,
+        member: &Member) -> Result<CharacterClass, Error> {
+     
+        let result = sqlx::query(r#"
+        SELECT
+            character.class as character_class
+        FROM
+            character_activity_stats
+        INNER JOIN
+            activity ON character_activity_stats.activity = activity.id,
+            character on character_activity_stats.character = character.id,
+            member on member.id = character.member
+        WHERE 
+            member.member_id = ?
+        ORDER BY
+            activity.period DESC
+            limit 1
+        "#)
+        .bind(member.id.to_string())
+        .fetch_one(&mut self.db)
+        .await?;
+
+        let class_id:u32 = result.try_get("character_class")?;
+
+        Ok(CharacterClass::from_id(class_id))
+    }
+
+    //returns the id used in the db queries for the specified class
+    //for ALL returns 4, and last_active finds last active
+    pub async fn get_sql_character_class_id(
+        &mut self,
         member: &Member,
-        character_selection: &CharacterClassSelection,
-    ) -> Result<CharacterData, Error> {
-        let member_id = &member.id;
-        let platform = &member.platform;
+        character_selection: &CharacterClassSelection) -> Result<u32, Error> {
 
-        let api = ApiInterface::new(self.verbose)?;
-        //first, lets get all of the current characters for the member
-        let characters = api
-            .retrieve_characters(member_id, platform)
-            .await?
-            .ok_or(Error::NoCharacters)?;
-
-        let out = match character_selection {
-            CharacterClassSelection::All => {
-                panic!("CharacterClassSelection::All passed to retrieve_character_selection_data which is not supported.");
-            }
-            CharacterClassSelection::Hunter => {
-                match characters.get_by_class(CharacterClass::Hunter) {
-                    Some(e) => e,
-                    None => return Err(Error::CharacterDoesNotExist),
-                }
-            }
-            CharacterClassSelection::Titan => {
-                match characters.get_by_class(CharacterClass::Titan) {
-                    Some(e) => e,
-                    None => return Err(Error::CharacterDoesNotExist),
-                }
-            }
-            CharacterClassSelection::Warlock => {
-                match characters.get_by_class(CharacterClass::Warlock) {
-                    Some(e) => e,
-                    None => return Err(Error::CharacterDoesNotExist),
-                }
-            }
-            CharacterClassSelection::LastActive => {
-                match characters.get_last_active() {
-                    Some(e) => e,
-                    None => return Err(Error::CharacterDoesNotExist),
-                }
-            }
+        let class_id = if character_selection
+            == &CharacterClassSelection::LastActive
+        {
+            let character_class = self
+                .retrieve_last_active_class(member).await?;
+                character_class.as_id()
+        } else {
+            character_selection.as_id()
         };
 
-        Ok(out)
+        Ok(class_id)
     }
 
     pub async fn retrieve_activities_summary(
@@ -1645,16 +1607,7 @@ impl ActivityStoreInterface {
             Mode::PrivateMatchesAll.as_id() as i32
         };
 
-        let class_id = if character_selection
-            == &CharacterClassSelection::LastActive
-        {
-            let character_data = self
-                .retrieve_character_selection_data(&member, character_selection)
-                .await?;
-            character_data.class_type.as_id()
-        } else {
-            character_selection.as_id()
-        };
+        let class_id = self.get_sql_character_class_id(member, character_selection).await?;
 
         let summary = sqlx::query_as::<_, PlayerActivitiesSummary>(r#"
         SELECT
@@ -1714,7 +1667,7 @@ impl ActivityStoreInterface {
             character on character_activity_stats.character = character.id,
             member on member.id = character.member
         WHERE
-            member.id = (select id from member where member_id = ?) AND
+            member.member_id = ? AND
             (character.class = ? OR 4 = ?) AND
             period > ? AND
             period < ? AND
@@ -1731,17 +1684,6 @@ impl ActivityStoreInterface {
         .bind(restrict_mode_id)
         .fetch_one(&mut self.db)
         .await?;
-
-        println!("{:?}", summary);
-
-        /*
-        println!("{}", member.id.to_string());
-        println!("{}", character_selection.as_id().to_string());
-        println!("{}", time_period.get_start().to_rfc3339());
-        println!("{}", time_period.get_end().to_rfc3339());
-        println!("{}", mode.as_id().to_string());
-        println!("{}", restrict_mode_id.to_string());
-        */
 
         Ok(Some(summary))
     }
@@ -1762,17 +1704,11 @@ impl ActivityStoreInterface {
             Mode::PrivateMatchesAll.as_id() as i32
         };
 
-        //this is running about 550ms
-        //TODO: this currently works because the bungie api for private only returns 32
-        //and does not contain submodes. so we only get private results if we explicitly
-        //search for private all (32), and dont get no private results. however,
-        //if bungie fixes this and starts include additional mode data (i.e. private control)
-        //then this will start to mix private and all when searching for control.
-        //need to see if its a private or non-private and then exclude others.
-        let activity_rows = if character_selection
-            == &CharacterClassSelection::All
-        {
-            sqlx::query(
+        let class_id = self.get_sql_character_class_id(member, character_selection).await?;
+
+            //todo: note, this might break if user has multiple characters of the same
+            //class. need to test
+            let activity_rows = sqlx::query(
             r#"
             SELECT
                 *,
@@ -1786,7 +1722,8 @@ impl ActivityStoreInterface {
                 character on character_activity_stats.character = character.id,
                 member on member.id = character.member
             WHERE
-                member.id = (select id from member where member_id = ?) AND
+                member.member_id = ? AND
+                (character.class = ? OR 4 = ?) AND
                 period > ? AND
                 period < ? AND
                 exists (select 1 from modes where activity = activity.id and mode = ?) AND
@@ -1796,53 +1733,16 @@ impl ActivityStoreInterface {
             "#,
         )
         .bind(member.id.to_string())
+        .bind(class_id)
+        .bind(class_id)
         .bind(time_period.get_start().to_rfc3339())
         .bind(time_period.get_end().to_rfc3339())
         .bind(mode.as_id().to_string())
         .bind(restrict_mode_id.to_string())
+        
         .fetch_all(&mut self.db)
-        .await?
-        } else {
-            let character_data = self
-                .retrieve_character_selection_data(&member, character_selection)
-                .await?;
-
-            //todo: note, this might break if user has multiple characters of the same
-            //class. need to test
-            sqlx::query(
-            r#"
-            SELECT
-                *,
-                activity.mode as activity_mode,
-                activity.id as activity_index_id,
-                character_activity_stats.id as character_activity_stats_index  
-            FROM
-                character_activity_stats
-            INNER JOIN
-                activity ON character_activity_stats.activity = activity.id,
-                character on character_activity_stats.character = character.id,
-                member on member.id = character.member
-            WHERE
-                member.id = (select id from member where member_id = ?) AND
-                activity.period > ? AND
-                activity.period < ? AND
-                exists (select 1 from modes where activity = activity.id and mode = ?) AND
-                not exists (select 1 from modes where activity = activity.id and mode = ?) AND
-                character_activity_stats.character = character.id AND
-                character.class = ?
-            ORDER BY
-                activity.period DESC
-            "#,
-        )
-        .bind(member.id.to_string())
-        .bind(time_period.get_start().to_rfc3339())
-        .bind(time_period.get_end().to_rfc3339())
-        .bind(mode.as_id().to_string())
-        .bind(restrict_mode_id.to_string())
-        .bind(character_data.class_type.as_id())
-        .fetch_all(&mut self.db)
-        .await?
-        };
+        .await?;
+    
 
         if activity_rows.is_empty() {
             return Ok(None);
