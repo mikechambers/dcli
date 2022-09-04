@@ -95,10 +95,7 @@ pub fn print_error(msg: &str, error: Error) {
     eprintln!("       https://github.com/mikechambers/dcli/issues");
 }
 
-pub fn calculate_per_activity_average(
-    value: u32,
-    total_activities: u32,
-) -> f32 {
+pub fn calculate_average(value: u32, total_activities: u32) -> f32 {
     if total_activities == 0 {
         return 0.0;
     }

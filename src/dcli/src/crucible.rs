@@ -557,14 +557,6 @@ impl AggregateCruciblePerformances {
 
         out
     }
-
-    pub fn stat_per_game(&self, value: u32) -> f32 {
-        if self.total_activities == 0 {
-            return 0.0;
-        }
-
-        value as f32 / self.total_activities as f32
-    }
 }
 
 #[derive(Debug, Default)]

@@ -20,8 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#[derive(sqlx::FromRow)]
-pub struct PlayerActivitySummary {
+#[derive(sqlx::FromRow, Debug)]
+pub struct PlayerActivitiesSummary {
     pub total_activities: u32,
     pub time_played_seconds: u32,
     pub wins: u32,
@@ -32,16 +32,12 @@ pub struct PlayerActivitySummary {
     pub deaths: u32,
     pub opponents_defeated: u32,
 
-    pub kd: f32,
-    pub kda: f32,
-    pub efficiency: f32,
-
     pub grenade_kills: u32,
     pub melee_kills: u32,
     pub super_kills: u32,
     pub ability_kills: u32,
     pub precision: u32,
-    pub highest_sssists: u32,
+    pub highest_assists: u32,
     pub highest_kills: u32,
     pub highest_deaths: u32,
     pub highest_opponents_defeated: u32,
@@ -52,16 +48,5 @@ pub struct PlayerActivitySummary {
 
     pub highest_kills_deaths_assists_ratio: f32,
     pub highest_kills_deaths_ratio: f32,
-    pub highest_effficiency: f32,
-}
-
-impl PlayerActivitySummary {
-    //move this to utils
-    pub fn stat_per_game(&self, value: u32) -> f32 {
-        if self.total_activities == 0 {
-            return 0.0;
-        }
-
-        value as f32 / self.total_activities as f32
-    }
+    pub highest_efficiency: f32,
 }

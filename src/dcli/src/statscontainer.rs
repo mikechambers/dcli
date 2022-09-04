@@ -23,8 +23,8 @@
 use crate::enums::standing::Standing;
 use crate::response::activities::Activity;
 use crate::utils::{
-    calculate_efficiency, calculate_kills_deaths_assists,
-    calculate_kills_deaths_ratio, calculate_per_activity_average,
+    calculate_average, calculate_efficiency, calculate_kills_deaths_assists,
+    calculate_kills_deaths_ratio,
 };
 
 #[derive(Default)]
@@ -92,10 +92,7 @@ impl ActivityStatsContainer {
     }
 
     pub fn per_activity_average(&self, value: f32) -> f32 {
-        calculate_per_activity_average(
-            value as u32,
-            self.activities.len() as u32,
-        )
+        calculate_average(value as u32, self.activities.len() as u32)
     }
 
     fn update(&mut self) {

@@ -32,8 +32,8 @@ use dcli::enums::{
 };
 use dcli::manifestinterface::ManifestInterface;
 use dcli::utils::{
-    calculate_percent, parse_and_validate_crucible_mode, parse_rfc3339,
-    truncate_ascii_string,
+    calculate_average, calculate_percent, parse_and_validate_crucible_mode,
+    parse_rfc3339, truncate_ascii_string,
 };
 use dcli::{
     crucible::{
@@ -339,16 +339,16 @@ fn print_default(
     "PER GAME",
     format!("{}%", format_f32(aggregate.win_rate, 2)),
     "",
-    format_f32(aggregate.stat_per_game(aggregate.kills), 2),
-    format_f32(aggregate.stat_per_game(aggregate.assists), 2),
-    format_f32(aggregate.stat_per_game(aggregate.opponents_defeated), 2),
-    format_f32(aggregate.stat_per_game(aggregate.deaths), 2),
+    format_f32(calculate_average(aggregate.kills, aggregate.total_activities), 2),
+    format_f32(calculate_average(aggregate.assists, aggregate.total_activities), 2),
+    format_f32(calculate_average(aggregate.opponents_defeated, aggregate.total_activities), 2),
+    format_f32(calculate_average(aggregate.deaths, aggregate.total_activities), 2),
     format_f32(aggregate.kills_deaths_ratio, 2),
     format_f32(aggregate.kills_deaths_assists, 2),
     format_f32(aggregate.efficiency, 2),
-    format_f32(aggregate.stat_per_game(extended.weapon_kills_super), 2),
-    format_f32(aggregate.stat_per_game(extended.weapon_kills_grenade), 2),
-    format_f32(aggregate.stat_per_game(extended.weapon_kills_melee), 2),
+    format_f32(calculate_average(extended.weapon_kills_super, aggregate.total_activities), 2),
+    format_f32(calculate_average(extended.weapon_kills_grenade, aggregate.total_activities), 2),
+    format_f32(calculate_average(extended.weapon_kills_melee, aggregate.total_activities), 2),
     format!("{}%",format_f32(calculate_percent(aggregate.total_mercy, aggregate.total_activities), 2)),
     "",
     col_w = col_w,
@@ -722,7 +722,7 @@ async fn main() {
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error initializing manifest directory.", e);
+            print_error("Error initializing data directory.", e);
             std::process::exit(EXIT_FAILURE);
         }
     };

@@ -25,7 +25,7 @@ use std::{collections::HashMap, path::Path};
 
 use chrono::{DateTime, Utc};
 
-use crate::playeractivitysummary::PlayerActivitySummary;
+use crate::playeractivitiessummary::PlayerActivitiesSummary;
 use crate::response::character::CharacterData;
 use crate::utils::calculate_percent;
 use crate::{
@@ -771,9 +771,7 @@ impl ActivityStoreInterface {
             //TODO: can rewrite this to short circuit when first result found
             //if !(director_activity_hash != 2526740498 && director_activity_hash != 248695599)
 
-            #[allow(clippy::nonminimal_bool)]
             if director_activity_hash == 2526740498
-                || director_activity_hash == 248695599
                 || director_activity_hash == 248695599
             {
                 //gambit private matches. ignoring
@@ -1639,7 +1637,7 @@ impl ActivityStoreInterface {
         character_selection: &CharacterClassSelection,
         mode: &Mode,
         time_period: &DateTimePeriod,
-    ) -> Result<Option<PlayerActivitySummary>, Error> {
+    ) -> Result<Option<PlayerActivitiesSummary>, Error> {
         let restrict_mode_id = if mode.is_private() {
             -1
         } else {
@@ -1647,48 +1645,58 @@ impl ActivityStoreInterface {
             Mode::PrivateMatchesAll.as_id() as i32
         };
 
-        let summary = sqlx::query_as::<_, PlayerActivitySummary>(r#"
+        println!("{}", character_selection.as_id());
+        let summary = sqlx::query_as::<_, PlayerActivitiesSummary>(r#"
         SELECT
-            count(*) as total_activities,
-            COALESCE(sum(time_played_seconds),0) as timePlayedSeconds,
-            COALESCE(sum(character_activity_stats.standing = 0),0) as wins,
-            COALESCE(sum( character_activity_stats.completion_reason = 4),0) as completionReasonMercy,
-            COALESCE(sum(completed),0) as completed,
-            COALESCE(sum(assists),0) as assists,
-            COALESCE(sum(character_activity_stats.kills),0) as kills,
-            COALESCE(sum(deaths),0) as deaths,
-            COALESCE(sum(opponents_defeated),0) as opponentsDefeated,
-            COALESCE(sum(weapon_kills_grenade),0) as grenadeKills,
-            COALESCE(sum(weapon_kills_melee),0) as meleeKills,
-            COALESCE(sum(weapon_kills_super),0) as superKills,
-            COALESCE(sum(weapon_kills_ability),0) as abilityKills,
-            COALESCE(sum(character_activity_stats.precision_kills),0) as precision,
-            COALESCE(max(assists),0) as highestAssists,
-            COALESCE(max(character_activity_stats.kills),0) as highestKills,
-            COALESCE(max(deaths),0) as highestDeaths,
-            COALESCE(max(opponents_defeated),0) as highestOpponentsDefeated,
-            COALESCE(max(weapon_kills_grenade),0) as highestGrenadeKills,
-            COALESCE(max(weapon_kills_melee),0) as highestMeleeKills,
-            COALESCE(max(weapon_kills_super),0) as highestSuperKills,
-            COALESCE(max(weapon_kills_ability),0) as highestAbilityKills,
-            COALESCE(max(
-                cast(character_activity_stats.kills as real) 
-                / 
-                cast(
-                    IFNULL(
-                        NULLIF(character_activity_stats.deaths, 0), 
-                    1) as real
-                )),0.0)
-            as highestKillsDeathsRatio,
-            COALESCE(max(
-                cast((character_activity_stats.kills + character_activity_stats.assists) as real) 
-                / 
-                cast(
-                    IFNULL(
-                        NULLIF(character_activity_stats.deaths, 0), 
-                    1) as real
-                )),0.0)
-            as highestEfficiency
+        count(*) as total_activities,
+        COALESCE(sum(time_played_seconds),0) as time_played_seconds,
+        COALESCE(sum(character_activity_stats.standing = 0),0) as wins,
+        COALESCE(sum( character_activity_stats.completion_reason = 4),0) as completion_reason_mercy,
+        COALESCE(sum(completed),0) as completed,
+        COALESCE(sum(assists),0) as assists,
+        COALESCE(sum(character_activity_stats.kills),0) as kills,
+        COALESCE(sum(deaths),0) as deaths,
+        COALESCE(sum(opponents_defeated),0) as opponents_defeated,
+        COALESCE(sum(weapon_kills_grenade),0) as grenade_kills,
+        COALESCE(sum(weapon_kills_melee),0) as melee_kills,
+        COALESCE(sum(weapon_kills_super),0) as super_kills,
+        COALESCE(sum(weapon_kills_ability),0) as ability_kills,
+        COALESCE(sum(character_activity_stats.precision_kills),0) as precision,
+        COALESCE(max(assists),0) as highest_assists,
+        COALESCE(max(character_activity_stats.kills),0) as highest_kills,
+        COALESCE(max(deaths),0) as highest_deaths,
+        COALESCE(max(opponents_defeated),0) as highest_opponents_defeated,
+        COALESCE(max(weapon_kills_grenade),0) as highest_grenade_kills,
+        COALESCE(max(weapon_kills_melee),0) as highest_melee_kills,
+        COALESCE(max(weapon_kills_super),0) as highest_super_kills,
+        COALESCE(max(weapon_kills_ability),0) as highest_ability_kills,
+        COALESCE(max(
+            cast(character_activity_stats.kills as real) 
+            / 
+            cast(
+                IFNULL(
+                    NULLIF(character_activity_stats.deaths, 0), 
+                1) as real
+            )),0.0)
+        as highest_kills_deaths_ratio,
+        COALESCE(max(
+            cast(character_activity_stats.kills + character_activity_stats.assists * 0.5 as real) 
+            / 
+            cast(
+                IFNULL(
+                    NULLIF(character_activity_stats.deaths, 0), 
+                1) as real
+            )),0.0)
+        as highest_kills_deaths_assists_ratio,
+        COALESCE(max(
+            cast((character_activity_stats.kills + character_activity_stats.assists) as real) 
+            / 
+            cast(
+                IFNULL(
+                    NULLIF(character_activity_stats.deaths, 0), 
+                1) as real
+            )),0.0)
+        as highest_efficiency
         FROM
             character_activity_stats
         INNER JOIN
@@ -1702,18 +1710,30 @@ impl ActivityStoreInterface {
             period < ? AND
             exists (select 1 from modes where activity = activity.id and mode = ?) AND
             not exists (select 1 from modes where activity = activity.id and mode = ?)
-        "#)
+        "#,
+        )
         .bind(member.id.to_string())
-        .bind(character_selection.as_id().to_string())
-        .bind(character_selection.as_id().to_string())
+        .bind(character_selection.as_id())
+        .bind(character_selection.as_id())
         .bind(time_period.get_start().to_rfc3339())
         .bind(time_period.get_end().to_rfc3339())
-        .bind(mode.as_id().to_string())
-        .bind(restrict_mode_id.to_string())
-        .fetch_optional(&mut self.db)
+        .bind(mode.as_id())
+        .bind(restrict_mode_id)
+        .fetch_one(&mut self.db)
         .await?;
 
-        Ok(summary)
+        println!("{:?}", summary);
+
+        /*
+        println!("{}", member.id.to_string());
+        println!("{}", character_selection.as_id().to_string());
+        println!("{}", time_period.get_start().to_rfc3339());
+        println!("{}", time_period.get_end().to_rfc3339());
+        println!("{}", mode.as_id().to_string());
+        println!("{}", restrict_mode_id.to_string());
+        */
+
+        Ok(Some(summary))
     }
 
     pub async fn retrieve_activities_since(

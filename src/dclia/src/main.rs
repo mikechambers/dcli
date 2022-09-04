@@ -106,7 +106,7 @@ async fn main() {
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error initializing manifest directory.", e);
+            print_error("Error initializing data directory.", e);
             std::process::exit(EXIT_FAILURE);
         }
     };

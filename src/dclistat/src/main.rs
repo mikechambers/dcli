@@ -22,17 +22,13 @@
 
 use chrono::{DateTime, Utc};
 use dcli::crucible::{Member, PlayerName};
+use dcli::enums::mode::Mode;
 use dcli::enums::moment::{DateTimePeriod, Moment};
 use dcli::enums::stat::Stat;
-use dcli::manifestinterface::ManifestInterface;
-use dcli::playeractivitysummary::PlayerActivitySummary;
-use dcli::utils::parse_rfc3339;
-use dcli::{
-    crucible::{
-        AggregateCruciblePerformances, CruciblePlayerActivityPerformance,
-        CruciblePlayerPerformance,
-    },
-    enums::mode::Mode,
+use dcli::playeractivitiessummary::PlayerActivitiesSummary;
+use dcli::utils::{
+    calculate_average, calculate_efficiency, calculate_kills_deaths_assists,
+    calculate_kills_deaths_ratio, parse_rfc3339,
 };
 use std::path::PathBuf;
 
@@ -49,47 +45,64 @@ use dcli::utils::{print_error, print_verbose};
 use structopt::StructOpt;
 
 #[allow(clippy::too_many_arguments)]
-fn print_default(data: &PlayerActivitySummary, stats: &[Stat]) {
+fn print_default(data: &PlayerActivitiesSummary, stats: &[Stat]) {
     let mut out = Vec::<String>::new();
     for m in stats.iter() {
         let o: String = match m {
-            Stat::Assists => format!("{}", data.assists as f32),
-            Stat::AssistsAvg => {
-                format_f32(aggregate.stat_per_game(aggregate.assists), 2)
-            }
-            Stat::AssistsMax => format!("{}", aggregate.highest_assists),
-            Stat::Deaths => format!("{}", aggregate.deaths as f32),
-            Stat::DeathsAvg => {
-                format_f32(aggregate.stat_per_game(aggregate.deaths), 2)
-            }
-            Stat::DeathsMax => format!("{}", aggregate.highest_deaths),
-            Stat::Kills => format!("{}", aggregate.kills),
-            Stat::KillsAvg => {
-                format_f32(aggregate.stat_per_game(aggregate.kills), 2)
-            }
-            Stat::KillsMax => format!("{}", aggregate.highest_kills),
-            Stat::OpponentsDefeated => {
-                format!("{}", aggregate.opponents_defeated as f32)
-            }
+            Stat::Assists => data.assists.to_string(),
+            Stat::AssistsAvg => format_f32(
+                calculate_average(data.assists, data.total_activities),
+                2,
+            ),
+            Stat::AssistsMax => data.highest_assists.to_string(),
+            Stat::Deaths => data.deaths.to_string(),
+            Stat::DeathsAvg => format_f32(
+                calculate_average(data.deaths, data.total_activities),
+                2,
+            ),
+            Stat::DeathsMax => data.highest_deaths.to_string(),
+            Stat::Kills => data.kills.to_string(),
+            Stat::KillsAvg => format_f32(
+                calculate_average(data.kills, data.total_activities),
+                2,
+            ),
+            Stat::KillsMax => data.highest_kills.to_string(),
+            Stat::OpponentsDefeated => data.opponents_defeated.to_string(),
             Stat::OpponentsDefeatedAvg => format_f32(
-                aggregate.stat_per_game(aggregate.opponents_defeated),
+                calculate_average(
+                    data.opponents_defeated,
+                    data.total_activities,
+                ),
                 2,
             ),
             Stat::OpponentsDefeatedMax => {
-                format!("{}", aggregate.highest_opponents_defeated)
+                data.highest_opponents_defeated.to_string()
             }
-            Stat::Efficiency => format_f32(aggregate.efficiency, 2),
-            Stat::EfficiencyMax => format_f32(aggregate.highest_efficiency, 2),
-            Stat::KD => format_f32(aggregate.kills_deaths_ratio, 2),
-            Stat::KDMax => format_f32(aggregate.highest_kills_deaths_ratio, 2),
-            Stat::KDA => format_f32(aggregate.kills_deaths_assists, 2),
+            Stat::Efficiency => format_f32(
+                calculate_efficiency(data.kills, data.deaths, data.assists),
+                2,
+            ),
+            Stat::EfficiencyMax => format_f32(data.highest_efficiency, 2),
+            Stat::KD => format_f32(
+                calculate_kills_deaths_ratio(data.kills, data.deaths),
+                2,
+            ),
+            Stat::KDMax => format_f32(data.highest_kills_deaths_ratio, 2),
+            Stat::KDA => format_f32(
+                calculate_kills_deaths_assists(
+                    data.kills,
+                    data.deaths,
+                    data.assists,
+                ),
+                2,
+            ),
             Stat::KDAMax => {
-                format_f32(aggregate.highest_kills_deaths_assists, 2)
+                format_f32(data.highest_kills_deaths_assists_ratio, 2)
             }
-            Stat::Games => format!("{}", activity_count),
-            Stat::Wins => format!("{}", aggregate.wins),
-            Stat::Losses => format!("{}", aggregate.losses),
-            Stat::Mercies => format!("{}", aggregate.total_mercy),
+            Stat::Games => data.total_activities.to_string(),
+            Stat::Wins => data.wins.to_string(),
+            Stat::Losses => (data.total_activities - data.wins).to_string(),
+            Stat::Mercies => data.completion_reason_mercy.to_string(),
         };
 
         out.push(o);
@@ -258,7 +271,7 @@ async fn main() {
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error initializing manifest directory.", e);
+            print_error("Error initializing data directory.", e);
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -297,17 +310,6 @@ async fn main() {
         Err(e) => {
             print_error(
                 "Could not initialize activity store. Have you run dclisync?",
-                e,
-            );
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
-
-    let mut manifest = match ManifestInterface::new(&data_dir, false).await {
-        Ok(e) => e,
-        Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
                 e,
             );
             std::process::exit(EXIT_FAILURE);
@@ -356,7 +358,7 @@ async fn main() {
         return;
     }
 
-    let data: PlayerActivitySummary = data.unwrap();
+    let data: PlayerActivitiesSummary = data.unwrap();
 
     print_default(&data, &opt.stat);
 }
