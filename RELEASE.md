@@ -1,5 +1,7 @@
 # dcli Release Notes
 
+## v0.8.9
+
 - dclisync when adding members via group-id / clan, skip members who do not have a valid Bungie name / code.
 - Lots of refactoring to clean up code and improve performance
 - dclistat should be significantly faster when querying over long time periods
