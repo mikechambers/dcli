@@ -46,7 +46,7 @@ OPTIONS:
     -C, --class <character-class-selection>
             Character to retrieve data for
 
-            Valid values include hunter, titan, warlock, last_active and all. [default: last_active]
+            Valid values include hunter, titan, warlock, last_active and all. [default: all]
     -t, --custom-time <custom-time>
             Custom start time in RFC 3339 date / time format
 

@@ -55,7 +55,7 @@ OPTIONS:
     -C, --class <character-class-selection>
             Character class to retrieve data for
 
-            Valid values include hunter, titan, warlock, last_active and all. [default: last_active]
+            Valid values include hunter, titan, warlock, last_active and all. [default: all]
     -D, --data-dir <data-dir>
             Directory where Destiny 2 manifest and activity database files are stored. (optional)
 

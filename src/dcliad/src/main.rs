@@ -524,7 +524,7 @@ struct Opt {
     /// Character class to retrieve data for
     ///
     /// Valid values include hunter, titan, warlock, last_active and all.
-    #[structopt(short = "C", long = "class", default_value = "last_active")]
+    #[structopt(short = "C", long = "class", default_value = "all")]
     character_class_selection: CharacterClassSelection,
 
     ///Print out additional information
