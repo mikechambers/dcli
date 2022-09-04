@@ -25,6 +25,7 @@ use dcli::crucible::{Member, PlayerName};
 use dcli::enums::moment::{DateTimePeriod, Moment};
 use dcli::enums::stat::Stat;
 use dcli::manifestinterface::ManifestInterface;
+use dcli::playeractivitysummary::PlayerActivitySummary;
 use dcli::utils::parse_rfc3339;
 use dcli::{
     crucible::{
@@ -48,18 +49,11 @@ use dcli::utils::{print_error, print_verbose};
 use structopt::StructOpt;
 
 #[allow(clippy::too_many_arguments)]
-fn print_default(data: &[CruciblePlayerActivityPerformance], stats: &[Stat]) {
-    let performances = data;
-    let cpp: Vec<&CruciblePlayerPerformance> =
-        performances.iter().map(|x| &x.performance).collect();
-    let aggregate = AggregateCruciblePerformances::with_performances(&cpp);
-
-    let activity_count = performances.len();
-
+fn print_default(data: &PlayerActivitySummary, stats: &[Stat]) {
     let mut out = Vec::<String>::new();
     for m in stats.iter() {
         let o: String = match m {
-            Stat::Assists => format!("{}", aggregate.assists as f32),
+            Stat::Assists => format!("{}", data.assists as f32),
             Stat::AssistsAvg => {
                 format_f32(aggregate.stat_per_game(aggregate.assists), 2)
             }
@@ -342,12 +336,11 @@ async fn main() {
     }
 
     let data = match store
-        .retrieve_activities_since(
+        .retrieve_activities_summary(
             &member,
             &opt.character_class_selection,
             &opt.mode,
             &time_period,
-            &mut manifest,
         )
         .await
     {
@@ -359,16 +352,11 @@ async fn main() {
     };
 
     if data.is_none() {
-        println!("No activities found");
+        println!("No data found");
         return;
     }
 
-    let data: Vec<CruciblePlayerActivityPerformance> = data.unwrap();
-
-    if data.is_empty() {
-        println!("No activities found");
-        return;
-    }
+    let data: PlayerActivitySummary = data.unwrap();
 
     print_default(&data, &opt.stat);
 }

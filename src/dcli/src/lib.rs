@@ -33,6 +33,7 @@ pub mod error;
 pub mod manifest;
 pub mod manifestinterface;
 pub mod output;
+pub mod playeractivitysummary;
 pub mod response;
 pub mod statscontainer;
 pub mod utils;

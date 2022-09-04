@@ -25,6 +25,7 @@ use std::{collections::HashMap, path::Path};
 
 use chrono::{DateTime, Utc};
 
+use crate::playeractivitysummary::PlayerActivitySummary;
 use crate::response::character::CharacterData;
 use crate::utils::calculate_percent;
 use crate::{
@@ -533,9 +534,10 @@ impl ActivityStoreInterface {
                         character = ? AND synced = 0
                 "#,
             )
-            .bind(format!("{}", character_row_id))
+            .bind(character_row_id.to_string())
             .fetch(&mut self.db);
 
+            //todo: could probably get this without looping through entire set
             while let Some(row) = rows.try_next().await? {
                 let activity_id: i64 = row.try_get("activity_id")?;
                 ids.push(activity_id);
@@ -1629,6 +1631,89 @@ impl ActivityStoreInterface {
         };
 
         Ok(out)
+    }
+
+    pub async fn retrieve_activities_summary(
+        &mut self,
+        member: &Member,
+        character_selection: &CharacterClassSelection,
+        mode: &Mode,
+        time_period: &DateTimePeriod,
+    ) -> Result<Option<PlayerActivitySummary>, Error> {
+        let restrict_mode_id = if mode.is_private() {
+            -1
+        } else {
+            //if not private, then we dont include any results that are private
+            Mode::PrivateMatchesAll.as_id() as i32
+        };
+
+        let summary = sqlx::query_as::<_, PlayerActivitySummary>(r#"
+        SELECT
+            count(*) as total_activities,
+            COALESCE(sum(time_played_seconds),0) as timePlayedSeconds,
+            COALESCE(sum(character_activity_stats.standing = 0),0) as wins,
+            COALESCE(sum( character_activity_stats.completion_reason = 4),0) as completionReasonMercy,
+            COALESCE(sum(completed),0) as completed,
+            COALESCE(sum(assists),0) as assists,
+            COALESCE(sum(character_activity_stats.kills),0) as kills,
+            COALESCE(sum(deaths),0) as deaths,
+            COALESCE(sum(opponents_defeated),0) as opponentsDefeated,
+            COALESCE(sum(weapon_kills_grenade),0) as grenadeKills,
+            COALESCE(sum(weapon_kills_melee),0) as meleeKills,
+            COALESCE(sum(weapon_kills_super),0) as superKills,
+            COALESCE(sum(weapon_kills_ability),0) as abilityKills,
+            COALESCE(sum(character_activity_stats.precision_kills),0) as precision,
+            COALESCE(max(assists),0) as highestAssists,
+            COALESCE(max(character_activity_stats.kills),0) as highestKills,
+            COALESCE(max(deaths),0) as highestDeaths,
+            COALESCE(max(opponents_defeated),0) as highestOpponentsDefeated,
+            COALESCE(max(weapon_kills_grenade),0) as highestGrenadeKills,
+            COALESCE(max(weapon_kills_melee),0) as highestMeleeKills,
+            COALESCE(max(weapon_kills_super),0) as highestSuperKills,
+            COALESCE(max(weapon_kills_ability),0) as highestAbilityKills,
+            COALESCE(max(
+                cast(character_activity_stats.kills as real) 
+                / 
+                cast(
+                    IFNULL(
+                        NULLIF(character_activity_stats.deaths, 0), 
+                    1) as real
+                )),0.0)
+            as highestKillsDeathsRatio,
+            COALESCE(max(
+                cast((character_activity_stats.kills + character_activity_stats.assists) as real) 
+                / 
+                cast(
+                    IFNULL(
+                        NULLIF(character_activity_stats.deaths, 0), 
+                    1) as real
+                )),0.0)
+            as highestEfficiency
+        FROM
+            character_activity_stats
+        INNER JOIN
+            activity ON character_activity_stats.activity = activity.id,
+            character on character_activity_stats.character = character.id,
+            member on member.id = character.member
+        WHERE
+            member.id = (select id from member where member_id = ?) AND
+            (character.class = ? OR 4 = ?) AND
+            period > ? AND
+            period < ? AND
+            exists (select 1 from modes where activity = activity.id and mode = ?) AND
+            not exists (select 1 from modes where activity = activity.id and mode = ?)
+        "#)
+        .bind(member.id.to_string())
+        .bind(character_selection.as_id().to_string())
+        .bind(character_selection.as_id().to_string())
+        .bind(time_period.get_start().to_rfc3339())
+        .bind(time_period.get_end().to_rfc3339())
+        .bind(mode.as_id().to_string())
+        .bind(restrict_mode_id.to_string())
+        .fetch_optional(&mut self.db)
+        .await?;
+
+        Ok(summary)
     }
 
     pub async fn retrieve_activities_since(

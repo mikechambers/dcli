@@ -25,13 +25,19 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum CharacterClassSelection {
     Titan = 0,
     Hunter = 1,
     Warlock = 2,
     LastActive = 3,
     All = 4,
+}
+
+impl CharacterClassSelection {
+    pub fn as_id(&self) -> u32 {
+        *self as u32
+    }
 }
 
 impl FromStr for CharacterClassSelection {
