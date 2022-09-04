@@ -26,7 +26,6 @@ use std::{collections::HashMap, path::Path};
 use chrono::{DateTime, Utc};
 
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
-use crate::response::character::CharacterData;
 use crate::utils::calculate_percent;
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
@@ -1375,7 +1374,9 @@ impl ActivityStoreInterface {
     ) -> Result<CrucibleActivity, Error> {
         let member_id = &member.id;
 
-        let class_id = self.get_sql_character_class_id(member, character_selection).await?;
+        let class_id = self
+            .get_sql_character_class_id(member, character_selection)
+            .await?;
 
         let activity_row = match sqlx::query(
                 r#"
@@ -1417,7 +1418,6 @@ impl ActivityStoreInterface {
                     }
                 },
             };
-
 
         let crucible_activity =
             self.populate_activity_data(&activity_row, manifest).await?;
@@ -1547,9 +1547,10 @@ impl ActivityStoreInterface {
     //that have been synced
     pub async fn retrieve_last_active_class(
         &mut self,
-        member: &Member) -> Result<CharacterClass, Error> {
-     
-        let result = sqlx::query(r#"
+        member: &Member,
+    ) -> Result<CharacterClass, Error> {
+        let result = sqlx::query(
+            r#"
         SELECT
             character.class as character_class
         FROM
@@ -1563,12 +1564,13 @@ impl ActivityStoreInterface {
         ORDER BY
             activity.period DESC
             limit 1
-        "#)
+        "#,
+        )
         .bind(member.id.to_string())
         .fetch_one(&mut self.db)
         .await?;
 
-        let class_id:u32 = result.try_get("character_class")?;
+        let class_id: u32 = result.try_get("character_class")?;
 
         Ok(CharacterClass::from_id(class_id))
     }
@@ -1578,17 +1580,16 @@ impl ActivityStoreInterface {
     pub async fn get_sql_character_class_id(
         &mut self,
         member: &Member,
-        character_selection: &CharacterClassSelection) -> Result<u32, Error> {
-
-        let class_id = if character_selection
-            == &CharacterClassSelection::LastActive
-        {
-            let character_class = self
-                .retrieve_last_active_class(member).await?;
+        character_selection: &CharacterClassSelection,
+    ) -> Result<u32, Error> {
+        let class_id =
+            if character_selection == &CharacterClassSelection::LastActive {
+                let character_class =
+                    self.retrieve_last_active_class(member).await?;
                 character_class.as_id()
-        } else {
-            character_selection.as_id()
-        };
+            } else {
+                character_selection.as_id()
+            };
 
         Ok(class_id)
     }
@@ -1607,7 +1608,9 @@ impl ActivityStoreInterface {
             Mode::PrivateMatchesAll.as_id() as i32
         };
 
-        let class_id = self.get_sql_character_class_id(member, character_selection).await?;
+        let class_id = self
+            .get_sql_character_class_id(member, character_selection)
+            .await?;
 
         let summary = sqlx::query_as::<_, PlayerActivitiesSummary>(r#"
         SELECT
@@ -1704,11 +1707,13 @@ impl ActivityStoreInterface {
             Mode::PrivateMatchesAll.as_id() as i32
         };
 
-        let class_id = self.get_sql_character_class_id(member, character_selection).await?;
+        let class_id = self
+            .get_sql_character_class_id(member, character_selection)
+            .await?;
 
-            //todo: note, this might break if user has multiple characters of the same
-            //class. need to test
-            let activity_rows = sqlx::query(
+        //todo: note, this might break if user has multiple characters of the same
+        //class. need to test
+        let activity_rows = sqlx::query(
             r#"
             SELECT
                 *,
@@ -1739,10 +1744,8 @@ impl ActivityStoreInterface {
         .bind(time_period.get_end().to_rfc3339())
         .bind(mode.as_id().to_string())
         .bind(restrict_mode_id.to_string())
-        
         .fetch_all(&mut self.db)
         .await?;
-    
 
         if activity_rows.is_empty() {
             return Ok(None);
