@@ -343,6 +343,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dclif"
+version = "0.8.9"
+dependencies = [
+ "chrono",
+ "dcli",
+ "num-format",
+ "structopt",
+ "tokio",
+]
+
+[[package]]
 name = "dclim"
 version = "0.8.9"
 dependencies = [
