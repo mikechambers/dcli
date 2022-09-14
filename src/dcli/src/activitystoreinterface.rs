@@ -26,7 +26,7 @@ use std::{collections::HashMap, path::Path};
 use chrono::{DateTime, Utc};
 
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
-use crate::utils::calculate_percent;
+use crate::utils::{calculate_percent, print_error};
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
     enums::{
@@ -319,17 +319,15 @@ impl ActivityStoreInterface {
         for member in members.iter() {
             match self.sync_member(&member).await {
                 Ok(_) => {}
-                Err(e) => {
-                    if e == Error::RequestTimedOut {
-                        println!(
-                            "Request timed out. Aborting syncing player: {}",
-                            member.name.get_bungie_name()
-                        );
-                    } else {
-                        return Err(e);
-                    }
-                }
-            };
+                Err(e) => print_error(
+                    &format!(
+                        "Error Syncing. Aborting syncing player: {}",
+                        member.name.get_bungie_name()
+                    )
+                    .to_string(),
+                    e,
+                ),
+            }
         }
 
         Ok(())
