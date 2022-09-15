@@ -152,6 +152,12 @@ $ cargo build --release
 
 which will place the compiled tools in _src/target/release_
 
+## Privacy
+
+Note, in order for dclisync to be able to sync your data, you must have the following privacy options selected on your Bungie account at [https://www.bungie.net/7/en/User/Account/Privacy](https://www.bungie.net/7/en/User/Account/Privacy)
+
+- Show my Destiny game Activity feed on Bungie.net
+
 ## Known Issues
 
 - Tied matches are not displayed correctly, and are treated as a Victory.

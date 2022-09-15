@@ -159,6 +159,12 @@ If the `DCLI_FIX_DATA` environment variable is set to `TRUE` then when corrupt o
 
 Setting this to true can significantly slow down sync time, especially the initial sync, and in general, is meant to be used when using DCLI to create datastores for larger applications.
 
+## Privacy
+
+Note, in order for dclisync to be able to sync your data, you must have the following privacy options selected on your Bungie account at [https://www.bungie.net/7/en/User/Account/Privacy](https://www.bungie.net/7/en/User/Account/Privacy)
+
+- Show my Destiny game Activity feed on Bungie.net
+
 ## Questions, Feature Requests, Feedback
 
 If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
