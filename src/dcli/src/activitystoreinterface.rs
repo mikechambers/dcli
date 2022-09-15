@@ -280,21 +280,14 @@ impl ActivityStoreInterface {
         for player in players.iter() {
             match self.sync_player(&player).await {
                 Ok(_) => {}
-                Err(e) => {
-                    if e == Error::BungieNameNotFound {
-                        println!(
-                            "Name not found: {}. Skipping.",
-                            player.get_bungie_name()
-                        );
-                    } else if e == Error::RequestTimedOut {
-                        println!(
-                            "Request timed out. Aborting syncing player: {}",
-                            player.get_bungie_name()
-                        );
-                    } else {
-                        return Err(e);
-                    }
-                }
+                Err(e) => print_error(
+                    &format!(
+                        "Error Syncing. Aborting syncing player: {}",
+                        player.get_bungie_name()
+                    )
+                    .to_string(),
+                    e,
+                ),
             };
         }
 
