@@ -27,7 +27,7 @@ use classascii::ClassAscii;
 
 use dcli::crucible::{Member, PlayerName};
 use dcli::enums::mode::Mode;
-use dcli::enums::moment::{DateTimePeriod, Moment};
+use dcli::enums::moment::{self, DateTimePeriod, Moment};
 use dcli::enums::stat::Stat;
 use dcli::playeractivitiessummary::PlayerActivitiesSummary;
 use dcli::utils::{
@@ -48,6 +48,14 @@ use dcli::utils::EXIT_FAILURE;
 use dcli::utils::{print_error, print_verbose};
 use structopt::StructOpt;
 
+fn print_header(header: &str) {
+    println!("{:^44}", header);
+}
+
+fn print_row(left: &str, center: &str, right: &str) {
+    println!("{:>20}{:^4}{:<20}", left, center, right);
+}
+
 #[allow(clippy::too_many_arguments)]
 fn print_default(data: &PlayerActivitiesSummary) {
     let ascii = ClassAscii::init();
@@ -55,6 +63,41 @@ fn print_default(data: &PlayerActivitiesSummary) {
     for s in ascii.hunter.iter() {
         println!("{}", s);
     }
+
+    //3 columns
+
+    //println!("{:>20}{:^14}{:<20}", "left", "center", "right");
+
+    print_row("left", "center", "right");
+
+    //mode
+    //moment
+    //win %
+    //kd
+    //eff
+}
+
+fn print_mode_data(
+    mode: &Mode,
+    moment: &Moment,
+    data: &PlayerActivitiesSummary,
+) {
+    print_header(&mode.to_string());
+    print_row("Moment", "", &moment.to_string());
+    print_row("Win %", "", "");
+    print_row(
+        "KD",
+        "",
+        &format_f32(calculate_kills_deaths_ratio(data.kills, data.deaths), 2),
+    );
+    print_row(
+        "Efficiency",
+        "",
+        &format_f32(
+            calculate_efficiency(data.kills, data.deaths, data.assists),
+            2,
+        ),
+    );
 }
 
 #[derive(StructOpt, Debug)]
@@ -297,5 +340,7 @@ async fn main() {
 
     let data: PlayerActivitiesSummary = data.unwrap();
 
-    print_default(&data);
+    //print_default(&data);
+
+    print_mode_data(&opt.mode, &opt.moment, &data);
 }
