@@ -235,7 +235,7 @@ fn print_default(
                 format_f32(p.stats.efficiency, 2),
                 extended.weapon_kills_super.to_string(),
                 extended.weapon_kills_grenade.to_string(),
-                extended.weapon_kills_ability.to_string(),
+                extended.weapon_kills_melee.to_string(),
                 extended.all_medals_earned.to_string(),
                 elo_str,
                 p.stats.generate_status(),
