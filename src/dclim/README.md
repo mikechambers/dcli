@@ -54,7 +54,7 @@ OPTIONS:
 
 ### Examples
 
-#### Check for an updated manifest and store any new version in *~/manifest/*:
+#### Check for an updated manifest and store in default location:
 ```
 $ dclim
 ```
