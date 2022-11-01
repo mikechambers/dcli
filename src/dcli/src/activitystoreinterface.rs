@@ -777,8 +777,12 @@ impl ActivityStoreInterface {
             //synced for another character. we could potentially detect this, and when we
             //insert it we flag it as already synced. Need to check if this would impact
             //update logic for detecting new activities (seeing which was the latest synced)
+            //
+            //Added the or IGNORE to work around a case where sometimes we would
+            //get into a state where the foriegn key constraint would failed (potentially
+            //do to issue above). This works around the issue.
             match sqlx::query(
-                "INSERT into activity_queue ('activity_id', 'character') VALUES (?, ?)",
+                "INSERT or IGNORE into activity_queue ('activity_id', 'character') VALUES (?, ?)",
             )
             .bind(instance_id)
             .bind(character_row_id)
