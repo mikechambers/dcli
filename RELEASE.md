@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.8.91 November 1, 2022
+
+- Workaround issue where system could get in state where it would not clear a previous activity from the queue, forcing a reload of all data.
+
 ## v0.8.9 November 1, 2022
 
 - dclisync when adding members via group-id / clan, skip members who do not have a valid Bungie name / code.
