@@ -24,6 +24,7 @@ use tokio::signal::ctrl_c;
 use tokio::signal::unix::{signal, SignalKind};
 
 use std::path::PathBuf;
+use std::sync::Mutex;
 use std::sync::atomic::Ordering;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
@@ -274,50 +275,65 @@ async fn main() {
                 }
             }
         }
-        println!();
+        println!()
     }
 
     if opt.sync.is_some() {
 
         use std::{thread, time};
-        use std::sync::Arc;
+        use std::sync::{Arc, Mutex};
         use std::sync::atomic::AtomicBool;
-        use ctrlc;
+
+        use signal_hook::{consts::SIGINT, consts::SIGTERM, iterator::Signals};
 
         //TODO: add option to put into daemon mode (-d)
         //add refresh interval options -r (that is only used with -d)
         //only run loop when in daemon mode
-        //change to different library to catch sigint and sigterm
-        //check which is sent from systemctl
-        //make sure timing in systemctl service gives us enough time to shut down
-        //the services
+        //https://rust-cli.github.io/book/in-depth/signals.html:b13
+        //todo: instead of storing a boolean to sleep, store a number (default 0)
+        //and use that for the exit code
+        //https://www.freedesktop.org/software/systemd/man/systemd.kill.html
+        //add default timeout to service
 
         let delay = time::Duration::from_secs(15);
 
         let is_sleeping = Arc::new(AtomicBool::new(false));
         let is_sleeping2 = is_sleeping.clone();
-        let is_sleeping3 = is_sleeping.clone();
 
-        //All three variable refer to the same one. We have to have three as
-        //as the reference to the second is moved in the set_handled call, and
-        //so we can't reference it within the loop.
-        let should_interrupt = Arc::new(AtomicBool::new(false));
-        let should_interrupt2 = should_interrupt.clone();
-        let should_interrupt3 = should_interrupt.clone();
+        let exit_code = Arc::new(Mutex::new(0));
+        let exit_code2 = exit_code.clone();
 
-        ctrlc::set_handler(move || {
-           
-            println!("Ctrl-c received. Cleaning up and shutting down.");
+        let mut signals = match Signals::new(&[SIGINT, SIGTERM]) {
+            Ok(e) => e,
+            Err(_) => std::process::exit(EXIT_FAILURE),
+        };
 
-            //if loop is sleeping just exit out immediately
-            if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
-                std::process::exit(EXIT_SUCCESS);
+        thread::spawn(move || {
+            let mut count = 0;
+            for sig in signals.forever() {
+                let code = sig + 128;
+
+                count += 1;
+
+                //code we return should be code from sig + 128
+                //fatal error signal is 128 + n
+                //EXIT CODE 130 for CTRL-C (siginit)
+                if count > 1 {
+                    std::process::exit(code);
+                }
+
+                println!("Received signal {:?}. Cleaning up and shutting down.", sig);
+
+                //if loop is sleeping just exit out immediately
+                if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
+                    std::process::exit(code);
+                }
+
+                *exit_code2.lock().unwrap() = code;
             }
-
-            should_interrupt2.store(true, Ordering::Relaxed);
         });
 
-            let players = opt.sync.unwrap();
+        let players = opt.sync.unwrap();
 
         loop {
             if players.is_empty() {
@@ -338,14 +354,15 @@ async fn main() {
                 }
             }
 
-            if should_interrupt3.load(std::sync::atomic::Ordering::Relaxed) {
-                break;
+            let s =  *exit_code.lock().unwrap();
+            if s > 0 {
+                std::process::exit(s);
             }
             
-            is_sleeping3.store(true, Ordering::Relaxed);
+            is_sleeping.store(true, Ordering::Relaxed);
             println!("Sleeping 15 seconds");
             thread::sleep(delay);
-            is_sleeping3.store(false, Ordering::Relaxed);
+            is_sleeping.store(false, Ordering::Relaxed);
         }
 
         println!("Sync Complete");
