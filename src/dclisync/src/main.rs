@@ -20,7 +20,11 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use tokio::signal::ctrl_c;
+use tokio::signal::unix::{signal, SignalKind};
+
 use std::path::PathBuf;
+use std::sync::atomic::Ordering;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::apiinterface::ApiInterface;
@@ -274,24 +278,74 @@ async fn main() {
     }
 
     if opt.sync.is_some() {
-        let players = opt.sync.unwrap();
 
-        if players.is_empty() {
-            match store.sync_all().await {
-                Ok(_) => {}
-                Err(e) => {
-                    print_error("Error syncing.", e);
-                    std::process::exit(EXIT_FAILURE);
+        use std::{thread, time};
+        use std::sync::Arc;
+        use std::sync::atomic::AtomicBool;
+        use ctrlc;
+
+        //TODO: add option to put into daemon mode (-d)
+        //add refresh interval options -r (that is only used with -d)
+        //only run loop when in daemon mode
+        //change to different library to catch sigint and sigterm
+        //check which is sent from systemctl
+        //make sure timing in systemctl service gives us enough time to shut down
+        //the services
+
+        let delay = time::Duration::from_secs(15);
+
+        let is_sleeping = Arc::new(AtomicBool::new(false));
+        let is_sleeping2 = is_sleeping.clone();
+        let is_sleeping3 = is_sleeping.clone();
+
+        //All three variable refer to the same one. We have to have three as
+        //as the reference to the second is moved in the set_handled call, and
+        //so we can't reference it within the loop.
+        let should_interrupt = Arc::new(AtomicBool::new(false));
+        let should_interrupt2 = should_interrupt.clone();
+        let should_interrupt3 = should_interrupt.clone();
+
+        ctrlc::set_handler(move || {
+           
+            println!("Ctrl-c received. Cleaning up and shutting down.");
+
+            //if loop is sleeping just exit out immediately
+            if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
+                std::process::exit(EXIT_SUCCESS);
+            }
+
+            should_interrupt2.store(true, Ordering::Relaxed);
+        });
+
+            let players = opt.sync.unwrap();
+
+        loop {
+            if players.is_empty() {
+                match store.sync_all().await {
+                    Ok(_) => {}
+                    Err(e) => {
+                        print_error("Error syncing.", e);
+                        std::process::exit(EXIT_FAILURE);
+                    }
+                }
+            } else {
+                match store.sync_players(&players).await {
+                    Ok(_) => {}
+                    Err(e) => {
+                        print_error("Error syncing.", e);
+                        std::process::exit(EXIT_FAILURE);
+                    }
                 }
             }
-        } else {
-            match store.sync_players(&players).await {
-                Ok(_) => {}
-                Err(e) => {
-                    print_error("Error syncing.", e);
-                    std::process::exit(EXIT_FAILURE);
-                }
+
+            if should_interrupt3.load(std::sync::atomic::Ordering::Relaxed) {
+                break;
             }
+            
+            is_sleeping3.store(true, Ordering::Relaxed);
+            println!("Sleeping 15 seconds");
+            thread::sleep(delay);
+            is_sleeping3.store(false, Ordering::Relaxed);
         }
 
         println!("Sync Complete");
