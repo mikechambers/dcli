@@ -1,0 +1,19 @@
+#systemctl for running dcli_sync_manager.py as a service
+#run within the users environment
+#make sure to replace /home/mesh below with appropriate path
+# replace user / group with the appropriate user / group for your system.
+# service does not need admin right
+
+[Unit]
+Description=dclisync service
+After=multi-user.target
+
+[Service]
+Type=simple
+Restart=always
+User=mesh
+Group=mesh
+ExecStart=/usr/bin/bash -lc "/usr/bin/python3 /home/mesh/bin/dcli_sync_manager.py"
+
+[Install]
+WantedBy=multi-user.target
