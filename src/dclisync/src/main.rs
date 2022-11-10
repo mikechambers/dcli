@@ -20,12 +20,9 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use tokio::signal::ctrl_c;
-use tokio::signal::unix::{signal, SignalKind};
-
 use std::path::PathBuf;
-use std::sync::Mutex;
 use std::sync::atomic::Ordering;
+use std::sync::Mutex;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::apiinterface::ApiInterface;
@@ -279,10 +276,9 @@ async fn main() {
     }
 
     if opt.sync.is_some() {
-
-        use std::{thread, time};
-        use std::sync::{Arc, Mutex};
         use std::sync::atomic::AtomicBool;
+        use std::sync::{Arc, Mutex};
+        use std::{thread, time};
 
         use signal_hook::{consts::SIGINT, consts::SIGTERM, iterator::Signals};
 
@@ -294,6 +290,7 @@ async fn main() {
         //and use that for the exit code
         //https://www.freedesktop.org/software/systemd/man/systemd.kill.html
         //add default timeout to service
+        //do we need to listen for SIGKILL? (and automatically end?)
 
         let delay = time::Duration::from_secs(15);
 
@@ -322,7 +319,10 @@ async fn main() {
                     std::process::exit(code);
                 }
 
-                println!("Received signal {:?}. Cleaning up and shutting down.", sig);
+                println!(
+                    "Received signal {:?}. Cleaning up and shutting down.",
+                    sig
+                );
 
                 //if loop is sleeping just exit out immediately
                 if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
@@ -354,11 +354,11 @@ async fn main() {
                 }
             }
 
-            let s =  *exit_code.lock().unwrap();
+            let s = *exit_code.lock().unwrap();
             if s > 0 {
                 std::process::exit(s);
             }
-            
+
             is_sleeping.store(true, Ordering::Relaxed);
             println!("Sleeping 15 seconds");
             thread::sleep(delay);
