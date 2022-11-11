@@ -20,6 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use log::{info, error};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -172,7 +173,13 @@ struct Opt {
 
 #[tokio::main]
 async fn main() {
+
+    env_logger::init();
+
+
     let opt = Opt::from_args();
+
+    info!("Arguments : {:#?}", opt);
     print_verbose(&format!("{:#?}", opt), opt.verbose);
 
     let data_dir = match determine_data_dir(opt.data_dir) {
@@ -182,6 +189,8 @@ async fn main() {
             std::process::exit(EXIT_FAILURE);
         }
     };
+
+    info!("Using data directory : {:#?}", &data_dir);
 
     let key = match opt.api_key {
         Some(e) => e,
@@ -300,74 +309,94 @@ async fn main() {
         let is_sleeping = Arc::new(AtomicBool::new(false));
         let exit_code = Arc::new(Mutex::new(SHOULD_CONTINUE_CODE));
 
-        if opt.daemon {
-            let is_sleeping2 = is_sleeping.clone();
-            let exit_code2 = exit_code.clone();
+            
+        #[allow(unused_variables)]
+        let is_sleeping2 = is_sleeping.clone();
 
-            #[cfg(target_family = "windows")]
-            {
-                use ctrlc;
-                let _ = ctrlc::set_handler(move || {
-                    println!("Received Ctrl-C. Cleaning up and shutting down.");
+        #[allow(unused_variables)]
+        let exit_code2 = exit_code.clone();
 
-                    //Windows doesn't really handle any non-0 codes well, so we will
-                    //just use 0
-                    let code = 0;
-                    //if loop is sleeping just exit out immediately
-                    if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
+        #[cfg(target_family = "windows")]
+        {
+            use ctrlc;
+            let _ = match ctrlc::set_handler(move || {
+                println!("Received Ctrl-C. Cleaning up and shutting down.");
+
+                //Windows doesn't really handle any non-0 codes well, so we will
+                //just use 0
+                let code = 0;
+                //if loop is sleeping just exit out immediately
+                if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
+                    info!("Exiting process while loop sleeping.");
+                    info!("Exit code : {}", code);
+                    std::process::exit(code);
+                }
+
+                *exit_code2.lock().unwrap() = code;
+            }) {
+                Ok(e) => e,
+                Err(e) => {
+                    error!("Could not intialize ctrlc. Exiting");
+                    error!("{}", e);
+                },
+            };
+        }
+
+        #[cfg(not(target_family = "windows"))]
+        {
+            use signal_hook::{
+                consts::SIGINT, consts::SIGTERM, iterator::Signals,
+            };
+
+            let mut signals = match Signals::new(&[SIGINT, SIGTERM]) {
+                Ok(e) => e,
+                Err(e) => {
+                    error!("Could not intialize Signals. Exiting");
+                    error!("{}", e);
+                    std::process::exit(EXIT_FAILURE);
+                }
+            };
+
+            thread::spawn(move || {
+                let mut count = 0;
+                for sig in signals.forever() {
+                    //code we return should be code from sig + 128
+                    //fatal error signal is 128 + n
+                    //EXIT CODE 130 for CTRL-C (siginit)
+                    let code = sig + 128;
+
+                    count += 1;
+
+                    if count > 1 {
+                        info!("Received multiple interupts. Forcing Exit");
+                        info!("Exit code : {}", code);
                         std::process::exit(code);
                     }
 
-                    *exit_code2.lock().unwrap() = code;
-                });
-
-                #[cfg(not(target_family = "windows"))]
-                {
-                    use signal_hook::{
-                        consts::SIGINT, consts::SIGTERM, iterator::Signals,
-                    };
-
-                    let mut signals = match Signals::new(&[SIGINT, SIGTERM]) {
-                        Ok(e) => e,
-                        Err(_) => std::process::exit(EXIT_FAILURE),
-                    };
-
-                    thread::spawn(move || {
-                        let mut count = 0;
-                        for sig in signals.forever() {
-                            //code we return should be code from sig + 128
-                            //fatal error signal is 128 + n
-                            //EXIT CODE 130 for CTRL-C (siginit)
-                            let code = sig + 128;
-
-                            count += 1;
-
-                            if count > 1 {
-                                std::process::exit(code);
-                            }
-
-                            println!(
-                            "Received signal {:?}. Cleaning up and shutting down.",
-                            sig
+                    println!(
+                        "Received signal {:?}. Cleaning up and shutting down.",
+                        sig
                         );
 
-                            //if loop is sleeping just exit out immediately
-                            if is_sleeping2
-                                .load(std::sync::atomic::Ordering::Relaxed)
-                            {
-                                std::process::exit(code);
-                            }
-
-                            *exit_code2.lock().unwrap() = code;
+                    //if loop is sleeping just exit out immediately
+                    if is_sleeping2
+                        .load(std::sync::atomic::Ordering::Relaxed)
+                        {
+                            info!("Exiting process while loop sleeping.");
+                            info!("Exit code : {}", code);
+                            std::process::exit(code);
                         }
-                    });
-                }
-            }
 
+                    *exit_code2.lock().unwrap() = code;
+                }
+            });
+        }
+
+        if opt.daemon {
             println!(
                 "Beginning Sync in Daemon Mode with {} second interval",
                 refresh_interval
-            );
+                );
         }
 
         let players = opt.sync.unwrap();
@@ -393,6 +422,7 @@ async fn main() {
 
             let s = *exit_code.lock().unwrap();
             if s != SHOULD_CONTINUE_CODE {
+                info!("Exiting loop. Exit code : {}", s);
                 std::process::exit(s);
             }
 

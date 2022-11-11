@@ -20,6 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use log::{info, debug};
+
 use reqwest::header::{HeaderMap, HeaderValue, CONNECTION};
 use reqwest::{Client, Url};
 
@@ -68,6 +70,8 @@ impl ApiClient {
 
         print_verbose(&format!("{}", url), self.verbose);
 
+        info!("API call : {}", url);
+
         let response = self
             .client
             .get(url)
@@ -97,12 +101,14 @@ impl ApiClient {
             const MAX: usize = 200;
             let limit = std::cmp::min(len, MAX);
 
+            debug!("Response body : {}", body);
             let string: String = body.chars().take(limit).skip(0).collect();
             println!(
                 "---------Begin API response : First {}  chars---------",
                 limit
             );
             println!("{}", string);
+            info!("First {}  chars of response: {}", limit, string);
             println!("---------End API response---------");
         }
 
@@ -121,6 +127,8 @@ impl ApiClient {
         post_data: &str,
     ) -> Result<reqwest::Response, Error> {
         let url = Url::parse(&url).unwrap();
+
+        info!("Calling API [post] : {}", url);
 
         print_verbose(&format!("{}", url), self.verbose);
 
