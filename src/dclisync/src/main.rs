@@ -141,8 +141,8 @@ struct Opt {
     )]
     list: bool,
 
-    ///Run dclisync in daemon mode. dclisync will run without existing, syncing
-    ///at specified intervals.
+    ///Run dclisync in daemon mode. dclisync will run continuously with a
+    /// pause (specified by --interval) between syncs
     #[structopt(short = "d", long = "daemon")]
     daemon: bool,
 

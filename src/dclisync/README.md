@@ -32,9 +32,12 @@ If any errors occur while downloading activity details (step 3), then that speci
 
 ```
 USAGE:
-    dclisync [FLAGS] [OPTIONS] --api-key <api-key> --sync <sync>...
+    dclisync.exe [FLAGS] [OPTIONS] --api-key <api-key> --sync <sync>...
 
 FLAGS:
+    -d, --daemon
+            Run dclisync in daemon mode. dclisync will run continuously with a pause (specified by --interval) between syncs
+
     -h, --help
             Prints help information
 
@@ -80,6 +83,9 @@ OPTIONS:
             variable.
 
             You can obtain a key from https://www.bungie.net/en/Application
+    -I, --interval <interval>
+            Interval in seconds between player syncs when running in daemon mode
+
     -r, --remove <remove>...
             Remove specified player(s) from having their acitivities synced.
 
@@ -100,7 +106,7 @@ OPTIONS:
             Requires that a Bungie API key is specified via the --api-key KEY flag, or DESTINY_API_KEY environment
             variable.
 
-            You can obtain an api key from https://www.bungie.net/en/Application
+            You can obtain a key from https://www.bungie.net/en/Application
 ```
 
 ### Examples
@@ -143,6 +149,16 @@ API key may also be spcified via the DESTINY_API_KEY environment variable.
 
 You can obtain an api key from https://www.bungie.net/en/Application
 
+#### Run in daemon mode
+
+Run in mode where dclisync continuously syncs data, with a 60 seconds pause between syncs.
+
+```
+$ dclisync --sync --daemon --interval 60
+```
+
+Note, when running in daemon mode, you can stop the process via Ctrl-C or sending a system SIGINT or SIGTERM message. dclisync will capture these calls and try to gracefully shut down.
+
 #### Sync activities for specific players
 
 ```
@@ -163,7 +179,7 @@ Setting this to true can significantly slow down sync time, especially the initi
 
 Note, in order for dclisync to be able to sync your data, you must have the following privacy options selected on your Bungie account at [https://www.bungie.net/7/en/User/Account/Privacy](https://www.bungie.net/7/en/User/Account/Privacy)
 
-- Show my Destiny game Activity feed on Bungie.net
+-   Show my Destiny game Activity feed on Bungie.net
 
 ## Questions, Feature Requests, Feedback
 
