@@ -21,7 +21,7 @@
 */
 
 use std::path::PathBuf;
-use std::sync::atomic::{Ordering, AtomicBool};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -30,11 +30,12 @@ use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::apiinterface::ApiInterface;
 use dcli::crucible::{Member, PlayerName};
 use dcli::utils::{
-    determine_data_dir, print_error, print_verbose, EXIT_FAILURE, EXIT_SUCCESS,
+    determine_data_dir, print_error, print_verbose, EXIT_FAILURE,
 };
 use structopt::StructOpt;
 
 const DEFAULT_REFRESH_INTERVAL: u32 = 30;
+const SHOULD_CONTINUE_CODE: i32 = -1;
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
@@ -289,7 +290,6 @@ async fn main() {
     }
 
     if opt.sync.is_some() {
-
         let refresh_interval = match opt.interval {
             Some(e) => e,
             None => DEFAULT_REFRESH_INTERVAL,
@@ -298,118 +298,130 @@ async fn main() {
         let sleep_duration = Duration::from_secs(refresh_interval as u64);
 
         let is_sleeping = Arc::new(AtomicBool::new(false));
-        let exit_code = Arc::new(Mutex::new(0));
+        let exit_code = Arc::new(Mutex::new(SHOULD_CONTINUE_CODE));
+
+        let is_sleeping2 = is_sleeping.clone();
+        let exit_code2 = exit_code.clone();
 
         #[cfg(target_family = "windows")]
         {
             use ctrlc;
-            ctrlc::set_handler(move || {
+            let _ = ctrlc::set_handler(move || {
+                println!("Received Ctrl-C. Cleaning up and shutting down.");
+
+                //Windows doesn't really handle any non-0 codes well, so we will
+                //just use 0
+                let code = 0;
                 //if loop is sleeping just exit out immediately
                 if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
                     std::process::exit(code);
                 }
 
-                //130 is SIGINT (128 + 2)
-                *exit_code2.lock().unwrap() = 130;
+                *exit_code2.lock().unwrap() = code;
             });
-        }
 
-        #[cfg(not(target_family = "windows"))]
-        {
-            use signal_hook::{
-                consts::SIGINT, consts::SIGTERM, iterator::Signals,
-            };
+            #[cfg(not(target_family = "windows"))]
+            {
+                use signal_hook::{
+                    consts::SIGINT, consts::SIGTERM, iterator::Signals,
+                };
 
-            let is_sleeping2 = is_sleeping.clone();
-            let exit_code2 = exit_code.clone();
+                let mut signals = match Signals::new(&[SIGINT, SIGTERM]) {
+                    Ok(e) => e,
+                    Err(_) => std::process::exit(EXIT_FAILURE),
+                };
 
-            let mut signals = match Signals::new(&[SIGINT, SIGTERM]) {
-                Ok(e) => e,
-                Err(_) => std::process::exit(EXIT_FAILURE),
-            };
+                thread::spawn(move || {
+                    let mut count = 0;
+                    for sig in signals.forever() {
+                        let code = sig + 128;
 
-            thread::spawn(move || {
-                let mut count = 0;
-                for sig in signals.forever() {
-                    let code = sig + 128;
+                        count += 1;
 
-                    count += 1;
+                        //code we return should be code from sig + 128
+                        //fatal error signal is 128 + n
+                        //EXIT CODE 130 for CTRL-C (siginit)
+                        if count > 1 {
+                            std::process::exit(code);
+                        }
 
-                    //code we return should be code from sig + 128
-                    //fatal error signal is 128 + n
-                    //EXIT CODE 130 for CTRL-C (siginit)
-                    if count > 1 {
-                        std::process::exit(code);
-                    }
-
-                    println!(
+                        println!(
                         "Received signal {:?}. Cleaning up and shutting down.",
                         sig
                     );
 
-                    //if loop is sleeping just exit out immediately
-                    if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
-                        std::process::exit(code);
+                        //if loop is sleeping just exit out immediately
+                        if is_sleeping2
+                            .load(std::sync::atomic::Ordering::Relaxed)
+                        {
+                            std::process::exit(code);
+                        }
+
+                        *exit_code2.lock().unwrap() = code;
                     }
+                });
+            }
+            let players = opt.sync.unwrap();
 
-                    *exit_code2.lock().unwrap() = code;
-                }
-            });
-        }
-        let players = opt.sync.unwrap();
+            if opt.daemon {
+                println!(
+                    "Beginning Sync in Daemon Mode with {} second interval.",
+                    refresh_interval
+                );
+            }
 
-        loop {
-            if players.is_empty() {
-                match store.sync_all().await {
-                    Ok(_) => {}
-                    Err(e) => {
-                        print_error("Error syncing.", e);
-                        std::process::exit(EXIT_FAILURE);
+            loop {
+                if players.is_empty() {
+                    match store.sync_all().await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            print_error("Error syncing.", e);
+                            std::process::exit(EXIT_FAILURE);
+                        }
+                    }
+                } else {
+                    match store.sync_players(&players).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            print_error("Error syncing.", e);
+                            std::process::exit(EXIT_FAILURE);
+                        }
                     }
                 }
-            } else {
-                match store.sync_players(&players).await {
-                    Ok(_) => {}
-                    Err(e) => {
-                        print_error("Error syncing.", e);
-                        std::process::exit(EXIT_FAILURE);
-                    }
+
+                let s = *exit_code.lock().unwrap();
+                if s != SHOULD_CONTINUE_CODE {
+                    std::process::exit(s);
                 }
+
+                if !opt.daemon {
+                    break;
+                }
+
+                is_sleeping.store(true, Ordering::Relaxed);
+                println!("Sleeping {} seconds", refresh_interval);
+                thread::sleep(sleep_duration);
+                is_sleeping.store(false, Ordering::Relaxed);
             }
 
-            let s = *exit_code.lock().unwrap();
-            if s > 0 {
-                std::process::exit(s);
-            }
-
-            if !opt.daemon {
-                break;
-            }
-
-            is_sleeping.store(true, Ordering::Relaxed);
-            println!("Sleeping {} seconds", refresh_interval);
-            thread::sleep(sleep_duration);
-            is_sleeping.store(false, Ordering::Relaxed);
+            println!("Sync Complete");
         }
 
-        println!("Sync Complete");
-        std::process::exit(EXIT_SUCCESS);
-    }
+        if opt.list {
+            let members = match store.get_sync_members().await {
+                Ok(m) => m,
+                Err(e) => {
+                    print_error("Error syncing.", e);
+                    std::process::exit(EXIT_FAILURE);
+                }
+            };
 
-    if opt.list {
-        let members = match store.get_sync_members().await {
-            Ok(m) => m,
-            Err(e) => {
-                print_error("Error syncing.", e);
-                std::process::exit(EXIT_FAILURE);
+            println!("Synced Players");
+            println!("-------------");
+            for member in members.iter() {
+                println!("{}", member.name.get_bungie_name());
             }
-        };
-
-        println!("Synced Players");
-        println!("-------------");
-        for member in members.iter() {
-            println!("{}", member.name.get_bungie_name());
+            println!();
         }
-        println!();
     }
 }

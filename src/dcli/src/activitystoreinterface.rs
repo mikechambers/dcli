@@ -77,7 +77,7 @@ const DB_SCHEMA_VERSION: i32 = 9;
 const NO_TEAMS_INDEX: i32 = 253;
 
 pub struct ActivityStoreInterface {
-    verbose: bool,
+    pub verbose: bool,
     db: SqliteConnection,
     path: String,
     api_interface: ApiInterface,
