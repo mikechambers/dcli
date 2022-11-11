@@ -21,8 +21,10 @@
 */
 
 use std::path::PathBuf;
-use std::sync::atomic::Ordering;
-use std::sync::Mutex;
+use std::sync::atomic::{Ordering, AtomicBool};
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::apiinterface::ApiInterface;
@@ -31,6 +33,8 @@ use dcli::utils::{
     determine_data_dir, print_error, print_verbose, EXIT_FAILURE, EXIT_SUCCESS,
 };
 use structopt::StructOpt;
+
+const DEFAULT_REFRESH_INTERVAL: u32 = 30;
 
 #[derive(StructOpt, Debug)]
 #[structopt(verbatim_doc_comment)]
@@ -135,6 +139,15 @@ struct Opt {
         //conflicts_with_all = &["sync"]
     )]
     list: bool,
+
+    ///Run dclisync in daemon mode. dclisync will run without existing, syncing
+    ///at specified intervals.
+    #[structopt(short = "d", long = "daemon")]
+    daemon: bool,
+
+    ///Interval in seconds between player syncs when running in daemon mode.
+    #[structopt(short = "I", long = "interval")]
+    interval: Option<u32>,
 
     /// Import all players for specified Destiny 2 Group / clan.
     ///
@@ -276,63 +289,73 @@ async fn main() {
     }
 
     if opt.sync.is_some() {
-        use std::sync::atomic::AtomicBool;
-        use std::sync::{Arc, Mutex};
-        use std::{thread, time};
 
-        use signal_hook::{consts::SIGINT, consts::SIGTERM, iterator::Signals};
-
-        //TODO: add option to put into daemon mode (-d)
-        //add refresh interval options -r (that is only used with -d)
-        //only run loop when in daemon mode
-        //https://rust-cli.github.io/book/in-depth/signals.html:b13
-        //todo: instead of storing a boolean to sleep, store a number (default 0)
-        //and use that for the exit code
-        //https://www.freedesktop.org/software/systemd/man/systemd.kill.html
-        //add default timeout to service
-        //do we need to listen for SIGKILL? (and automatically end?)
-
-        let delay = time::Duration::from_secs(15);
-
-        let is_sleeping = Arc::new(AtomicBool::new(false));
-        let is_sleeping2 = is_sleeping.clone();
-
-        let exit_code = Arc::new(Mutex::new(0));
-        let exit_code2 = exit_code.clone();
-
-        let mut signals = match Signals::new(&[SIGINT, SIGTERM]) {
-            Ok(e) => e,
-            Err(_) => std::process::exit(EXIT_FAILURE),
+        let refresh_interval = match opt.interval {
+            Some(e) => e,
+            None => DEFAULT_REFRESH_INTERVAL,
         };
 
-        thread::spawn(move || {
-            let mut count = 0;
-            for sig in signals.forever() {
-                let code = sig + 128;
+        let sleep_duration = Duration::from_secs(refresh_interval as u64);
 
-                count += 1;
+        let is_sleeping = Arc::new(AtomicBool::new(false));
+        let exit_code = Arc::new(Mutex::new(0));
 
-                //code we return should be code from sig + 128
-                //fatal error signal is 128 + n
-                //EXIT CODE 130 for CTRL-C (siginit)
-                if count > 1 {
-                    std::process::exit(code);
-                }
-
-                println!(
-                    "Received signal {:?}. Cleaning up and shutting down.",
-                    sig
-                );
-
+        #[cfg(target_family = "windows")]
+        {
+            use ctrlc;
+            ctrlc::set_handler(move || {
                 //if loop is sleeping just exit out immediately
                 if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
                     std::process::exit(code);
                 }
 
-                *exit_code2.lock().unwrap() = code;
-            }
-        });
+                //130 is SIGINT (128 + 2)
+                *exit_code2.lock().unwrap() = 130;
+            });
+        }
 
+        #[cfg(not(target_family = "windows"))]
+        {
+            use signal_hook::{
+                consts::SIGINT, consts::SIGTERM, iterator::Signals,
+            };
+
+            let is_sleeping2 = is_sleeping.clone();
+            let exit_code2 = exit_code.clone();
+
+            let mut signals = match Signals::new(&[SIGINT, SIGTERM]) {
+                Ok(e) => e,
+                Err(_) => std::process::exit(EXIT_FAILURE),
+            };
+
+            thread::spawn(move || {
+                let mut count = 0;
+                for sig in signals.forever() {
+                    let code = sig + 128;
+
+                    count += 1;
+
+                    //code we return should be code from sig + 128
+                    //fatal error signal is 128 + n
+                    //EXIT CODE 130 for CTRL-C (siginit)
+                    if count > 1 {
+                        std::process::exit(code);
+                    }
+
+                    println!(
+                        "Received signal {:?}. Cleaning up and shutting down.",
+                        sig
+                    );
+
+                    //if loop is sleeping just exit out immediately
+                    if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
+                        std::process::exit(code);
+                    }
+
+                    *exit_code2.lock().unwrap() = code;
+                }
+            });
+        }
         let players = opt.sync.unwrap();
 
         loop {
@@ -359,9 +382,13 @@ async fn main() {
                 std::process::exit(s);
             }
 
+            if !opt.daemon {
+                break;
+            }
+
             is_sleeping.store(true, Ordering::Relaxed);
-            println!("Sleeping 15 seconds");
-            thread::sleep(delay);
+            println!("Sleeping {} seconds", refresh_interval);
+            thread::sleep(sleep_duration);
             is_sleeping.store(false, Ordering::Relaxed);
         }
 
