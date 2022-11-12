@@ -115,6 +115,8 @@ When running in daemon mode, sync progress will not be displayed, although messa
 
 By default, sync will pause for 60 seconds between each sync. This can be set via the _--interval_ flag, with a minimum value of 30 seconds.
 
+You can stop dclisync via Ctrl-C or sending a SIGINT or SIGTERM system message. dclisync will capture these calls and try to gracefully shut down by finishing its current sync. You can force the app to exit by sending another Ctrl-C / SIGINIT / SIGTERM.
+
 #### Run in daemon mode
 
 Run in daemon mode, with pause of 60 seconds between syncs.
@@ -194,16 +196,6 @@ $ dclisync --sync --api-key YOUR_DESTINY_API_KEY
 API key may also be specified via the DESTINY_API_KEY environment variable.
 
 You can obtain an api key from https://www.bungie.net/en/Application
-
-#### Run in daemon mode
-
-Run in mode where dclisync continuously syncs data, with a 60 seconds pause between syncs.
-
-```
-$ dclisync --sync --daemon --interval 60
-```
-
-Note, when running in daemon mode, you can stop the process via Ctrl-C or sending a system SIGINT or SIGTERM message. dclisync will capture these calls and try to gracefully shut down.
 
 #### Sync activities for specific players
 
