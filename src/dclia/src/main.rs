@@ -35,8 +35,8 @@ use dcli::enums::mode::Mode;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::output::Output;
 use dcli::response::gpr::CharacterActivitiesData;
-use dcli::utils::{EXIT_FAILURE, format_error};
 use dcli::utils::{build_tsv, determine_data_dir};
+use dcli::utils::{format_error, EXIT_FAILURE};
 use structopt::StructOpt;
 
 const ORBIT_PLACE_HASH: u32 = 2961497387;
@@ -103,8 +103,12 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
-    
-    let level = if opt.verbose { TellLevel::Verbose } else {TellLevel::Progress};
+
+    let level = if opt.verbose {
+        TellLevel::Verbose
+    } else {
+        TellLevel::Progress
+    };
     Tell::init(level);
 
     tell::verbose!(&format!("{:#?}", opt));
@@ -117,21 +121,19 @@ async fn main() {
         }
     };
 
-    let mut store = match ActivityStoreInterface::init_with_path(
-        &data_dir,
-        opt.api_key,
-    )
-    .await
-    {
-        Ok(e) => e,
-        Err(e) => {
-            tell::error!(format_error(
+    let mut store =
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.api_key)
+            .await
+        {
+            Ok(e) => e,
+            Err(e) => {
+                tell::error!(format_error(
                 "Could not initialize activity store. Have you run dclisync?",
                 e,
             ));
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
 
     let member: Member = match store.find_member(&opt.name, true).await {
         Ok(e) => e,
@@ -186,19 +188,20 @@ async fn main() {
         }
     };
 
-    tell::verbose!(
-        &format!(
-            "Getting activity definition data from manifest : {}",
-            activity_data_a.current_activity_hash
-        )
-    );
+    tell::verbose!(&format!(
+        "Getting activity definition data from manifest : {}",
+        activity_data_a.current_activity_hash
+    ));
     let activity_data_m: Option<ActivityDefinitionData> = match manifest
         .get_activity_definition(activity_data_a.current_activity_hash)
         .await
     {
         Ok(e) => e,
         Err(e) => {
-            tell::error!(format_error("Error Retrieving Data from Manifest", e));
+            tell::error!(format_error(
+                "Error Retrieving Data from Manifest",
+                e
+            ));
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -213,7 +216,7 @@ async fn main() {
     if activity_data_m.place_hash == ORBIT_PLACE_HASH {
         match opt.output {
             Output::Default => {
-               tell::update!(get_in_orbit_human());
+                tell::update!(get_in_orbit_human());
             }
             Output::Tsv => {
                 print_tsv_orbit();
@@ -223,19 +226,20 @@ async fn main() {
         return;
     }
 
-        tell::update!(
-        &format!(
-            "Getting place definition data from manifest : {}",
-            activity_data_m.place_hash
-        )
-    );
+    tell::update!(&format!(
+        "Getting place definition data from manifest : {}",
+        activity_data_m.place_hash
+    ));
     let place_data_m: Option<PlaceDefinitionData> = match manifest
         .get_place_definition(activity_data_m.place_hash)
         .await
     {
         Ok(e) => e,
         Err(e) => {
-            tell::error!(format_error("Error Retrieving Data from Manifest", e));
+            tell::error!(format_error(
+                "Error Retrieving Data from Manifest",
+                e
+            ));
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -246,25 +250,26 @@ async fn main() {
     }
     let place_data_m = place_data_m.unwrap();
 
-    tell::update!(
-        &format!(
-            "Getting destination definition data from manifest : {}",
-            activity_data_m.destination_hash
-        )
-    );
+    tell::update!(&format!(
+        "Getting destination definition data from manifest : {}",
+        activity_data_m.destination_hash
+    ));
     let destination_data_m: Option<DestinationDefinitionData> = match manifest
         .get_destination_definition(activity_data_m.destination_hash)
         .await
     {
         Ok(e) => e,
         Err(e) => {
-            tell::update!(format_error("Error Retrieving Data from Manifest", e));
+            tell::update!(format_error(
+                "Error Retrieving Data from Manifest",
+                e
+            ));
             std::process::exit(EXIT_FAILURE);
         }
     };
 
     if destination_data_m.is_none() {
-       tell::update!("Unknown destination. Make sure you have synced the latest version of the manifest using dclim.");
+        tell::update!("Unknown destination. Make sure you have synced the latest version of the manifest using dclim.");
         return;
     }
 
@@ -274,47 +279,42 @@ async fn main() {
 
     //lets find out the mode / activity type name
     tell::verbose!("Determining activity mode");
-    let activity_type_name: String = match activity_data_a
-        .current_activity_mode_type
-    {
-        // if its set in the API data, we use that
-        // this is due to this bug:
-        // https://github.com/Bungie-net/api/issues/1341
-        Some(e) => {
-            mode = e;
-            format!("{}", e)
-        }
-        None => {
-            tell::verbose!(
-                &format!(
-                    "Activity mode not returned from API. Checking Manifest : {}",
-                    activity_data_m.activity_type_hash
-                )
-            );
-            //otherwise, we go into the manifest to find it
-            match manifest
-                .get_activity_type_definition(
-                    activity_data_m.activity_type_hash,
-                )
-                .await
-            {
-                Ok(e) => match e {
-                    Some(e) => e.display_properties.name,
-                    None => "Unknown".to_string(),
-                },
-                Err(e) => {
-                    tell::verbose!(
-                        &format!(
+    let activity_type_name: String =
+        match activity_data_a.current_activity_mode_type {
+            // if its set in the API data, we use that
+            // this is due to this bug:
+            // https://github.com/Bungie-net/api/issues/1341
+            Some(e) => {
+                mode = e;
+                format!("{}", e)
+            }
+            None => {
+                tell::verbose!(&format!(
+                "Activity mode not returned from API. Checking Manifest : {}",
+                activity_data_m.activity_type_hash
+            ));
+                //otherwise, we go into the manifest to find it
+                match manifest
+                    .get_activity_type_definition(
+                        activity_data_m.activity_type_hash,
+                    )
+                    .await
+                {
+                    Ok(e) => match e {
+                        Some(e) => e.display_properties.name,
+                        None => "Unknown".to_string(),
+                    },
+                    Err(e) => {
+                        tell::verbose!(&format!(
                             "Activity Mode not found in Manifest : {:?}",
                             e
-                        )
-                    );
-                    //Todo: this either means an error, unknown activity, or they are in orbit
-                    "Unknown".to_string()
+                        ));
+                        //Todo: this either means an error, unknown activity, or they are in orbit
+                        "Unknown".to_string()
+                    }
                 }
             }
-        }
-    };
+        };
 
     // note if for some reason correct activities are not displayed for some
     // crucible modes, then this may be false (i've only seen this as an issue

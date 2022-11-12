@@ -22,13 +22,13 @@
 
 use std::{
     collections::HashMap,
-    io::{self, Write}
+    io::{self, Write},
 };
 
 use tell::tell::{Tell, TellLevel};
 
 use chrono::{DateTime, Utc};
-use indicatif::{ProgressBar, ProgressStyle, HumanCount};
+use indicatif::{HumanCount, ProgressBar, ProgressStyle};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 use crate::response::gmd::GetMembershipData;
@@ -705,9 +705,11 @@ impl ApiInterface {
         pb.finish_and_clear();
 
         let s = if out.len() == 1 { "y" } else { "ies" };
-        tell::progress!(format!("Completed : {} activit{} found",
-                                HumanCount(out.len() as u64), s));
-
+        tell::progress!(format!(
+            "Completed : {} activit{} found",
+            HumanCount(out.len() as u64),
+            s
+        ));
 
         if out.is_empty() {
             return Ok(None);

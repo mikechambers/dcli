@@ -38,8 +38,7 @@ use tokio::io::AsyncWriteExt;
 
 pub const MANIFEST_INFO_FILE_NAME: &str = "manifest_info.json";
 
-async fn retrieve_manifest_info(
-) -> Result<ManifestInfo, Error> {
+async fn retrieve_manifest_info() -> Result<ManifestInfo, Error> {
     let client: ApiClient = ApiClient::new()?;
     let url = "https://www.bungie.net/Platform/Destiny2/Manifest/";
 
@@ -76,10 +75,7 @@ fn load_manifest_info(path: &Path) -> Result<ManifestInfo, Error> {
 }
 
 //should this move to ApiClient?
-async fn download_manifest(
-    url: &str,
-    path: &Path,
-) -> Result<(), Error> {
+async fn download_manifest(url: &str, path: &Path) -> Result<(), Error> {
     let client: ApiClient = ApiClient::new()?;
 
     //Download the manifest
@@ -274,9 +270,7 @@ async fn main() {
     if opt.force || manifest_needs_updating {
         //print to stderr so user can redirect other output (such as tsv) to stdout
         eprintln!("Downloading manifest. This may take a bit of time.");
-        match download_manifest(&remote_manifest_info.url, &m_path)
-            .await
-        {
+        match download_manifest(&remote_manifest_info.url, &m_path).await {
             Ok(e) => e,
             Err(e) => {
                 print_error("Could not download and save manifest", e);

@@ -20,9 +20,9 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use tell::tell::{Tell, TellLevel};
 use std::str::FromStr;
 use std::{collections::HashMap, path::Path};
+use tell::tell::{Tell, TellLevel};
 
 use chrono::{DateTime, Utc};
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
@@ -462,7 +462,6 @@ impl ActivityStoreInterface {
         let mut total_synced = 0;
         let mut total_in_queue = 0;
 
-
         tell::update!(format!(
             "\nCHECKING FOR NEW ACTIVITIES FOR {} (PUBLIC AND PRIVATE)",
             member.name.get_bungie_name()
@@ -582,7 +581,7 @@ impl ActivityStoreInterface {
         } else {
             ProgressBar::hidden()
         };
-       
+
         pb.set_style(ProgressStyle::with_template(
                 "{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ETA:({eta_precise})")
         .unwrap()
@@ -643,9 +642,7 @@ impl ActivityStoreInterface {
                     }
                     Err(_) => {
                         tell::error!(
-                            "Error retrieving activity details from api. Skipping."
-                            
-                        );
+                            "Error retrieving activity details from api. Skipping.");
                     }
                 }
             }

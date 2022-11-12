@@ -87,7 +87,7 @@ impl Tell {
         match level {
             TellLevel::Error => {
                 eprintln!("{}", msg);
-            },
+            }
             _ => {
                 println!("{}", msg);
             }

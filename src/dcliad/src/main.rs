@@ -77,9 +77,7 @@ fn generate_score(data: &CrucibleActivity) -> String {
     tokens.join("")
 }
 
-async fn get_combat_ratings(
-    data: &CrucibleActivity,
-) -> HashMap<u64, f32> {
+async fn get_combat_ratings(data: &CrucibleActivity) -> HashMap<u64, f32> {
     let mut players: Vec<&Player> = Vec::new();
 
     for t in data.teams.values() {
@@ -582,21 +580,19 @@ async fn main() {
         }
     };
 
-    let mut store = match ActivityStoreInterface::init_with_path(
-        &data_dir,
-        opt.api_key,
-    )
-    .await
-    {
-        Ok(e) => e,
-        Err(e) => {
-            print_error(
+    let mut store =
+        match ActivityStoreInterface::init_with_path(&data_dir, opt.api_key)
+            .await
+        {
+            Ok(e) => e,
+            Err(e) => {
+                print_error(
                 "Could not initialize activity store. Have you run dclisync?",
                 e,
             );
-            std::process::exit(EXIT_FAILURE);
-        }
-    };
+                std::process::exit(EXIT_FAILURE);
+            }
+        };
 
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,

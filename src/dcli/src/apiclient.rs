@@ -66,8 +66,8 @@ impl ApiClient {
 
     pub async fn call(&self, url: &str) -> Result<reqwest::Response, Error> {
         let url = Url::parse(&url).unwrap();
-        
-        tell::verbose!(format!("{}",url));
+
+        tell::verbose!(format!("{}", url));
         info!("API call : {}", url);
 
         let response = self
