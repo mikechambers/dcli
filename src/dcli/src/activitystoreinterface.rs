@@ -103,10 +103,10 @@ impl ActivityStoreInterface {
             Err(_e) => false,
         };
 
-        tell::verbose!(format!(
+        tell::verbose!(
             "DCLI_FIX_DATA environment variable enabled : {}",
             fix_corrupt_data
-        ));
+        );
 
         info!(
             "DCLI_FIX_DATA environment variable enabled : {}",
@@ -284,13 +284,16 @@ impl ActivityStoreInterface {
             match self.sync_player(&player).await {
                 Ok(_) => {}
                 Err(e) => {
-                    tell::error!(format_error(
-                        &format!(
-                            "Error Syncing. Aborting syncing player: {}",
-                            player.get_bungie_name()
-                        ),
-                        e
-                    ));
+                    tell::error!(
+                        "{}",
+                        format_error(
+                            &format!(
+                                "Error Syncing. Aborting syncing player: {}",
+                                player.get_bungie_name()
+                            ),
+                            e
+                        )
+                    );
                 }
             };
         }
@@ -316,13 +319,16 @@ impl ActivityStoreInterface {
         for member in members.iter() {
             match self.sync_member(&member).await {
                 Ok(_) => {}
-                Err(e) => tell::error!(format_error(
-                    &format!(
-                        "Error Syncing. Aborting syncing player: {}",
-                        member.name.get_bungie_name()
-                    ),
-                    e
-                )),
+                Err(e) => tell::error!(
+                    "{}",
+                    format_error(
+                        &format!(
+                            "Error Syncing. Aborting syncing player: {}",
+                            member.name.get_bungie_name()
+                        ),
+                        e
+                    )
+                ),
             }
         }
 
@@ -462,10 +468,10 @@ impl ActivityStoreInterface {
         let mut total_synced = 0;
         let mut total_in_queue = 0;
 
-        tell::update!(format!(
+        tell::update!(
             "\nCHECKING FOR NEW ACTIVITIES FOR {} (PUBLIC AND PRIVATE)",
             member.name.get_bungie_name()
-        ));
+        );
         tell::progress!("This may take a few minutes depending on the number of activities.");
 
         for c in characters.characters {
@@ -473,7 +479,7 @@ impl ActivityStoreInterface {
             let character_row_id = self
                 .insert_character_id(&c.id, &c.class_type, member_row_id)
                 .await?;
-            tell::progress!(format!("[{}]", c.class_type).to_uppercase());
+            tell::progress!("{}", format!("[{}]", c.class_type).to_uppercase());
 
             //these calls could be a little more general purpose by taking api ids and not db ids.
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
@@ -622,10 +628,10 @@ impl ActivityStoreInterface {
                                     total_synced += 1;
                                 }
                                 Err(e) => {
-                                    tell::error!(format!(
+                                    tell::error!(
                                         "Error inserting data into character activity stats table. Skipping. : {}",
                                         e,
-                                    ));
+                                    );
                                 }
                             },
                             None => {
@@ -1547,10 +1553,9 @@ impl ActivityStoreInterface {
 
             match teams.get_mut(&index) {
                 Some(e) => e.player_performances.push(cpp),
-                None => tell::update!(format!(
-                    "Invalid Team ID ({}) : Skipping",
-                    &index
-                )),
+                None => {
+                    tell::update!("Invalid Team ID ({}) : Skipping", &index)
+                }
             }
         }
 

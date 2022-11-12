@@ -20,6 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use tell::tell::{Tell, TellLevel};
+
 use std::str::FromStr;
 use std::{collections::HashMap, path::PathBuf};
 
@@ -141,11 +143,10 @@ fn print_default(
     let team_title_border = repeat_str("-", name_col_w + col_w);
     let activity_title_border = repeat_str("=", name_col_w + col_w + col_w);
 
-    println!();
-    println!("ACTIVITY");
-    println!("{}", activity_title_border);
+    tell::update!("\nACTIVITY");
+    tell::update!(&activity_title_border);
 
-    println!(
+    tell::update!(
         "{} on {} :: {} {}",
         data.details.mode,
         data.details.map_name,
@@ -153,14 +154,10 @@ fn print_default(
         activity_duration
     );
 
-    if verbose {
-        println!("Activity ID : {}", data.details.id);
-    }
+    tell::verbose!("Activity ID : {}", data.details.id);
 
-    println!("{}", standing_str);
-    println!("{} {}", generate_score(data), completion_reason);
-
-    println!();
+    tell::update!(&standing_str);
+    tell::update!("{} {}\n", generate_score(data), completion_reason);
 
     let header = format!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "PLAYER",
@@ -193,10 +190,10 @@ fn print_default(
         let mut elo_team_count = 0;
         let mut elo_team_total = 0.0;
 
-        println!("[{}] {} Team {}!", v.score, v.display_name, v.standing);
-        println!("{}", team_title_border);
-        println!("{}", header);
-        println!("{}", header_border);
+        tell::update!("[{}] {} Team {}!", v.score, v.display_name, v.standing);
+        tell::update!(&team_title_border);
+        tell::update!(&header);
+        tell::update!(&header_border);
 
         let mut first_performance = true;
 
@@ -221,7 +218,7 @@ fn print_default(
             }
 
             let extended = p.stats.extended.as_ref().unwrap();
-            println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+            tell::update!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
                 truncate_ascii_string(&p.player.name.get_short_name(), name_col_w),
                 p.stats.kills.to_string(),
                 p.stats.assists.to_string(),
@@ -242,14 +239,14 @@ fn print_default(
 
             //todo: what if they dont have weapon kills (test)
             if details && !extended.weapons.is_empty() {
-                println!("{}", entry_border);
+                tell::update!(&entry_border);
 
                 let mut weapons = extended.weapons.clone();
                 weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
 
                 let mut min_index = 2;
                 if first_performance {
-                    println!(
+                    tell::update!(
                         //"{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}",
                         "{:<0col_w$}{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}",
                         format!("{}", p.player.class_type),
@@ -291,8 +288,8 @@ fn print_default(
                         weapon_type = format!("{}", w.weapon.item_sub_type);
                     }
 
-                    println!(
-                        "{:<0col_w$}{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}",
+                    tell::update!(
+                        "{:<0col_w$}{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}\n",
                         meta,
                         weapon_name,
                         weapon_kills,
@@ -304,10 +301,9 @@ fn print_default(
                         col_w2 = col_w * 3,
                     );
                 }
-                println!();
             }
         }
-        println!("{}", footer_border);
+        tell::update!(&footer_border);
 
         let mut cpp: Vec<&CruciblePlayerPerformance> = Vec::new();
 
@@ -330,7 +326,7 @@ fn print_default(
             format_f32(team_elo, 0)
         };
 
-        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        tell::update!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
             "TOTAL",
             aggregate.kills.to_string(),
             aggregate.assists.to_string(),
@@ -349,7 +345,7 @@ fn print_default(
             name_col_w = name_col_w,
         );
 
-        println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+        tell::update!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}\n",
             "AVG",
             format_f32(aggregate.kills as f32 / player_performances.len() as f32, 2),
             format_f32(aggregate.assists as f32 / player_performances.len() as f32,2),
@@ -370,11 +366,10 @@ fn print_default(
 
         //println!("{}", header_border);
         //println!("{}", header);
-        println!();
     }
 
-    println!("Combined");
-    println!("{}", team_title_border);
+    tell::update!("Combined");
+    tell::update!("{}", team_title_border);
 
     let aggregate =
         AggregateCruciblePerformances::with_performances(&all_performances);
@@ -384,9 +379,9 @@ fn print_default(
     let agg_grenades = agg_extended.weapon_kills_grenade;
     let agg_melees = agg_extended.weapon_kills_melee;
 
-    println!("{}", header);
-    println!("{}", header_border);
-    println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    tell::update!(&header);
+    tell::update!(&header_border);
+    tell::update!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
         "TOTAL",
         aggregate.kills.to_string(),
         aggregate.assists.to_string(),
@@ -412,7 +407,7 @@ fn print_default(
         format_f32(total_elo, 0)
     };
 
-    println!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
+    tell::update!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}\n",
     "AVG",
     format_f32(aggregate.kills as f32 / all_performances.len() as f32, 2),
     format_f32(aggregate.assists as f32 / all_performances.len() as f32,2),
@@ -431,8 +426,6 @@ fn print_default(
     name_col_w = name_col_w,
 );
 
-    println!();
-
     let wep_col = name_col_w + col_w;
     let wep_header_str = format!(
         "{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0name_col_w$}",
@@ -447,16 +440,16 @@ fn print_default(
     );
 
     let wep_divider = repeat_str(&"=", wep_header_str.chars().count());
-    println!("{}", wep_header_str);
-    println!("{}", wep_divider);
+    tell::update!(&wep_header_str);
+    tell::update!(&wep_divider);
 
     let weapons = &aggregate.extended.as_ref().unwrap().weapons;
     let max_weps = std::cmp::min(weapon_count as usize, weapons.len());
 
     let wep_col = name_col_w + col_w;
     for w in &weapons[..max_weps] {
-        println!(
-            "{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0name_col_w$}",
+        tell::update!(
+            "{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0name_col_w$}\n",
             w.weapon.name,
             w.kills.to_string(),
             format!(
@@ -471,9 +464,7 @@ fn print_default(
         );
     }
 
-    println!();
-    println!("STATUS : L - Joined late, E - Left early");
-    println!();
+    println!("STATUS : L - Joined late, E - Left early\n");
 }
 
 #[derive(StructOpt, Debug)]
@@ -570,7 +561,20 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
-    print_verbose(&format!("{:#?}", opt), opt.verbose);
+
+    let level = if opt.verbose {
+        TellLevel::Verbose
+    } else {
+        TellLevel::Progress
+    };
+    Tell::init(level);
+
+    tell::foo!("foo");
+    tell::foo!();
+    tell::foo!("{}", "foo");
+    tell::foo!("{}{}", "foo", "foo");
+
+    tell::verbose!("{:#?}", opt);
 
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,

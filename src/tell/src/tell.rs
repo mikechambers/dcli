@@ -57,21 +57,22 @@ impl PartialOrd for TellLevel {
 }
 
 lazy_static! {
+
     #[allow(non_upper_case_globals)]
-    static ref tell_level: RwLock<TellLevel> = RwLock::new(TellLevel::Update);
+    static ref TL: RwLock<TellLevel> = RwLock::new(TellLevel::Update);
 }
 
 pub struct Tell;
 
 impl Tell {
     pub fn is_active(level: TellLevel) -> bool {
-        let t = tell_level.write().unwrap();
+        let t = TL.write().unwrap();
 
         level <= *t
     }
 
     pub fn set_level(level: TellLevel) {
-        let mut t = tell_level.write().unwrap();
+        let mut t = TL.write().unwrap();
         *t = level;
     }
 
@@ -79,7 +80,7 @@ impl Tell {
         Tell::set_level(level);
     }
 
-    pub fn print(level: TellLevel, msg: String) {
+    pub fn print(level: TellLevel, msg: &str) {
         if !Tell::is_active(level) || level == TellLevel::Silent {
             return;
         }
@@ -96,34 +97,105 @@ impl Tell {
 }
 
 #[macro_export]
-macro_rules! update {
-    ($a:expr) => {
-        tell::tell::Tell::print(tell::tell::TellLevel::Update, $a.to_string());
+macro_rules! t {
+
+    //($lvl:expr, $($arg:tt)+) => (log!(target: __log_module_path!(), $lvl, $($arg)+));
+    ($lvl:expr, $($arg:tt)+)  => {
+        tell::tell::Tell::print($lvl, &(format_args!($($arg)+)).to_string());
     };
+}
+
+//TODO: this works. copy to other functions
+#[macro_export]
+macro_rules! foo {
+    () => (tell::t!(tell::tell::TellLevel::Update, ""));
+    ($($arg:tt)+) => (tell::t!(tell::tell::TellLevel::Update, $($arg)+));
+}
+
+//update seems to work. turn this into a macro
+#[macro_export]
+macro_rules! update {
+
+    () => {{
+        tell::tell::Tell::print(tell::tell::TellLevel::Update, "");
+    }};
+
+    ($a:expr) => {{
+
+        tell::tell::Tell::print(tell::tell::TellLevel::Update, $a);
+    }};
+
+    ($($arg:tt)+) => {{
+        tell::tell::Tell::print(tell::tell::TellLevel::Update, &(format_args!($($arg)+)).to_string());
+    }}
+
 }
 
 #[macro_export]
 macro_rules! progress {
-    ($a:expr) => {
-        tell::tell::Tell::print(
-            tell::tell::TellLevel::Progress,
-            $a.to_string(),
-        );
+
+    () => {
+        tell::tell::Tell::print(tell::tell::TellLevel::Progress, "\n");
     };
+
+    ($a:expr) => {
+
+        tell::tell::Tell::print(tell::tell::TellLevel::Progress, $a);
+    };
+
+    ($($arg:tt)*) => {{
+        tell::tell::Tell::print(tell::tell::TellLevel::Progress, &(format_args!($($arg)*)).to_string());
+    }}
 }
 
 #[macro_export]
 macro_rules! error {
-    ($a:expr) => {
-        tell::tell::Tell::print(tell::tell::TellLevel::Error, $a.to_string());
+
+
+    () => {
+        tell::tell::Tell::print(tell::tell::TellLevel::Error, "\n");
     };
+
+    ($a:expr) => {
+
+        tell::tell::Tell::print(tell::tell::TellLevel::Error, $a);
+    };
+
+    ($($arg:tt)*) => {{
+        tell::tell::Tell::print(tell::tell::TellLevel::Error, &(format_args!($($arg)*)).to_string());
+    }}
+
+    /*
+    ($a:expr) => {
+        tell::tell::Tell::print(tell::tell::TellLevel::Error, $a);
+    };
+    */
 }
 
 #[macro_export]
 macro_rules! verbose {
+
+    () => {
+        tell::tell::Tell::print(tell::tell::TellLevel::Verbose, "\n")
+    };
+
+    ($a:expr) => {
+
+        tell::tell::Tell::print(tell::tell::TellLevel::Verbose, $a)
+    };
+
+    ($($arg:tt)*) => {{
+        tell::tell::Tell::print(tell::tell::TellLevel::Verbose, &(format_args!($($arg)*)).to_string());
+    }}
+
+    /*
+
+($($arg:tt)+) => {tell::tell::Tell::print(tell::tell::TellLevel::Verbose, format_args!($($arg)+).to_string())};
+
     ($a:expr) => {
         tell::tell::Tell::print(tell::tell::TellLevel::Verbose, $a.to_string());
-    };
+    }
+*/
 }
 
 /*

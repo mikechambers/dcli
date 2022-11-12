@@ -705,11 +705,11 @@ impl ApiInterface {
         pb.finish_and_clear();
 
         let s = if out.len() == 1 { "y" } else { "ies" };
-        tell::progress!(format!(
+        tell::progress!(
             "Completed : {} activit{} found",
             HumanCount(out.len() as u64),
             s
-        ));
+        );
 
         if out.is_empty() {
             return Ok(None);

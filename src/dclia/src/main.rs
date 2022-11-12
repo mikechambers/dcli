@@ -111,7 +111,7 @@ async fn main() {
     };
     Tell::init(level);
 
-    tell::verbose!(&format!("{:#?}", opt));
+    tell::verbose!("{:#?}", opt);
 
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,

@@ -67,7 +67,7 @@ impl ApiClient {
     pub async fn call(&self, url: &str) -> Result<reqwest::Response, Error> {
         let url = Url::parse(&url).unwrap();
 
-        tell::verbose!(format!("{}", url));
+        tell::verbose!("{}", url);
         info!("API call : {}", url);
 
         let response = self
@@ -101,11 +101,11 @@ impl ApiClient {
 
             debug!("Response body : {}", body);
             let string: String = body.chars().take(limit).skip(0).collect();
-            tell::verbose!(format!(
+            tell::verbose!(
                 "---------Begin API response : First {}  chars---------",
                 limit
-            ));
-            tell::verbose!(string);
+            );
+            tell::verbose!("{}", string);
             info!("First {}  chars of response: {}", limit, string);
             tell::verbose!("---------End API response---------");
         }
@@ -127,8 +127,7 @@ impl ApiClient {
         let url = Url::parse(&url).unwrap();
 
         info!("Calling API [post] : {}", url);
-
-        tell::verbose!(url);
+        tell::verbose!("{}",url);
 
         let response = self
             .client
@@ -160,11 +159,11 @@ impl ApiClient {
             const MAX: usize = 200;
             let limit = std::cmp::min(len, MAX);
 
-            tell::verbose!(format!(
+            tell::verbose!(
                 "---------Begin API response : First {}  chars---------",
                 limit
-            ));
-            tell::verbose!(&body[..limit]);
+            );
+            tell::verbose!("{}", &body[..limit]);
             tell::verbose!("---------End API response---------");
         }
 
