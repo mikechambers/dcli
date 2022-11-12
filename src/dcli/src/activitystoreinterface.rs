@@ -469,7 +469,7 @@ impl ActivityStoreInterface {
         let mut total_in_queue = 0;
 
         tell::update!(
-            "\nCHECKING FOR NEW ACTIVITIES FOR {} (PUBLIC AND PRIVATE)",
+            "CHECKING FOR NEW ACTIVITIES FOR {} (PUBLIC AND PRIVATE)",
             member.name.get_bungie_name()
         );
         tell::progress!("This may take a few minutes depending on the number of activities.");
