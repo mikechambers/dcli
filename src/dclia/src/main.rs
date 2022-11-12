@@ -81,7 +81,7 @@ struct Opt {
     ///
     /// Valid values are default (Default) and tsv.
     ///
-    /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
+    /// tsv outputs in a tab (\t) separated format of name / value pairs with lines
     /// ending in a new line character (\n).
     #[structopt(
         short = "O",
@@ -377,7 +377,7 @@ fn print_tsv(
     description: &str,
     in_activity: bool,
 ) {
-    //figure out if they are in orbit since bungie doesnt give us
+    //figure out if they are in orbit since bungie doesn't give us
     //a mode for it
     let human_status = if mode == Mode::None && in_activity {
         get_in_orbit_human()

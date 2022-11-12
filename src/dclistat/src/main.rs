@@ -28,8 +28,8 @@ use dcli::enums::stat::Stat;
 use dcli::playeractivitiessummary::PlayerActivitiesSummary;
 use dcli::utils::{
     calculate_average, calculate_efficiency, calculate_kills_deaths_assists,
-    calculate_kills_deaths_ratio, parse_and_validate_crucible_mode,
-    parse_rfc3339,
+    calculate_kills_deaths_ratio, determine_data_dir, format_error, format_f32,
+    parse_and_validate_crucible_mode, parse_rfc3339,
 };
 use std::path::PathBuf;
 use tell::{Tell, TellLevel};
@@ -37,11 +37,6 @@ use tell::{Tell, TellLevel};
 use dcli::enums::character::CharacterClassSelection;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
-
-use dcli::utils::{
-    determine_data_dir, format_error, format_f32,
-    parse_and_validate_crucible_mode,
-};
 
 use dcli::utils::EXIT_FAILURE;
 use structopt::StructOpt;
@@ -359,10 +354,7 @@ async fn main() {
         Err(e) => {
             tell::error!(
                 "{}",
-                format_error!(
-                    "Could not retrieve data from activity store.",
-                    e
-                )
+                format_error("Could not retrieve data from activity store.", e)
             );
             std::process::exit(EXIT_FAILURE);
         }

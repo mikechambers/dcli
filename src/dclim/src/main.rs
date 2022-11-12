@@ -243,7 +243,7 @@ async fn main() {
             manifest_needs_updating =
                 local_manifest_info.url != remote_manifest_info.url;
         } else {
-            //couldnt load local manifest, so we will try and update
+            //couldn't load local manifest, so we will try and update
             manifest_needs_updating = true;
 
             tell::verbose!(
@@ -265,13 +265,13 @@ async fn main() {
         match opt.output {
             Output::Default => {
                 if !manifest_needs_updating {
-                    tell::update!("No new manifest avaliable.");
+                    tell::update!("No new manifest available.");
                 }
             }
             Output::Tsv => {
                 let mut name_values: Vec<(&str, String)> = Vec::new();
                 name_values.push((
-                    "update_avaliable",
+                    "update_available",
                     format!("{}", manifest_needs_updating),
                 ));
                 name_values.push(("updated", format!("{}", false)));

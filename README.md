@@ -41,7 +41,7 @@ You can also find some additional examples in the [examples](examples/) folder.
 
 You can download the latest binaries for Windows, Linux and x86_64 Mac from the [releases](https://github.com/mikechambers/dcli/releases/latest) page.
 
-Just download, place them in your path and run from the command line (use --help to get a list of options). You can find a script [here](https://github.com/mikechambers/dcli/blob/main/tests/) that will run all of the apps to verfiy they are working and in your path.
+Just download, place them in your path and run from the command line (use --help to get a list of options). You can find a script [here](https://github.com/mikechambers/dcli/blob/main/tests/) that will run all of the apps to verify they are working and in your path.
 
 [![](https://img.shields.io/github/v/release/mikechambers/dcli?style=social)](https://github.com/mikechambers/dcli/releases/latest)
 
@@ -51,7 +51,7 @@ Just download, place them in your path and run from the command line (use --help
 
 The core idea behind the project is to provide small, focused utilities that provide useful info by themselves, but that can also be combined together, or with other shell scripts to create greater functionality.
 
-To get started, download the release (or compile from source), and place the executables somewhere within your path so you can call them from anywhere. Doing this will make it easy to call from anywhere on your system and from other sciprts.
+To get started, download the release (or compile from source), and place the executables somewhere within your path so you can call them from anywhere. Doing this will make it easy to call from anywhere on your system and from other scripts.
 
 If you are running on Mac, make sure to [read this article](https://github.com/mikechambers/dcli/wiki/Running-dcli-tools-on-Mac-OS-X) to ensure everything will run correctly.
 
@@ -67,7 +67,7 @@ Just run:
 $ dclim
 ```
 
-and the manifest file will be downloaded and saved in a system appropriate directory. You should peridocially run this command to check whether the manifest has been updated by Bungie.
+and the manifest file will be downloaded and saved in a system appropriate directory. You should periodically run this command to check whether the manifest has been updated by Bungie.
 
 ### Sync your activities
 
@@ -82,7 +82,7 @@ Replacing mesh#3230 with your own Bungie name.
 
 You can find your Bungie name in game, or on Bungie's site at [https://www.bungie.net/7/en/User/Account/IdentitySettings](https://www.bungie.net/7/en/User/Account/IdentitySettings).
 
-The first time you run this, it may take a couple of minutes to load all of your data (depending on the number of activities that you have). If any errors occur while syncing, just re-run the app when its done. It is smart enough to only sync the acitivties that it missed the first time.
+The first time you run this, it may take a couple of minutes to load all of your data (depending on the number of activities that you have). If any errors occur while syncing, just re-run the app when its done. It is smart enough to only sync the activities that it missed the first time.
 
 Once you have done the initial sync, subsequent activity syncs should be very fast. You can periodically re-run the app to keep things in sync, or have dcliah / dcliad automatically sync before it displays your stats.
 
@@ -112,7 +112,7 @@ There are a couple of examples in the [examples directory](https://github.com/mi
 
 ### Learning More
 
-At anytime, you can see which arguments and options are avaliable by passing the _--help_ argument:
+At anytime, you can see which arguments and options are available by passing the _--help_ argument:
 
 ```
 $ dcliah --help
@@ -128,9 +128,15 @@ You can also log bugs and features requests on the [issues page](https://github.
 
 ### Environment Variables
 
+#### DCLI_FIX_DATA
+
 If the `DCLI_FIX_DATA` environment variable is set to `TRUE` then when corrupt or missing data is returned from the Bungie API, and there is not a valid local version, DCLI will attempt to retrieve updated, non-corrupt data from Bungie. (This sometimes happens if a lot of people leave a game, and no player names will be returned from the server).
 
 Setting this to true can significantly slow down sync time, especially the initial sync, and in general, is meant to be used when using DCLI to create datastores for larger applications.
+
+#### RUST_LOG
+
+All dcli apps have support for log output via the [env_logger](https://docs.rs/env_logger/0.9.3/env_logger/) library. This is mostly used for development, but may be helpful when trying to debug any issues.
 
 ## Compiling
 

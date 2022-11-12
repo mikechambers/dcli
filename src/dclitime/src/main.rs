@@ -29,6 +29,7 @@ use dcli::enums::moment::Moment;
 use dcli::output::Output;
 use dcli::utils::build_tsv;
 use structopt::StructOpt;
+use tell::{Tell, TellLevel};
 
 //we do a custom parse / validation here so we can reuse Moment enum
 //across apps but not have to have all apps support all time ranges.
@@ -100,7 +101,7 @@ struct Opt {
     ///
     /// Valid values are default (Default) and tsv.
     ///
-    /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
+    /// tsv outputs in a tab (\t) separated format of name / value pairs with lines
     /// ending in a new line character (\n).
     #[structopt(
         short = "O",
@@ -113,7 +114,17 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
-    print_verbose(&format!("{:#?}", opt), opt.verbose);
+
+    let level = if opt.verbose {
+        TellLevel::Verbose
+    } else {
+        TellLevel::Progress
+    };
+
+    Tell::init(level);
+
+    log::info!("{:#?}", opt.verbose);
+    tell::verbose!("{:#?}", opt.verbose);
 
     let dt = opt.moment.get_date_time();
     let date_time_str = match opt.time_format {

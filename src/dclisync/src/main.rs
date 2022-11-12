@@ -34,7 +34,7 @@ use dcli::crucible::{Member, PlayerName};
 use dcli::utils::{determine_data_dir, format_error, EXIT_FAILURE};
 use structopt::StructOpt;
 
-const DEFAULT_REFRESH_INTERVAL: u32 = 30;
+const DEFAULT_REFRESH_INTERVAL: u32 = 60;
 const SHOULD_CONTINUE_CODE: i32 = -1;
 
 #[derive(StructOpt, Debug)]
@@ -79,7 +79,7 @@ struct Opt {
     /// Sync player activities.
     ///
     /// If no arguments are provided, all players will be synced. Optionally,
-    /// you can pass in one or more space seperated Bungie names and codes.
+    /// you can pass in one or more space separated Bungie names and codes.
     /// If a name has a space in it, you must the entire name in quotes.
     ///
     /// Name(s) must be in the format of NAME#CODE. Example: foo#3280
@@ -118,7 +118,7 @@ struct Opt {
     )]
     add: Option<Vec<PlayerName>>,
 
-    /// Remove specified player(s) from having their acitivities synced.
+    /// Remove specified player(s) from having their activities synced.
     ///
     /// Note, player data will still be contained in the database, but no new
     /// activities will be synced for the player(s)

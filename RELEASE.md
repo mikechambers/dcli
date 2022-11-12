@@ -1,9 +1,11 @@
 # dcli Release Notes
 
-## v0.9.0
+## v0.9.0 November 12, 2022
 
--   Added a daemon mode to dclisync which continuously checks for updated data with a pause between syncs.
--   dclisync now listens for Ctrl-C / SIGINT / SIGTERM events, and tries to gracefully shutdown.
+-   Added a daemon mode to dclisync which continuously checks for updated data with a pause between syncs
+-   dclisync now listens for Ctrl-C / SIGINT / SIGTERM events, and will try to gracefully shutdown
+-   Updated progress output / visuals (now show a progress bar and spinner)
+-   Refactored all app console output. (please report any issues)
 
 ## v0.8.91 November 1, 2022
 

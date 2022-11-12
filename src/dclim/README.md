@@ -2,15 +2,15 @@
 
 Command line tool for retrieving and managing the Destiny 2 manifest database.
 
-When running the utility will check whether a more current version of the Destiny 2 API manifest database is avaliable (comparing it to the last version which has been downloaded). If a new version is found, it will download the database, uncompress it, and save it to the directory specified when calling the utility. It will also save a file containting metadata about the current version, which is used for future checks for updates.
+When running the utility will check whether a more current version of the Destiny 2 API manifest database is available (comparing it to the last version which has been downloaded). If a new version is found, it will download the database, un-compress it, and save it to the directory specified when calling the utility. It will also save a file containing metadata about the current version, which is used for future checks for updates.
 
 The manifest is stored in the system specific local app data directory with the file name:
 manifest.sqlite3, along with meta-data with information about the downloaded
 version. This is used to to determine whether the remote version has been updated.
 
-The utility expects that the downloaded manifest will not be moved from the directory it is downloaded to, and uses that information to determine whether a new version is avaliable. If the manifest is moved, the utility will re-download the manifest on next check.
+The utility expects that the downloaded manifest will not be moved from the directory it is downloaded to, and uses that information to determine whether a new version is available. If the manifest is moved, the utility will re-download the manifest on next check.
 
-The utility uses the download url for the manifest to check for a new version. While it displays the version number, that is not used to detect whether a new version is avaliable.
+The utility uses the download url for the manifest to check for a new version. While it displays the version number, that is not used to detect whether a new version is available.
 
 The manifest is a [Sqlite 3](https://www.sqlite.org/index.html) database.
 
@@ -47,7 +47,7 @@ OPTIONS:
 
             Valid values are default (Default) and tsv.
 
-            tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
+            tsv outputs in a tab (\t) separated format of name / value pairs with lines ending in a new line character
             (\n). [default: default]
 ```
 
@@ -94,7 +94,7 @@ Local Manifest url            https://www.bungie.net/common/destiny2_content/sql
 Updated manifest available    89360.20.11.18.2249-6
 ```
 
-#### Check for an updated manifest print output in a tab seperated format (tsv)
+#### Check for an updated manifest print output in a tab separated format (tsv)
 
 ```
 $ dclim --output-format tsv
@@ -115,6 +115,18 @@ This shows that the local path for the manifest, and indicates that it was just 
 If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
 
 You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
+
+### Environment Variables
+
+#### DCLI_FIX_DATA
+
+If the `DCLI_FIX_DATA` environment variable is set to `TRUE` then when corrupt or missing data is returned from the Bungie API, and there is not a valid local version, DCLI will attempt to retrieve updated, non-corrupt data from Bungie. (This sometimes happens if a lot of people leave a game, and no player names will be returned from the server).
+
+Setting this to true can significantly slow down sync time, especially the initial sync, and in general, is meant to be used when using DCLI to create datastores for larger applications.
+
+#### RUST_LOG
+
+All dcli apps have support for log output via the [env_logger](https://docs.rs/env_logger/0.9.3/env_logger/) library. This is mostly used for development, but may be helpful when trying to debug any issues.
 
 ## Compiling
 

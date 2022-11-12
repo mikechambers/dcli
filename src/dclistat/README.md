@@ -2,7 +2,7 @@
 
 Command line tool for querying Destiny 2 PVP stats.
 
-The application takes a list of stat types and returns a comma seperated list of the corresponding data for that stat and the specificed parameters.
+The application takes a list of stat types and returns a comma separated list of the corresponding data for that stat and the specificed parameters.
 
 dclistat pulls its data from the local Destiny 2 activity database store. Data can be synced using using [dclisync](https://github.com/mikechambers/dcli/tree/main/src/dclisync) or by passing the --sync flag to dclistat.
 
@@ -164,6 +164,18 @@ Outputs:
 If you have any questions, feature requests, need help, are running into issues, or just want to chat, join the [dcli Discord server](https://discord.gg/2Y8bV2Mq3p).
 
 You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
+
+### Environment Variables
+
+#### DCLI_FIX_DATA
+
+If the `DCLI_FIX_DATA` environment variable is set to `TRUE` then when corrupt or missing data is returned from the Bungie API, and there is not a valid local version, DCLI will attempt to retrieve updated, non-corrupt data from Bungie. (This sometimes happens if a lot of people leave a game, and no player names will be returned from the server).
+
+Setting this to true can significantly slow down sync time, especially the initial sync, and in general, is meant to be used when using DCLI to create datastores for larger applications.
+
+#### RUST_LOG
+
+All dcli apps have support for log output via the [env_logger](https://docs.rs/env_logger/0.9.3/env_logger/) library. This is mostly used for development, but may be helpful when trying to debug any issues.
 
 ## Compiling
 
