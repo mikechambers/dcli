@@ -50,8 +50,6 @@ FLAGS:
     -v, --verbose
             Print out additional information
 
-            Output is printed to stderr.
-
 OPTIONS:
     -A, --add <add>...
             Add specified player(s) to have their activities synced the next time the database is synced.

@@ -23,6 +23,7 @@
 use chrono::{DateTime, Utc};
 use std::cmp::Ordering;
 use std::path::PathBuf;
+use tell::{Tell, TellLevel};
 
 use dcli::crucible::{Member, PlayerName};
 use dcli::enums::standing::Standing;
@@ -32,8 +33,8 @@ use dcli::enums::{
 };
 use dcli::manifestinterface::ManifestInterface;
 use dcli::utils::{
-    calculate_average, calculate_percent, parse_and_validate_crucible_mode,
-    parse_rfc3339, truncate_ascii_string,
+    calculate_average, calculate_percent, format_error,
+    parse_and_validate_crucible_mode, parse_rfc3339, truncate_ascii_string,
 };
 use dcli::{
     crucible::{
@@ -55,7 +56,6 @@ use dcli::utils::{
 };
 
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{print_error, print_verbose};
 use num_format::{Locale, ToFormattedString};
 use structopt::StructOpt;
 
@@ -92,8 +92,8 @@ fn print_default(
     let start_time_label = human_date_format(&start_time);
     let end_time_label = human_date_format(&end_time);
 
-    println!();
-    println!();
+    tell::update!();
+    tell::update!();
 
     let char_class = match character_class_selection {
         CharacterClassSelection::Hunter => "Hunter",
@@ -126,24 +126,24 @@ fn print_default(
         )
     };
 
-    println!();
-    println!("ACTIVITIES");
-    println!("==================");
-    println!("{}", title);
-    println!(
+    tell::update!();
+    tell::update!("ACTIVITIES");
+    tell::update!("==================");
+    tell::update!("{}", title);
+    tell::update!(
         "Total time played is {}",
         human_duration(aggregate.time_played_seconds)
     );
-    println!();
+    tell::update!();
 
     if is_limited {
-        println!(
+        tell::update!(
             "Displaying details for the last {display_count} of {activity_count} activities",
             display_count = display_count,
             activity_count = activity_count,
         );
     } else {
-        println!(
+        tell::update!(
             "Displaying details for the last {display_count} activit{ies}.",
             display_count = display_count,
             ies = {
@@ -155,7 +155,7 @@ fn print_default(
             },
         );
     }
-    println!();
+    tell::update!();
 
     let col_w = 8;
     let wl_col_w = 14;
@@ -187,12 +187,12 @@ fn print_default(
         wl_col_w=wl_col_w,
         id_col_w=id_col_w,
     );
-    println!("{}", header);
+    tell::update!("{}", header);
     let header_divider = repeat_str(&"=", header.chars().count());
-    println!("{}", header_divider);
+    tell::update!("{}", header_divider);
 
     let slice: &[CruciblePlayerActivityPerformance] = if is_limited {
-        println!(
+        tell::update!(
             "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
             "...", "...", "...", "...", "...", "...", "...","...","...","...","...","...", "...", "...","...",
             col_w = col_w,
@@ -213,9 +213,9 @@ fn print_default(
 
     for activity in slice.iter().rev() {
         if activity.activity_detail.mode != last_mode {
-            println!();
-            println!("{}", activity.activity_detail.mode);
-            println!("{}", repeat_str(&"-", col_w + map_col_w));
+            tell::update!();
+            tell::update!("{}", activity.activity_detail.mode);
+            tell::update!("{}", repeat_str(&"-", col_w + map_col_w));
             last_mode = activity.activity_detail.mode;
         }
 
@@ -259,7 +259,7 @@ fn print_default(
             ""
         };
 
-        println!(
+        tell::update!(
             "{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
             map_name,
             activity.performance.stats.standing.to_string(),
@@ -285,9 +285,9 @@ fn print_default(
     }
 
     let extended = aggregate.extended.as_ref().unwrap();
-    println!("{}", repeat_str(&"-", header.chars().count()));
+    tell::update!("{}", repeat_str(&"-", header.chars().count()));
 
-    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+    tell::update!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "TOTAL",
     aggregate.total_activities.to_formatted_string(&Locale::en),
     "",
@@ -310,7 +310,7 @@ fn print_default(
     id_col_w=id_col_w,
     );
 
-    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+    tell::update!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "HIGH",
     format!("{}-{}", aggregate.wins.to_formatted_string(&Locale::en), aggregate.losses.to_formatted_string(&Locale::en)),
     format!("{}W {}L", aggregate.longest_win_streak, aggregate.longest_loss_streak),
@@ -335,7 +335,7 @@ fn print_default(
     id_col_w=id_col_w,
     );
 
-    println!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
+    tell::update!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "PER GAME",
     format!("{}%", format_f32(aggregate.win_rate, 2)),
     "",
@@ -358,11 +358,11 @@ fn print_default(
     id_col_w=id_col_w,
     );
 
-    println!("{}", header_divider);
-    println!("{}", header);
+    tell::update!("{}", header_divider);
+    tell::update!("{}", header);
 
-    println!();
-    println!();
+    tell::update!();
+    tell::update!();
 
     //we have to calculate this even though we might not display weapons as the medal output needs this data
     let wep_col = map_col_w + col_w;
@@ -386,8 +386,8 @@ fn print_default(
     let wep_divider = repeat_str(&"=", wep_divider_len);
 
     if weapon_count > &0 {
-        println!("{}", wep_header_str);
-        println!("{}", wep_divider);
+        tell::update!("{}", wep_header_str);
+        tell::update!("{}", wep_divider);
 
         let mut weapons = extended.weapons.clone();
         match weapon_sort {
@@ -447,7 +447,7 @@ fn print_default(
         let max_weps = std::cmp::min(*weapon_count as usize, weapons.len());
 
         for w in &weapons[..max_weps] {
-            println!(
+            tell::update!(
             "{:<0map_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0map_col_w$}",
             w.weapon.name,
             w.activity_count.to_formatted_string(&Locale::en),
@@ -462,13 +462,17 @@ fn print_default(
             map_col_w = wep_col,
         );
         }
-        println!();
-        println!("% TOTAL - Percentage of all kills");
-        println!("K/Gk - Kills per game in games with a kill with the weapon");
-        println!("WIN % - Win percentage in games with a kill with the weapon");
+        tell::update!();
+        tell::update!("% TOTAL - Percentage of all kills");
+        tell::update!(
+            "K/Gk - Kills per game in games with a kill with the weapon"
+        );
+        tell::update!(
+            "WIN % - Win percentage in games with a kill with the weapon"
+        );
 
-        println!();
-        println!();
+        tell::update!();
+        tell::update!();
     }
 
     if medal_count > &0 {
@@ -496,8 +500,8 @@ fn print_default(
             m.medal.tier != dcli::enums::medaltier::MedalTier::Unknown
         });
 
-        println!("{}", med_header_str);
-        println!("{}", med_divider);
+        tell::update!("{}", med_header_str);
+        tell::update!("{}", med_divider);
 
         if !medals.is_empty() {
             medals.sort_by(|a, b| {
@@ -523,7 +527,7 @@ fn print_default(
 
                 let gm = (activity_count as f32 / m.count as f32).ceil();
 
-                println!(
+                tell::update!(
                     "{:<0map_col_w$}{:<col_w_h$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>col_w_h$}{:<0col_w$}",
                     m.medal.name,
                     gold,
@@ -538,15 +542,15 @@ fn print_default(
                 );
             }
         } else {
-            println!("No medals");
+            tell::update!("No medals");
         }
 
-        println!();
-        println!("M/G - Medals per game");
-        println!("G/M - Number of games to get one medal");
+        tell::update!();
+        tell::update!("M/G - Medals per game");
+        tell::update!("G/M - Number of games to get one medal");
 
-        println!();
-        println!();
+        tell::update!();
+        tell::update!();
     }
 }
 
@@ -690,8 +694,7 @@ struct Opt {
     weapon_sort: WeaponSort,
 
     ///Print out additional information
-    ///
-    ///Output is printed to stderr.
+
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
@@ -717,12 +720,24 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
-    print_verbose(&format!("{:#?}", opt), opt.verbose);
+
+    let level = if opt.verbose {
+        TellLevel::Verbose
+    } else {
+        TellLevel::Progress
+    };
+    Tell::init(level);
+
+    tell::verbose!("{:#?}", opt);
+    log::info!("{:#?}", opt);
 
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error initializing data directory.", e);
+            tell::error!(
+                "{}",
+                format_error("Error initializing data directory.", e)
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -745,7 +760,7 @@ async fn main() {
         match DateTimePeriod::with_start_end_time(start_time, end_time) {
             Ok(e) => e,
             Err(_e) => {
-                eprintln!("--end-moment must be greater than --moment");
+                tell::error!("--end-moment must be greater than --moment");
                 std::process::exit(EXIT_FAILURE);
             }
         };
@@ -756,10 +771,10 @@ async fn main() {
         {
             Ok(e) => e,
             Err(e) => {
-                print_error(
+                tell::error!("{}", format_error(
                 "Could not initialize activity store. Have you run dclisync?",
                 e,
-            );
+            ));
                 std::process::exit(EXIT_FAILURE);
             }
         };
@@ -767,9 +782,12 @@ async fn main() {
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
-                e,
+            tell::error!(
+                "{}",
+                format_error(
+                    "Could not initialize manifest. Have you run dclim?",
+                    e,
+                )
             );
             std::process::exit(EXIT_FAILURE);
         }
@@ -778,8 +796,8 @@ async fn main() {
     let member: Member = match store.find_member(&opt.name, true).await {
         Ok(e) => e,
         Err(e) => {
-            eprintln!(
-                "Could not find bungie name. Please check name and try again. {}",
+            tell::error!(
+                "Could not find Bungie ID. Please check name and try again. {}",
                 e
             );
             std::process::exit(EXIT_FAILURE);
@@ -790,8 +808,8 @@ async fn main() {
         match store.sync_member(&member).await {
             Ok(_e) => (),
             Err(e) => {
-                eprintln!("Could not sync activity store {}", e);
-                eprintln!("Using existing data");
+                tell::error!("Could not sync activity store {}", e);
+                tell::update!("Using existing data");
             }
         };
     }
@@ -808,20 +826,23 @@ async fn main() {
     {
         Ok(e) => e,
         Err(e) => {
-            print_error("Could not retrieve data from activity store.", e);
+            tell::error!(
+                "{}",
+                format_error("Could not retrieve data from activity store.", e)
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
 
     if data.is_none() {
-        println!("No activities found");
+        tell::update!("No activities found");
         return;
     }
 
     let data: Vec<CruciblePlayerActivityPerformance> = data.unwrap();
 
     if data.is_empty() {
-        println!("No activities found");
+        tell::update!("No activities found");
         return;
     }
 

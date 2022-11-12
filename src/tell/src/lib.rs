@@ -20,4 +20,80 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod tell;
+mod macros;
+
+use lazy_static::lazy_static;
+use std::cmp;
+use std::fmt;
+use std::sync::RwLock;
+
+#[derive(Eq, PartialEq, Clone, Copy)]
+pub enum TellLevel {
+    Silent = 0,
+    Error,
+    Update,   //general update on status
+    Progress, //progress update
+    Verbose,
+}
+
+impl fmt::Display for TellLevel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let out = match self {
+            TellLevel::Silent => "Silent",
+            TellLevel::Error => "Error",
+            TellLevel::Update => "Update",
+            TellLevel::Progress => "Progress",
+            TellLevel::Verbose => "Verbose",
+        };
+
+        write!(f, "{}", out)
+    }
+}
+
+impl PartialOrd for TellLevel {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        let s = *self as usize;
+        let o = *other as usize;
+        s.partial_cmp(&o)
+    }
+}
+
+lazy_static! {
+
+    #[allow(non_upper_case_globals)]
+    static ref TL: RwLock<TellLevel> = RwLock::new(TellLevel::Update);
+}
+
+pub struct Tell;
+
+impl Tell {
+    pub fn is_active(level: TellLevel) -> bool {
+        let t = TL.write().unwrap();
+
+        level <= *t
+    }
+
+    pub fn set_level(level: TellLevel) {
+        let mut t = TL.write().unwrap();
+        *t = level;
+    }
+
+    pub fn init(level: TellLevel) {
+        Tell::set_level(level);
+    }
+
+    pub fn print(level: TellLevel, msg: &str) {
+        if !Tell::is_active(level) || level == TellLevel::Silent {
+            return;
+        }
+
+        match level {
+            TellLevel::Error => {
+                eprintln!("{}", msg);
+            }
+            _ => {
+                println!("{}", msg);
+            }
+        }
+    }
+}

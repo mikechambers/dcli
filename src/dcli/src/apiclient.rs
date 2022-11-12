@@ -21,7 +21,7 @@
 */
 
 use log::{debug, info};
-use tell::tell::{Tell, TellLevel};
+use tell::{Tell, TellLevel};
 
 use reqwest::header::{HeaderMap, HeaderValue, CONNECTION};
 use reqwest::{Client, Url};
@@ -127,7 +127,7 @@ impl ApiClient {
         let url = Url::parse(&url).unwrap();
 
         info!("Calling API [post] : {}", url);
-        tell::verbose!("{}",url);
+        tell::verbose!("{}", url);
 
         let response = self
             .client

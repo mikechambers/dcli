@@ -25,7 +25,7 @@ use std::{
     io::{self, Write},
 };
 
-use tell::tell::{Tell, TellLevel};
+use tell::{Tell, TellLevel};
 
 use chrono::{DateTime, Utc};
 use indicatif::{HumanCount, ProgressBar, ProgressStyle};

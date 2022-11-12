@@ -30,10 +30,11 @@ use dcli::error::Error;
 use dcli::manifestinterface::MANIFEST_FILE_NAME;
 use dcli::output::Output;
 use dcli::response::manifest::ManifestResponse;
-use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose};
+use dcli::utils::{build_tsv, determine_data_dir};
+use dcli::utils::{format_error, EXIT_FAILURE};
 use manifest_info::ManifestInfo;
 use structopt::StructOpt;
+use tell::{Tell, TellLevel};
 use tokio::io::AsyncWriteExt;
 
 pub const MANIFEST_INFO_FILE_NAME: &str = "manifest_info.json";
@@ -135,8 +136,7 @@ struct Opt {
     data_dir: Option<PathBuf>,
 
     ///Print out additional information
-    ///
-    ///Output is printed to stderr.
+
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
@@ -152,7 +152,7 @@ struct Opt {
     ///
     /// Valid values are default (Default) and tsv.
     ///
-    /// tsv outputs in a tab (\t) seperated format of name / value pairs with lines
+    /// tsv outputs in a tab (\t) separated format of name / value pairs with lines
     /// ending in a new line character (\n).
     #[structopt(
         short = "O",
@@ -164,12 +164,24 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
-    print_verbose(&format!("{:#?}", opt), opt.verbose);
+
+    let level = if opt.verbose {
+        TellLevel::Verbose
+    } else {
+        TellLevel::Progress
+    };
+    Tell::init(level);
+
+    tell::verbose!("{:#?}", opt);
+    log::info!("{:#?}", opt);
 
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error initializing data directory.", e);
+            tell::error!(
+                "{}",
+                format_error("Error initializing data directory.", e)
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -180,20 +192,26 @@ async fn main() {
     let remote_manifest_info = match retrieve_manifest_info().await {
         Ok(e) => e,
         Err(e) => {
-            print_error("Could not retrieve manifest info from Bungie.", e);
+            tell::error!(
+                "{}",
+                format_error(
+                    "Could not retrieve manifest info from Bungie.",
+                    e
+                )
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
 
-    let col_w = 30;
+    let col_w: usize = 30;
     if opt.output == Output::Default {
-        println!(
+        tell::update!(
             "{:<0col_w$}{}",
             "Remote Manifest version",
             remote_manifest_info.version,
             col_w = col_w
         );
-        println!(
+        tell::update!(
             "{:<0col_w$}{}",
             "Remote Manifest url",
             remote_manifest_info.url,
@@ -208,13 +226,13 @@ async fn main() {
             let local_manifest_info: ManifestInfo = e;
 
             if opt.output == Output::Default {
-                println!(
+                tell::update!(
                     "{:<0col_w$}{}",
                     "Local Manifest version",
                     local_manifest_info.version,
                     col_w = col_w
                 );
-                println!(
+                tell::update!(
                     "{:<0col_w$}{}",
                     "Local Manifest url",
                     local_manifest_info.url,
@@ -228,15 +246,14 @@ async fn main() {
             //couldnt load local manifest, so we will try and update
             manifest_needs_updating = true;
 
-            print_verbose(
-                "Could not load local manifest info. Forcing download.",
-                opt.verbose,
+            tell::verbose!(
+                "Could not load local manifest info. Forcing download."
             );
         }
     }
 
     if manifest_needs_updating && opt.output == Output::Default {
-        println!(
+        tell::update!(
             "{:<0col_w$}{}",
             "Updated manifest available",
             &remote_manifest_info.version,
@@ -248,7 +265,7 @@ async fn main() {
         match opt.output {
             Output::Default => {
                 if !manifest_needs_updating {
-                    println!("No new manifest avaliable.");
+                    tell::update!("No new manifest avaliable.");
                 }
             }
             Output::Tsv => {
@@ -261,7 +278,7 @@ async fn main() {
                 name_values.push(("version", remote_manifest_info.version));
                 name_values.push(("url", remote_manifest_info.url));
 
-                print!("{}", build_tsv(name_values));
+                tell::update!("{}", build_tsv(name_values));
             }
         }
         return;
@@ -269,36 +286,39 @@ async fn main() {
 
     if opt.force || manifest_needs_updating {
         //print to stderr so user can redirect other output (such as tsv) to stdout
-        eprintln!("Downloading manifest. This may take a bit of time.");
+        tell::update!("Downloading manifest. This may take a bit of time.");
         match download_manifest(&remote_manifest_info.url, &m_path).await {
             Ok(e) => e,
             Err(e) => {
-                print_error("Could not download and save manifest", e);
+                tell::error!(
+                    "{}",
+                    format_error("Could not download and save manifest", e)
+                );
                 std::process::exit(EXIT_FAILURE);
             }
         };
 
-        print_verbose("Download and save complete.", opt.verbose);
-        print_verbose("Saving manifest info.", opt.verbose);
+        tell::verbose!("Download and save complete.");
+        tell::verbose!("Saving manifest info.");
 
         match save_manifest_info(&remote_manifest_info, &m_info_path) {
             Ok(e) => e,
             Err(e) => {
-                print_error("Could not save manifest.", e);
+                tell::error!("{}", format_error("Could not save manifest.", e));
                 std::process::exit(EXIT_FAILURE);
             }
         }
 
         if opt.output == Output::Default {
-            println!("Manifest info saved.");
+            tell::update!("Manifest info saved.");
         }
     } else if opt.output == Output::Default {
-        println!("No new manifest available");
+        tell::update!("No new manifest available");
     }
 
     match opt.output {
         Output::Default => {
-            println!("{}", m_path.display());
+            tell::update!("{}", m_path.display());
         }
         Output::Tsv => {
             let mut name_values: Vec<(&str, String)> = Vec::new();
@@ -308,7 +328,7 @@ async fn main() {
             name_values.push(("version", remote_manifest_info.version));
             name_values.push(("url", remote_manifest_info.url));
 
-            print!("{}", build_tsv(name_values));
+            tell::update!("{}", build_tsv(name_values));
         }
     }
 }

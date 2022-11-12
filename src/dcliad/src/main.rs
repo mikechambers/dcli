@@ -20,13 +20,13 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use tell::tell::{Tell, TellLevel};
+use tell::{Tell, TellLevel};
 
 use std::str::FromStr;
 use std::{collections::HashMap, path::PathBuf};
 
 use dcli::crucible::{Member, PlayerName};
-use dcli::utils::truncate_ascii_string;
+use dcli::utils::{format_error, truncate_ascii_string};
 use dcli::{
     apiinterface::ApiInterface,
     crucible::{
@@ -51,7 +51,6 @@ use dcli::utils::{
 };
 
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{print_error, print_verbose};
 use structopt::StructOpt;
 
 const ELO_SCALE: f32 = 10.0;
@@ -116,7 +115,6 @@ fn print_default(
     member: &Member,
     details: bool,
     weapon_count: u32,
-    verbose: bool,
 ) {
     let member_id = &member.id;
 
@@ -144,7 +142,7 @@ fn print_default(
     let activity_title_border = repeat_str("=", name_col_w + col_w + col_w);
 
     tell::update!("\nACTIVITY");
-    tell::update!(&activity_title_border);
+    tell::update!("{}", activity_title_border);
 
     tell::update!(
         "{} on {} :: {} {}",
@@ -156,7 +154,7 @@ fn print_default(
 
     tell::verbose!("Activity ID : {}", data.details.id);
 
-    tell::update!(&standing_str);
+    tell::update!("{}", standing_str);
     tell::update!("{} {}\n", generate_score(data), completion_reason);
 
     let header = format!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
@@ -191,9 +189,9 @@ fn print_default(
         let mut elo_team_total = 0.0;
 
         tell::update!("[{}] {} Team {}!", v.score, v.display_name, v.standing);
-        tell::update!(&team_title_border);
-        tell::update!(&header);
-        tell::update!(&header_border);
+        tell::update!("{}", team_title_border);
+        tell::update!("{}", header);
+        tell::update!("{}", header_border);
 
         let mut first_performance = true;
 
@@ -239,7 +237,7 @@ fn print_default(
 
             //todo: what if they dont have weapon kills (test)
             if details && !extended.weapons.is_empty() {
-                tell::update!(&entry_border);
+                tell::update!("{}", entry_border);
 
                 let mut weapons = extended.weapons.clone();
                 weapons.sort_by(|a, b| b.kills.cmp(&a.kills));
@@ -303,7 +301,7 @@ fn print_default(
                 }
             }
         }
-        tell::update!(&footer_border);
+        tell::update!("{}", footer_border);
 
         let mut cpp: Vec<&CruciblePlayerPerformance> = Vec::new();
 
@@ -364,8 +362,8 @@ fn print_default(
             name_col_w = name_col_w,
         );
 
-        //println!("{}", header_border);
-        //println!("{}", header);
+        //tell::update!("{}", header_border);
+        //tell::update!("{}", header);
     }
 
     tell::update!("Combined");
@@ -379,8 +377,8 @@ fn print_default(
     let agg_grenades = agg_extended.weapon_kills_grenade;
     let agg_melees = agg_extended.weapon_kills_melee;
 
-    tell::update!(&header);
-    tell::update!(&header_border);
+    tell::update!("{}", header);
+    tell::update!("{}", header_border);
     tell::update!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
         "TOTAL",
         aggregate.kills.to_string(),
@@ -440,8 +438,8 @@ fn print_default(
     );
 
     let wep_divider = repeat_str(&"=", wep_header_str.chars().count());
-    tell::update!(&wep_header_str);
-    tell::update!(&wep_divider);
+    tell::update!("{}", wep_header_str);
+    tell::update!("{}", wep_divider);
 
     let weapons = &aggregate.extended.as_ref().unwrap().weapons;
     let max_weps = std::cmp::min(weapon_count as usize, weapons.len());
@@ -464,7 +462,7 @@ fn print_default(
         );
     }
 
-    println!("STATUS : L - Joined late, E - Left early\n");
+    tell::update!("STATUS : L - Joined late, E - Left early\n");
 }
 
 #[derive(StructOpt, Debug)]
@@ -516,8 +514,7 @@ struct Opt {
     character_class_selection: CharacterClassSelection,
 
     ///Print out additional information
-    ///
-    ///Output is printed to stderr.
+
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
@@ -569,17 +566,15 @@ async fn main() {
     };
     Tell::init(level);
 
-    tell::foo!("foo");
-    tell::foo!();
-    tell::foo!("{}", "foo");
-    tell::foo!("{}{}", "foo", "foo");
-
     tell::verbose!("{:#?}", opt);
 
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error initializing data directory.", e);
+            tell::error!(
+                "{}",
+                format_error("Error initializing data directory.", e)
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -590,10 +585,10 @@ async fn main() {
         {
             Ok(e) => e,
             Err(e) => {
-                print_error(
+                tell::error!("{}",format_error(
                 "Could not initialize activity store. Have you run dclisync?",
                 e,
-            );
+            ));
                 std::process::exit(EXIT_FAILURE);
             }
         };
@@ -601,9 +596,12 @@ async fn main() {
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error(
-                "Could not initialize manifest. Have you run dclim?",
-                e,
+            tell::error!(
+                "{}",
+                format_error(
+                    "Could not initialize manifest. Have you run dclim?",
+                    e,
+                )
             );
             std::process::exit(EXIT_FAILURE);
         }
@@ -612,8 +610,8 @@ async fn main() {
     let member = match store.find_member(&opt.name, true).await {
         Ok(e) => e,
         Err(e) => {
-            eprintln!(
-                "Could not find bungie name. Please check name and try again. {}",
+            tell::error!(
+                "Could not find Bungie id. Please check name and try again. {}",
                 e
             );
             std::process::exit(EXIT_FAILURE);
@@ -624,8 +622,8 @@ async fn main() {
         match store.sync_member(&member).await {
             Ok(_e) => (),
             Err(e) => {
-                eprintln!("Could not sync activity store {}", e);
-                eprintln!("Using existing data");
+                tell::error!("Could not sync activity store {}", e);
+                tell::update!("Using existing data");
             }
         };
     }
@@ -648,23 +646,19 @@ async fn main() {
         Ok(e) => e,
         Err(e) => {
             if e == Error::ActivityNotFound {
-                println!("No activities found");
+                tell::update!("No activities found");
                 return;
             }
 
-            print_error("Could not retrieve data from activity store.", e);
+            tell::error!(
+                "{}",
+                format_error("Could not retrieve data from activity store.", e)
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
 
     let elo_hash = get_combat_ratings(&data).await;
 
-    print_default(
-        &data,
-        &elo_hash,
-        &member,
-        opt.details,
-        opt.weapon_count,
-        opt.verbose,
-    );
+    print_default(&data, &elo_hash, &member, opt.details, opt.weapon_count);
 }

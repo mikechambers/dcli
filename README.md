@@ -28,9 +28,10 @@ If you run into any issues, have any ideas, or just want to chat, please post in
 
 ### Libraries
 
-| TOOL                                                            | DESCRIPTION                              |
-| --------------------------------------------------------------- | ---------------------------------------- |
-| [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) | Library used across all of the dcli apps |
+| TOOL                                                            | DESCRIPTION                                            |
+| --------------------------------------------------------------- | ------------------------------------------------------ |
+| [dcli](https://github.com/mikechambers/dcli/tree/main/src/dcli) | Library used across all of the dcli apps               |
+| [tell](https://github.com/mikechambers/dcli/tree/main/src/tell) | Library used to manage output for console applications |
 
 Each tool page contains additional tool specific information and usage examples.
 
@@ -105,9 +106,9 @@ These can be useful on their own, but where they can be really powerful is when 
 
 There are a couple of examples in the [examples directory](https://github.com/mikechambers/dcli/tree/main/examples):
 
-- Send a notification when you load into a new activity (particularly useful when playing crucible so you can see which map you are loading into)
-- Automatically generate weekly reports on your Crucible stats and email them to yourself
-- Track your Crucible stats per game play session
+-   Send a notification when you load into a new activity (particularly useful when playing crucible so you can see which map you are loading into)
+-   Automatically generate weekly reports on your Crucible stats and email them to yourself
+-   Track your Crucible stats per game play session
 
 ### Learning More
 
@@ -156,11 +157,11 @@ which will place the compiled tools in _src/target/release_
 
 Note, in order for dclisync to be able to sync your data, you must have the following privacy options selected on your Bungie account at [https://www.bungie.net/7/en/User/Account/Privacy](https://www.bungie.net/7/en/User/Account/Privacy)
 
-- Show my Destiny game Activity feed on Bungie.net
+-   Show my Destiny game Activity feed on Bungie.net
 
 ## Known Issues
 
-- Tied matches are not displayed correctly, and are treated as a Victory.
+-   Tied matches are not displayed correctly, and are treated as a Victory.
 
 ## License
 

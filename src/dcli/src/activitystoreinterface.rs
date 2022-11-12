@@ -22,7 +22,7 @@
 
 use std::str::FromStr;
 use std::{collections::HashMap, path::Path};
-use tell::tell::{Tell, TellLevel};
+use tell::{Tell, TellLevel};
 
 use chrono::{DateTime, Utc};
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};

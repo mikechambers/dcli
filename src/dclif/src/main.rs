@@ -30,7 +30,8 @@ use dcli::enums::mode::Mode;
 use dcli::enums::moment::{DateTimePeriod, Moment};
 use dcli::playeractivitiessummary::PlayerActivitiesSummary;
 use dcli::utils::{
-    calculate_efficiency, calculate_kills_deaths_ratio, parse_rfc3339,
+    calculate_efficiency, calculate_kills_deaths_ratio, format_error,
+    parse_rfc3339,
 };
 use std::path::PathBuf;
 
@@ -43,15 +44,14 @@ use dcli::utils::{
 };
 
 use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{print_error, print_verbose};
 use structopt::StructOpt;
 
 fn print_header(header: &str) {
-    println!("{:^44}", header);
+    tell::update!("{:^44}", header);
 }
 
 fn print_row(left: &str, center: &str, right: &str) {
-    println!("{:>20}{:^4}{:<20}", left, center, right);
+    tell::update!("{:>20}{:^4}{:<20}", left, center, right);
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -59,12 +59,12 @@ fn _print_default(data: &PlayerActivitiesSummary) {
     let ascii = ClassAscii::init();
 
     for s in ascii.hunter.iter() {
-        println!("{}", s);
+        tell::update!("{}", s);
     }
 
     //3 columns
 
-    //println!("{:>20}{:^14}{:<20}", "left", "center", "right");
+    //tell::update!("{:>20}{:^14}{:<20}", "left", "center", "right");
 
     print_row("left", "center", "right");
 
@@ -217,8 +217,7 @@ struct Opt {
     character_class_selection: CharacterClassSelection,
 
     ///Print out additional information
-    ///
-    ///Output is printed to stderr.
+
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
@@ -244,12 +243,15 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
-    print_verbose(&format!("{:#?}", opt), opt.verbose);
+    tell::error!("{:#?}", opt);
 
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error initializing data directory.", e);
+            tell::error!(
+                "{}",
+                format_error("Error initializing data directory.", e)
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -272,7 +274,7 @@ async fn main() {
         match DateTimePeriod::with_start_end_time(start_time, end_time) {
             Ok(e) => e,
             Err(_e) => {
-                eprintln!("--end-moment must be greater than --moment");
+                tell::error!("--end-moment must be greater than --moment");
                 std::process::exit(EXIT_FAILURE);
             }
         };
@@ -283,10 +285,10 @@ async fn main() {
         {
             Ok(e) => e,
             Err(e) => {
-                print_error(
+                tell::error!("{}", format_error(
                 "Could not initialize activity store. Have you run dclisync?",
                 e,
-            );
+            ));
                 std::process::exit(EXIT_FAILURE);
             }
         };
@@ -294,8 +296,8 @@ async fn main() {
     let member: Member = match store.find_member(&opt.name, true).await {
         Ok(e) => e,
         Err(e) => {
-            eprintln!(
-                "Could not find bungie name. Please check name and try again. {}",
+            tell::error!(
+                "Could not find Bungie ID. Please check name and try again. {}",
                 e
             );
             std::process::exit(EXIT_FAILURE);
@@ -306,8 +308,8 @@ async fn main() {
         match store.sync_member(&member).await {
             Ok(_e) => (),
             Err(e) => {
-                eprintln!("Could not sync activity store {}", e);
-                eprintln!("Using existing data");
+                tell::error!("Could not sync activity store {}", e);
+                tell::update!("Using existing data");
             }
         };
     }
@@ -323,13 +325,16 @@ async fn main() {
     {
         Ok(e) => e,
         Err(e) => {
-            print_error("Could not retrieve data from activity store.", e);
+            tell::error!(
+                "{}",
+                format_error("Could not retrieve data from activity store.", e)
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
 
     if data.is_none() {
-        println!("No data found");
+        tell::update!("No data found");
         return;
     }
 

@@ -55,14 +55,6 @@ pub trait Period {
     fn get_end(&self) -> DateTime<Utc>;
 }
 
-pub fn print_verbose(msg: &str, verbose: bool) {
-    if !verbose {
-        return;
-    }
-
-    eprintln!("{}", msg);
-}
-
 pub fn format_error(msg: &str, error: Error) -> String {
     let mut strings: Vec<String> = vec![];
 
@@ -97,38 +89,7 @@ pub fn format_error(msg: &str, error: Error) -> String {
     strings
         .push("       https://github.com/mikechambers/dcli/issues".to_string());
 
-    return strings.join("\n");
-}
-pub fn print_error(msg: &str, error: Error) {
-    let app_name = env::current_exe()
-        .ok()
-        .as_ref()
-        .map(Path::new)
-        .and_then(Path::file_name)
-        .and_then(OsStr::to_str)
-        .map(String::from)
-        .unwrap_or_else(|| "".to_string());
-
-    eprintln!("{} : v{}", app_name, VERSION);
-
-    eprintln!("{}", msg);
-    eprintln!("{}", error);
-
-    match error {
-        Error::InvalidParameters => {
-            eprintln!("This can occur if --platform is set incorrectly.");
-        }
-        Error::ParameterParseFailure => {
-            eprintln!("This can occur if --member-id or --character-id were entered incorrectly.");
-        }
-        _ => {}
-    }
-
-    eprintln!();
-    eprintln!("If you think you have hit a bug and would like to report it (or would just like some help):");
-    eprintln!("    1. Run command with '--verbose' flag.");
-    eprintln!("    2. Copy output, and log a bug at: ");
-    eprintln!("       https://github.com/mikechambers/dcli/issues");
+    strings.join("\n")
 }
 
 pub fn calculate_average(value: u32, total_activities: u32) -> f32 {

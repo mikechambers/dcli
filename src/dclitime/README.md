@@ -18,7 +18,6 @@ FLAGS:
     -v, --verbose
             Print out additional information
 
-            Output is printed to stderr.
 
 OPTIONS:
     -T, --moment <moment>

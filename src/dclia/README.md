@@ -8,47 +8,45 @@ The API updates pretty quickly, and can be used to see check the activity and / 
 
 The too expects that the manifest has been downloaded and synced to the default location using [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim). You can specify a custom path to the manifest using the --data-dir argument.
 
-
 ## USAGE
+
 ```
 USAGE:
     dclia [FLAGS] [OPTIONS] --name <name>
 
 FLAGS:
-    -h, --help       
+    -h, --help
             Prints help information
 
-    -V, --version    
+    -V, --version
             Prints version information
 
-    -v, --verbose    
+    -v, --verbose
             Print out additional information
-            
-            Output is printed to stderr.
 
 OPTIONS:
-    -k, --api-key <api-key>         
+    -k, --api-key <api-key>
             API key from Bungie required for some actions.
-            
+
             If specified the key will be passed to all Destiny API calls.
-            
+
             You can obtain a key from https://www.bungie.net/en/Application [env:
             DESTINY_API_KEY=8eacb6527ea648fbbd8106990231c21c]
-    -D, --data-dir <data-dir>       
+    -D, --data-dir <data-dir>
             Directory where Destiny 2 manifest database file is stored. (optional)
-            
+
             This will normally be downloaded using the dclim tool, and stored in a file named manifest.sqlite3 (in the
             manifest directory specified when running dclim).
-    -n, --name <name>               
+    -n, --name <name>
             Bungie name for player
-            
+
             Name must be in the format of NAME#CODE. Example: foo#3280 You can find your name in game, or on Bungie's
             site at: https://www.bungie.net/7/en/User/Account/IdentitySettings
-    -O, --output-format <output>    
+    -O, --output-format <output>
             Format for command output
-            
+
             Valid values are default (Default) and tsv.
-            
+
             tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
             (\n). [default: default]
 
@@ -59,7 +57,6 @@ Manifest can be downloaded and synced with from [dclim](https://github.com/mikec
 ### Examples
 
 #### Check for current activity.
-
 
 ```
 $ dclia --name mesh#3230
@@ -108,4 +105,4 @@ To compile, switch to the `src/` directory and run:
 $ cargo build --release
 ```
 
-which will place the compiled tools in *src/target/release*
+which will place the compiled tools in _src/target/release_

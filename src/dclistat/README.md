@@ -27,8 +27,6 @@ FLAGS:
     -v, --verbose
             Print out additional information
 
-            Output is printed to stderr.
-
 OPTIONS:
     -k, --api-key <api-key>
             API key from Bungie required for some actions.

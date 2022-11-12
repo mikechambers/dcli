@@ -29,8 +29,6 @@ FLAGS:
     -v, --verbose
             Print out additional information
 
-            Output is printed to stderr.
-
 OPTIONS:
     -L, --activity-limit <activity-limit>
             Limit the number of activity details that will be displayed

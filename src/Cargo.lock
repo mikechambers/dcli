@@ -345,6 +345,8 @@ name = "dclia"
 version = "0.9.0"
 dependencies = [
  "dcli",
+ "env_logger",
+ "log",
  "structopt",
  "tell",
  "tokio",
@@ -355,6 +357,8 @@ name = "dcliad"
 version = "0.9.0"
 dependencies = [
  "dcli",
+ "env_logger",
+ "log",
  "structopt",
  "tell",
  "tokio",
@@ -366,8 +370,11 @@ version = "0.9.0"
 dependencies = [
  "chrono",
  "dcli",
+ "env_logger",
+ "log",
  "num-format",
  "structopt",
+ "tell",
  "tokio",
 ]
 
@@ -377,8 +384,11 @@ version = "0.9.0"
 dependencies = [
  "chrono",
  "dcli",
+ "env_logger",
+ "log",
  "num-format",
  "structopt",
+ "tell",
  "tokio",
 ]
 
@@ -387,11 +397,14 @@ name = "dclim"
 version = "0.9.0"
 dependencies = [
  "dcli",
+ "env_logger",
+ "log",
  "reqwest",
  "serde",
  "serde_derive",
  "serde_json",
  "structopt",
+ "tell",
  "tokio",
  "zip",
 ]
@@ -402,8 +415,11 @@ version = "0.9.0"
 dependencies = [
  "chrono",
  "dcli",
+ "env_logger",
+ "log",
  "num-format",
  "structopt",
+ "tell",
  "tokio",
 ]
 
@@ -427,7 +443,10 @@ version = "0.9.0"
 dependencies = [
  "chrono",
  "dcli",
+ "env_logger",
+ "log",
  "structopt",
+ "tell",
  "tokio",
 ]
 

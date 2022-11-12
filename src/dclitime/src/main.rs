@@ -27,7 +27,7 @@ use std::str::FromStr;
 use datetimeformat::DateTimeFormat;
 use dcli::enums::moment::Moment;
 use dcli::output::Output;
-use dcli::utils::{build_tsv, print_verbose};
+use dcli::utils::build_tsv;
 use structopt::StructOpt;
 
 //we do a custom parse / validation here so we can reuse Moment enum
@@ -93,8 +93,6 @@ struct Opt {
     time_format: DateTimeFormat,
 
     /// Print out additional information
-    ///
-    /// Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
@@ -126,7 +124,7 @@ async fn main() {
 
     match opt.output {
         Output::Default => {
-            println!("{}", date_time_str);
+            tell::update!("{}", date_time_str);
         }
         Output::Tsv => {
             let mut name_values: Vec<(&str, String)> = Vec::new();
@@ -134,7 +132,7 @@ async fn main() {
             name_values.push(("format", format!("{}", opt.time_format)));
             name_values.push(("moment", format!("{}", opt.moment)));
 
-            print!("{}", build_tsv(name_values));
+            tell::update!("{}", build_tsv(name_values));
         }
     }
 }

@@ -26,7 +26,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use tell::tell::{Tell, TellLevel};
+use tell::{Tell, TellLevel};
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
 use dcli::apiinterface::ApiInterface;
@@ -65,8 +65,6 @@ const SHOULD_CONTINUE_CODE: i32 = -1;
 /// Released under an MIT License.
 struct Opt {
     /// Print out additional information
-    ///
-    /// Output is printed to stderr.
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
@@ -185,15 +183,15 @@ async fn main() {
     info!("Using {} Output Level", level);
 
     info!("Arguments : {:#?}", opt);
-    tell::verbose!(format!("{:#?}", opt));
+    tell::verbose!("{:#?}", opt);
 
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
-            tell::error!(format_error(
-                "Error initializing storage directory store.",
-                e
-            ));
+            tell::error!(
+                "{}",
+                format_error("Error initializing storage directory store.", e)
+            );
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -215,10 +213,10 @@ async fn main() {
         {
             Ok(e) => e,
             Err(e) => {
-                tell::error!(format_error(
-                    "Error initializing activity store.",
-                    e
-                ));
+                tell::error!(
+                    "{}",
+                    format_error("Error initializing activity store.", e)
+                );
                 std::process::exit(EXIT_FAILURE);
             }
         };
@@ -226,12 +224,15 @@ async fn main() {
     if opt.import_group.is_some() {
         let group_id = opt.import_group.unwrap();
 
-        tell::update!(format!("Import Group ID : {}", group_id));
+        tell::update!("Import Group ID : {}", group_id);
 
         let api = match ApiInterface::new_with_key(&key) {
             Ok(e) => e,
             Err(e) => {
-                tell::error!(format_error("Error creating interface.", e));
+                tell::error!(
+                    "{}",
+                    format_error("Error creating interface.", e)
+                );
                 std::process::exit(EXIT_FAILURE);
             }
         };
@@ -240,30 +241,33 @@ async fn main() {
             match api.retrieve_group_members(group_id).await {
                 Ok(e) => e,
                 Err(e) => {
-                    tell::error!(format_error("Error creating interface.", e));
+                    tell::error!(
+                        "{}",
+                        format_error("Error creating interface.", e)
+                    );
                     std::process::exit(EXIT_FAILURE);
                 }
             };
 
         for m in members.iter() {
-            //if they dont have a valid bungie name / id, then skip
+            //if they dont have a valid Bungie ID / id, then skip
             if !m.name.is_valid_bungie_name() {
-                tell::update!(format!(
-                    "No valid bungie name and code. Skipping. : {}",
+                tell::update!(
+                    "No valid Bungie ID and code. Skipping. : {}",
                     m.name.get_short_name()
-                ));
+                );
 
                 continue;
             }
 
             match store.add_member_to_sync(&m).await {
-                Ok(_) => tell::update!(m.name.get_bungie_name()),
+                Ok(_) => tell::update!("{}", m.name.get_bungie_name()),
                 Err(e) => {
-                    tell::update!(format!(
+                    tell::update!(
                         "Error adding {}. Skipping. {}",
                         m.name.get_bungie_name(),
                         e
-                    ));
+                    );
                 }
             }
         }
@@ -276,13 +280,13 @@ async fn main() {
         tell::update!("-------------");
         for player in players.iter() {
             match store.add_player_to_sync(&player).await {
-                Ok(_) => tell::update!(player.get_bungie_name()),
+                Ok(_) => tell::update!("{}", player.get_bungie_name()),
                 Err(e) => {
-                    tell::update!(format!(
+                    tell::update!(
                         "Error adding {}. Skipping. {}",
                         player.get_bungie_name(),
                         e
-                    ));
+                    );
                 }
             }
         }
@@ -296,13 +300,13 @@ async fn main() {
         tell::update!("-------------");
         for player in players.iter() {
             match store.remove_player_from_sync(&player).await {
-                Ok(_) => tell::update!(player.get_bungie_name()),
+                Ok(_) => tell::update!("{}", player.get_bungie_name()),
                 Err(e) => {
-                    tell::update!(format!(
+                    tell::update!(
                         "Error removing {}. {}",
                         player.get_bungie_name(),
                         e
-                    ));
+                    );
                 }
             }
         }
@@ -396,10 +400,10 @@ async fn main() {
                         std::process::exit(code);
                     }
 
-                    tell::update!(format!(
+                    tell::update!(
                         "Received signal {:?}. Cleaning up and shutting down.",
                         sig
-                    ));
+                    );
 
                     //if loop is sleeping just exit out immediately
                     if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
@@ -414,10 +418,10 @@ async fn main() {
         }
 
         if opt.daemon {
-            tell::update!(format!(
+            tell::update!(
                 "Beginning Sync in Daemon Mode with {} second interval (quiet mode)",
                 refresh_interval
-            ));
+            );
         }
 
         let players = opt.sync.unwrap();
@@ -427,7 +431,7 @@ async fn main() {
                 match store.sync_all().await {
                     Ok(_) => {}
                     Err(e) => {
-                        tell::error!(format_error("Error syncing.", e));
+                        tell::error!("{}", format_error("Error syncing.", e));
                         std::process::exit(EXIT_FAILURE);
                     }
                 }
@@ -435,7 +439,7 @@ async fn main() {
                 match store.sync_players(&players).await {
                     Ok(_) => {}
                     Err(e) => {
-                        tell::error!(format_error("Error syncing.", e));
+                        tell::error!("{}", format_error("Error syncing.", e));
                         std::process::exit(EXIT_FAILURE);
                     }
                 }
@@ -452,7 +456,7 @@ async fn main() {
             }
 
             is_sleeping.store(true, Ordering::Relaxed);
-            tell::update!(format!("Sleeping {} seconds", refresh_interval));
+            tell::update!("Sleeping {} seconds", refresh_interval);
             thread::sleep(sleep_duration);
             is_sleeping.store(false, Ordering::Relaxed);
         }
@@ -464,7 +468,7 @@ async fn main() {
         let members = match store.get_sync_members().await {
             Ok(m) => m,
             Err(e) => {
-                tell::error!(format_error("Error syncing.", e));
+                tell::error!("{}", format_error("Error syncing.", e));
                 std::process::exit(EXIT_FAILURE);
             }
         };
@@ -472,7 +476,7 @@ async fn main() {
         tell::update!("Synced Players");
         tell::update!("-------------");
         for member in members.iter() {
-            tell::update!(member.name.get_bungie_name());
+            tell::update!("{}", member.name.get_bungie_name());
         }
         tell::update!("");
     }

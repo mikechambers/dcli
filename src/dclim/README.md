@@ -15,39 +15,38 @@ The utility uses the download url for the manifest to check for a new version. W
 The manifest is a [Sqlite 3](https://www.sqlite.org/index.html) database.
 
 ## USAGE
+
 ```
 USAGE:
     dclim [FLAGS] [OPTIONS]
 
 FLAGS:
-    -K, --check      
+    -K, --check
             Check whether a new manifest version is available, but do not download
 
-    -F, --force      
+    -F, --force
             Force a download of manifest regardless of whether it has been updated
 
-    -h, --help       
+    -h, --help
             Prints help information
 
-    -V, --version    
+    -V, --version
             Prints version information
 
-    -v, --verbose    
+    -v, --verbose
             Print out additional information
-            
-            Output is printed to stderr.
 
 OPTIONS:
-    -D, --data-dir <data-dir>       
+    -D, --data-dir <data-dir>
             Directory where manifest will be stored. (optional)
-            
+
             By default data will be loaded from and stored in the appropriate system local storage directory. Manifest
             will be stored in a sqlite3 database file named manifest.sqlite3
-    -O, --output-format <output>    
+    -O, --output-format <output>
             Format for command output
-            
+
             Valid values are default (Default) and tsv.
-            
+
             tsv outputs in a tab (\t) seperated format of name / value pairs with lines ending in a new line character
             (\n). [default: default]
 ```
@@ -55,6 +54,7 @@ OPTIONS:
 ### Examples
 
 #### Check for an updated manifest and store in default location:
+
 ```
 $ dclim
 ```
@@ -71,7 +71,8 @@ Manifest info saved.
 /home/mesh/tmp/tmp2/manifest.sqlite3
 ```
 
-#### Download remote manifest and store in *~/manifest/* directory regardless of whether remote is updated.
+#### Download remote manifest and store in _~/manifest/_ directory regardless of whether remote is updated.
+
 ```
 $ dclim --data-dir ~/manifest/ --force
 ```
@@ -115,7 +116,6 @@ If you have any questions, feature requests, need help, are running into issues,
 
 You can also log bugs and features requests on the [issues page](https://github.com/mikechambers/dcli/issues).
 
-
 ## Compiling
 
 This utility is written and compiled in [Rust](https://www.rust-lang.org/).
@@ -128,4 +128,4 @@ To compile, switch to the `src/` directory and run:
 $ cargo build --release
 ```
 
-which will place the compiled tools in *src/target/release*
+which will place the compiled tools in _src/target/release_

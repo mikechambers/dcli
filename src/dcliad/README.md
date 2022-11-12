@@ -37,8 +37,6 @@ FLAGS:
     -v, --verbose
             Print out additional information
 
-            Output is printed to stderr.
-
 OPTIONS:
     -a, --activity-index <activity-index>
             The index of the activity to display data about
