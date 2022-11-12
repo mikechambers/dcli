@@ -217,7 +217,7 @@ fn print_default(
 
             let extended = p.stats.extended.as_ref().unwrap();
             tell::update!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
-                truncate_ascii_string(&p.player.name.get_short_name(), name_col_w),
+                truncate_ascii_string(&p.player.name.get_bungie_name(), name_col_w),
                 p.stats.kills.to_string(),
                 p.stats.assists.to_string(),
                 p.stats.opponents_defeated.to_string(),
@@ -287,7 +287,7 @@ fn print_default(
                     }
 
                     tell::update!(
-                        "{:<0col_w$}{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}\n",
+                        "{:<0col_w$}{:>0w_name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w2$}",
                         meta,
                         weapon_name,
                         weapon_kills,
@@ -299,6 +299,7 @@ fn print_default(
                         col_w2 = col_w * 3,
                     );
                 }
+                tell::update!();
             }
         }
         tell::update!("{}", footer_border);
@@ -405,7 +406,7 @@ fn print_default(
         format_f32(total_elo, 0)
     };
 
-    tell::update!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}\n",
+    tell::update!("{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}",
     "AVG",
     format_f32(aggregate.kills as f32 / all_performances.len() as f32, 2),
     format_f32(aggregate.assists as f32 / all_performances.len() as f32,2),
@@ -423,6 +424,7 @@ fn print_default(
     col_w=col_w,
     name_col_w = name_col_w,
 );
+    tell::update!();
 
     let wep_col = name_col_w + col_w;
     let wep_header_str = format!(
@@ -447,7 +449,7 @@ fn print_default(
     let wep_col = name_col_w + col_w;
     for w in &weapons[..max_weps] {
         tell::update!(
-            "{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0name_col_w$}\n",
+            "{:<0name_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0name_col_w$}",
             w.weapon.name,
             w.kills.to_string(),
             format!(
@@ -462,7 +464,9 @@ fn print_default(
         );
     }
 
-    tell::update!("STATUS : L - Joined late, E - Left early\n");
+    tell::update!();
+    tell::update!("STATUS : L - Joined late, E - Left early");
+    tell::update!();
 }
 
 #[derive(StructOpt, Debug)]
