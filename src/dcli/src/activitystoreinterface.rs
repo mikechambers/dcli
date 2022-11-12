@@ -26,7 +26,7 @@ use std::{collections::HashMap, path::Path};
 use chrono::{DateTime, Utc};
 
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
-use crate::utils::{calculate_percent, print_error};
+use crate::utils::{calculate_percent, format_error};
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
     enums::{
@@ -65,19 +65,20 @@ use crate::{
 
 use std::env;
 
+use log::info;
+
 const STORE_FILE_NAME: &str = "dcli.sqlite3";
 const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 
 const DCLI_FIX_DATA: &str = "DCLI_FIX_DATA";
 
-//numer of simultaneous requests we make to server when retrieving activity history
+//number of simultaneous requests we make to server when retrieving activity history
 const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
 
 const DB_SCHEMA_VERSION: i32 = 9;
 const NO_TEAMS_INDEX: i32 = 253;
 
 pub struct ActivityStoreInterface {
-    pub verbose: bool,
     db: SqliteConnection,
     path: String,
     api_interface: ApiInterface,
@@ -91,7 +92,6 @@ impl ActivityStoreInterface {
 
     pub async fn init_with_path(
         store_dir: &Path,
-        verbose: bool,
         key: Option<String>,
     ) -> Result<ActivityStoreInterface, Error> {
         let path = store_dir.join(STORE_FILE_NAME).display().to_string();
@@ -101,12 +101,15 @@ impl ActivityStoreInterface {
             Err(_e) => false,
         };
 
-        if verbose {
-            println!(
-                "DCLI_FIX_DATA environment variable enabled : {}",
-                fix_corrupt_data
-            );
-        }
+        tell::verbose!(format!(
+            "DCLI_FIX_DATA environment variable enabled : {}",
+            fix_corrupt_data
+        ));
+
+        info!(
+            "DCLI_FIX_DATA environment variable enabled : {}",
+            fix_corrupt_data
+        );
 
         let read_only = false;
         let connection_string: &str = &path;
@@ -137,18 +140,17 @@ impl ActivityStoreInterface {
         };
 
         if should_update_schema {
-            eprintln!("Data store needs to be updated.");
+            tell::update!("Data store needs to be updated.");
             sqlx::query(STORE_DB_SCHEMA).execute(&mut db).await?;
         }
 
         let api_interface = match key {
-            Some(e) => ApiInterface::new_with_key(verbose, &e)?,
-            None => ApiInterface::new(verbose)?,
+            Some(e) => ApiInterface::new_with_key(&e)?,
+            None => ApiInterface::new()?,
         };
 
         Ok(ActivityStoreInterface {
             db,
-            verbose,
             path: path.to_string(),
             api_interface,
             fix_corrupt_data,
@@ -256,7 +258,6 @@ impl ActivityStoreInterface {
         let out = match member {
             Some(e) => e,
             None => {
-                //let api = ApiInterface::new(self.verbose)?;
                 let user_info =
                     self.api_interface.search_destiny_player(name).await?;
 
@@ -280,14 +281,15 @@ impl ActivityStoreInterface {
         for player in players.iter() {
             match self.sync_player(&player).await {
                 Ok(_) => {}
-                Err(e) => print_error(
-                    &format!(
-                        "Error Syncing. Aborting syncing player: {}",
-                        player.get_bungie_name()
-                    )
-                    .to_string(),
-                    e,
-                ),
+                Err(e) => {
+                    tell::error!(format_error(
+                        &format!(
+                            "Error Syncing. Aborting syncing player: {}",
+                            player.get_bungie_name()
+                        ),
+                        e
+                    ));
+                }
             };
         }
 
@@ -312,14 +314,13 @@ impl ActivityStoreInterface {
         for member in members.iter() {
             match self.sync_member(&member).await {
                 Ok(_) => {}
-                Err(e) => print_error(
+                Err(e) => tell::error!(format_error(
                     &format!(
                         "Error Syncing. Aborting syncing player: {}",
                         member.name.get_bungie_name()
-                    )
-                    .to_string(),
-                    e,
-                ),
+                    ),
+                    e
+                )),
             }
         }
 
@@ -443,8 +444,6 @@ impl ActivityStoreInterface {
         &mut self,
         member: &Member,
     ) -> Result<SyncResult, Error> {
-        //let api = ApiInterface::new(self.verbose)?;
-
         //Note, we need this call in case the user deletes and creates a new character
         //https://www.bungie.net/Platform/Destiny2/1/Profile/4611686018429783292/?components=100,200
         let player_info = self
@@ -461,19 +460,19 @@ impl ActivityStoreInterface {
         let mut total_synced = 0;
         let mut total_in_queue = 0;
 
-        eprintln!();
+        tell::progress!("");
 
-        eprintln!(
+        tell::update!(format!(
             "CHECKING FOR NEW ACTIVITIES FOR {} (PUBLIC AND PRIVATE)",
             member.name.get_bungie_name()
-        );
-        eprintln!("This may take a few minutes depending on the number of activities.");
+        ));
+        tell::update!("This may take a few minutes depending on the number of activities.");
         for c in characters.characters {
             let character_id = &c.id;
             let character_row_id = self
                 .insert_character_id(&c.id, &c.class_type, member_row_id)
                 .await?;
-            eprintln!("{}", format!("{}", c.class_type).to_uppercase());
+            tell::progress!(format!("{}\n", c.class_type).to_uppercase());
 
             //these calls could be a little more general purpose by taking api ids and not db ids.
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
@@ -561,16 +560,17 @@ impl ActivityStoreInterface {
         let mut total_synced = 0;
 
         let s = if ids.len() == 1 { "y" } else { "ies" };
-        eprintln!(
-            "{}",
-            format!("Retrieving details for {} activit{}", ids.len(), s)
-        );
+        tell::progress!(format!(
+            "Retrieving details for {} activit{}\n",
+            ids.len(),
+            s
+        ));
 
-        eprintln!(
-            "Each dot represents {} activities",
+        tell::progress!(format!(
+            "Each dot represents {} activities\n",
             PGCR_REQUEST_CHUNK_AMOUNT
-        );
-        eprint!("[");
+        ));
+        tell::progress!("[");
         for id_chunks in ids.chunks(PGCR_REQUEST_CHUNK_AMOUNT) {
             let mut f = Vec::new();
 
@@ -581,7 +581,7 @@ impl ActivityStoreInterface {
                 );
             }
 
-            eprint!(".");
+            tell::progress!(".");
 
             //TODO: look into using threading for this
             let results = futures::future::join_all(f).await;
@@ -601,17 +601,15 @@ impl ActivityStoreInterface {
                                     total_synced += 1;
                                 }
                                 Err(e) => {
-                                    eprintln!();
-                                    eprintln!(
-                                        "Error inserting data into character activity stats table. Skipping. : {}",
+                                    tell::error!(format!(
+                                        "\nError inserting data into character activity stats table. Skipping. : {}",
                                         e,
-                                    );
+                                    ));
                                 }
                             },
                             None => {
-                                eprintln!();
-                                eprintln!(
-                                    "PGCR returned empty response. Ignoring."
+                                tell::error!(
+                                    "\nPGCR returned empty response. Ignoring."
                                 );
                                 //TODO: should not get here, as none means either an API error
                                 //occured or there is no data associated with the ID (which is
@@ -622,10 +620,9 @@ impl ActivityStoreInterface {
                         }
                     }
                     Err(e) => {
-                        eprintln!();
-                        eprintln!(
-                            "Error retrieving activity details from api. Skipping : {}",
-                            e
+                        tell::error!(format_error(
+                            "\nError retrieving activity details from api. Skipping : {}",
+                            e)
                         );
                     }
                 }
@@ -638,13 +635,13 @@ impl ActivityStoreInterface {
                 .await?;
         }
 
-        eprintln!("]");
-        eprintln!(
-            "{} of {} synced ({}%)",
+        tell::progress!("]\n");
+        tell::progress!(format!(
+            "{} of {} synced ({}%)\n",
             total_synced,
             total_available,
             calculate_percent(total_synced, total_available).floor()
-        );
+        ));
 
         Ok(SyncResult {
             total_available,
@@ -734,7 +731,7 @@ impl ActivityStoreInterface {
         }
 
         let mut activities = result.unwrap();
-        eprintln!("{} new activities found", activities.len());
+        tell::progress!(format!("{} new activities found", activities.len()));
 
         //reverse them so we add the oldest first
         activities.reverse();
@@ -1529,7 +1526,10 @@ impl ActivityStoreInterface {
 
             match teams.get_mut(&index) {
                 Some(e) => e.player_performances.push(cpp),
-                None => eprintln!("Invalid Team ID ({}) : Skipping", &index),
+                None => tell::update!(format!(
+                    "Invalid Team ID ({}) : Skipping",
+                    &index
+                )),
             }
         }
 
@@ -1538,7 +1538,7 @@ impl ActivityStoreInterface {
         Ok(CrucibleActivity { details, teams })
     }
 
-    //returns the last played class for the specified member for activties
+    //returns the last played class for the specified member for activities
     //that have been synced
     pub async fn retrieve_last_active_class(
         &mut self,

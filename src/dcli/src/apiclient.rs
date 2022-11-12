@@ -20,7 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use log::{info, debug};
+use log::{debug, info};
+use tell::tell::{Tell, TellLevel};
 
 use reqwest::header::{HeaderMap, HeaderValue, CONNECTION};
 use reqwest::{Client, Url};
@@ -29,7 +30,6 @@ use crate::error::Error;
 use crate::response::drs::{
     check_destiny_response_status, IsDestinyAPIResponse,
 };
-use crate::utils::print_verbose;
 
 const DESTINY_API_KEY: &str = env!("DESTINY_API_KEY");
 const API_TIMEOUT: u64 = 10; //seconds
@@ -38,16 +38,15 @@ const API_TIMEOUT: u64 = 10; //seconds
 static_assertions::const_assert!(!DESTINY_API_KEY.is_empty());
 
 pub struct ApiClient {
-    pub verbose: bool,
     client: Client,
 }
 
 impl ApiClient {
-    pub fn new(verbose: bool) -> Result<ApiClient, Error> {
-        ApiClient::new_with_key(verbose, DESTINY_API_KEY)
+    pub fn new() -> Result<ApiClient, Error> {
+        ApiClient::new_with_key(DESTINY_API_KEY)
     }
 
-    pub fn new_with_key(verbose: bool, key: &str) -> Result<ApiClient, Error> {
+    pub fn new_with_key(key: &str) -> Result<ApiClient, Error> {
         let mut headers = HeaderMap::new();
         headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
         headers.insert(
@@ -62,14 +61,13 @@ impl ApiClient {
             .timeout(std::time::Duration::from_secs(API_TIMEOUT))
             .build()?;
 
-        Ok(ApiClient { verbose, client })
+        Ok(ApiClient { client })
     }
 
     pub async fn call(&self, url: &str) -> Result<reqwest::Response, Error> {
         let url = Url::parse(&url).unwrap();
 
-        print_verbose(&format!("{}", url), self.verbose);
-
+        tell::verbose!(url);
         info!("API call : {}", url);
 
         let response = self
@@ -90,26 +88,26 @@ impl ApiClient {
     ) -> Result<T, Error> {
         let body = match self.call(url).await {
             Ok(e) => {
-                //println!("{:?}", e.headers());
+                info!("{:?}", e.headers());
                 e.text().await?
             }
             Err(e) => return Err(e),
         };
 
-        if self.verbose {
+        if Tell::is_active(TellLevel::Verbose) {
             let len = body.chars().count();
             const MAX: usize = 200;
             let limit = std::cmp::min(len, MAX);
 
             debug!("Response body : {}", body);
             let string: String = body.chars().take(limit).skip(0).collect();
-            println!(
+            tell::verbose!(format!(
                 "---------Begin API response : First {}  chars---------",
                 limit
-            );
-            println!("{}", string);
+            ));
+            tell::verbose!(string);
             info!("First {}  chars of response: {}", limit, string);
-            println!("---------End API response---------");
+            tell::verbose!("---------End API response---------");
         }
 
         //we split the parsing from the request so we can capture the body and
@@ -130,7 +128,7 @@ impl ApiClient {
 
         info!("Calling API [post] : {}", url);
 
-        print_verbose(&format!("{}", url), self.verbose);
+        tell::verbose!(url);
 
         let response = self
             .client
@@ -151,23 +149,23 @@ impl ApiClient {
     ) -> Result<T, Error> {
         let body = match self.call_post(url, post_data).await {
             Ok(e) => {
-                //println!("{:?}", e.headers());
+                info!("{:?}", e.headers());
                 e.text().await?
             }
             Err(e) => return Err(e),
         };
 
-        if self.verbose {
+        if Tell::is_active(TellLevel::Verbose) {
             let len = body.chars().count();
             const MAX: usize = 200;
             let limit = std::cmp::min(len, MAX);
 
-            println!(
+            tell::verbose!(format!(
                 "---------Begin API response : First {}  chars---------",
                 limit
-            );
-            println!("{}", &body[..limit]);
-            println!("---------End API response---------");
+            ));
+            tell::verbose!(&body[..limit]);
+            tell::verbose!("---------End API response---------");
         }
 
         //we split the parsing from the request so we can capture the body and

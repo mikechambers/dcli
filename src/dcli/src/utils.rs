@@ -63,6 +63,42 @@ pub fn print_verbose(msg: &str, verbose: bool) {
     eprintln!("{}", msg);
 }
 
+pub fn format_error(msg: &str, error: Error) -> String {
+    let mut strings: Vec<String> = vec![];
+
+    let app_name = env::current_exe()
+        .ok()
+        .as_ref()
+        .map(Path::new)
+        .and_then(Path::file_name)
+        .and_then(OsStr::to_str)
+        .map(String::from)
+        .unwrap_or_else(|| "".to_string());
+
+    strings.push(format!("{} : v{}", app_name, VERSION));
+    strings.push(msg.to_string());
+    strings.push(format!("{}", error));
+
+    match error {
+        Error::InvalidParameters => {
+            strings.push(
+                "This can occur if --platform is set incorrectly.".to_string(),
+            );
+        }
+        Error::ParameterParseFailure => {
+            strings.push("This can occur if --member-id or --character-id were entered incorrectly.".to_string());
+        }
+        _ => {}
+    }
+
+    strings.push("\nIf you think you have hit a bug and would like to report it (or would just like some help):".to_string());
+    strings.push("    1. Run command with '--verbose' flag.".to_string());
+    strings.push("    2. Copy output, and log a bug at: ".to_string());
+    strings
+        .push("       https://github.com/mikechambers/dcli/issues".to_string());
+
+    return strings.join("\n");
+}
 pub fn print_error(msg: &str, error: Error) {
     let app_name = env::current_exe()
         .ok()

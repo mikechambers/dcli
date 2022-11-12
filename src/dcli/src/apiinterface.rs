@@ -67,19 +67,16 @@ pub struct ApiInterface {
 }
 
 impl ApiInterface {
-    pub fn new(print_url: bool) -> Result<ApiInterface, Error> {
-        let client = ApiClient::new(print_url)?;
+    pub fn new() -> Result<ApiInterface, Error> {
+        let client = ApiClient::new()?;
         Ok(ApiInterface { client })
     }
 
-    pub fn new_with_key(
-        print_url: bool,
-        key: &str,
-    ) -> Result<ApiInterface, Error> {
-        let client = ApiClient::new_with_key(print_url, key)?;
+    pub fn new_with_key(key: &str) -> Result<ApiInterface, Error> {
+        let client = ApiClient::new_with_key(key)?;
         Ok(ApiInterface { client })
 
-        //Have an option on to take a manifest, if manifest is avaliable it will use it
+        //Have an option on to take a manifest, if manifest is available it will use it
         //some methods may require it and will throw errors if its not set
     }
 
@@ -548,10 +545,10 @@ impl ApiInterface {
         let mut page = 0;
         let count = MAX_ACTIVITIES_REQUEST_COUNT;
 
-        eprint!("[");
+        tell::progress!("[");
         //TODO: if error occurs on an individual call, retry?
         loop {
-            eprint!(".");
+            tell::progress!(".");
             io::stderr().flush().unwrap();
 
             // TODO: if we call more pages that there is data, it will return back with no Response
@@ -603,7 +600,7 @@ impl ApiInterface {
             //empty response, which we detect retrieve_activities (and returns None)
         }
 
-        eprintln!("] : COMPLETE");
+        tell::progress!("] : COMPLETE\n");
 
         if out.is_empty() {
             return Ok(None);
@@ -624,10 +621,10 @@ impl ApiInterface {
         let mut page = 0;
         let count = MAX_ACTIVITIES_REQUEST_COUNT;
 
-        eprint!("[");
+        tell::progress!("[");
         //TODO: if error occurs on an individual call, retry?
         loop {
-            eprint!(".");
+            tell::progress!(".");
             io::stderr().flush().unwrap();
 
             // TODO: if we call more pages that there is data, it will return back with no Response
@@ -680,7 +677,7 @@ impl ApiInterface {
             //empty response, which we detect retrieve_activities (and returns None)
         }
 
-        eprintln!("]");
+        tell::progress!("]\n");
 
         if out.is_empty() {
             return Ok(None);

@@ -19,6 +19,7 @@ log = "0.4.17"
 env_logger = "0.9.3"
 
 dcli = { path = "../dcli/"}
+tell = { path = "../tell/"}
 
 [target.'cfg(not(windows))'.dependencies]
 signal-hook = "0.3.14"
