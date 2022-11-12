@@ -57,6 +57,7 @@ impl PartialOrd for TellLevel {
 }
 
 lazy_static! {
+    #[allow(non_upper_case_globals)]
     static ref tell_level: RwLock<TellLevel> = RwLock::new(TellLevel::Update);
 }
 
@@ -86,10 +87,7 @@ impl Tell {
         match level {
             TellLevel::Error => {
                 eprintln!("{}", msg);
-            }
-            TellLevel::Progress => {
-                print!("{}", msg);
-            }
+            },
             _ => {
                 println!("{}", msg);
             }

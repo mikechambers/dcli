@@ -113,7 +113,6 @@ async fn main() {
 
     let mut store = match ActivityStoreInterface::init_with_path(
         &data_dir,
-        opt.verbose,
         opt.api_key,
     )
     .await
@@ -139,7 +138,7 @@ async fn main() {
         }
     };
 
-    let client = match ApiInterface::new(opt.verbose) {
+    let client = match ApiInterface::new() {
         Ok(e) => e,
         Err(e) => {
             print_error("Error initializing API Interface", e);

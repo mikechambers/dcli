@@ -79,7 +79,6 @@ fn generate_score(data: &CrucibleActivity) -> String {
 
 async fn get_combat_ratings(
     data: &CrucibleActivity,
-    verbose: bool,
 ) -> HashMap<u64, f32> {
     let mut players: Vec<&Player> = Vec::new();
 
@@ -89,7 +88,7 @@ async fn get_combat_ratings(
         }
     }
 
-    let elo_hash: HashMap<u64, f32> = match ApiInterface::new(verbose) {
+    let elo_hash: HashMap<u64, f32> = match ApiInterface::new() {
         Ok(e) => {
             let mut player_refs: Vec<&Player> = Vec::new();
             for t in data.teams.values() {
@@ -585,7 +584,6 @@ async fn main() {
 
     let mut store = match ActivityStoreInterface::init_with_path(
         &data_dir,
-        opt.verbose,
         opt.api_key,
     )
     .await
@@ -659,7 +657,7 @@ async fn main() {
         }
     };
 
-    let elo_hash = get_combat_ratings(&data, opt.verbose).await;
+    let elo_hash = get_combat_ratings(&data).await;
 
     print_default(
         &data,

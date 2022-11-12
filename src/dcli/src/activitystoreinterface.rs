@@ -20,14 +20,15 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use tell::tell::{Tell, TellLevel};
 use std::str::FromStr;
 use std::{collections::HashMap, path::Path};
 
 use chrono::{DateTime, Utc};
-use indicatif::{HumanCount, ProgressBar, ProgressState, ProgressStyle};
+use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
-use crate::utils::{calculate_percent, format_error};
+use crate::utils::format_error;
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
     enums::{
@@ -461,20 +462,19 @@ impl ActivityStoreInterface {
         let mut total_synced = 0;
         let mut total_in_queue = 0;
 
-        tell::progress!("");
 
         tell::update!(format!(
-            "CHECKING FOR NEW ACTIVITIES FOR {} (PUBLIC AND PRIVATE)",
+            "\nCHECKING FOR NEW ACTIVITIES FOR {} (PUBLIC AND PRIVATE)",
             member.name.get_bungie_name()
         ));
-        tell::update!("This may take a few minutes depending on the number of activities.");
+        tell::progress!("This may take a few minutes depending on the number of activities.");
 
         for c in characters.characters {
             let character_id = &c.id;
             let character_row_id = self
                 .insert_character_id(&c.id, &c.class_type, member_row_id)
                 .await?;
-            tell::progress!(format!("{}\n", c.class_type).to_uppercase());
+            tell::progress!(format!("[{}]", c.class_type).to_uppercase());
 
             //these calls could be a little more general purpose by taking api ids and not db ids.
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
@@ -561,7 +561,7 @@ impl ActivityStoreInterface {
         let total_available = ids.len() as u32;
         let mut total_synced = 0;
 
-        let s = if ids.len() == 1 { "y" } else { "ies" };
+        //let s = if ids.len() == 1 { "y" } else { "ies" };
         /*tell::progress!(format!(
             "Retrieving details for {} activit{}\n",
             ids.len(),
@@ -577,8 +577,14 @@ impl ActivityStoreInterface {
 
         use std::fmt::Write;
 
-        let pb = ProgressBar::new(ids.len() as u64);
-        pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta_precise})")
+        let pb = if Tell::is_active(TellLevel::Progress) {
+            ProgressBar::new(ids.len() as u64)
+        } else {
+            ProgressBar::hidden()
+        };
+       
+        pb.set_style(ProgressStyle::with_template(
+                "{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {human_pos}/{human_len} ETA:({eta_precise})")
         .unwrap()
         .with_key("eta", |state: &ProgressState, w: &mut dyn Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
         .progress_chars("#>-"));
@@ -618,14 +624,14 @@ impl ActivityStoreInterface {
                                 }
                                 Err(e) => {
                                     tell::error!(format!(
-                                        "\nError inserting data into character activity stats table. Skipping. : {}",
+                                        "Error inserting data into character activity stats table. Skipping. : {}",
                                         e,
                                     ));
                                 }
                             },
                             None => {
                                 tell::error!(
-                                    "\nPGCR returned empty response. Ignoring."
+                                    "PGCR returned empty response. Ignoring."
                                 );
                                 //TODO: should not get here, as none means either an API error
                                 //occured or there is no data associated with the ID (which is
@@ -635,10 +641,10 @@ impl ActivityStoreInterface {
                             }
                         }
                     }
-                    Err(e) => {
-                        tell::error!(format_error(
-                            "\nError retrieving activity details from api. Skipping : {}",
-                            e)
+                    Err(_) => {
+                        tell::error!(
+                            "Error retrieving activity details from api. Skipping."
+                            
                         );
                     }
                 }

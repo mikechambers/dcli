@@ -39,9 +39,8 @@ use tokio::io::AsyncWriteExt;
 pub const MANIFEST_INFO_FILE_NAME: &str = "manifest_info.json";
 
 async fn retrieve_manifest_info(
-    print_url: bool,
 ) -> Result<ManifestInfo, Error> {
-    let client: ApiClient = ApiClient::new(print_url)?;
+    let client: ApiClient = ApiClient::new()?;
     let url = "https://www.bungie.net/Platform/Destiny2/Manifest/";
 
     let response = client.call_and_parse::<ManifestResponse>(url).await?;
@@ -80,9 +79,8 @@ fn load_manifest_info(path: &Path) -> Result<ManifestInfo, Error> {
 async fn download_manifest(
     url: &str,
     path: &Path,
-    print_url: bool,
 ) -> Result<(), Error> {
-    let client: ApiClient = ApiClient::new(print_url)?;
+    let client: ApiClient = ApiClient::new()?;
 
     //Download the manifest
     let mut response = client.call(url).await?;
@@ -183,7 +181,7 @@ async fn main() {
     let m_path = data_dir.join(MANIFEST_FILE_NAME);
     let m_info_path = data_dir.join(MANIFEST_INFO_FILE_NAME);
 
-    let remote_manifest_info = match retrieve_manifest_info(opt.verbose).await {
+    let remote_manifest_info = match retrieve_manifest_info().await {
         Ok(e) => e,
         Err(e) => {
             print_error("Could not retrieve manifest info from Bungie.", e);
@@ -276,7 +274,7 @@ async fn main() {
     if opt.force || manifest_needs_updating {
         //print to stderr so user can redirect other output (such as tsv) to stdout
         eprintln!("Downloading manifest. This may take a bit of time.");
-        match download_manifest(&remote_manifest_info.url, &m_path, opt.verbose)
+        match download_manifest(&remote_manifest_info.url, &m_path)
             .await
         {
             Ok(e) => e,

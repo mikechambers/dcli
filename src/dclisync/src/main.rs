@@ -415,7 +415,7 @@ async fn main() {
 
         if opt.daemon {
             tell::update!(format!(
-                "Beginning Sync in Daemon Mode with {} second interval",
+                "Beginning Sync in Daemon Mode with {} second interval (quiet mode)",
                 refresh_interval
             ));
         }

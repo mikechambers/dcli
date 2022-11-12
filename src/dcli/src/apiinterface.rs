@@ -22,13 +22,13 @@
 
 use std::{
     collections::HashMap,
-    io::{self, Write},
-    thread,
-    time::Duration,
+    io::{self, Write}
 };
 
+use tell::tell::{Tell, TellLevel};
+
 use chrono::{DateTime, Utc};
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar, ProgressStyle, HumanCount};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 use crate::response::gmd::GetMembershipData;
@@ -630,20 +630,15 @@ impl ApiInterface {
             "{prefix:.bold.dim} {spinner:.green} {wide_msg}",
         )
         .unwrap();
-        //.tick_chars("/-\\|/-\\|");
-        //.tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ");
 
-        let pb = ProgressBar::new(4u32 as u64);
+        let pb = if Tell::is_active(TellLevel::Progress) {
+            ProgressBar::new(4u32 as u64)
+        } else {
+            ProgressBar::hidden()
+        };
+
         pb.set_style(spinner_style);
         pb.set_message("Searching for new activities.");
-
-        /*
-        for c in 0..30 {
-            pb.inc(1);
-            pb.set_message("Searching for new activities. Found : [0]");
-            thread::sleep(Duration::from_millis(250));
-        }
-        */
 
         //TODO: if error occurs on an individual call, retry?
         loop {
@@ -700,7 +695,7 @@ impl ApiInterface {
 
             pb.set_message(format!(
                 "Searching for new activities. Found : [{}]",
-                out.len()
+                HumanCount(out.len() as u64)
             ));
 
             //if we try to page past where there is valid data, bungie will return
@@ -709,9 +704,10 @@ impl ApiInterface {
 
         pb.finish_and_clear();
 
-        println!("Completed : {} activities found.", out.len());
+        let s = if out.len() == 1 { "y" } else { "ies" };
+        tell::progress!(format!("Completed : {} activit{} found",
+                                HumanCount(out.len() as u64), s));
 
-        //tell::progress!("]\n");
 
         if out.is_empty() {
             return Ok(None);

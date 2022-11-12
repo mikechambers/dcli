@@ -27,11 +27,10 @@ use classascii::ClassAscii;
 
 use dcli::crucible::{Member, PlayerName};
 use dcli::enums::mode::Mode;
-use dcli::enums::moment::{self, DateTimePeriod, Moment};
-use dcli::enums::stat::Stat;
+use dcli::enums::moment::{DateTimePeriod, Moment};
 use dcli::playeractivitiessummary::PlayerActivitiesSummary;
 use dcli::utils::{
-    calculate_average, calculate_efficiency, calculate_kills_deaths_assists,
+    calculate_efficiency, 
     calculate_kills_deaths_ratio, parse_rfc3339,
 };
 use std::path::PathBuf;
@@ -57,7 +56,7 @@ fn print_row(left: &str, center: &str, right: &str) {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn print_default(data: &PlayerActivitiesSummary) {
+fn _print_default(data: &PlayerActivitiesSummary) {
     let ascii = ClassAscii::init();
 
     for s in ascii.hunter.iter() {
@@ -281,7 +280,6 @@ async fn main() {
 
     let mut store = match ActivityStoreInterface::init_with_path(
         &data_dir,
-        opt.verbose,
         opt.api_key,
     )
     .await

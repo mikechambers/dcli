@@ -301,7 +301,6 @@ async fn main() {
 
     let mut store = match ActivityStoreInterface::init_with_path(
         &data_dir,
-        opt.verbose,
         opt.api_key,
     )
     .await
