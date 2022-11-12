@@ -23,9 +23,12 @@
 use std::{
     collections::HashMap,
     io::{self, Write},
+    thread,
+    time::Duration,
 };
 
 use chrono::{DateTime, Utc};
+use indicatif::{ProgressBar, ProgressStyle};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 use crate::response::gmd::GetMembershipData;
@@ -621,10 +624,30 @@ impl ApiInterface {
         let mut page = 0;
         let count = MAX_ACTIVITIES_REQUEST_COUNT;
 
-        tell::progress!("[");
+        //tell::progress!("[");
+
+        let spinner_style = ProgressStyle::with_template(
+            "{prefix:.bold.dim} {spinner:.green} {wide_msg}",
+        )
+        .unwrap();
+        //.tick_chars("/-\\|/-\\|");
+        //.tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ");
+
+        let pb = ProgressBar::new(4u32 as u64);
+        pb.set_style(spinner_style);
+        pb.set_message("Searching for new activities.");
+
+        /*
+        for c in 0..30 {
+            pb.inc(1);
+            pb.set_message("Searching for new activities. Found : [0]");
+            thread::sleep(Duration::from_millis(250));
+        }
+        */
+
         //TODO: if error occurs on an individual call, retry?
         loop {
-            tell::progress!(".");
+            //tell::progress!(".");
             io::stderr().flush().unwrap();
 
             // TODO: if we call more pages that there is data, it will return back with no Response
@@ -644,6 +667,8 @@ impl ApiInterface {
                     page,
                 )
                 .await?;
+
+            pb.inc(1);
 
             if activities.is_none() {
                 break;
@@ -673,11 +698,20 @@ impl ApiInterface {
 
             page += 1;
 
+            pb.set_message(format!(
+                "Searching for new activities. Found : [{}]",
+                out.len()
+            ));
+
             //if we try to page past where there is valid data, bungie will return
             //empty response, which we detect retrieve_activities (and returns None)
         }
 
-        tell::progress!("]\n");
+        pb.finish_and_clear();
+
+        println!("Completed : {} activities found.", out.len());
+
+        //tell::progress!("]\n");
 
         if out.is_empty() {
             return Ok(None);

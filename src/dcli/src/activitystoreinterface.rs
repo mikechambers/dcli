@@ -24,6 +24,7 @@ use std::str::FromStr;
 use std::{collections::HashMap, path::Path};
 
 use chrono::{DateTime, Utc};
+use indicatif::{HumanCount, ProgressBar, ProgressState, ProgressStyle};
 
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
 use crate::utils::{calculate_percent, format_error};
@@ -467,6 +468,7 @@ impl ActivityStoreInterface {
             member.name.get_bungie_name()
         ));
         tell::update!("This may take a few minutes depending on the number of activities.");
+
         for c in characters.characters {
             let character_id = &c.id;
             let character_row_id = self
@@ -560,7 +562,7 @@ impl ActivityStoreInterface {
         let mut total_synced = 0;
 
         let s = if ids.len() == 1 { "y" } else { "ies" };
-        tell::progress!(format!(
+        /*tell::progress!(format!(
             "Retrieving details for {} activit{}\n",
             ids.len(),
             s
@@ -570,7 +572,18 @@ impl ActivityStoreInterface {
             "Each dot represents {} activities\n",
             PGCR_REQUEST_CHUNK_AMOUNT
         ));
-        tell::progress!("[");
+        //tell::progress!("[");
+        */
+
+        use std::fmt::Write;
+
+        let pb = ProgressBar::new(ids.len() as u64);
+        pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta_precise})")
+        .unwrap()
+        .with_key("eta", |state: &ProgressState, w: &mut dyn Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
+        .progress_chars("#>-"));
+
+        let mut count: u64 = 0;
         for id_chunks in ids.chunks(PGCR_REQUEST_CHUNK_AMOUNT) {
             let mut f = Vec::new();
 
@@ -581,7 +594,10 @@ impl ActivityStoreInterface {
                 );
             }
 
-            tell::progress!(".");
+            count += id_chunks.len() as u64;
+            pb.set_position(count);
+
+            //tell::progress!(".");
 
             //TODO: look into using threading for this
             let results = futures::future::join_all(f).await;
@@ -629,19 +645,21 @@ impl ActivityStoreInterface {
             }
         }
 
+        pb.finish_and_clear();
+
         if !ids.is_empty() {
             sqlx::query("PRAGMA OPTIMIZE;")
                 .execute(&mut self.db)
                 .await?;
         }
 
-        tell::progress!("]\n");
-        tell::progress!(format!(
+        //tell::progress!("]\n");
+        /*tell::progress!(format!(
             "{} of {} synced ({}%)\n",
             total_synced,
             total_available,
             calculate_percent(total_synced, total_available).floor()
-        ));
+        ));*/
 
         Ok(SyncResult {
             total_available,
@@ -731,7 +749,7 @@ impl ActivityStoreInterface {
         }
 
         let mut activities = result.unwrap();
-        tell::progress!(format!("{} new activities found", activities.len()));
+        //tell::progress!(format!("{} new activities found", activities.len()));
 
         //reverse them so we add the oldest first
         activities.reverse();

@@ -329,14 +329,25 @@ async fn main() {
         #[cfg(target_family = "windows")]
         {
             use ctrlc;
+
+            let mut ctrlc_count = 0;
             let _ = match ctrlc::set_handler(move || {
+                ctrlc_count += 1;
+                let code = 0;
+
+                if ctrlc_count > 1 {
+                    info!("Received multiple interrupts. Forcing Exit");
+                    info!("Exit code : {}", code);
+                    std::process::exit(code);
+                }
+
                 tell::update!(
                     "Received Ctrl-C. Cleaning up and shutting down."
                 );
 
                 //Windows doesn't really handle any non-0 codes well, so we will
                 //just use 0
-                let code = 0;
+
                 //if loop is sleeping just exit out immediately
                 if is_sleeping2.load(std::sync::atomic::Ordering::Relaxed) {
                     info!("Exiting process while loop sleeping.");
@@ -363,7 +374,7 @@ async fn main() {
             let mut signals = match Signals::new(&[SIGINT, SIGTERM]) {
                 Ok(e) => e,
                 Err(e) => {
-                    error!("Could not intialize Signals. Exiting");
+                    error!("Could not initialize Signals. Exiting");
                     error!("{}", e);
                     std::process::exit(EXIT_FAILURE);
                 }
@@ -380,7 +391,7 @@ async fn main() {
                     count += 1;
 
                     if count > 1 {
-                        info!("Received multiple interupts. Forcing Exit");
+                        info!("Received multiple interrupts. Forcing Exit");
                         info!("Exit code : {}", code);
                         std::process::exit(code);
                     }
