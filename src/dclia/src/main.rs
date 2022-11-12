@@ -20,6 +20,8 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use tell::tell::{Tell, TellLevel};
+
 use std::path::PathBuf;
 
 use dcli::activitystoreinterface::ActivityStoreInterface;
@@ -33,8 +35,8 @@ use dcli::enums::mode::Mode;
 use dcli::manifestinterface::ManifestInterface;
 use dcli::output::Output;
 use dcli::response::gpr::CharacterActivitiesData;
-use dcli::utils::EXIT_FAILURE;
-use dcli::utils::{build_tsv, determine_data_dir, print_error, print_verbose};
+use dcli::utils::{EXIT_FAILURE, format_error};
+use dcli::utils::{build_tsv, determine_data_dir};
 use structopt::StructOpt;
 
 const ORBIT_PLACE_HASH: u32 = 2961497387;
@@ -101,12 +103,16 @@ struct Opt {
 #[tokio::main]
 async fn main() {
     let opt = Opt::from_args();
-    print_verbose(&format!("{:#?}", opt), opt.verbose);
+    
+    let level = if opt.verbose { TellLevel::Verbose } else {TellLevel::Progress};
+    Tell::init(level);
+
+    tell::verbose!(&format!("{:#?}", opt));
 
     let data_dir = match determine_data_dir(opt.data_dir) {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error initializing data directory.", e);
+            tell::error!(format_error("Error initializing data directory.", e));
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -119,10 +125,10 @@ async fn main() {
     {
         Ok(e) => e,
         Err(e) => {
-            print_error(
+            tell::error!(format_error(
                 "Could not initialize activity store. Have you run dclisync?",
                 e,
-            );
+            ));
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -130,10 +136,10 @@ async fn main() {
     let member: Member = match store.find_member(&opt.name, true).await {
         Ok(e) => e,
         Err(e) => {
-            eprintln!(
+            tell::error!(format_error(
                 "Could not find bungie name. Please check name and try again. {}",
                 e
-            );
+            ));
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -141,7 +147,7 @@ async fn main() {
     let client = match ApiInterface::new() {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error initializing API Interface", e);
+            tell::error!(format_error("Error initializing API Interface", e));
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -152,7 +158,7 @@ async fn main() {
     {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error retrieving data from API", e);
+            tell::error!(format_error("Error retrieving data from API", e));
             std::process::exit(EXIT_FAILURE);
         }
     };
@@ -162,7 +168,7 @@ async fn main() {
         None => {
             match opt.output {
                 Output::Default => {
-                    println!("Not currently in an activity");
+                    tell::update!("Not currently in an activity");
                 }
                 Output::Tsv => {
                     print_tsv_no_activity();
@@ -175,17 +181,16 @@ async fn main() {
     let mut manifest = match ManifestInterface::new(&data_dir, false).await {
         Ok(e) => e,
         Err(e) => {
-            print_error("Manifest Error", e);
+            tell::error!(format_error("Manifest Error", e));
             std::process::exit(EXIT_FAILURE);
         }
     };
 
-    print_verbose(
+    tell::verbose!(
         &format!(
             "Getting activity definition data from manifest : {}",
             activity_data_a.current_activity_hash
-        ),
-        opt.verbose,
+        )
     );
     let activity_data_m: Option<ActivityDefinitionData> = match manifest
         .get_activity_definition(activity_data_a.current_activity_hash)
@@ -193,13 +198,13 @@ async fn main() {
     {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error Retrieving Data from Manifest", e);
+            tell::error!(format_error("Error Retrieving Data from Manifest", e));
             std::process::exit(EXIT_FAILURE);
         }
     };
 
     if activity_data_m.is_none() {
-        println!("Unknown activity. Make sure you have synced the latest version of the manifest using dclim.");
+        tell::update!("Unknown activity. Make sure you have synced the latest version of the manifest using dclim.");
         return;
     }
 
@@ -208,7 +213,7 @@ async fn main() {
     if activity_data_m.place_hash == ORBIT_PLACE_HASH {
         match opt.output {
             Output::Default => {
-                println!("{}", get_in_orbit_human());
+               tell::update!(get_in_orbit_human());
             }
             Output::Tsv => {
                 print_tsv_orbit();
@@ -218,12 +223,11 @@ async fn main() {
         return;
     }
 
-    print_verbose(
+        tell::update!(
         &format!(
             "Getting place definition data from manifest : {}",
             activity_data_m.place_hash
-        ),
-        opt.verbose,
+        )
     );
     let place_data_m: Option<PlaceDefinitionData> = match manifest
         .get_place_definition(activity_data_m.place_hash)
@@ -231,23 +235,22 @@ async fn main() {
     {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error Retrieving Data from Manifest", e);
+            tell::error!(format_error("Error Retrieving Data from Manifest", e));
             std::process::exit(EXIT_FAILURE);
         }
     };
 
     if place_data_m.is_none() {
-        println!("Unknown location. Make sure you have synced the latest version of the manifest using dclim.");
+        tell::update!("Unknown location. Make sure you have synced the latest version of the manifest using dclim.");
         return;
     }
     let place_data_m = place_data_m.unwrap();
 
-    print_verbose(
+    tell::update!(
         &format!(
             "Getting destination definition data from manifest : {}",
             activity_data_m.destination_hash
-        ),
-        opt.verbose,
+        )
     );
     let destination_data_m: Option<DestinationDefinitionData> = match manifest
         .get_destination_definition(activity_data_m.destination_hash)
@@ -255,13 +258,13 @@ async fn main() {
     {
         Ok(e) => e,
         Err(e) => {
-            print_error("Error Retrieving Data from Manifest", e);
+            tell::update!(format_error("Error Retrieving Data from Manifest", e));
             std::process::exit(EXIT_FAILURE);
         }
     };
 
     if destination_data_m.is_none() {
-        println!("Unknown destination. Make sure you have synced the latest version of the manifest using dclim.");
+       tell::update!("Unknown destination. Make sure you have synced the latest version of the manifest using dclim.");
         return;
     }
 
@@ -270,7 +273,7 @@ async fn main() {
     let mut mode = Mode::None;
 
     //lets find out the mode / activity type name
-    print_verbose("Determining activity mode", opt.verbose);
+    tell::verbose!("Determining activity mode");
     let activity_type_name: String = match activity_data_a
         .current_activity_mode_type
     {
@@ -282,12 +285,11 @@ async fn main() {
             format!("{}", e)
         }
         None => {
-            print_verbose(
+            tell::verbose!(
                 &format!(
                     "Activity mode not returned from API. Checking Manifest : {}",
                     activity_data_m.activity_type_hash
-                ),
-                opt.verbose,
+                )
             );
             //otherwise, we go into the manifest to find it
             match manifest
@@ -301,12 +303,11 @@ async fn main() {
                     None => "Unknown".to_string(),
                 },
                 Err(e) => {
-                    print_verbose(
+                    tell::verbose!(
                         &format!(
                             "Activity Mode not found in Manifest : {:?}",
                             e
-                        ),
-                        opt.verbose,
+                        )
                     );
                     //Todo: this either means an error, unknown activity, or they are in orbit
                     "Unknown".to_string()
@@ -394,7 +395,7 @@ fn print_tsv(
         ("is_crucible", mode.is_crucible().to_string()),
     ];
 
-    print!("{}", build_tsv(name_values));
+    tell::update!(format!("{}", build_tsv(name_values)));
 }
 
 fn print_default(
@@ -414,7 +415,7 @@ fn print_default(
         description,
     );
 
-    println!("{}", out);
+    tell::update!(out);
 }
 
 fn build_human_status(

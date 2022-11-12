@@ -346,6 +346,7 @@ version = "0.9.0"
 dependencies = [
  "dcli",
  "structopt",
+ "tell",
  "tokio",
 ]
 
