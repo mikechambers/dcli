@@ -1,0 +1,19 @@
+#It does not require admin rights, but must be run in a user account
+#which has any required environment variables set (such as DESTINY_API_KEY
+#and which contains the dclisync executable in its path (you can also provide).
+#The user that it runs under will also impact where the database is stored.
+#make sure to replace /home/mesh below with appropriate path
+
+[Unit]
+Description=dclisync service
+After=multi-user.target
+
+[Service]
+Type=simple
+Restart=always
+User=mesh
+Group=mesh
+ExecStart=/usr/bin/bash -lc "dclisync --sync --daemon --interval 60"
+TimeoutStopSec=60
+[Install]
+WantedBy=multi-user.target
