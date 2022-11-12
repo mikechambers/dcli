@@ -1,0 +1,14 @@
+[package]
+name = "tell"
+#version
+version = "0.9.0"
+authors = ["Mike Chambers <mikechambers@gmail.com>"]
+edition = "2018"
+description = "Simple library for handling different levels of user output for command line apps."
+homepage = "https://www.mikechambers.com"
+repository = "https://github.com/mikechambers/dcli"
+license = "MIT"
+readme = "README.md"
+
+[dependencies]
+lazy_static = "1.4.0"
