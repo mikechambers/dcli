@@ -162,6 +162,8 @@ When adding and syncing new users it is recommended that you:
 
 The initial sync for each player can take an extended amount of this, and manually running it makes it easier to debug any issues.
 
+As a general rule, you should stop the service anytime you manually run or update _dclisync_.
+
 More info:
 
 -   [How To Use Systemctl to Manage Systemd Services and Units](https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units)
