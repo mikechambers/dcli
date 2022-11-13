@@ -147,9 +147,11 @@ TimeoutStopSec=60
 WantedBy=multi-user.target
 ```
 
+This will launch, log and monitor _dclisync_ in the background. With _dclisync_ pausing 60 seconds between syncs.
+
 Note that the service does not need to run as admin, but it does need to run as a user which has access to any required environment variables (such as _DESTINY_API_KEY_). The user's path must also include the _dclisync_ executable, or you must provide an absolute path above. Finally, the user that it runs under will also impact the path where the database will be created.
 
-Also note that we set _TimeoutStopSec_ to 60 seconds. When stopping the service, dclisync will try to finish its existing sync and gracefully shutdown. This tells systemctl to wait 60 seconds for dclisync to shutdown before forcefully killing it.
+Also note that we set _TimeoutStopSec_ to 60 seconds. When stopping the service, dclisync will try to finish it's existing sync and gracefully shutdown. This tells systemctl to wait 60 seconds for dclisync to shutdown before forcefully killing it.
 
 When adding and syncing new users it is recommended that you:
 
