@@ -151,6 +151,15 @@ Note that the service does not need to run as admin, but it does need to run as 
 
 Also note that we set _TimeoutStopSec_ to 60 seconds. When stopping the service, dclisync will try to finish its existing sync and gracefully shutdown. This tells systemctl to wait 60 seconds for dclisync to shutdown before forcefully killing it.
 
+When adding and syncing new users it is recommended that you:
+
+1. Shut down the dclisync service
+2. Add the new players
+3. Do an initial sync for all of the new players
+4. Restart the service
+
+The initial sync for each player can take an extended amount of this, and manually running it makes it easier to debug any issues.
+
 More info:
 
 -   [How To Use Systemctl to Manage Systemd Services and Units](https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units)
