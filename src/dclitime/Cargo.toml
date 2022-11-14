@@ -1,7 +1,7 @@
 [package]
 name = "dclitime"
 #version
-version = "0.9.0"
+version = "0.91.0"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
 edition = "2018"
 description = "Command line tool for retrieving Destiny 2 related date / time stamps"
@@ -13,9 +13,9 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-structopt = "0.3.21"
-tokio = { version="1.7.1", features=["full"] }
-chrono = "0.4.19"
+structopt = "0.3.26"
+tokio = { version="1.21.2", features=["full"] }
+chrono = "0.4.23"
 log = "0.4.17"
 env_logger = "0.9.3"
 

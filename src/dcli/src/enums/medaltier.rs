@@ -22,7 +22,7 @@
 
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-#[derive(PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
+#[derive(Eq, PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
 #[repr(u32)]
 pub enum MedalTier {
     Tier1 = 802673300,

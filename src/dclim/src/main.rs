@@ -50,7 +50,7 @@ async fn retrieve_manifest_info() -> Result<ManifestInfo, Error> {
         None => return Err(Error::ApiResponseMissing), //we should never get here as this will be caught earlier
     };
 
-    let m_info: ManifestInfo = ManifestInfo::from_manifest(&manifest);
+    let m_info: ManifestInfo = ManifestInfo::from_manifest(manifest);
 
     Ok(m_info)
 }
@@ -100,7 +100,7 @@ async fn download_manifest(url: &str, path: &Path) -> Result<(), Error> {
     let mut manifest = zip.by_index(0)?;
 
     //reference to file we are going to write the ucompressed manifest to
-    let mut outfile = fs::File::create(&path)?;
+    let mut outfile = fs::File::create(path)?;
 
     //save the uncompressed / unzipped manifest to the file system
     std::io::copy(&mut manifest, &mut outfile)?;

@@ -22,7 +22,7 @@
 
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-#[derive(PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
+#[derive(Eq, PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
 #[repr(i32)]
 pub enum ItemType {
     Unknown = -1,
@@ -56,7 +56,7 @@ pub enum ItemType {
     Pattern = 30,
 }
 
-#[derive(PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
+#[derive(Eq, PartialEq, Debug, Clone, Deserialize_repr, Serialize_repr)]
 #[repr(i32)]
 pub enum ItemSubType {
     Unknown = -1,

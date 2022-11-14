@@ -23,7 +23,7 @@
 use std::fmt;
 
 ///Destiny 2 Platforms
-#[derive(PartialEq, Clone, Copy, Debug)]
+#[derive(Eq, PartialEq, Clone, Copy, Debug)]
 #[repr(i32)]
 pub enum CompletionReason {
     ObjectiveComplete = 0,

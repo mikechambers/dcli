@@ -3,122 +3,122 @@ name: dcli
 on: [push]
 
 jobs:
-  build-linux-musl:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Config
-        id: config
-        run: |
-          echo ::set-output name=SOURCE_TAG::${GITHUB_REF/refs\/tags\//}
-          echo ::set-output name=TARGET_NAME::x86_64-unknown-linux-musl
-      - uses: actions/checkout@master
-      - name: Build
-        uses: stevenleadbeater/rust-musl-builder@master
-        with:
-          args: /bin/bash -c "export DESTINY_API_KEY=${{ secrets.DESTINY_API_KEY }} && rustup toolchain install 1.53.0 && rustup target add x86_64-unknown-linux-musl --toolchain=1.53.0 && rustup override set 1.53.0 && cargo build --manifest-path=src/Cargo.toml --release --target=x86_64-unknown-linux-musl"
-      - name: Process and Package
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        env:
-          SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
-          TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
-        run: echo SOURCE_TAG ${SOURCE_TAG} && echo TARGET_NAME ${TARGET_NAME} && ls -l src/target/ && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia  && cp src/target/${TARGET_NAME}/release/dcliad . && strip dcliad && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && cp src/target/${TARGET_NAME}/release/dclisync . && strip dclisync && cp src/target/${TARGET_NAME}/release/dclistat . && strip dclistat && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dcliad dclim dclitime dcliah dclisync dclistat
+    build-linux-musl:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Setup Config
+              id: config
+              run: |
+                  echo ::set-output name=SOURCE_TAG::${GITHUB_REF/refs\/tags\//}
+                  echo ::set-output name=TARGET_NAME::x86_64-unknown-linux-musl
+            - uses: actions/checkout@master
+            - name: Build
+              uses: stevenleadbeater/rust-musl-builder@master
+              with:
+                  args: /bin/bash -c "export DESTINY_API_KEY=${{ secrets.DESTINY_API_KEY }} && rustup toolchain install 1.65.0 && rustup target add x86_64-unknown-linux-musl --toolchain=1.65.0 && rustup override set 1.65.0 && cargo build --manifest-path=src/Cargo.toml --release --target=x86_64-unknown-linux-musl"
+            - name: Process and Package
+              if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+              env:
+                  SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
+                  TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
+              run: echo SOURCE_TAG ${SOURCE_TAG} && echo TARGET_NAME ${TARGET_NAME} && ls -l src/target/ && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia  && cp src/target/${TARGET_NAME}/release/dcliad . && strip dcliad && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && cp src/target/${TARGET_NAME}/release/dclisync . && strip dclisync && cp src/target/${TARGET_NAME}/release/dclistat . && strip dclistat && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dcliad dclim dclitime dcliah dclisync dclistat
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip
-            RELEASE.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Release
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              with:
+                  files: |
+                      dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip
+                      RELEASE.md
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-windows-msvc:
-    runs-on: windows-latest
-    steps:
-      #set some environement variables that we can use through the rest of our
-      #action
-      - name: Setup Config
-        id: config
-        run: |
-          echo ::set-output name=SOURCE_TAG::${GITHUB_REF/refs\/tags\//}
-          echo ::set-output name=TARGET_NAME::x86_64-pc-windows-msvc
-        shell: bash
+    build-windows-msvc:
+        runs-on: windows-latest
+        steps:
+            #set some environement variables that we can use through the rest of our
+            #action
+            - name: Setup Config
+              id: config
+              run: |
+                  echo ::set-output name=SOURCE_TAG::${GITHUB_REF/refs\/tags\//}
+                  echo ::set-output name=TARGET_NAME::x86_64-pc-windows-msvc
+              shell: bash
 
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ steps.config.outputs.TARGET_NAME }}
-          override: true
-      - name: Build
-        uses: actions-rs/cargo@v1
-        env:
-          DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
-          RUSTFLAGS: "-C target-feature=+crt-static"
-        with:
-          use-cross: true
-          command: build
-          args: --manifest-path=src/Cargo.toml --release --target ${{ steps.config.outputs.TARGET_NAME }}
-      - name: Process
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        env:
-          SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
-          TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
-        run: rustup.exe toolchain install 1.53.0 && rustup.exe override set 1.53.0 && echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia.exe . && strip dclia.exe && cp src/target/${TARGET_NAME}/release/dcliad.exe . && strip dcliad.exe && cp src/target/${TARGET_NAME}/release/dclim.exe . && strip dclim.exe && cp src/target/${TARGET_NAME}/release/dclitime.exe . && strip dclitime.exe && cp src/target/${TARGET_NAME}/release/dcliah.exe . && strip dcliah.exe && cp src/target/${TARGET_NAME}/release/dclisync.exe . && strip dclisync.exe && cp src/target/${TARGET_NAME}/release/dclistat.exe . && strip dclistat.exe
-        shell: bash
-      - name: Package
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        run: Compress-Archive -Path RELEASE.md, README.md, LICENSE.md, dclia.exe, dcliad.exe, dclim.exe, dclitime.exe, dcliah.exe, dclisync.exe, dclistat.exe -DestinationPath dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip -CompressionLevel Optimal
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip
-            RELEASE.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - uses: actions/checkout@v2
+            - uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+                  target: ${{ steps.config.outputs.TARGET_NAME }}
+                  override: true
+            - name: Build
+              uses: actions-rs/cargo@v1
+              env:
+                  DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
+                  RUSTFLAGS: "-C target-feature=+crt-static"
+              with:
+                  use-cross: true
+                  command: build
+                  args: --manifest-path=src/Cargo.toml --release --target ${{ steps.config.outputs.TARGET_NAME }}
+            - name: Process
+              if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+              env:
+                  SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
+                  TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
+              run: rustup.exe toolchain install 1.65.0 && rustup.exe override set 1.65.0 && echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia.exe . && strip dclia.exe && cp src/target/${TARGET_NAME}/release/dcliad.exe . && strip dcliad.exe && cp src/target/${TARGET_NAME}/release/dclim.exe . && strip dclim.exe && cp src/target/${TARGET_NAME}/release/dclitime.exe . && strip dclitime.exe && cp src/target/${TARGET_NAME}/release/dcliah.exe . && strip dcliah.exe && cp src/target/${TARGET_NAME}/release/dclisync.exe . && strip dclisync.exe && cp src/target/${TARGET_NAME}/release/dclistat.exe . && strip dclistat.exe
+              shell: bash
+            - name: Package
+              if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+              run: Compress-Archive -Path RELEASE.md, README.md, LICENSE.md, dclia.exe, dcliad.exe, dclim.exe, dclitime.exe, dcliah.exe, dclisync.exe, dclistat.exe -DestinationPath dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip -CompressionLevel Optimal
+            - name: Release
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              with:
+                  files: |
+                      dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip
+                      RELEASE.md
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-mac-x86_64:
-    runs-on: macos-10.15
-    steps:
-      #set some environement variables that we can use through the rest of our
-      #action
-      - name: Setup Config
-        id: config
-        run: |
-          echo ::set-output name=SOURCE_TAG::${GITHUB_REF/refs\/tags\//}
-          echo ::set-output name=TARGET_NAME::x86_64-apple-darwin
+    build-mac-x86_64:
+        runs-on: macos-10.15
+        steps:
+            #set some environement variables that we can use through the rest of our
+            #action
+            - name: Setup Config
+              id: config
+              run: |
+                  echo ::set-output name=SOURCE_TAG::${GITHUB_REF/refs\/tags\//}
+                  echo ::set-output name=TARGET_NAME::x86_64-apple-darwin
 
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ steps.config.outputs.TARGET_NAME }}
-          override: true
-      - name: Build
-        uses: actions-rs/cargo@v1
-        env:
-          DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
-        with:
-          use-cross: true
-          command: build
-          args: --manifest-path=src/Cargo.toml --release --target ${{ steps.config.outputs.TARGET_NAME }}
-      - name: Process
-        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        env:
-          SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
-          TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
-          DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
-        run: rustup toolchain install 1.53.0 && rustup override set 1.53.0 && echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dcliad . && strip dcliad && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && cp src/target/${TARGET_NAME}/release/dclisync . && strip dclisync && cp src/target/${TARGET_NAME}/release/dclistat . && strip dclistat && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dcliad dclim dclitime dcliah dclisync dclistat
+            - uses: actions/checkout@v2
+            - uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+                  target: ${{ steps.config.outputs.TARGET_NAME }}
+                  override: true
+            - name: Build
+              uses: actions-rs/cargo@v1
+              env:
+                  DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
+              with:
+                  use-cross: true
+                  command: build
+                  args: --manifest-path=src/Cargo.toml --release --target ${{ steps.config.outputs.TARGET_NAME }}
+            - name: Process
+              if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+              env:
+                  SOURCE_TAG: ${{ steps.config.outputs.SOURCE_TAG }}
+                  TARGET_NAME: ${{ steps.config.outputs.TARGET_NAME }}
+                  DESTINY_API_KEY: ${{ secrets.DESTINY_API_KEY }}
+              run: rustup toolchain install 1.65.0 && rustup override set 1.65.0 && echo SOURCE_TAG ${SOURCE_TAG} && cp src/target/${TARGET_NAME}/release/dclia . && strip dclia && cp src/target/${TARGET_NAME}/release/dcliad . && strip dcliad && cp src/target/${TARGET_NAME}/release/dclim . && strip dclim && cp src/target/${TARGET_NAME}/release/dclitime . && strip dclitime && cp src/target/${TARGET_NAME}/release/dcliah . && strip dcliah && cp src/target/${TARGET_NAME}/release/dclisync . && strip dclisync && cp src/target/${TARGET_NAME}/release/dclistat . && strip dclistat && zip -j dcli_${TARGET_NAME}_${SOURCE_TAG}.zip RELEASE.md README.md LICENSE.md dclia dcliad dclim dclitime dcliah dclisync dclistat
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip
-            RELEASE.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Release
+              uses: softprops/action-gh-release@v1
+              if: startsWith(github.ref, 'refs/tags/')
+              with:
+                  files: |
+                      dcli_${{ steps.config.outputs.TARGET_NAME }}_${{ steps.config.outputs.SOURCE_TAG }}.zip
+                      RELEASE.md
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -74,13 +74,7 @@ impl Characters {
             return None;
         }
 
-        for c in &self.characters {
-            if c.class_type == class_type {
-                return Some(c);
-            }
-        }
-
-        None
+        self.characters.iter().find(|&c| c.class_type == class_type)
     }
 
     pub fn get_last_active_ref(&self) -> Option<&CharacterData> {

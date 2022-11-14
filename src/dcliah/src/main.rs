@@ -188,7 +188,7 @@ fn print_default(
         id_col_w=id_col_w,
     );
     tell::update!("{}", header);
-    let header_divider = repeat_str(&"=", header.chars().count());
+    let header_divider = repeat_str("=", header.chars().count());
     tell::update!("{}", header_divider);
 
     let slice: &[CruciblePlayerActivityPerformance] = if is_limited {
@@ -204,7 +204,7 @@ fn print_default(
 
         &performances[..*activity_limit as usize]
     } else {
-        &performances
+        performances
     };
 
     let mut last_mode = Mode::None;
@@ -215,7 +215,7 @@ fn print_default(
         if activity.activity_detail.mode != last_mode {
             tell::update!();
             tell::update!("{}", activity.activity_detail.mode);
-            tell::update!("{}", repeat_str(&"-", col_w + map_col_w));
+            tell::update!("{}", repeat_str("-", col_w + map_col_w));
             last_mode = activity.activity_detail.mode;
         }
 
@@ -285,7 +285,7 @@ fn print_default(
     }
 
     let extended = aggregate.extended.as_ref().unwrap();
-    tell::update!("{}", repeat_str(&"-", header.chars().count()));
+    tell::update!("{}", repeat_str("-", header.chars().count()));
 
     tell::update!("{:<0map_col_w$}{:<0wl_col_w$}{:>0str_col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0col_w$}{:>0id_col_w$}",
     "TOTAL",
@@ -383,7 +383,7 @@ fn print_default(
     );
 
     let wep_divider_len = wep_header_str.chars().count();
-    let wep_divider = repeat_str(&"=", wep_divider_len);
+    let wep_divider = repeat_str("=", wep_divider_len);
 
     if weapon_count > &0 {
         tell::update!("{}", wep_header_str);
@@ -493,7 +493,7 @@ fn print_default(
         col_w_h = col_w_h);
 
         let med_divider_len = wep_divider_len;
-        let med_divider = repeat_str(&"=", med_divider_len);
+        let med_divider = repeat_str("=", med_divider_len);
 
         let mut medals = extended.medals.clone();
         medals.retain(|m| {
@@ -615,7 +615,7 @@ struct Opt {
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
     /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
     /// season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen,
-    /// witch_queen, season_of_the_haunted, season_of_the_plunder.
+    /// witch_queen, season_of_the_haunted, season_of_plunder.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --custom-time argument.
@@ -642,7 +642,7 @@ struct Opt {
     /// season_of_opulence, season_of_the_undying, season_of_dawn,
     /// season_of_the_worthy, season_of_arrivals, season_of_the_hunt,
     /// season_of_the_chosen, season_of_the_splicer, season_of_the_lost, season_of_the_risen,
-    /// witch_queen, season_of_the_haunted, season_of_the_plunder.
+    /// witch_queen, season_of_the_haunted, season_of_plunder.
     ///
     /// When custom is specified, the custom start date in RFC3339 format must
     /// be specified with the --end-custom-time argument.

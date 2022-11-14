@@ -34,7 +34,7 @@ use crate::{
     },
 };
 
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Moment {
     Now,
     Daily,
@@ -70,7 +70,7 @@ pub enum Moment {
     SeasonOfTheRisen,
     WitchQueen,
     SeasonOfTheHaunted,
-    SeasonOfThePlunder,
+    SeasonOfPlunder,
 }
 
 impl Moment {
@@ -90,35 +90,65 @@ impl Moment {
             Moment::Month => Utc::now() - Duration::days(30),
             Moment::NextMonth => Utc::now() + Duration::days(30),
             Moment::AllTime => get_destiny2_launch_date(),
-            Moment::Custom => Utc.ymd(0, 0, 0).and_hms(0, 0, 0),
+            Moment::Custom => Utc.with_ymd_and_hms(0, 0, 0, 0, 0, 0).unwrap(),
 
-            Moment::Launch => Utc.ymd(2017, 9, 6).and_hms(0, 0, 1),
-            Moment::CurseOfOsiris => Utc.ymd(2017, 12, 5).and_hms(17, 0, 0),
-            Moment::Warmind => Utc.ymd(2018, 5, 8).and_hms(17, 0, 0),
-            Moment::SeasonOfTheOutlaw => Utc.ymd(2018, 9, 4).and_hms(17, 0, 0),
-            Moment::SeasonOfTheForge => Utc.ymd(2018, 12, 4).and_hms(17, 0, 0),
-            Moment::SeasonOfTheDrifter => Utc.ymd(2019, 3, 5).and_hms(17, 0, 0),
-            Moment::SeasonOfOpulence => Utc.ymd(2019, 6, 4).and_hms(17, 0, 0),
+            Moment::Launch => {
+                Utc.with_ymd_and_hms(2017, 9, 6, 0, 0, 1).unwrap()
+            }
+            Moment::CurseOfOsiris => {
+                Utc.with_ymd_and_hms(2017, 12, 5, 17, 0, 0).unwrap()
+            }
+            Moment::Warmind => {
+                Utc.with_ymd_and_hms(2018, 5, 8, 17, 0, 0).unwrap()
+            }
+            Moment::SeasonOfTheOutlaw => {
+                Utc.with_ymd_and_hms(2018, 9, 4, 17, 0, 0).unwrap()
+            }
+            Moment::SeasonOfTheForge => {
+                Utc.with_ymd_and_hms(2018, 12, 4, 17, 0, 0).unwrap()
+            }
+            Moment::SeasonOfTheDrifter => {
+                Utc.with_ymd_and_hms(2019, 3, 5, 17, 0, 0).unwrap()
+            }
+            Moment::SeasonOfOpulence => {
+                Utc.with_ymd_and_hms(2019, 6, 4, 17, 0, 0).unwrap()
+            }
             Moment::SeasonOfTheUndying => {
-                Utc.ymd(2019, 10, 1).and_hms(17, 0, 0)
+                Utc.with_ymd_and_hms(2019, 10, 1, 17, 0, 0).unwrap()
             }
-            Moment::SeasonOfDawn => Utc.ymd(2019, 12, 10).and_hms(17, 0, 0),
-            Moment::SeasonOfTheWorthy => Utc.ymd(2020, 3, 10).and_hms(17, 0, 0),
-            Moment::SeasonOfArrivals => Utc.ymd(2020, 6, 9).and_hms(17, 0, 0),
-            Moment::SeasonOfTheHunt => Utc.ymd(2020, 11, 10).and_hms(17, 0, 0),
-            Moment::SeasonOfTheChosen => Utc.ymd(2021, 2, 9).and_hms(17, 0, 0),
+            Moment::SeasonOfDawn => {
+                Utc.with_ymd_and_hms(2019, 12, 10, 17, 0, 0).unwrap()
+            }
+            Moment::SeasonOfTheWorthy => {
+                Utc.with_ymd_and_hms(2020, 3, 10, 17, 0, 0).unwrap()
+            }
+            Moment::SeasonOfArrivals => {
+                Utc.with_ymd_and_hms(2020, 6, 9, 17, 0, 0).unwrap()
+            }
+            Moment::SeasonOfTheHunt => {
+                Utc.with_ymd_and_hms(2020, 11, 10, 17, 0, 0).unwrap()
+            }
+            Moment::SeasonOfTheChosen => {
+                Utc.with_ymd_and_hms(2021, 2, 9, 17, 0, 0).unwrap()
+            }
             Moment::SeasonOfTheSplicer => {
-                Utc.ymd(2021, 5, 11).and_hms(17, 0, 0)
+                Utc.with_ymd_and_hms(2021, 5, 11, 17, 0, 0).unwrap()
             }
-            Moment::SeasonOfTheLost => Utc.ymd(2021, 8, 24).and_hms(17, 0, 0),
-            Moment::SeasonOfTheRisen => Utc.ymd(2022, 2, 22).and_hms(17, 0, 0),
-            Moment::WitchQueen => Utc.ymd(2022, 2, 22).and_hms(17, 0, 0),
+            Moment::SeasonOfTheLost => {
+                Utc.with_ymd_and_hms(2021, 8, 24, 17, 0, 0).unwrap()
+            }
+            Moment::SeasonOfTheRisen => {
+                Utc.with_ymd_and_hms(2022, 2, 22, 17, 0, 0).unwrap()
+            }
+            Moment::WitchQueen => {
+                Utc.with_ymd_and_hms(2022, 2, 22, 17, 0, 0).unwrap()
+            }
             Moment::SeasonOfTheHaunted => {
-                Utc.ymd(2022, 5, 24).and_hms(17, 0, 0)
+                Utc.with_ymd_and_hms(2022, 5, 24, 17, 0, 0).unwrap()
             }
 
-            Moment::SeasonOfThePlunder => {
-                Utc.ymd(2022, 8, 23).and_hms(17, 0, 0)
+            Moment::SeasonOfPlunder => {
+                Utc.with_ymd_and_hms(2022, 8, 23, 17, 0, 0).unwrap()
             }
         }
     }
@@ -167,7 +197,7 @@ impl FromStr for Moment {
             "season_of_the_risen" => Ok(Moment::SeasonOfTheRisen),
             "witch_queen" => Ok(Moment::WitchQueen),
             "season_of_the_haunted" => Ok(Moment::SeasonOfTheHaunted),
-            "season_of_the_plunder" => Ok(Moment::SeasonOfThePlunder),
+            "season_of_plunder" => Ok(Moment::SeasonOfPlunder),
 
             _ => Err("Unknown Moment type"),
         }
@@ -212,7 +242,7 @@ impl fmt::Display for Moment {
             Moment::SeasonOfTheRisen => "Season of the Risen",
             Moment::WitchQueen => "The Witch Queen",
             Moment::SeasonOfTheHaunted => "Season of the Haunted",
-            Moment::SeasonOfThePlunder => "Season of the Plunder",
+            Moment::SeasonOfPlunder => "Season of the Plunder",
         };
 
         write!(f, "{}", out)

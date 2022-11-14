@@ -330,7 +330,7 @@ async fn main() {
     let description = activity_data_m
         .display_properties
         .description
-        .unwrap_or_else(|| "".to_string());
+        .unwrap_or_default();
     let activity_name = activity_data_m.display_properties.name;
     let place_name = place_data_m.display_properties.name;
     let destination_name = destination_data_m.display_properties.name;

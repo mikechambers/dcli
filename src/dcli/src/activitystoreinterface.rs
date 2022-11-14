@@ -117,7 +117,7 @@ impl ActivityStoreInterface {
         let connection_string: &str = &path;
 
         //TODO: Is this still the correct / best journal mode for us?
-        let mut db = SqliteConnectOptions::from_str(&connection_string)?
+        let mut db = SqliteConnectOptions::from_str(connection_string)?
             .journal_mode(SqliteJournalMode::Wal)
             .create_if_missing(true)
             .read_only(read_only)
@@ -281,7 +281,7 @@ impl ActivityStoreInterface {
         players: &[PlayerName],
     ) -> Result<(), Error> {
         for player in players.iter() {
-            match self.sync_player(&player).await {
+            match self.sync_player(player).await {
                 Ok(_) => {}
                 Err(e) => {
                     tell::error!(
@@ -306,7 +306,7 @@ impl ActivityStoreInterface {
         &mut self,
         player: &PlayerName,
     ) -> Result<SyncResult, Error> {
-        let member = self.find_member(&player, false).await?;
+        let member = self.find_member(player, false).await?;
 
         let out = self.sync_member(&member).await?;
         Ok(out)
@@ -317,7 +317,7 @@ impl ActivityStoreInterface {
         let members: Vec<Member> = self.get_sync_members().await?;
 
         for member in members.iter() {
-            match self.sync_member(&member).await {
+            match self.sync_member(member).await {
                 Ok(_) => {}
                 Err(e) => tell::error!(
                     "{}",
@@ -352,7 +352,7 @@ impl ActivityStoreInterface {
 
         let mut out: Vec<Member> = Vec::new();
         for row in rows.iter() {
-            let member = self.parse_member_row(&row)?;
+            let member = self.parse_member_row(row)?;
             out.push(member);
         }
 
@@ -553,8 +553,7 @@ impl ActivityStoreInterface {
         for id in ids {
             match self.get_activity_row_id(id).await {
                 Ok(_) => {
-                    let _ = self
-                        .remove_from_activity_queue(&character_row_id, &id)
+                    self.remove_from_activity_queue(&character_row_id, &id)
                         .await?;
                     continue;
                 }
@@ -966,7 +965,7 @@ impl ActivityStoreInterface {
                 .await?;
 
             self._insert_character_activity_stats(
-                &entry,
+                entry,
                 character_row_id,
                 activity_row_id,
             )
@@ -1486,8 +1485,7 @@ impl ActivityStoreInterface {
             let player_performances: Vec<CruciblePlayerPerformance> =
                 Vec::new();
 
-            let display_name =
-                team_names.pop().unwrap_or_else(|| "".to_string());
+            let display_name = team_names.pop().unwrap_or_default();
 
             let team = Team {
                 id,
@@ -1504,8 +1502,7 @@ impl ActivityStoreInterface {
         //this also covered any bugs where no teams are specified
         let mut no_teams = false;
         if teams.is_empty() {
-            let display_name =
-                team_names.pop().unwrap_or_else(|| "".to_string());
+            let display_name = team_names.pop().unwrap_or_default();
 
             let team = Team {
                 standing: Standing::Unknown,
@@ -1559,7 +1556,7 @@ impl ActivityStoreInterface {
             }
         }
 
-        let details = self.parse_activity(manifest, &activity_row).await?;
+        let details = self.parse_activity(manifest, activity_row).await?;
 
         Ok(CrucibleActivity { details, teams })
     }
@@ -1789,7 +1786,7 @@ impl ActivityStoreInterface {
 
         for activity_row in activity_rows {
             let player_performance = self
-                .parse_individual_performance_row(manifest, &activity_row)
+                .parse_individual_performance_row(manifest, activity_row)
                 .await?;
 
             performances.push(player_performance);
@@ -1947,10 +1944,8 @@ impl ActivityStoreInterface {
 
             match item_definition {
                 Some(e) => {
-                    description = e
-                        .display_properties
-                        .description
-                        .unwrap_or_else(|| "".to_string());
+                    description =
+                        e.display_properties.description.unwrap_or_default();
                     name = e.display_properties.name;
                     item_type = e.item_type;
                     item_sub_type = e.item_sub_type;

@@ -65,7 +65,8 @@ impl ApiClient {
     }
 
     pub async fn call(&self, url: &str) -> Result<reqwest::Response, Error> {
-        let url = Url::parse(&url).unwrap();
+        //todo: this could fail if we pass in non-url string
+        let url = Url::parse(url).unwrap();
 
         tell::verbose!("{}", url);
         info!("API call : {}", url);
@@ -124,7 +125,7 @@ impl ApiClient {
         url: &str,
         post_data: &str,
     ) -> Result<reqwest::Response, Error> {
-        let url = Url::parse(&url).unwrap();
+        let url = Url::parse(url).unwrap();
 
         info!("Calling API [post] : {}", url);
         tell::verbose!("{}", url);

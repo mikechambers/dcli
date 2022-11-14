@@ -1,5 +1,5 @@
 [workspace]
-members = ["dclia", "dclim", "dcliah", "dclitime", "dclisync", "dcliad", "dclistat", "dclif"]
+members = ["dclia", "dclim", "dcliah", "dclitime", "dclisync", "dcliad", "dclistat"]
 
 #https://github.com/johnthagen/min-sized-rust
 [profile.release]

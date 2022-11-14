@@ -23,7 +23,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Stat {
     KD,
     Efficiency,

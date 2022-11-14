@@ -139,7 +139,7 @@ pub fn format_f32(val: f32, precision: usize) -> String {
 }
 
 pub fn repeat_str(s: &str, count: usize) -> String {
-    std::iter::repeat(s).take(count).collect::<String>()
+    s.repeat(count)
 }
 
 /// Clears screen. Works across platforms
@@ -178,8 +178,9 @@ pub fn human_date_format(start_time: &DateTime<Utc>) -> String {
 
 //this could use some more work and polish. Add "and" before the last item.
 pub fn human_duration(seconds: u32) -> String {
-    let dt =
-        Utc.ymd(0, 1, 1).and_hms(0, 0, 0) + Duration::seconds(seconds as i64);
+    //let dt = Utc.with_ymd_and_hms(0, 1, 1,0, 0, 0) + Duration::seconds(seconds as i64);
+    let dt = Utc.with_ymd_and_hms(0, 1, 1, 0, 0, 0).unwrap()
+        + Duration::seconds(seconds as i64);
     let year = build_time_str(dt.year(), "year");
     let mon = build_time_str(dt.month() as i32 - 1, "month");
     let day = build_time_str(dt.day() as i32 - 1, "day");
@@ -224,24 +225,27 @@ pub fn build_tsv(name_values: Vec<(&str, String)>) -> String {
 }
 
 pub fn get_destiny2_launch_date() -> DateTime<Utc> {
-    Utc.ymd(2017, 9, 6).and_hms(17, 0, 0)
+    Utc.with_ymd_and_hms(2017, 9, 6, 17, 0, 0).unwrap()
 }
 
 pub fn get_last_weekly_reset() -> DateTime<Utc> {
     //get a hardcoded past reset date / time (17:00 UTC every tuesday)
-    let past_reset: DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);
+    let past_reset: DateTime<Utc> =
+        Utc.with_ymd_and_hms(2020, 11, 10, 17, 0, 0).unwrap();
     find_previous_moment(past_reset, WEEK_IN_SECONDS)
 }
 
 pub fn get_last_friday_reset() -> DateTime<Utc> {
     //get a hardcoded past reset date / time (17:00 UTC every friday)
-    let past_reset: DateTime<Utc> = Utc.ymd(2020, 12, 4).and_hms(17, 0, 0);
+    let past_reset: DateTime<Utc> =
+        Utc.with_ymd_and_hms(2020, 12, 4, 17, 0, 0).unwrap();
     find_previous_moment(past_reset, WEEK_IN_SECONDS)
 }
 
 pub fn get_last_daily_reset() -> DateTime<Utc> {
     //get a hardcoded past daily date / time (17:00 UTC every tuesday)
-    let past_reset: DateTime<Utc> = Utc.ymd(2020, 11, 10).and_hms(17, 0, 0);
+    let past_reset: DateTime<Utc> =
+        Utc.with_ymd_and_hms(2020, 11, 10, 17, 0, 0).unwrap();
 
     find_previous_moment(past_reset, DAY_IN_SECONDS)
 }

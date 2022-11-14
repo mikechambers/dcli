@@ -436,7 +436,7 @@ impl AggregateCruciblePerformances {
                     std::cmp::max(longest_win_streak, streak as u32);
             } else if streak < 0 {
                 longest_loss_streak =
-                    std::cmp::max(longest_loss_streak, streak.abs() as u32);
+                    std::cmp::max(longest_loss_streak, streak.unsigned_abs());
             }
 
             last_standing = p.stats.standing;

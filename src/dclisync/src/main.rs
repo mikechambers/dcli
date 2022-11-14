@@ -173,7 +173,9 @@ async fn main() {
     let opt = Opt::from_args();
     env_logger::init();
 
-    let level = if opt.daemon {
+    let level = if opt.verbose {
+        TellLevel::Verbose
+    } else if opt.daemon {
         TellLevel::Update
     } else {
         TellLevel::Progress
@@ -260,7 +262,7 @@ async fn main() {
                 continue;
             }
 
-            match store.add_member_to_sync(&m).await {
+            match store.add_member_to_sync(m).await {
                 Ok(_) => tell::update!("{}", m.name.get_bungie_name()),
                 Err(e) => {
                     tell::update!(
@@ -279,7 +281,7 @@ async fn main() {
         tell::update!("Added");
         tell::update!("-------------");
         for player in players.iter() {
-            match store.add_player_to_sync(&player).await {
+            match store.add_player_to_sync(player).await {
                 Ok(_) => tell::update!("{}", player.get_bungie_name()),
                 Err(e) => {
                     tell::update!(
@@ -299,7 +301,7 @@ async fn main() {
         tell::update!("Removed");
         tell::update!("-------------");
         for player in players.iter() {
-            match store.remove_player_from_sync(&player).await {
+            match store.remove_player_from_sync(player).await {
                 Ok(_) => tell::update!("{}", player.get_bungie_name()),
                 Err(e) => {
                     tell::update!(
@@ -335,7 +337,7 @@ async fn main() {
             use ctrlc;
 
             let mut ctrlc_count = 0;
-            let _ = match ctrlc::set_handler(move || {
+            match ctrlc::set_handler(move || {
                 ctrlc_count += 1;
                 let code = 0;
 

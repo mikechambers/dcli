@@ -31,7 +31,7 @@ use std::fmt::{Display, Formatter, Result};
 
 use crate::response::activities::MAX_ACTIVITIES_REQUEST_COUNT;
 
-#[derive(PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug)]
 pub enum Error {
     ApiRequest { description: String },
     ApiStatus { description: String },

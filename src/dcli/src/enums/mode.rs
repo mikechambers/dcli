@@ -27,7 +27,9 @@ use crate::error::Error;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType.html#schema_Destiny-HistoricalStats-Definitions-DestinyActivityModeType
-#[derive(PartialEq, Clone, Copy, Debug, Serialize_repr, Deserialize_repr)]
+#[derive(
+    Eq, PartialEq, Clone, Copy, Debug, Serialize_repr, Deserialize_repr,
+)]
 #[repr(u32)]
 pub enum Mode {
     None = 0,

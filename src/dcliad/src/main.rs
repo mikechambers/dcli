@@ -439,7 +439,7 @@ fn print_default(
         name_col_w = wep_col,
     );
 
-    let wep_divider = repeat_str(&"=", wep_header_str.chars().count());
+    let wep_divider = repeat_str("=", wep_header_str.chars().count());
     tell::update!("{}", wep_header_str);
     tell::update!("{}", wep_divider);
 

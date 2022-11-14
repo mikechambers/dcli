@@ -288,7 +288,7 @@ impl ApiInterface {
             "{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/LinkedProfiles/",
             base = API_BASE_URL,
             platform_id = platform.as_id(),
-            member_id = utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
+            member_id = utf8_percent_encode(member_id, NON_ALPHANUMERIC)
         );
 
         let profile: LinkedProfilesResponse = self
@@ -317,7 +317,7 @@ impl ApiInterface {
         let url = format!(
             "{base}/Platform/User/GetMembershipsById/{member_id}/-1/",
             base = API_BASE_URL,
-            member_id = utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
+            member_id = utf8_percent_encode(member_id, NON_ALPHANUMERIC)
         );
 
         let profile: GetMembershipData = self
@@ -348,7 +348,7 @@ impl ApiInterface {
             "{base}/Platform/Destiny2/{platform_id}/Profile/{member_id}/?components=100,200",
             base = API_BASE_URL,
             platform_id = platform.as_id(),
-            member_id = utf8_percent_encode(&member_id, NON_ALPHANUMERIC)
+            member_id = utf8_percent_encode(member_id, NON_ALPHANUMERIC)
         );
 
         let profile: GetProfileResponse = self
@@ -445,8 +445,8 @@ impl ApiInterface {
         format!("{base}/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=2&groups=1,2,3",
             base=API_BASE_URL,
             platform_id = platform.as_id(),
-            member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
-            character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
+            member_id=utf8_percent_encode(member_id, NON_ALPHANUMERIC),
+            character_id=utf8_percent_encode(character_id, NON_ALPHANUMERIC),
             mode_id = mode.as_id(),
         );
 
@@ -485,8 +485,8 @@ impl ApiInterface {
         format!("{base}/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/?modes={mode_id}&periodType=1&groups=1,2,3&daystart={day_start}&dayend={day_end}",
             base=API_BASE_URL,
             platform_id = platform.as_id(),
-            member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
-            character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
+            member_id=utf8_percent_encode(member_id, NON_ALPHANUMERIC),
+            character_id=utf8_percent_encode(character_id, NON_ALPHANUMERIC),
             mode_id = mode.as_id(),
             day_start = utf8_percent_encode(&day_start, NON_ALPHANUMERIC),
             day_end = utf8_percent_encode(&day_end, NON_ALPHANUMERIC),
@@ -732,8 +732,8 @@ impl ApiInterface {
         format!("{base}/Platform/Destiny2/{platform_id}/Account/{member_id}/Character/{character_id}/Stats/Activities/?mode={mode_id}&count={count}&page={page}",
             base=API_BASE_URL,
             platform_id = platform.as_id(),
-            member_id=utf8_percent_encode(&member_id, NON_ALPHANUMERIC),
-            character_id=utf8_percent_encode(&character_id, NON_ALPHANUMERIC),
+            member_id=utf8_percent_encode(member_id, NON_ALPHANUMERIC),
+            character_id=utf8_percent_encode(character_id, NON_ALPHANUMERIC),
             mode_id = mode.as_id(),
             count=count,
             page=page,
