@@ -22,8 +22,6 @@
 
 mod datetimeformat;
 
-use std::str::FromStr;
-
 use datetimeformat::DateTimeFormat;
 use dcli::enums::moment::Moment;
 use dcli::output::Output;
