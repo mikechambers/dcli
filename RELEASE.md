@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.9.0 NOT RELEASED
+
+-   Fixed --verbose flag not working in dclisync
+
 ## v0.9.0 November 12, 2022
 
 -   Added a daemon mode to dclisync which continuously checks for updated data with a pause between syncs
