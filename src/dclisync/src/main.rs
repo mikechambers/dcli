@@ -173,7 +173,9 @@ async fn main() {
     let opt = Opt::from_args();
     env_logger::init();
 
-    let level = if opt.daemon {
+    let level = if opt.verbose {
+        TellLevel::Verbose
+    } else if opt.daemon {
         TellLevel::Update
     } else {
         TellLevel::Progress
