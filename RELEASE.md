@@ -4,6 +4,7 @@
 
 -   Update required Rust compiler version to 1.65.0 and update libraries to most recent versions
 -   Changed SEASON_OF_THE_PLUNDER moment to SEASON_OF_PLUNDER (season_of_plunder)
+-   --verbose flag not working in dclisync
 
 ## v0.9.0 November 12, 2022
 

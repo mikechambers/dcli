@@ -459,6 +459,13 @@ impl ActivityStoreInterface {
             .get_player_info(&member.id, &member.platform)
             .await?;
 
+        //TODO: Check is core issue has been fixed
+        //Note, if this profile call fails, then we dont sync user. However, we could
+        //capture and then just sync the characters we already have.
+        //This issue is causing the sync to fail for some users:
+        //https://twitter.com/BungieHelp/status/1595515590160306176?s=20&t=QR7Rs7weMwzTfO2YtTArSg
+        //https://github.com/Bungie-net/api/issues/1738
+
         let characters = player_info.characters;
 
         let member_row_id = self
