@@ -1,11 +1,11 @@
 # dcli Release Notes
 
-## v9.91.0
+## v9.91.0 December 6, 2022
 
--   Update required Rust compiler version to 1.65.0 and update libraries to most recent versions
+-   Update required Rust compiler version to 1.65.0 and updated libraries to most recent versions
 -   Changed SEASON_OF_THE_PLUNDER moment to SEASON_OF_PLUNDER (season_of_plunder)
 -   Fixed --verbose flag not working in dclisync
--   Added support for Season of Redacted
+-   Added support for Season of the Seraph
 
 ## v0.9.0 November 12, 2022
 
