@@ -44,6 +44,9 @@ pub const DAY_IN_SECONDS: i64 = 86400;
 pub const TSV_EOL: &str = "\n";
 pub const TSV_DELIM: &str = "\t";
 
+pub const COMPETITIVE_PVP_ACTIVITY_HASH: u32 = 2754695317;
+pub const FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH: u32 = 2607135461;
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn f32_are_equal(a: f32, b: f32) -> bool {

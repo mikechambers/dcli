@@ -27,8 +27,13 @@ use tell::{Tell, TellLevel};
 use chrono::{DateTime, Utc};
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 
+use crate::enums::moment::Moment;
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
-use crate::utils::format_error;
+use crate::response::activities::DestinyHistoricalStatsActivity;
+use crate::utils::{
+    format_error, COMPETITIVE_PVP_ACTIVITY_HASH,
+    FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH,
+};
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
     enums::{
@@ -626,8 +631,8 @@ impl ActivityStoreInterface {
                 match r {
                     Ok(e) => {
                         match e {
-                            Some(e) => match self
-                                .insert_activity(&e, character_row_id)
+                            Some(mut e) => match self
+                                .insert_activity(&mut e, character_row_id)
                                 .await
                             {
                                 Ok(_e) => {
@@ -848,7 +853,7 @@ impl ActivityStoreInterface {
 
     async fn insert_activity(
         &mut self,
-        data: &DestinyPostGameCarnageReportData,
+        data: &mut DestinyPostGameCarnageReportData,
         character_row_id: i32,
     ) -> Result<(), Error> {
         sqlx::query("BEGIN TRANSACTION;")
@@ -867,9 +872,72 @@ impl ActivityStoreInterface {
         }
     }
 
+    /*
+        Fixes known issues with data in a DestinyPostGameCarnageReportData object.
+        Returns a boolean indicating if the object was updated.
+    */
+    fn fix_pgcr_data(
+        &self,
+        activity: &mut DestinyPostGameCarnageReportData,
+    ) -> bool {
+        let mut was_updated = false;
+        if chrono::offset::Utc::now()
+            < Moment::SeasonOfTheSeraph.get_date_time()
+        {
+            return was_updated;
+        }
+
+        println!("found activity after season of the seraph");
+
+        if activity.activity_details.mode == Mode::None
+            && (activity.activity_details.director_activity_hash
+                == COMPETITIVE_PVP_ACTIVITY_HASH
+                || activity.activity_details.director_activity_hash
+                    == FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH)
+        {
+            print!("found pvp activity with mode None");
+
+            //fix for https://github.com/Bungie-net/api/issues/1740
+            //We assume a competitive pvp activity with no mode is Rift
+
+            print!("found competitive pvp activity with mode None");
+
+            activity.activity_details.mode = Mode::Rift;
+
+            //todo: we could ignore adding rift, but still add competitive
+            if !activity.activity_details.modes.contains(&Mode::Rift) {
+                activity.activity_details.modes.push(Mode::Rift);
+            }
+
+            if !activity
+                .activity_details
+                .modes
+                .contains(&Mode::PvPCompetitive)
+            {
+                activity.activity_details.modes.push(Mode::PvPCompetitive);
+            }
+
+            was_updated = true;
+        } else if activity.activity_details.mode == Mode::Showdown {
+            //fix for https://github.com/Bungie-net/api/issues/1740
+            print!("found activity with mode Showdown");
+
+            if !activity
+                .activity_details
+                .modes
+                .contains(&Mode::PvPCompetitive)
+            {
+                activity.activity_details.modes.push(Mode::PvPCompetitive);
+                was_updated = true;
+            }
+        }
+
+        was_updated
+    }
+
     async fn _insert_activity(
         &mut self,
-        data: &DestinyPostGameCarnageReportData,
+        data: &mut DestinyPostGameCarnageReportData,
         character_row_id: i32,
     ) -> Result<(), Error> {
         //NOTE: We shouldnt need the check below, as we check for this before
@@ -894,6 +962,15 @@ impl ActivityStoreInterface {
             Err(_e) => (),
         };
         */
+
+        let was_updated = self.fix_pgcr_data(data);
+
+        if was_updated {
+            println!("activity was updated: {:#?}", data.activity_details);
+            return Err(Error::Unknown {
+                description: "activity mode updated".to_string(),
+            });
+        }
 
         //throw an error if we try to insert and it already exists. That should never
         //happen since we check for that above.
