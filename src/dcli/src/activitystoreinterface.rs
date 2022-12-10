@@ -970,6 +970,7 @@ impl ActivityStoreInterface {
             return Err(Error::Unknown {
                 description: "activity mode updated".to_string(),
             });
+            println!("DEBUG DO NOT FORGET TO REMOVE THIS!!!!!!!");
         }
 
         //throw an error if we try to insert and it already exists. That should never
