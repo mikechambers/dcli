@@ -905,24 +905,24 @@ impl ActivityStoreInterface {
 
         match activity.activity_details.director_activity_hash {
             4242525388 | 559852413 => {
-                self.add_mode(activity, Mode::Clash);
-                self.add_to_modes(activity, Mode::PrivateMatchesClash);
+                self.add_mode(activity, Mode::PrivateMatchesClash);
+                self.add_to_modes(activity, Mode::Clash);
             }
             1859507212 | 3959500077 => {
-                self.add_mode(activity, Mode::Control);
-                self.add_to_modes(activity, Mode::PrivateMatchesControl);
+                self.add_mode(activity, Mode::PrivateMatchesControl);
+                self.add_to_modes(activity, Mode::Control);
             }
             2491884566 | 3076038389 => {
-                self.add_mode(activity, Mode::Rumble);
-                self.add_to_modes(activity, Mode::PrivateMatchesRumble);
+                self.add_mode(activity, Mode::PrivateMatchesRumble);
+                self.add_to_modes(activity, Mode::Rumble);
             }
             29726492 | 1543557109 => {
-                self.add_mode(activity, Mode::AllMayhem);
-                self.add_to_modes(activity, Mode::PrivateMatchesMayhem);
+                self.add_mode(activity, Mode::PrivateMatchesMayhem);
+                self.add_to_modes(activity, Mode::AllMayhem);
             }
             2143799792 | 2903879783 => {
-                self.add_mode(activity, Mode::Survival);
-                self.add_to_modes(activity, Mode::PrivateMatchesSurvival);
+                self.add_mode(activity, Mode::PrivateMatchesSurvival);
+                self.add_to_modes(activity, Mode::Survival);
             }
             2923123473 => {
                 self.add_mode(activity, Mode::Elimination);
@@ -947,15 +947,17 @@ impl ActivityStoreInterface {
                 self.add_mode(activity, Mode::Breakthrough);
             }
             1218001922 => {
-                self.add_mode(activity, Mode::Supremacy);
-                self.add_to_modes(activity, Mode::PrivateMatchesSupremacy);
+                self.add_mode(activity, Mode::PrivateMatchesSupremacy);
+                self.add_to_modes(activity, Mode::Supremacy);
             }
             3767360267 => {
-                self.add_mode(activity, Mode::Countdown);
-                self.add_to_modes(activity, Mode::PrivateMatchesCountdown);
+                self.add_mode(activity, Mode::PrivateMatchesCountdown);
+                self.add_to_modes(activity, Mode::Countdown);
             }
             _ => was_updated = false,
         };
+
+        //println!("found private match: updated : {}", was_updated);
 
         if was_updated {
             self.add_to_modes(activity, Mode::AllPvP);
@@ -994,6 +996,7 @@ impl ActivityStoreInterface {
         }
 
         //comp fixes for Season of the Seraph
+        //todo: test if new data is still broken
         if chrono::offset::Utc::now()
             > Moment::SeasonOfTheSeraph.get_date_time()
         {
@@ -1003,12 +1006,10 @@ impl ActivityStoreInterface {
                     || activity.activity_details.director_activity_hash
                         == FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH)
             {
-                print!("found pvp activity with mode None");
-
                 //fix for https://github.com/Bungie-net/api/issues/1740
                 //We assume a competitive pvp activity with no mode is Rift
 
-                print!("found competitive pvp activity with mode None");
+                //println!("found competitive pvp activity with mode None");
 
                 self.add_to_modes(activity, Mode::PvPCompetitive);
                 self.add_mode(activity, Mode::Rift);
@@ -1016,7 +1017,7 @@ impl ActivityStoreInterface {
                 was_updated = true;
             } else if activity.activity_details.mode == Mode::Showdown {
                 //fix for https://github.com/Bungie-net/api/issues/1740
-                print!("found activity with mode Showdown");
+                //println!("found activity with mode Showdown");
 
                 if !activity
                     .activity_details
@@ -1060,15 +1061,19 @@ impl ActivityStoreInterface {
         };
         */
 
-        let was_updated = self.fix_pgcr_data(data);
+        self.fix_pgcr_data(data);
 
+        /*
         if was_updated {
-            println!("activity was updated: {:#?}", data.activity_details);
+            //println!("activity was updated: {:#?}", data.activity_details);
+            //println!("DEBUG DO NOT FORGET TO REMOVE THIS!!!!!!!");
+
             return Err(Error::Unknown {
                 description: "activity mode updated".to_string(),
             });
-            println!("DEBUG DO NOT FORGET TO REMOVE THIS!!!!!!!");
-        }
+
+
+        }*/
 
         //throw an error if we try to insert and it already exists. That should never
         //happen since we check for that above.
@@ -1486,6 +1491,13 @@ impl ActivityStoreInterface {
         character_row_id: i32,
         mode: &Mode,
     ) -> Result<i64, Error> {
+        let restrict_mode_id = if mode.is_private() {
+            -1
+        } else {
+            //if not private, then we dont include any results that are private
+            Mode::PrivateMatchesAll.as_id() as i32
+        };
+
         let rows = sqlx::query(
             r#"
             SELECT
@@ -1496,16 +1508,20 @@ impl ActivityStoreInterface {
                 activity ON activity_queue.activity_id = activity.activity_id,
                 character_activity_stats ON character_activity_stats.activity = activity.id,
                 character on character_activity_stats.character = character.id,
-                modes ON modes.activity = activity.id and modes.mode in (select mode from modes where mode = ?)
+                modes ON modes.activity = activity.id
             WHERE
                 character_activity_stats.character = ? AND
-                activity_queue.character = ?
+                activity_queue.character = ? AND
+                exists (select 1 from modes where activity = activity.id and mode = ?) AND
+                not exists (select 1 from modes where activity = activity.id and mode = ?)
             ORDER BY activity.period DESC LIMIT 1
         "#,
         )
+        
+        .bind(character_row_id.to_string())
+        .bind(character_row_id.to_string())
         .bind(mode.as_id().to_string())
-        .bind(character_row_id.to_string())
-        .bind(character_row_id.to_string())
+        .bind(restrict_mode_id)
         .fetch_all(&mut self.db)
         .await?;
 

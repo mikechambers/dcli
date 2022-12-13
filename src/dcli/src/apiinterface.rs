@@ -624,8 +624,6 @@ impl ApiInterface {
         let mut page = 0;
         let count = MAX_ACTIVITIES_REQUEST_COUNT;
 
-        //tell::progress!("[");
-
         let spinner_style = ProgressStyle::with_template(
             "{prefix:.bold.dim} {spinner:.green} {wide_msg}",
         )
