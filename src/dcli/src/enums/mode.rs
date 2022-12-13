@@ -115,6 +115,7 @@ pub enum Mode {
     Rift = 88,
     ZoneControl = 89,
     IronBannerRift = 90,
+    IronBannerZoneControl = 91,
 }
 
 impl Mode {
@@ -203,6 +204,7 @@ impl Mode {
             88 => Ok(Mode::Rift),
             89 => Ok(Mode::ZoneControl),
             90 => Ok(Mode::IronBannerRift),
+            91 => Ok(Mode::IronBannerZoneControl),
 
             _ => Err(Error::UnknownEnumValue),
         }
@@ -273,6 +275,7 @@ impl Mode {
             || *self == Mode::Rift
             || *self == Mode::ZoneControl
             || *self == Mode::IronBannerRift
+            || *self == Mode::IronBannerZoneControl
     }
 
     pub fn is_private(&self) -> bool {
@@ -380,6 +383,7 @@ impl FromStr for Mode {
             "rift" => Ok(Mode::Rift),
             "iron_banner_rift" => Ok(Mode::IronBannerRift),
             "zone_control" => Ok(Mode::ZoneControl),
+            "iron_banner_zone_control" => Ok(Mode::IronBannerZoneControl),
 
             _ => Err("Unknown Mode type"),
         }
@@ -472,6 +476,7 @@ impl fmt::Display for Mode {
             Mode::Rift => "Rift",
             Mode::ZoneControl => "Zone Control",
             Mode::IronBannerRift => "Iron Banner Rift",
+            Mode::IronBannerZoneControl => "Iron Banner Zone Control",
         };
 
         write!(f, "{}", out)

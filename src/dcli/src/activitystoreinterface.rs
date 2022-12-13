@@ -872,6 +872,98 @@ impl ActivityStoreInterface {
         }
     }
 
+    fn add_mode(
+        &self,
+        activity: &mut DestinyPostGameCarnageReportData,
+        mode: Mode,
+    ) {
+        activity.activity_details.mode = mode;
+
+        self.add_to_modes(activity, mode);
+    }
+
+    fn add_to_modes(
+        &self,
+        activity: &mut DestinyPostGameCarnageReportData,
+        mode: Mode,
+    ) -> bool {
+        if !activity.activity_details.modes.contains(&mode) {
+            activity.activity_details.modes.push(mode);
+            return true;
+        }
+
+        false
+    }
+
+    //workaround for private matches not having a mode
+    //https://github.com/Bungie-net/api/issues/1386
+    fn fix_private_match(
+        &self,
+        activity: &mut DestinyPostGameCarnageReportData,
+    ) -> bool {
+        let mut was_updated = true;
+
+        match activity.activity_details.director_activity_hash {
+            4242525388 | 559852413 => {
+                self.add_mode(activity, Mode::Clash);
+                self.add_to_modes(activity, Mode::PrivateMatchesClash);
+            }
+            1859507212 | 3959500077 => {
+                self.add_mode(activity, Mode::Control);
+                self.add_to_modes(activity, Mode::PrivateMatchesControl);
+            }
+            2491884566 | 3076038389 => {
+                self.add_mode(activity, Mode::Rumble);
+                self.add_to_modes(activity, Mode::PrivateMatchesRumble);
+            }
+            29726492 | 1543557109 => {
+                self.add_mode(activity, Mode::AllMayhem);
+                self.add_to_modes(activity, Mode::PrivateMatchesMayhem);
+            }
+            2143799792 | 2903879783 => {
+                self.add_mode(activity, Mode::Survival);
+                self.add_to_modes(activity, Mode::PrivateMatchesSurvival);
+            }
+            2923123473 => {
+                self.add_mode(activity, Mode::Elimination);
+            }
+            3530889940 => {
+                self.add_mode(activity, Mode::Momentum);
+            }
+            84526555 => {
+                self.add_mode(activity, Mode::ScorchedTeam);
+                self.add_to_modes(activity, Mode::Scorched);
+            }
+            3344441646 => {
+                self.add_mode(activity, Mode::Scorched);
+            }
+            1887396202 => {
+                self.add_mode(activity, Mode::Showdown);
+            }
+            1978116819 => {
+                self.add_mode(activity, Mode::Rift);
+            }
+            2404525917 => {
+                self.add_mode(activity, Mode::Breakthrough);
+            }
+            1218001922 => {
+                self.add_mode(activity, Mode::Supremacy);
+                self.add_to_modes(activity, Mode::PrivateMatchesSupremacy);
+            }
+            3767360267 => {
+                self.add_mode(activity, Mode::Countdown);
+                self.add_to_modes(activity, Mode::PrivateMatchesCountdown);
+            }
+            _ => was_updated = false,
+        };
+
+        if was_updated {
+            self.add_to_modes(activity, Mode::AllPvP);
+        }
+
+        was_updated
+    }
+
     /*
         Fixes known issues with data in a DestinyPostGameCarnageReportData object.
         Returns a boolean indicating if the object was updated.
@@ -881,54 +973,59 @@ impl ActivityStoreInterface {
         activity: &mut DestinyPostGameCarnageReportData,
     ) -> bool {
         let mut was_updated = false;
-        if chrono::offset::Utc::now()
-            < Moment::SeasonOfTheSeraph.get_date_time()
-        {
-            return was_updated;
+
+        //known instances of private matches not having mode set correct
+        if activity.activity_details.mode == Mode::None {
+            match activity.activity_details.director_activity_hash {
+                2259621230 => {
+                    self.add_mode(activity, Mode::Rumble);
+                    was_updated = true;
+                }
+                903584917 | 3847433434 => {
+                    self.add_mode(activity, Mode::AllMayhem);
+                    was_updated = true;
+                }
+                _ => (),
+            }
         }
 
-        println!("found activity after season of the seraph");
+        if activity.activity_details.mode == Mode::PrivateMatchesAll {
+            was_updated = self.fix_private_match(activity);
+        }
 
-        if activity.activity_details.mode == Mode::None
-            && (activity.activity_details.director_activity_hash
-                == COMPETITIVE_PVP_ACTIVITY_HASH
-                || activity.activity_details.director_activity_hash
-                    == FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH)
+        //comp fixes for Season of the Seraph
+        if chrono::offset::Utc::now()
+            > Moment::SeasonOfTheSeraph.get_date_time()
         {
-            print!("found pvp activity with mode None");
-
-            //fix for https://github.com/Bungie-net/api/issues/1740
-            //We assume a competitive pvp activity with no mode is Rift
-
-            print!("found competitive pvp activity with mode None");
-
-            activity.activity_details.mode = Mode::Rift;
-
-            //todo: we could ignore adding rift, but still add competitive
-            if !activity.activity_details.modes.contains(&Mode::Rift) {
-                activity.activity_details.modes.push(Mode::Rift);
-            }
-
-            if !activity
-                .activity_details
-                .modes
-                .contains(&Mode::PvPCompetitive)
+            if activity.activity_details.mode == Mode::None
+                && (activity.activity_details.director_activity_hash
+                    == COMPETITIVE_PVP_ACTIVITY_HASH
+                    || activity.activity_details.director_activity_hash
+                        == FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH)
             {
-                activity.activity_details.modes.push(Mode::PvPCompetitive);
-            }
+                print!("found pvp activity with mode None");
 
-            was_updated = true;
-        } else if activity.activity_details.mode == Mode::Showdown {
-            //fix for https://github.com/Bungie-net/api/issues/1740
-            print!("found activity with mode Showdown");
+                //fix for https://github.com/Bungie-net/api/issues/1740
+                //We assume a competitive pvp activity with no mode is Rift
 
-            if !activity
-                .activity_details
-                .modes
-                .contains(&Mode::PvPCompetitive)
-            {
-                activity.activity_details.modes.push(Mode::PvPCompetitive);
+                print!("found competitive pvp activity with mode None");
+
+                self.add_to_modes(activity, Mode::PvPCompetitive);
+                self.add_mode(activity, Mode::Rift);
+
                 was_updated = true;
+            } else if activity.activity_details.mode == Mode::Showdown {
+                //fix for https://github.com/Bungie-net/api/issues/1740
+                print!("found activity with mode Showdown");
+
+                if !activity
+                    .activity_details
+                    .modes
+                    .contains(&Mode::PvPCompetitive)
+                {
+                    activity.activity_details.modes.push(Mode::PvPCompetitive);
+                    was_updated = true;
+                }
             }
         }
 

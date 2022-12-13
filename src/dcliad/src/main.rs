@@ -505,7 +505,8 @@ struct Opt {
     ///
     /// Addition values available are crimsom_doubles, supremacy, survival,
     /// countdown, all_doubles, doubles, private_clash, private_control,
-    /// private_survival, private_rumble, showdown, lockdown, iron_banner_rift, rift,
+    /// private_survival, private_rumble, showdown, lockdown, iron_banner_rift,
+    /// zone_control, iron_banner_zone_control, rift,
     /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine
     #[structopt(long = "mode", short = "M", 
         parse(try_from_str=parse_and_validate_mode), default_value = "all_pvp")]

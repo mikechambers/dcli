@@ -1,5 +1,10 @@
 # dcli Release Notes
 
+## v9.93.0
+
+-   Added support for Iron Banner Zone Control (iron_banner_zone_control)
+-   Added code that attempts to fix missing / incorrect mode data for some match returned from API. This includes Season of the Seraph comp match data, as well as data for private matches. In order to get fixed data, you will need to delete your data store and resync once.
+
 ## v9.91.0 December 6, 2022
 
 -   Update required Rust compiler version to 1.65.0 and updated libraries to most recent versions
