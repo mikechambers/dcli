@@ -29,7 +29,6 @@ use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 
 use crate::enums::moment::Moment;
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
-use crate::response::activities::DestinyHistoricalStatsActivity;
 use crate::utils::{
     format_error, COMPETITIVE_PVP_ACTIVITY_HASH,
     FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH,
@@ -957,12 +956,6 @@ impl ActivityStoreInterface {
             _ => was_updated = false,
         };
 
-        //println!("found private match: updated : {}", was_updated);
-
-        if was_updated {
-            self.add_to_modes(activity, Mode::AllPvP);
-        }
-
         was_updated
     }
 
@@ -1491,13 +1484,6 @@ impl ActivityStoreInterface {
         character_row_id: i32,
         mode: &Mode,
     ) -> Result<i64, Error> {
-        let restrict_mode_id = if mode.is_private() {
-            -1
-        } else {
-            //if not private, then we dont include any results that are private
-            Mode::PrivateMatchesAll.as_id() as i32
-        };
-
         let rows = sqlx::query(
             r#"
             SELECT
@@ -1508,20 +1494,16 @@ impl ActivityStoreInterface {
                 activity ON activity_queue.activity_id = activity.activity_id,
                 character_activity_stats ON character_activity_stats.activity = activity.id,
                 character on character_activity_stats.character = character.id,
-                modes ON modes.activity = activity.id
+                modes ON modes.activity = activity.id and modes.mode = ?
             WHERE
                 character_activity_stats.character = ? AND
-                activity_queue.character = ? AND
-                exists (select 1 from modes where activity = activity.id and mode = ?) AND
-                not exists (select 1 from modes where activity = activity.id and mode = ?)
+                activity_queue.character = ?
             ORDER BY activity.period DESC LIMIT 1
         "#,
         )
-        
-        .bind(character_row_id.to_string())
-        .bind(character_row_id.to_string())
         .bind(mode.as_id().to_string())
-        .bind(restrict_mode_id)
+        .bind(character_row_id.to_string())
+        .bind(character_row_id.to_string())
         .fetch_all(&mut self.db)
         .await?;
 
@@ -1531,6 +1513,7 @@ impl ActivityStoreInterface {
 
         let row = &rows[0];
         let activity_id: i64 = row.try_get("max_activity_id")?;
+
         Ok(activity_id)
     }
 

@@ -88,7 +88,9 @@ pub fn format_error(msg: &str, error: Error) -> String {
 
     strings.push("\nIf you think you have hit a bug and would like to report it (or would just like some help):".to_string());
     strings.push("    1. Run command with '--verbose' flag.".to_string());
-    strings.push("    2. Copy output, and log a bug at: ".to_string());
+    strings.push("    2a. Copy output, and share on Discord: ".to_string());
+    strings.push("       https://discord.gg/2Y8bV2Mq3p".to_string());
+    strings.push("    2b. Copy output, and log a bug at: ".to_string());
     strings
         .push("       https://github.com/mikechambers/dcli/issues".to_string());
 
