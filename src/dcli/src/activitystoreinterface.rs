@@ -980,6 +980,10 @@ impl ActivityStoreInterface {
                     self.add_mode(activity, Mode::AllMayhem);
                     was_updated = true;
                 }
+                1113451448 => {
+                    self.add_mode(activity, Mode::Rift);
+                    was_updated = true;
+                }
                 _ => (),
             }
         }

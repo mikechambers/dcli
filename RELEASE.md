@@ -1,11 +1,15 @@
 # dcli Release Notes
 
-## v9.93.0
+## v0.94.0 December 13, 2022
+
+-   Fix corrupted Rift matches (mode set to 0)
+
+## v0.93.0 December 13, 2022
 
 -   Added support for Iron Banner Zone Control (iron_banner_zone_control)
 -   Added code that attempts to fix missing / incorrect mode data for some matches returned from API. This includes Season of the Seraph comp match data, as well as data for private matches. In order to get fixed data, you will need to delete your data store and resync all data.
 
-## v9.91.0 December 6, 2022
+## v0.91.0 December 6, 2022
 
 -   Update required Rust compiler version to 1.65.0 and updated libraries to most recent versions
 -   Changed SEASON_OF_THE_PLUNDER moment to SEASON_OF_PLUNDER (season_of_plunder)
