@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.95.0 December 17, 2022
+
+-   Improved handling of missing character class data from API
+
 ## v0.94.0 December 13, 2022
 
 -   Fix corrupted Rift matches (mode set to 0)

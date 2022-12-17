@@ -1367,18 +1367,12 @@ impl ActivityStoreInterface {
             //if some data is missing, we see if we already have info on
             //this member stored.
 
-            let row_id: i32 = match self.get_member_row_id(member).await {
-                Ok(e) => e,
-                Err(_e) => -1,
+            match self.get_member_row_id(member).await {
+                Ok(e) => return Ok(e),
+                Err(_e) => {}
             };
 
-            //if we do have something stored, just return that entry, otherwise,
-            //add it to the DB, even though the name info in missing
-            if row_id != -1 {
-                return Ok(row_id);
-            }
-
-            //if the DCLI_FIX_DATA environemnt variable is set to true
+            //if the DCLI_FIX_DATA environment variable is set to true
             //the code will try and fix corrupt data with additional API
             //calls. This can dramatically slow down the first time data is
             //synced, but can help fix missing data
@@ -1428,9 +1422,9 @@ impl ActivityStoreInterface {
         .execute(&mut self.db)
         .await?;
 
-        let rowid: i32 = self.get_member_row_id(member).await?;
+        let row_id: i32 = self.get_member_row_id(member).await?;
 
-        Ok(rowid)
+        Ok(row_id)
     }
 
     async fn get_member_row_id(
@@ -1457,6 +1451,29 @@ impl ActivityStoreInterface {
         class_type: &CharacterClass,
         member_rowid: i32,
     ) -> Result<i32, Error> {
+        // Check if clas_type is Unknown (Missing data in API)
+        // If it is, then first see if we already have the character in the DB
+        // and if so, just return that row. That way, once we have valid data
+        // in the db, we never overwrite it with invalid data
+        if *class_type == CharacterClass::Unknown {
+            match sqlx::query(
+                r#"
+                SELECT id from "character" where character_id=? and member=?
+            "#,
+            )
+            .bind(character_id.to_string())
+            .bind(format!("{}", member_rowid))
+            .fetch_one(&mut self.db)
+            .await
+            {
+                Ok(e) => {
+                    let id: i32 = e.try_get("id")?;
+                    return Ok(id);
+                }
+                Err(_e) => {}
+            };
+        }
+
         sqlx::query(
             r#"
             INSERT OR IGNORE into "character" ("character_id", "member", "class") VALUES (?, ?, ?)
@@ -1478,9 +1495,9 @@ impl ActivityStoreInterface {
         .fetch_one(&mut self.db)
         .await?;
 
-        let rowid: i32 = row.try_get("id")?;
+        let row_id: i32 = row.try_get("id")?;
 
-        Ok(rowid)
+        Ok(row_id)
     }
 
     async fn get_max_activity_id(
