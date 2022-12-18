@@ -1479,24 +1479,21 @@ impl ActivityStoreInterface {
             return Ok(row_id);
         }
 
-        // here we need to either insert or update.
-        // sqlite has REPLACE or UPDATE but it deletes the row and then inserts
-        // instead of updating. With the way we have our primary keys setup, this
-        // causes issues, so we have to manually check and run the right command.
-        // if we just used member_id and character_id as primary keys, instead of
-        // auto-incrementing we would be fine (but we don't do that right now)
-        if row_id == -1 {
-            sqlx::query(
-                r#"
-                INSERT into "character" ("character_id", "member", "class") VALUES (?, ?, ?)
-            "#,
-            )
-            .bind(character_id.to_string())
-            .bind(member_rowid)
-            .bind(class_type.as_id().to_string())
-            .execute(&mut self.db)
-            .await?;
+        sqlx::query(
+            r#"
+            INSERT into "character" ("character_id", "member", "class") VALUES (?, ?, ?)
+            ON CONFLICT (character_id, member) DO UPDATE
+            set class = ?
+        "#,
+        )
+        .bind(character_id.to_string())
+        .bind(member_rowid)
+        .bind(class_type.as_id().to_string())
+        .bind(class_type.as_id().to_string())
+        .execute(&mut self.db)
+        .await?;
 
+        if row_id == -1 {
             let row = sqlx::query(
                 r#"
                 SELECT id from "character" where character_id=? and member=?
@@ -1508,17 +1505,6 @@ impl ActivityStoreInterface {
             .await?;
 
             row_id = row.try_get("id")?;
-        } else {
-            sqlx::query(
-                r#"
-                UPDATE "character" set class=? where  member=? AND character_id=?
-            "#,
-            )
-            .bind(character_id.to_string())
-            .bind(member_rowid)
-            .bind(class_type.as_id().to_string())
-            .execute(&mut self.db)
-            .await?;
         }
 
         Ok(row_id)
