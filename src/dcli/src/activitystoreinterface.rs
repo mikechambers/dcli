@@ -1445,57 +1445,81 @@ impl ActivityStoreInterface {
         Ok(rowid)
     }
 
+    //we really only need character id
     async fn insert_character_id(
         &mut self,
         character_id: &str,
         class_type: &CharacterClass,
         member_rowid: i32,
     ) -> Result<i32, Error> {
-        // Check if clas_type is Unknown (Missing data in API)
-        // If it is, then first see if we already have the character in the DB
-        // and if so, just return that row. That way, once we have valid data
-        // in the db, we never overwrite it with invalid data
-        if *class_type == CharacterClass::Unknown {
-            match sqlx::query(
-                r#"
-                SELECT id from "character" where character_id=? and member=?
-            "#,
-            )
-            .bind(character_id.to_string())
-            .bind(format!("{}", member_rowid))
-            .fetch_one(&mut self.db)
-            .await
-            {
-                Ok(e) => {
-                    let id: i32 = e.try_get("id")?;
-                    return Ok(id);
-                }
-                Err(_e) => {}
-            };
-        }
+        let mut row_id = -1;
+        let mut stored_class_type = CharacterClass::Unknown;
 
-        sqlx::query(
+        //can select just on character id
+        match sqlx::query(
             r#"
-            INSERT OR IGNORE into "character" ("character_id", "member", "class") VALUES (?, ?, ?)
-        "#,
-        )
-        .bind(character_id.to_string())
-        .bind(member_rowid)
-        .bind(class_type.as_id().to_string())
-        .execute(&mut self.db)
-        .await?;
-
-        let row = sqlx::query(
-            r#"
-            SELECT id from "character" where character_id=? and member=?
+            SELECT id, class from "character" where character_id=? and member=?
         "#,
         )
         .bind(character_id.to_string())
         .bind(format!("{}", member_rowid))
         .fetch_one(&mut self.db)
-        .await?;
+        .await
+        {
+            Ok(e) => {
+                row_id = e.try_get("id")?;
+                let class_id = e.try_get("class")?;
+                stored_class_type = CharacterClass::from_id(class_id);
+            }
+            Err(_e) => {}
+        };
 
-        let row_id: i32 = row.try_get("id")?;
+        //data exists and its valid
+        if row_id != -1 && stored_class_type != CharacterClass::Unknown {
+            return Ok(row_id);
+        }
+
+        // here we need to either insert or update.
+        // sqlite has REPLACE or UPDATE but it deletes the row and then inserts
+        // instead of updating. With the way we have our primary keys setup, this
+        // causes issues, so we have to manually check and run the right command.
+        // if we just used member_id and character_id as primary keys, instead of
+        // auto-incrementing we would be fine (but we don't do that right now)
+        if row_id == -1 {
+            sqlx::query(
+                r#"
+                INSERT into "character" ("character_id", "member", "class") VALUES (?, ?, ?)
+            "#,
+            )
+            .bind(character_id.to_string())
+            .bind(member_rowid)
+            .bind(class_type.as_id().to_string())
+            .execute(&mut self.db)
+            .await?;
+
+            let row = sqlx::query(
+                r#"
+                SELECT id from "character" where character_id=? and member=?
+            "#,
+            )
+            .bind(character_id.to_string())
+            .bind(member_rowid.to_string())
+            .fetch_one(&mut self.db)
+            .await?;
+
+            row_id = row.try_get("id")?;
+        } else {
+            sqlx::query(
+                r#"
+                UPDATE "character" set class=? where  member=? AND character_id=?
+            "#,
+            )
+            .bind(character_id.to_string())
+            .bind(member_rowid)
+            .bind(class_type.as_id().to_string())
+            .execute(&mut self.db)
+            .await?;
+        }
 
         Ok(row_id)
     }

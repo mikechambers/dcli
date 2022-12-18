@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.95.1
+
+-   Fix some issues, missing cases from v0.95.0 changes
+
 ## v0.95.0 December 17, 2022
 
 -   Improved handling of missing character class data from API
