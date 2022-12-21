@@ -81,7 +81,7 @@ const DCLI_FIX_DATA: &str = "DCLI_FIX_DATA";
 //number of simultaneous requests we make to server when retrieving activity history
 const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
 
-const DB_SCHEMA_VERSION: i32 = 9;
+const DB_SCHEMA_VERSION: i32 = 10;
 const NO_TEAMS_INDEX: i32 = 253;
 
 pub struct ActivityStoreInterface {
@@ -195,7 +195,7 @@ impl ActivityStoreInterface {
         &mut self,
         member_row: &sqlx::sqlite::SqliteRow,
     ) -> Result<Member, Error> {
-        let member_id: String = member_row.try_get("member_id")?;
+        let member_id: i64 = member_row.try_get("member_id")?;
         let platform_id: u32 = member_row.try_get("platform_id")?;
         let display_name: Option<String> =
             member_row.try_get("display_name")?;
@@ -689,7 +689,7 @@ impl ActivityStoreInterface {
     async fn update_activity_queue(
         &mut self,
         character_row_id: i32,
-        member_id: &str,
+        member_id: &i64,
         character_id: &str,
         platform: &Platform,
     ) -> Result<SyncResult, Error> {
@@ -741,7 +741,7 @@ impl ActivityStoreInterface {
     async fn _update_activity_queue(
         &mut self,
         character_row_id: i32,
-        member_id: &str,
+        member_id: &i64,
         character_id: &str,
         platform: &Platform,
         mode: &Mode,
@@ -2290,7 +2290,7 @@ impl ActivityStoreInterface {
         &mut self,
         activity_row: &sqlx::sqlite::SqliteRow,
     ) -> Result<Player, Error> {
-        let member_id: String = activity_row.try_get_unchecked("member_id")?;
+        let member_id: i64 = activity_row.try_get_unchecked("member_id")?;
         let character_id = activity_row.try_get_unchecked("character_id")?;
         let platform_id: u32 = activity_row.try_get_unchecked("platform_id")?;
         let display_name: Option<String> =

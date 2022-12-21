@@ -59,11 +59,11 @@ pub struct CrucibleActivity {
 impl CrucibleActivity {
     pub fn get_member_performance(
         &self,
-        member_id: &str,
+        member_id: &i64,
     ) -> Option<&CruciblePlayerPerformance> {
         for t in self.teams.values() {
             for p in &t.player_performances {
-                if p.player.member_id == member_id {
+                if &p.player.member_id == member_id {
                     return Some(p);
                 }
             }
@@ -141,7 +141,7 @@ pub struct ExtendedCrucibleStats {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Player {
-    pub member_id: String,
+    pub member_id: i64,
     pub character_id: String,
     pub platform: Platform,
     pub name: PlayerName,
@@ -161,7 +161,7 @@ impl Player {
 pub struct Member {
     pub name: PlayerName,
     pub platform: Platform,
-    pub id: String,
+    pub id: i64,
 }
 
 //TODO: might need to make the properties Options, or drop display_name

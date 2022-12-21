@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS "main"."version" (
     "version"   INTEGER NOT NULL UNIQUE
 );
 
-INSERT INTO "main"."version"("version") VALUES (9);
+INSERT INTO "main"."version"("version") VALUES (10);
 
 CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
     "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS "sync" (
 
 CREATE TABLE IF NOT EXISTS  "member" (
     "id"            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-    "member_id"	    TEXT NOT NULL,
+    "member_id"	    INTEGER NOT NULL,
     "platform_id"	INTEGER NOT NULL,
     "display_name"  TEXT,
     "bungie_display_name"  TEXT,

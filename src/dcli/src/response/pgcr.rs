@@ -34,6 +34,8 @@ use crate::{
     },
 };
 
+use crate::response::utils::string_to_i64;
+
 pub const MAX_ACTIVITIES_REQUEST_COUNT: i32 = 250;
 
 //https://bungie-net.github.io/multi/operation_get_Destiny2-GetPostGameCarnageReport.html#operation_get_Destiny2-GetPostGameCarnageReport
@@ -167,8 +169,8 @@ pub struct UserInfoCard {
     #[serde(rename = "membershipType")]
     pub membership_type: Platform,
 
-    #[serde(rename = "membershipId")]
-    pub membership_id: String,
+    #[serde(rename = "membershipId", deserialize_with = "string_to_i64")]
+    pub membership_id: i64,
 
     #[serde(rename = "displayName")]
     pub display_name: Option<String>,
@@ -205,7 +207,7 @@ impl UserInfoCard {
         Member {
             name,
             platform: self.membership_type,
-            id: self.membership_id.to_string(),
+            id: self.membership_id,
         }
     }
 }
@@ -236,8 +238,8 @@ pub struct DestinyProfileUserInfoCard {
     #[serde(rename = "membershipType")]
     pub membership_type: Platform,
 
-    #[serde(rename = "membershipId")]
-    pub membership_id: String,
+    #[serde(rename = "membershipId", deserialize_with = "string_to_i64")]
+    pub membership_id: i64,
 
     #[serde(rename = "displayName")]
     pub display_name: Option<String>,
@@ -259,7 +261,7 @@ impl DestinyProfileUserInfoCard {
                 .clone(),
             is_public: self.is_public,
             membership_type: self.membership_type,
-            membership_id: self.membership_id.to_string(),
+            membership_id: self.membership_id,
             display_name: self.display_name.clone(),
             bungie_display_name: self.bungie_display_name.clone(),
             bungie_display_name_code: self.bungie_display_name_code,
