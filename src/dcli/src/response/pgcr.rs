@@ -90,10 +90,10 @@ pub struct DestinyPostGameCarnageReportTeamEntry {
 impl DestinyPostGameCarnageReportData {
     pub fn get_entry_for_character(
         &self,
-        character_id: &str,
+        character_id: &i64,
     ) -> Option<DestinyPostGameCarnageReportEntry> {
         for e in self.entries.iter() {
-            if e.character_id == character_id {
+            if &e.character_id == character_id {
                 return Some(e.clone());
             }
         }
@@ -105,8 +105,8 @@ impl DestinyPostGameCarnageReportData {
 //https://bungie-net.github.io/multi/schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportEntry.html#schema_Destiny-HistoricalStats-DestinyPostGameCarnageReportEntry
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DestinyPostGameCarnageReportEntry {
-    #[serde(rename = "characterId")]
-    pub character_id: String,
+    #[serde(rename = "characterId", deserialize_with = "string_to_i64")]
+    pub character_id: i64,
 
     pub extended: Option<DestinyPostGameCarnageReportExtendedData>,
 

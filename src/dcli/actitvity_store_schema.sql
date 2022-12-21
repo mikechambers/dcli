@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS  "member" (
 
 CREATE TABLE IF NOT EXISTS  "character" (
     "id"	        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-    "character_id"	TEXT NOT NULL,
+    "character_id"	INTEGER NOT NULL,
     "member"	    INTEGER NOT NULL,
     "class"         INTEGER NOT NULL,
 

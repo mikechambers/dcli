@@ -30,10 +30,12 @@ use crate::response::utils::str_to_int;
 use crate::emblem::Emblem;
 use crate::response::utils::str_to_datetime;
 
+use crate::response::utils::string_to_i64;
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct CharacterData {
-    #[serde(rename = "characterId")]
-    pub id: String,
+    #[serde(rename = "characterId", deserialize_with = "string_to_i64")]
+    pub id: i64,
 
     #[serde(
         rename = "dateLastPlayed",

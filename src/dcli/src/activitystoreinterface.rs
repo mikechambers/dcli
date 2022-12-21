@@ -690,7 +690,7 @@ impl ActivityStoreInterface {
         &mut self,
         character_row_id: i32,
         member_id: &i64,
-        character_id: &str,
+        character_id: &i64,
         platform: &Platform,
     ) -> Result<SyncResult, Error> {
         //TODO catch errors so we can continue?
@@ -742,7 +742,7 @@ impl ActivityStoreInterface {
         &mut self,
         character_row_id: i32,
         member_id: &i64,
-        character_id: &str,
+        character_id: &i64,
         platform: &Platform,
         mode: &Mode,
     ) -> Result<SyncResult, Error> {
@@ -1448,7 +1448,7 @@ impl ActivityStoreInterface {
     //we really only need character id
     async fn insert_character_id(
         &mut self,
-        character_id: &str,
+        character_id: &i64,
         class_type: &CharacterClass,
         member_rowid: i32,
     ) -> Result<i32, Error> {
@@ -1461,7 +1461,7 @@ impl ActivityStoreInterface {
             SELECT id, class from "character" where character_id=? and member=?
         "#,
         )
-        .bind(character_id.to_string())
+        .bind(character_id)
         .bind(format!("{}", member_rowid))
         .fetch_one(&mut self.db)
         .await

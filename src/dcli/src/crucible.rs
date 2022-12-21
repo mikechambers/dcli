@@ -142,7 +142,7 @@ pub struct ExtendedCrucibleStats {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Player {
     pub member_id: i64,
-    pub character_id: String,
+    pub character_id: i64,
     pub platform: Platform,
     pub name: PlayerName,
     pub light_level: i32,
