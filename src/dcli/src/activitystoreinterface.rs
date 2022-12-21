@@ -350,12 +350,6 @@ impl ActivityStoreInterface {
         Ok(out)
     }
 
-    /*
-        select member.id, member_id, platform_id, display_name, bungie_display_name, bungie_display_name_code from member
-    INNER JOIN
-    sync on member.id = sync.member
-     */
-
     pub async fn remove_player_from_sync(
         &mut self,
         player: &PlayerName,
@@ -546,12 +540,11 @@ impl ActivityStoreInterface {
 
         //remove ids to sync for activities we have already synced
         for id in ids {
-            match self.get_activity_row_id(id).await {
-                Ok(_) => {
-                    self.remove_from_activity_queue(character_id, &id).await?;
-                    continue;
-                }
-                Err(_) => filtered_ids.push(id),
+            if self.has_activity(&id).await {
+                self.remove_from_activity_queue(character_id, &id).await?;
+                continue;
+            } else {
+                filtered_ids.push(id)
             }
         }
         ids = filtered_ids;
@@ -1015,17 +1008,7 @@ impl ActivityStoreInterface {
     ) -> Result<(), Error> {
         self.fix_pgcr_data(data);
 
-        /*
-        if was_updated {
-            //println!("activity was updated: {:#?}", data.activity_details);
-            //println!("DEBUG DO NOT FORGET TO REMOVE THIS!!!!!!!");
-
-            return Err(Error::Unknown {
-                description: "activity mode updated".to_string(),
-            });
-
-
-        }*/
+        let activity_id = data.activity_details.instance_id;
 
         //throw an error if we try to insert and it already exists. That should never
         //happen since we check for that above.
@@ -1038,7 +1021,7 @@ impl ActivityStoreInterface {
             VALUES (?,?,?,?,?, ?)
         "#,
         )
-        .bind(data.activity_details.instance_id) //activity_id
+        .bind(activity_id) //activity_id
         .bind(data.period.to_rfc3339()) //period
         .bind(data.activity_details.mode.as_id().to_string()) //mode
         .bind(data.activity_details.membership_type.as_id().to_string()) //platform
@@ -1046,10 +1029,6 @@ impl ActivityStoreInterface {
         .bind(data.activity_details.reference_id.to_string()) //reference_id
         .execute(&mut self.db)
         .await?;
-
-        let activity_row_id = self
-            .get_activity_row_id(data.activity_details.instance_id)
-            .await?;
 
         for team in &data.teams {
             sqlx::query(
@@ -1064,7 +1043,7 @@ impl ActivityStoreInterface {
             .bind(team.team)
             .bind(team.score as i32)
             .bind(team.standing as i32)
-            .bind(activity_row_id)
+            .bind(activity_id)
             .execute(&mut self.db)
             .await?;
         }
@@ -1082,7 +1061,7 @@ impl ActivityStoreInterface {
                 "#,
             )
             .bind(mode.as_id().to_string())
-            .bind(activity_row_id)
+            .bind(activity_id)
             .execute(&mut self.db)
             .await?;
         }
@@ -1100,7 +1079,7 @@ impl ActivityStoreInterface {
             self._insert_character_activity_stats(
                 entry,
                 &entry.character_id,
-                &activity_row_id,
+                &activity_id,
             )
             .await?;
         }
@@ -1118,7 +1097,7 @@ impl ActivityStoreInterface {
         &mut self,
         entry: &DestinyPostGameCarnageReportEntry,
         character_id: &i64,
-        activity_row_id: &i32,
+        activity_id: &i64,
     ) -> Result<(), Error> {
         let char_data = entry;
 
@@ -1199,7 +1178,7 @@ impl ActivityStoreInterface {
         .bind(weapon_kills_super as i32) //weapon_kills_super
         .bind(all_medals_earned as i32) //weapon_kills_super
         .bind(char_data.player.light_level) //activity
-        .bind(activity_row_id)
+        .bind(activity_id)
         .bind(char_data.values.fireteam_id.to_string())
         .bind(char_data.player.emblem_hash) //activity
         .execute(&mut self.db)
@@ -1212,7 +1191,7 @@ impl ActivityStoreInterface {
             SELECT "id" FROM "character_activity_stats" WHERE activity = ? and character = ?
         "#,
         )
-        .bind(activity_row_id)
+        .bind(activity_id)
         .bind(character_id)
         .fetch_one(&mut self.db)
         .await?;
@@ -1270,7 +1249,7 @@ impl ActivityStoreInterface {
     async fn remove_from_activity_queue(
         &mut self,
         character_id: &i64,
-        instance_id: &i64,
+        activity_id: &i64,
     ) -> Result<(), Error> {
         sqlx::query(
             r#"
@@ -1280,29 +1259,24 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(character_id)
-        .bind(instance_id)
+        .bind(activity_id)
         .execute(&mut self.db)
         .await?;
 
         Ok(())
     }
 
-    async fn get_activity_row_id(
-        &mut self,
-        instance_id: i64,
-    ) -> Result<i32, Error> {
-        let row = sqlx::query(
+    async fn has_activity(&mut self, activity_id: &i64) -> bool {
+        let out = sqlx::query(
             r#"
-            SELECT "id" FROM "activity" WHERE activity_id = ?
+            SELECT activity_id FROM "activity" WHERE activity_id = ?
         "#,
         )
-        .bind(instance_id.to_string())
+        .bind(activity_id)
         .fetch_one(&mut self.db)
-        .await?;
+        .await;
 
-        let id: i32 = row.try_get("id")?;
-
-        Ok(id)
+        out.is_ok()
     }
 
     async fn insert_member(&mut self, mem: &Member) -> Result<(), Error> {
@@ -1453,16 +1427,16 @@ impl ActivityStoreInterface {
                 "activity_queue"
             INNER JOIN
                 activity ON activity_queue.activity_id = activity.activity_id,
-                character_activity_stats ON character_activity_stats.activity = activity.id,
+                character_activity_stats ON character_activity_stats.activity = activity.activity_id,
                 character on character_activity_stats.character = character.character_id,
-                modes ON modes.activity = activity.id and modes.mode = ?
+                modes ON modes.activity = activity.activity_id and modes.mode = ?
             WHERE
                 character_activity_stats.character = ? AND
                 activity_queue.character = ?
             ORDER BY activity.period DESC LIMIT 1
         "#,
         )
-        .bind(mode.as_id().to_string())
+        .bind(mode.as_id())
         .bind(character_id)
         .bind(character_id)
         .fetch_all(&mut self.db)
@@ -1478,15 +1452,14 @@ impl ActivityStoreInterface {
         Ok(activity_id)
     }
 
-    pub async fn retrieve_activity_by_index(
+    pub async fn retrieve_activity(
         &mut self,
-        activity_index: u32,
+        activity_id: i64,
         manifest: &mut ManifestInterface,
     ) -> Result<CrucibleActivity, Error> {
         let activity_row = match sqlx::query(
             r#"
             SELECT
-                activity.id as activity_index_id,
                 activity.activity_id,
                 activity.period,
                 activity.mode as activity_mode,
@@ -1496,16 +1469,16 @@ impl ActivityStoreInterface {
             FROM
                 activity
             INNER JOIN
-                character_activity_stats on character_activity_stats.activity = activity.id,
+                character_activity_stats on character_activity_stats.activity = activity.activity_id,
                 character on character_activity_stats.character = character.character_id,
                 member on character.member = member.member_id
             WHERE
-                activity.id = ?
+                activity_id = ?
             ORDER BY
                 period DESC LIMIT 1
             "#,
         )
-        .bind(activity_index.to_string())
+        .bind(activity_id)
         .fetch_one(&mut self.db)
         .await
         {
@@ -1542,7 +1515,6 @@ impl ActivityStoreInterface {
         let activity_row = match sqlx::query(
                 r#"
                 SELECT
-                    activity.id as activity_index_id,
                     activity.activity_id,
                     activity.period,
                     activity.mode as activity_mode,
@@ -1552,11 +1524,11 @@ impl ActivityStoreInterface {
                 FROM
                     activity
                 INNER JOIN
-                    character_activity_stats on character_activity_stats.activity = activity.id,
+                    character_activity_stats on character_activity_stats.activity = activity.activity_id,
                     character on character_activity_stats.character = character.character_id,
                     member on character.member = member.member_id AND member.member_id = ?
                 WHERE
-                    exists (select 1 from modes where activity = activity.id and mode = ?) AND
+                    exists (select 1 from modes where activity = activity.activity_id and mode = ?) AND
                     (character.class = ? OR 4 = ?) 
                 ORDER BY
                     period DESC LIMIT 1
@@ -1717,7 +1689,7 @@ impl ActivityStoreInterface {
         FROM
             character_activity_stats
         INNER JOIN
-            activity ON character_activity_stats.activity = activity.id,
+            activity ON character_activity_stats.activity = activity.activity_id,
             character on character_activity_stats.character = character.character_id,
             member on member.member_id = character.member
         WHERE 
@@ -1827,7 +1799,7 @@ impl ActivityStoreInterface {
         FROM
             character_activity_stats
         INNER JOIN
-            activity ON character_activity_stats.activity = activity.id,
+            activity ON character_activity_stats.activity = activity.activity_id,
             character on character_activity_stats.character = character.character_id,
             member on member.member_id = character.member
         WHERE
@@ -1835,8 +1807,8 @@ impl ActivityStoreInterface {
             (character.class = ? OR 4 = ?) AND
             period > ? AND
             period < ? AND
-            exists (select 1 from modes where activity = activity.id and mode = ?) AND
-            not exists (select 1 from modes where activity = activity.id and mode = ?)
+            exists (select 1 from modes where activity = activity.activity_id and mode = ?) AND
+            not exists (select 1 from modes where activity = activity.activity_id and mode = ?)
         "#,
         )
         .bind(member.id)
@@ -1879,12 +1851,11 @@ impl ActivityStoreInterface {
             SELECT
                 *,
                 activity.mode as activity_mode,
-                activity.id as activity_index_id,
                 character_activity_stats.id as character_activity_stats_index  
             FROM
                 character_activity_stats
             INNER JOIN
-                activity ON character_activity_stats.activity = activity.id,
+                activity ON character_activity_stats.activity = activity.activity_id,
                 character on character_activity_stats.character = character.character_id,
                 member on member.member_id = character.member
             WHERE
@@ -1892,8 +1863,8 @@ impl ActivityStoreInterface {
                 (character.class = ? OR 4 = ?) AND
                 period > ? AND
                 period < ? AND
-                exists (select 1 from modes where activity = activity.id and mode = ?) AND
-                not exists (select 1 from modes where activity = activity.id and mode = ?)
+                exists (select 1 from modes where activity = activity.activity_id and mode = ?) AND
+                not exists (select 1 from modes where activity = activity.activity_id and mode = ?)
             ORDER BY
                 activity.period DESC
             "#,
@@ -1961,8 +1932,6 @@ impl ActivityStoreInterface {
         let reference_id: u32 =
             activity_row.try_get_unchecked("reference_id")?;
 
-        let index_id: u32 =
-            activity_row.try_get_unchecked("activity_index_id")?;
         let activity_definition =
             manifest.get_activity_definition(reference_id).await?;
 
@@ -1972,7 +1941,6 @@ impl ActivityStoreInterface {
         };
 
         let activity_detail = ActivityDetail {
-            index_id,
             id: activity_id,
             period,
             map_name,

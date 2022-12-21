@@ -38,10 +38,11 @@ FLAGS:
             Print out additional information
 
 OPTIONS:
-    -a, --activity-index <activity-index>
-            The index of the activity to display data about
+    -a, --activity-id <activity-id>
+            The activity id of the activity to display data about
 
-            By default, the last activity will be displayed. The index can be retrieved from other dcli apps, such as
+            By default, the last activity will be displayed. The index can be retrieved
+    /// from other dcli apps, such as dcliah, or directly from the sqlite datastore.
             dcliah, or directly from the sqlite datastore.
     -k, --api-key <api-key>
             API key from Bungie required for some actions.

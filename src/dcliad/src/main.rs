@@ -538,12 +538,12 @@ struct Opt {
     #[structopt(long = "weapon-count", short = "w", default_value = "5")]
     weapon_count: u32,
 
-    /// The index of the activity to display data about
+    /// The activity id of the activity to display data about
     ///
     /// By default, the last activity will be displayed. The index can be retrieved
     /// from other dcli apps, such as dcliah, or directly from the sqlite datastore.
     #[structopt(long = "activity-index", short = "a")]
-    activity_index: Option<u32>,
+    activity_id: Option<i64>,
 
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
     ///
@@ -633,8 +633,8 @@ async fn main() {
         };
     }
 
-    let data_result = match opt.activity_index {
-        Some(e) => store.retrieve_activity_by_index(e, &mut manifest).await,
+    let data_result = match opt.activity_id {
+        Some(e) => store.retrieve_activity(e, &mut manifest).await,
         None => {
             store
                 .retrieve_last_activity(

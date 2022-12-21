@@ -62,8 +62,7 @@ CREATE TABLE IF NOT EXISTS  "character" (
 );
 
 CREATE TABLE IF NOT EXISTS "main"."activity" (
-    "id"	        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-    "activity_id"	INTEGER UNIQUE NOT NULL,
+    "activity_id"	INTEGER PRIMARY KEY UNIQUE NOT NULL,
     "period"        TEXT NOT NULL,
     "mode"          INTEGER NOT NULL,
     "platform"      INTEGER NOT NULL,
@@ -78,7 +77,7 @@ CREATE TABLE IF NOT EXISTS "main"."modes" (
     UNIQUE("mode", "activity"),
 
     FOREIGN KEY ("activity")
-        REFERENCES "activity" ("id")
+        REFERENCES "activity" ("activity_id")
         ON DELETE CASCADE
 );
 
@@ -92,7 +91,7 @@ CREATE TABLE IF NOT EXISTS "main"."team_result" (
     UNIQUE("team_id", "activity"),
 
     FOREIGN KEY ("activity")
-        REFERENCES "activity" ("id")
+        REFERENCES "activity" ("activity_id")
         ON DELETE CASCADE
 );
 
@@ -158,7 +157,7 @@ CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
     UNIQUE("activity", "character"),
 
     FOREIGN KEY ("activity")
-        REFERENCES "activity" ("id")
+        REFERENCES "activity" ("activity_id")
         ON DELETE CASCADE,
 
     FOREIGN KEY ("character")

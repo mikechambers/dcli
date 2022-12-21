@@ -165,7 +165,7 @@ pub struct DestinyHistoricalStatsActivity {
     #[serde(rename = "isPrivate")]
     pub is_private: bool,
 
-    /// The platform the activitity was played on
+    /// The platform the activity was played on
     #[serde(rename = "membershipType")]
     pub membership_type: Platform,
 }

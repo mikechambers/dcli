@@ -275,7 +275,7 @@ fn print_default(
             grenades.to_string(),
             melees.to_string(),
             mercy_str,
-            activity.activity_detail.index_id.to_string(),
+            activity.activity_detail.id,
             col_w = col_w,
             map_col_w=map_col_w,
             str_col_w=str_col_w,

@@ -581,7 +581,6 @@ pub struct ExtendedCruciblePlayerActivityPerformances {
 
 #[derive(Debug, Clone)]
 pub struct ActivityDetail {
-    pub index_id: u32,
     pub id: i64,
     pub period: DateTime<Utc>,
     pub map_name: String,
