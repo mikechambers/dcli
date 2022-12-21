@@ -473,8 +473,7 @@ impl ActivityStoreInterface {
 
         for c in characters.characters {
             let character_id = &c.id;
-            let character_row_id = self
-                .insert_character(&c.id, &c.class_type, &member.id)
+            self.insert_character(&c.id, &c.class_type, &member.id)
                 .await?;
             tell::progress!("{}", format!("[{}]", c.class_type).to_uppercase());
 
@@ -482,18 +481,17 @@ impl ActivityStoreInterface {
             //however, passing the db ids, lets us optimize a lot of the sql, and avoid
             //some extra calls to the DB
 
-            let a = self.sync_activities(character_row_id).await?;
+            let a = self.sync_activities(character_id).await?;
 
             let _b = self
                 .update_activity_queue(
-                    character_row_id,
                     &member.id,
                     character_id,
                     &member.platform,
                 )
                 .await?;
 
-            let c = self.sync_activities(character_row_id).await?;
+            let c = self.sync_activities(character_id).await?;
 
             total_synced += a.total_synced + c.total_synced;
             total_in_queue += (a.total_available + c.total_available)
@@ -511,7 +509,7 @@ impl ActivityStoreInterface {
     /// download results from ids in queue, and return number of items synced
     async fn sync_activities(
         &mut self,
-        character_row_id: i32,
+        character_id: &i64,
     ) -> Result<SyncResult, Error> {
         let mut ids: Vec<i64> = Vec::new();
 
@@ -527,7 +525,7 @@ impl ActivityStoreInterface {
                         character = ? AND synced = 0
                 "#,
             )
-            .bind(character_row_id.to_string())
+            .bind(character_id)
             .fetch(&mut self.db);
 
             //todo: could probably get this without looping through entire set
@@ -550,8 +548,7 @@ impl ActivityStoreInterface {
         for id in ids {
             match self.get_activity_row_id(id).await {
                 Ok(_) => {
-                    self.remove_from_activity_queue(&character_row_id, &id)
-                        .await?;
+                    self.remove_from_activity_queue(character_id, &id).await?;
                     continue;
                 }
                 Err(_) => filtered_ids.push(id),
@@ -617,7 +614,7 @@ impl ActivityStoreInterface {
                     Ok(e) => {
                         match e {
                             Some(mut e) => match self
-                                .insert_activity(&mut e, character_row_id)
+                                .insert_activity(&mut e, character_id)
                                 .await
                             {
                                 Ok(_e) => {
@@ -674,7 +671,6 @@ impl ActivityStoreInterface {
 
     async fn update_activity_queue(
         &mut self,
-        character_row_id: i32,
         member_id: &i64,
         character_id: &i64,
         platform: &Platform,
@@ -682,7 +678,6 @@ impl ActivityStoreInterface {
         //TODO catch errors so we can continue?
         let prv_result = self
             ._update_activity_queue(
-                character_row_id,
                 member_id,
                 character_id,
                 platform,
@@ -692,7 +687,6 @@ impl ActivityStoreInterface {
 
         let pub_result = self
             ._update_activity_queue(
-                character_row_id,
                 member_id,
                 character_id,
                 platform,
@@ -726,14 +720,12 @@ impl ActivityStoreInterface {
     //updates activity id queue with ids which have not been synced
     async fn _update_activity_queue(
         &mut self,
-        character_row_id: i32,
         member_id: &i64,
         character_id: &i64,
         platform: &Platform,
         mode: &Mode,
     ) -> Result<SyncResult, Error> {
-        let max_id: i64 =
-            self.get_max_activity_id(character_row_id, mode).await?;
+        let max_id: i64 = self.get_max_activity_id(character_id, mode).await?;
 
         let result = self
             .api_interface
@@ -805,7 +797,7 @@ impl ActivityStoreInterface {
                 "INSERT or IGNORE into activity_queue ('activity_id', 'character') VALUES (?, ?)",
             )
             .bind(instance_id)
-            .bind(character_row_id)
+            .bind(character_id)
             .execute(&mut self.db)
             .await
             {
@@ -839,13 +831,13 @@ impl ActivityStoreInterface {
     async fn insert_activity(
         &mut self,
         data: &mut DestinyPostGameCarnageReportData,
-        character_row_id: i32,
+        character_id: &i64,
     ) -> Result<(), Error> {
         sqlx::query("BEGIN TRANSACTION;")
             .execute(&mut self.db)
             .await?;
 
-        match self._insert_activity(data, character_row_id).await {
+        match self._insert_activity(data, character_id).await {
             Ok(_e) => {
                 sqlx::query("COMMIT;").execute(&mut self.db).await?;
                 Ok(())
@@ -1019,31 +1011,8 @@ impl ActivityStoreInterface {
     async fn _insert_activity(
         &mut self,
         data: &mut DestinyPostGameCarnageReportData,
-        character_row_id: i32,
+        character_id: &i64,
     ) -> Result<(), Error> {
-        //NOTE: We shouldnt need the check below, as we check for this before
-        //we retrieve activites. But right now, keeping it here just as extra safety
-        //so data doesn't get in some weird state.
-        //this means we have an extra DB call (get_activity_row) for each insert
-        /*
-        match self
-            .get_activity_row_id(data.activity_details.instance_id)
-            .await
-        {
-            Ok(_e) => {
-                //If we have already synced it, remove it from queue
-                self.remove_from_activity_queue(
-                    &character_row_id,
-                    &data.activity_details.instance_id,
-                )
-                .await?;
-
-                return Ok(());
-            }
-            Err(_e) => (),
-        };
-        */
-
         self.fix_pgcr_data(data);
 
         /*
@@ -1125,20 +1094,19 @@ impl ActivityStoreInterface {
 
             let class_type = CharacterClass::from_hash(entry.player.class_hash);
 
-            let character_row_id = self
-                .insert_character(&entry.character_id, &class_type, &member.id)
+            self.insert_character(&entry.character_id, &class_type, &member.id)
                 .await?;
 
             self._insert_character_activity_stats(
                 entry,
-                character_row_id,
-                activity_row_id,
+                &entry.character_id,
+                &activity_row_id,
             )
             .await?;
         }
 
         self.remove_from_activity_queue(
-            &character_row_id,
+            character_id,
             &data.activity_details.instance_id,
         )
         .await?;
@@ -1149,8 +1117,8 @@ impl ActivityStoreInterface {
     async fn _insert_character_activity_stats(
         &mut self,
         entry: &DestinyPostGameCarnageReportEntry,
-        character_row_id: i32,
-        activity_row_id: i32,
+        character_id: &i64,
+        activity_row_id: &i32,
     ) -> Result<(), Error> {
         let char_data = entry;
 
@@ -1204,7 +1172,7 @@ impl ActivityStoreInterface {
         //shouldnt be an issue, there is a chance we could lose precision when
         //converting some of the IDS. so we just do this to be consistent.
         //TODO: should think about losing data when pulling out of DB
-        .bind(character_row_id as i32) //character
+        .bind(character_id) //character
         .bind(char_data.values.assists as i32) //assists
         .bind(char_data.values.score as i32) //score
         .bind(char_data.values.kills as i32) //kiis
@@ -1245,7 +1213,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(activity_row_id)
-        .bind(character_row_id)
+        .bind(character_id)
         .fetch_one(&mut self.db)
         .await?;
 
@@ -1301,7 +1269,7 @@ impl ActivityStoreInterface {
 
     async fn remove_from_activity_queue(
         &mut self,
-        character_row_id: &i32,
+        character_id: &i64,
         instance_id: &i64,
     ) -> Result<(), Error> {
         sqlx::query(
@@ -1311,7 +1279,7 @@ impl ActivityStoreInterface {
             WHERE character = ? and activity_id = ?
         "#,
         )
-        .bind(character_row_id.to_string())
+        .bind(character_id)
         .bind(instance_id)
         .execute(&mut self.db)
         .await?;
@@ -1428,14 +1396,13 @@ impl ActivityStoreInterface {
         character_id: &i64,
         class_type: &CharacterClass,
         member_id: &i64,
-    ) -> Result<i32, Error> {
-        let mut row_id = -1;
+    ) -> Result<(), Error> {
         let mut stored_class_type = CharacterClass::Unknown;
 
-        //can select just on character id
+        //first, check if it exists and has valid data
         match sqlx::query(
             r#"
-            SELECT id, class from "character" where character_id=? and member=?
+            SELECT class from "character" where character_id=? and member=?
         "#,
         )
         .bind(character_id)
@@ -1444,22 +1411,22 @@ impl ActivityStoreInterface {
         .await
         {
             Ok(e) => {
-                row_id = e.try_get("id")?;
                 let class_id = e.try_get("class")?;
                 stored_class_type = CharacterClass::from_id(class_id);
             }
             Err(_e) => {}
         };
 
-        //data exists and its valid
-        if row_id != -1 && stored_class_type != CharacterClass::Unknown {
-            return Ok(row_id);
+        //data exists and its valid, so we don't need to insert
+        if stored_class_type != CharacterClass::Unknown {
+            return Ok(());
         }
 
+        //didn't exists or had invalid data (from API), so lets insert
         sqlx::query(
             r#"
             INSERT into "character" ("character_id", "member", "class") VALUES (?, ?, ?)
-            ON CONFLICT (character_id, member) DO UPDATE
+            ON CONFLICT (character_id) DO UPDATE
             set class = ?
         "#,
         )
@@ -1470,26 +1437,12 @@ impl ActivityStoreInterface {
         .execute(&mut self.db)
         .await?;
 
-        if row_id == -1 {
-            let row = sqlx::query(
-                r#"
-                SELECT id from "character" where character_id=? and member=?
-            "#,
-            )
-            .bind(character_id)
-            .bind(member_id)
-            .fetch_one(&mut self.db)
-            .await?;
-
-            row_id = row.try_get("id")?;
-        }
-
-        Ok(row_id)
+        Ok(())
     }
 
     async fn get_max_activity_id(
         &mut self,
-        character_row_id: i32,
+        character_id: &i64,
         mode: &Mode,
     ) -> Result<i64, Error> {
         let rows = sqlx::query(
@@ -1501,7 +1454,7 @@ impl ActivityStoreInterface {
             INNER JOIN
                 activity ON activity_queue.activity_id = activity.activity_id,
                 character_activity_stats ON character_activity_stats.activity = activity.id,
-                character on character_activity_stats.character = character.id,
+                character on character_activity_stats.character = character.character_id,
                 modes ON modes.activity = activity.id and modes.mode = ?
             WHERE
                 character_activity_stats.character = ? AND
@@ -1510,8 +1463,8 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(mode.as_id().to_string())
-        .bind(character_row_id.to_string())
-        .bind(character_row_id.to_string())
+        .bind(character_id)
+        .bind(character_id)
         .fetch_all(&mut self.db)
         .await?;
 
@@ -1544,8 +1497,8 @@ impl ActivityStoreInterface {
                 activity
             INNER JOIN
                 character_activity_stats on character_activity_stats.activity = activity.id,
-                character on character_activity_stats.character = character.id,
-                member on character.member = member.id
+                character on character_activity_stats.character = character.character_id,
+                member on character.member = member.member_id
             WHERE
                 activity.id = ?
             ORDER BY
@@ -1585,6 +1538,7 @@ impl ActivityStoreInterface {
             .get_sql_character_class_id(member, character_selection)
             .await?;
 
+        //TODO: Can remove some of the member clauses below
         let activity_row = match sqlx::query(
                 r#"
                 SELECT
@@ -1599,8 +1553,8 @@ impl ActivityStoreInterface {
                     activity
                 INNER JOIN
                     character_activity_stats on character_activity_stats.activity = activity.id,
-                    character on character_activity_stats.character = character.id,
-                    member on character.member = member.id AND member.member_id = ?
+                    character on character_activity_stats.character = character.character_id,
+                    member on character.member = member.member_id AND member.member_id = ?
                 WHERE
                     exists (select 1 from modes where activity = activity.id and mode = ?) AND
                     (character.class = ? OR 4 = ?) 
@@ -1714,8 +1668,8 @@ impl ActivityStoreInterface {
             FROM
                 character_activity_stats
             INNER JOIN
-                character on character_activity_stats.character = character.id,
-                member on character.member = member.id
+                character on character_activity_stats.character = character.character_id,
+                member on character.member = member.member_id
             WHERE
                 activity = ?
             "#,
@@ -1764,8 +1718,8 @@ impl ActivityStoreInterface {
             character_activity_stats
         INNER JOIN
             activity ON character_activity_stats.activity = activity.id,
-            character on character_activity_stats.character = character.id,
-            member on member.id = character.member
+            character on character_activity_stats.character = character.character_id,
+            member on member.member_id = character.member
         WHERE 
             member.member_id = ?
         ORDER BY
@@ -1773,7 +1727,7 @@ impl ActivityStoreInterface {
             limit 1
         "#,
         )
-        .bind(member.id.to_string())
+        .bind(member.id)
         .fetch_one(&mut self.db)
         .await?;
 
@@ -1874,8 +1828,8 @@ impl ActivityStoreInterface {
             character_activity_stats
         INNER JOIN
             activity ON character_activity_stats.activity = activity.id,
-            character on character_activity_stats.character = character.id,
-            member on member.id = character.member
+            character on character_activity_stats.character = character.character_id,
+            member on member.member_id = character.member
         WHERE
             member.member_id = ? AND
             (character.class = ? OR 4 = ?) AND
@@ -1885,7 +1839,7 @@ impl ActivityStoreInterface {
             not exists (select 1 from modes where activity = activity.id and mode = ?)
         "#,
         )
-        .bind(member.id.to_string())
+        .bind(member.id)
         .bind(class_id)
         .bind(class_id)
         .bind(time_period.get_start().to_rfc3339())
@@ -1931,8 +1885,8 @@ impl ActivityStoreInterface {
                 character_activity_stats
             INNER JOIN
                 activity ON character_activity_stats.activity = activity.id,
-                character on character_activity_stats.character = character.id,
-                member on member.id = character.member
+                character on character_activity_stats.character = character.character_id,
+                member on member.member_id = character.member
             WHERE
                 member.member_id = ? AND
                 (character.class = ? OR 4 = ?) AND
@@ -1944,7 +1898,7 @@ impl ActivityStoreInterface {
                 activity.period DESC
             "#,
         )
-        .bind(member.id.to_string())
+        .bind(member.id)
         .bind(class_id)
         .bind(class_id)
         .bind(time_period.get_start().to_rfc3339())

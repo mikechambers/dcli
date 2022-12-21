@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS "main"."activity_queue" (
     "character"	INTEGER NOT NULL,
     UNIQUE("activity_id", "character"),
     FOREIGN KEY ("character")
-        REFERENCES character ("id")
+        REFERENCES character ("character_id")
         ON DELETE CASCADE
 );
 
@@ -52,12 +52,10 @@ CREATE TABLE IF NOT EXISTS  "member" (
 );
 
 CREATE TABLE IF NOT EXISTS  "character" (
-    "id"	        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-    "character_id"	INTEGER NOT NULL,
+    "character_id"	INTEGER PRIMARY KEY UNIQUE NOT NULL,
     "member"	    INTEGER NOT NULL,
     "class"         INTEGER NOT NULL,
 
-    UNIQUE("character_id", "member"),
     FOREIGN KEY ("member")
         REFERENCES "member" ("member_id")
         ON DELETE CASCADE
@@ -164,7 +162,7 @@ CREATE TABLE IF NOT EXISTS "main"."character_activity_stats" (
         ON DELETE CASCADE,
 
     FOREIGN KEY ("character")
-        REFERENCES "character" ("id")
+        REFERENCES "character" ("character_id")
         ON DELETE CASCADE
 );
 
