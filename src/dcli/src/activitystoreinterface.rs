@@ -1562,7 +1562,7 @@ impl ActivityStoreInterface {
         activity_row: &sqlx::sqlite::SqliteRow,
         manifest: &mut ManifestInterface,
     ) -> Result<CrucibleActivity, Error> {
-        let activity_row_id: i32 = activity_row.try_get("activity_index_id")?;
+        let activity_id: i64 = activity_row.try_get("activity_id")?;
 
         let team_rows = sqlx::query(
             r#"
@@ -1574,7 +1574,7 @@ impl ActivityStoreInterface {
                 activity = ?
             "#,
         )
-        .bind(activity_row_id)
+        .bind(activity_id)
         .fetch_all(&mut self.db)
         .await?;
 
@@ -1646,7 +1646,7 @@ impl ActivityStoreInterface {
                 activity = ?
             "#,
         )
-        .bind(activity_row_id)
+        .bind(activity_id)
         .fetch_all(&mut self.db)
         .await?;
 

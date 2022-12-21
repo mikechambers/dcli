@@ -542,7 +542,7 @@ struct Opt {
     ///
     /// By default, the last activity will be displayed. The index can be retrieved
     /// from other dcli apps, such as dcliah, or directly from the sqlite datastore.
-    #[structopt(long = "activity-index", short = "a")]
+    #[structopt(long = "activity-id", short = "a")]
     activity_id: Option<i64>,
 
     /// Directory where Destiny 2 manifest and activity database files are stored. (optional)
