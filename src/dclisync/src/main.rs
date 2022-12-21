@@ -300,6 +300,7 @@ async fn main() {
 
         tell::update!("Removed");
         tell::update!("-------------");
+
         for player in players.iter() {
             match store.remove_player_from_sync(player).await {
                 Ok(_) => tell::update!("{}", player.get_bungie_name()),

@@ -221,8 +221,8 @@ impl ActivityStoreInterface {
 
     pub async fn update_sync_entry(
         &mut self,
-        member_row_id: i32,
-    ) -> Result<i32, Error> {
+        member_id: &i64,
+    ) -> Result<(), Error> {
         let timestamp: String = Utc::now().to_rfc3339();
 
         sqlx::query(
@@ -232,26 +232,13 @@ impl ActivityStoreInterface {
             set last_sync = ?
         "#,
         )
-        .bind(member_row_id)
+        .bind(member_id)
         .bind(&timestamp)
         .bind(&timestamp)
         .execute(&mut self.db)
         .await?;
 
-        //TODO: what to do if exists? (on conflict)
-
-        let row = sqlx::query(
-            r#"
-            SELECT id from "sync" where member=?
-        "#,
-        )
-        .bind(member_row_id)
-        .fetch_one(&mut self.db)
-        .await?;
-
-        let rowid: i32 = row.try_get("id")?;
-
-        Ok(rowid)
+        Ok(())
     }
 
     pub async fn find_member(
@@ -343,12 +330,12 @@ impl ActivityStoreInterface {
         let rows = sqlx::query(
             r#"
             SELECT
-                member.id, member_id, platform_id, display_name, 
-                bungie_display_name, bungie_display_name_code
+                "member_id", "platform_id", "display_name", 
+                "bungie_display_name", "bungie_display_name_code"
             FROM
-                member
+                "member"
             INNER JOIN
-                sync on member.id = sync.member
+                sync on member.member_id = sync.member
         "#,
         )
         .fetch_all(&mut self.db)
@@ -375,7 +362,7 @@ impl ActivityStoreInterface {
     ) -> Result<(), Error> {
         let row_option = sqlx::query(
             r#"
-            SELECT "id" from "member" 
+            SELECT "member_id" from "member" 
             where bungie_display_name = ? and bungie_display_name_code = ?
         "#,
         )
@@ -384,9 +371,9 @@ impl ActivityStoreInterface {
         .fetch_optional(&mut self.db)
         .await?;
 
-        let id: u32 = match row_option {
+        let id: i64 = match row_option {
             Some(e) => {
-                let id: u32 = e.try_get("id")?;
+                let id: i64 = e.try_get("member_id")?;
                 id
             }
             None => {
@@ -411,7 +398,7 @@ impl ActivityStoreInterface {
         member: &Member,
     ) -> Result<(), Error> {
         self.begin_transaction().await?;
-        let row_id = match self.insert_member(member).await {
+        match self.insert_member(member).await {
             Ok(e) => e,
             Err(e) => {
                 self.rollback_transaction().await?;
@@ -419,7 +406,7 @@ impl ActivityStoreInterface {
             }
         };
 
-        match self.update_sync_entry(row_id).await {
+        match self.update_sync_entry(&member.id).await {
             Ok(e) => e,
             Err(e) => {
                 self.rollback_transaction().await?;
@@ -472,8 +459,7 @@ impl ActivityStoreInterface {
 
         let characters = player_info.characters;
 
-        let member_row_id = self
-            .insert_member(&player_info.user_info.to_member())
+        self.insert_member(&player_info.user_info.to_member())
             .await?;
 
         let mut total_synced = 0;
@@ -488,7 +474,7 @@ impl ActivityStoreInterface {
         for c in characters.characters {
             let character_id = &c.id;
             let character_row_id = self
-                .insert_character_id(&c.id, &c.class_type, member_row_id)
+                .insert_character(&c.id, &c.class_type, &member.id)
                 .await?;
             tell::progress!("{}", format!("[{}]", c.class_type).to_uppercase());
 
@@ -514,7 +500,7 @@ impl ActivityStoreInterface {
                 - (a.total_synced + c.total_synced);
         }
 
-        self.update_sync_entry(member_row_id).await?;
+        self.update_sync_entry(&member.id).await?;
 
         Ok(SyncResult {
             total_synced,
@@ -1134,18 +1120,13 @@ impl ActivityStoreInterface {
 
         for entry in &data.entries {
             //todo: not sure if we should use membership type of crosssave orveride
-            let member_row_id = self
-                .insert_member(&entry.player.user_info.to_member())
-                .await?;
+            let member = &entry.player.user_info.to_member();
+            self.insert_member(member).await?;
 
             let class_type = CharacterClass::from_hash(entry.player.class_hash);
 
             let character_row_id = self
-                .insert_character_id(
-                    &entry.character_id,
-                    &class_type,
-                    member_row_id,
-                )
+                .insert_character(&entry.character_id, &class_type, &member.id)
                 .await?;
 
             self._insert_character_activity_stats(
@@ -1356,7 +1337,7 @@ impl ActivityStoreInterface {
         Ok(id)
     }
 
-    async fn insert_member(&mut self, mem: &Member) -> Result<i32, Error> {
+    async fn insert_member(&mut self, mem: &Member) -> Result<(), Error> {
         let mut member = mem;
         let mut m = None;
         //check and see if data is missing (happens a lot with the API)
@@ -1365,12 +1346,10 @@ impl ActivityStoreInterface {
             || member.platform == Platform::Unknown
         {
             //if some data is missing, we see if we already have info on
-            //this member stored.
-
-            match self.get_member_row_id(member).await {
-                Ok(e) => return Ok(e),
-                Err(_e) => {}
-            };
+            //this member stored, if so dont update
+            if self.has_member(member).await {
+                return Ok(());
+            }
 
             //if the DCLI_FIX_DATA environment variable is set to true
             //the code will try and fix corrupt data with additional API
@@ -1410,47 +1389,45 @@ impl ActivityStoreInterface {
             set display_name = ?, bungie_display_name = ?, bungie_display_name_code = ?, platform_id = ?
         "#,
         )
-        .bind(member.id.to_string())
-        .bind(member.platform.as_id().to_string())
+        .bind(member.id)
+        .bind(member.platform.as_id())
         .bind(&member.name.display_name)
         .bind(&member.name.bungie_display_name)
         .bind(&member.name.bungie_display_name_code)
         .bind(&member.name.display_name)
         .bind(&member.name.bungie_display_name)
         .bind(&member.name.bungie_display_name_code)
-        .bind(member.platform.as_id().to_string())
+        .bind(member.platform.as_id())
         .execute(&mut self.db)
         .await?;
 
-        let row_id: i32 = self.get_member_row_id(member).await?;
-
-        Ok(row_id)
+        Ok(())
     }
 
-    async fn get_member_row_id(
-        &mut self,
-        member: &Member,
-    ) -> Result<i32, Error> {
-        let row = sqlx::query(
+    async fn has_member(&mut self, member: &Member) -> bool {
+        //TODO: Might be more efficient to do:
+        //SELECT EXISTS (SELECT 1 from "member" where member_id=?)
+        //https://stackoverflow.com/a/9756276
+        //although Exists always returns a result (0, 1)
+
+        let out = sqlx::query(
             r#"
-            SELECT id from "member" where member_id=?
+            SELECT member_id from "member" where member_id=?
         "#,
         )
-        .bind(member.id.to_string())
+        .bind(member.id)
         .fetch_one(&mut self.db)
-        .await?;
+        .await;
 
-        let rowid: i32 = row.try_get("id")?;
-
-        Ok(rowid)
+        out.is_ok()
     }
 
     //we really only need character id
-    async fn insert_character_id(
+    async fn insert_character(
         &mut self,
         character_id: &i64,
         class_type: &CharacterClass,
-        member_rowid: i32,
+        member_id: &i64,
     ) -> Result<i32, Error> {
         let mut row_id = -1;
         let mut stored_class_type = CharacterClass::Unknown;
@@ -1462,7 +1439,7 @@ impl ActivityStoreInterface {
         "#,
         )
         .bind(character_id)
-        .bind(format!("{}", member_rowid))
+        .bind(member_id)
         .fetch_one(&mut self.db)
         .await
         {
@@ -1486,10 +1463,10 @@ impl ActivityStoreInterface {
             set class = ?
         "#,
         )
-        .bind(character_id.to_string())
-        .bind(member_rowid)
-        .bind(class_type.as_id().to_string())
-        .bind(class_type.as_id().to_string())
+        .bind(character_id)
+        .bind(member_id)
+        .bind(class_type.as_id())
+        .bind(class_type.as_id())
         .execute(&mut self.db)
         .await?;
 
@@ -1499,8 +1476,8 @@ impl ActivityStoreInterface {
                 SELECT id from "character" where character_id=? and member=?
             "#,
             )
-            .bind(character_id.to_string())
-            .bind(member_rowid.to_string())
+            .bind(character_id)
+            .bind(member_id)
             .fetch_one(&mut self.db)
             .await?;
 

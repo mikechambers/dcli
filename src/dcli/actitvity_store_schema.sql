@@ -40,17 +40,15 @@ CREATE TABLE IF NOT EXISTS "sync" (
     "last_sync"   TEXT NOT NULL,
     UNIQUE("member"),
     FOREIGN KEY ("member")
-        REFERENCES "member" ("id")
+        REFERENCES "member" ("member_id")
 );
 
 CREATE TABLE IF NOT EXISTS  "member" (
-    "id"            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-    "member_id"	    INTEGER NOT NULL,
+    "member_id"	    INTEGER PRIMARY KEY UNIQUE NOT NULL,
     "platform_id"	INTEGER NOT NULL,
     "display_name"  TEXT,
     "bungie_display_name"  TEXT,
-    "bungie_display_name_code"  TEXT,
-    UNIQUE("member_id")
+    "bungie_display_name_code"  TEXT
 );
 
 CREATE TABLE IF NOT EXISTS  "character" (
@@ -61,7 +59,7 @@ CREATE TABLE IF NOT EXISTS  "character" (
 
     UNIQUE("character_id", "member"),
     FOREIGN KEY ("member")
-        REFERENCES "member" ("id")
+        REFERENCES "member" ("member_id")
         ON DELETE CASCADE
 );
 
