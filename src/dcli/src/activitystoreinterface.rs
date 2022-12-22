@@ -79,7 +79,7 @@ const STORE_DB_SCHEMA: &str = include_str!("../actitvity_store_schema.sql");
 const DCLI_FIX_DATA: &str = "DCLI_FIX_DATA";
 
 //number of simultaneous requests we make to server when retrieving activity history
-const PGCR_REQUEST_CHUNK_AMOUNT: usize = 24;
+const PGCR_REQUEST_CHUNK_AMOUNT: usize = 50;
 
 const DB_SCHEMA_VERSION: i32 = 10;
 const NO_TEAMS_INDEX: i32 = 253;
@@ -128,8 +128,7 @@ impl ActivityStoreInterface {
             .connect()
             .await?;
 
-        //is this an existing db, or a completly new one / first time?
-
+        //is this an existing db, or a completely new one / first time?
         let should_update_schema = match sqlx::query(
             r#"
             SELECT max(version) as max_version FROM version
@@ -552,20 +551,6 @@ impl ActivityStoreInterface {
         let total_available = ids.len() as u32;
         let mut total_synced = 0;
 
-        //let s = if ids.len() == 1 { "y" } else { "ies" };
-        /*tell::progress!(format!(
-            "Retrieving details for {} activit{}\n",
-            ids.len(),
-            s
-        ));
-
-        tell::progress!(format!(
-            "Each dot represents {} activities\n",
-            PGCR_REQUEST_CHUNK_AMOUNT
-        ));
-        //tell::progress!("[");
-        */
-
         use std::fmt::Write;
 
         let pb = if Tell::is_active(TellLevel::Progress) {
@@ -647,14 +632,6 @@ impl ActivityStoreInterface {
                 .execute(&mut self.db)
                 .await?;
         }
-
-        //tell::progress!("]\n");
-        /*tell::progress!(format!(
-            "{} of {} synced ({}%)\n",
-            total_synced,
-            total_available,
-            calculate_percent(total_synced, total_available).floor()
-        ));*/
 
         Ok(SyncResult {
             total_available,
@@ -1006,9 +983,15 @@ impl ActivityStoreInterface {
         data: &mut DestinyPostGameCarnageReportData,
         character_id: &i64,
     ) -> Result<(), Error> {
-        self.fix_pgcr_data(data);
-
         let activity_id = data.activity_details.instance_id;
+
+        /*
+        if self.has_activity(&activity_id).await {
+            return Ok(());
+        }
+        */
+
+        self.fix_pgcr_data(data);
 
         //throw an error if we try to insert and it already exists. That should never
         //happen since we check for that above.
@@ -1282,6 +1265,7 @@ impl ActivityStoreInterface {
     async fn insert_member(&mut self, mem: &Member) -> Result<(), Error> {
         let mut member = mem;
         let mut m = None;
+
         //check and see if data is missing (happens a lot with the API)
         if member.name.bungie_display_name.is_none()
             || member.name.bungie_display_name_code.is_none()
@@ -1309,14 +1293,18 @@ impl ActivityStoreInterface {
                     let cards = c.destiny_memberships;
 
                     for card in cards.iter() {
+                        /*
                         if card.cross_save_override == card.membership_type {
                             m = Some(card.to_member());
                             break;
+                        }*/
+
+                        if card.membership_id == member.id {
+                            m = Some(card.to_member());
                         }
                     }
 
-                    //if we get here, then we need to go to the server to try and get the
-                    //data
+                    //got updated data from server
                     if m.is_some() {
                         member = m.as_ref().unwrap();
                     }
@@ -1395,8 +1383,8 @@ impl ActivityStoreInterface {
         if stored_class_type != CharacterClass::Unknown {
             return Ok(());
         }
-
         //didn't exists or had invalid data (from API), so lets insert
+
         sqlx::query(
             r#"
             INSERT into "character" ("character_id", "member", "class") VALUES (?, ?, ?)
