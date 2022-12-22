@@ -161,7 +161,7 @@ fn print_default(
     let wl_col_w = 14;
     let map_col_w = 18;
     let str_col_w = 7;
-    let id_col_w = 8;
+    let id_col_w = 14;
 
     //TODO: maybe format this to yellow background
     let header = format!(
@@ -275,7 +275,7 @@ fn print_default(
             grenades.to_string(),
             melees.to_string(),
             mercy_str,
-            activity.activity_detail.id,
+            activity.activity_detail.id.to_string(),
             col_w = col_w,
             map_col_w=map_col_w,
             str_col_w=str_col_w,
