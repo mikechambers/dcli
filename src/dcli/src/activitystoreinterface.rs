@@ -985,12 +985,6 @@ impl ActivityStoreInterface {
     ) -> Result<(), Error> {
         let activity_id = data.activity_details.instance_id;
 
-        /*
-        if self.has_activity(&activity_id).await {
-            return Ok(());
-        }
-        */
-
         self.fix_pgcr_data(data);
 
         //throw an error if we try to insert and it already exists. That should never
@@ -1050,7 +1044,7 @@ impl ActivityStoreInterface {
         }
 
         for entry in &data.entries {
-            //todo: not sure if we should use membership type of crosssave orveride
+            //todo: not sure if we should use membership type of crosssave override
             let member = &entry.player.user_info.to_member();
             self.insert_member(member).await?;
 
@@ -1131,7 +1125,7 @@ impl ActivityStoreInterface {
             "#,
         )
         //we for through format, as otherwise we have to cast to i32, and while
-        //shouldnt be an issue, there is a chance we could lose precision when
+        //shouldn't be an issue, there is a chance we could lose precision when
         //converting some of the IDS. so we just do this to be consistent.
         //TODO: should think about losing data when pulling out of DB
         .bind(character_id) //character
@@ -1166,8 +1160,6 @@ impl ActivityStoreInterface {
         .bind(char_data.player.emblem_hash) //activity
         .execute(&mut self.db)
         .await?;
-
-        //character_activity_stats
 
         let row = sqlx::query(
             r#"
@@ -1335,11 +1327,6 @@ impl ActivityStoreInterface {
     }
 
     async fn has_member(&mut self, member: &Member) -> bool {
-        //TODO: Might be more efficient to do:
-        //SELECT EXISTS (SELECT 1 from "member" where member_id=?)
-        //https://stackoverflow.com/a/9756276
-        //although Exists always returns a result (0, 1)
-
         let out = sqlx::query(
             r#"
             SELECT member_id from "member" where member_id=?
@@ -1352,7 +1339,7 @@ impl ActivityStoreInterface {
         out.is_ok()
     }
 
-    //we really only need character id
+    //todo: dont really need member id
     async fn insert_character(
         &mut self,
         character_id: &i64,
