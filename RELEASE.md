@@ -1,6 +1,6 @@
 # dcli Release Notes
 
-## v0.96.0
+## v0.96.0 December 25, 2022
 
 -   Refactored database schema. This is major refactor that should make it easier to work with the data. It will require data to be re-synced.
 
