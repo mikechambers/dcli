@@ -664,6 +664,15 @@ impl ActivityStoreInterface {
             )
             .await?;
 
+        let pub_result = self
+            ._update_activity_queue(
+                member_id,
+                character_id,
+                platform,
+                &Mode::IronBannerZoneControl,
+            )
+            .await?;
+
         Ok(pub_result + prv_result)
     }
 
@@ -916,6 +925,12 @@ impl ActivityStoreInterface {
         activity: &mut DestinyPostGameCarnageReportData,
     ) -> bool {
         let mut was_updated = false;
+
+        if activity.activity_details.mode == Mode::IronBannerZoneControl {
+            self.add_to_modes(activity, Mode::AllPvP);
+            self.add_to_modes(activity, Mode::IronBanner);
+            was_updated = true;
+        }
 
         //known instances of private matches not having mode set correct
         if activity.activity_details.mode == Mode::None {
@@ -1394,8 +1409,32 @@ impl ActivityStoreInterface {
         character_id: &i64,
         mode: &Mode,
     ) -> Result<i64, Error> {
-        let rows = sqlx::query(
-            r#"
+        //when AllPVP, need to exclude IronBannerZoneControl
+
+        let mut query = "";
+        if mode == &Mode::AllPvP {
+            query = r#"
+            SELECT
+                activity_queue.activity_id as max_activity_id
+            FROM
+                "activity_queue"
+            INNER JOIN
+                activity ON activity_queue.activity_id = activity.activity_id,
+                character_activity_stats ON character_activity_stats.activity = activity.activity_id,
+                character on character_activity_stats.character = character.character_id,
+                modes ON modes.activity = activity.activity_id
+            WHERE
+            exists (select 1 from modes where activity = activity.activity_id and mode = ?) AND
+            not exists (select 1 from modes where activity = activity.activity_id and mode = 91) AND
+                character_activity_stats.character = ? AND
+                activity_queue.character = ?
+
+
+                
+            ORDER BY activity.period DESC LIMIT 1
+        "#
+        } else {
+            query = r#"
             SELECT
                 activity_queue.activity_id as max_activity_id
             FROM
@@ -1409,13 +1448,15 @@ impl ActivityStoreInterface {
                 character_activity_stats.character = ? AND
                 activity_queue.character = ?
             ORDER BY activity.period DESC LIMIT 1
-        "#,
-        )
-        .bind(mode.as_id())
-        .bind(character_id)
-        .bind(character_id)
-        .fetch_all(&mut self.db)
-        .await?;
+        "#
+        };
+
+        let rows = sqlx::query(query)
+            .bind(mode.as_id())
+            .bind(character_id)
+            .bind(character_id)
+            .fetch_all(&mut self.db)
+            .await?;
 
         if rows.is_empty() {
             return Ok(0);
