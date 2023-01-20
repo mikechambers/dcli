@@ -1,5 +1,5 @@
 /*
-* Copyright 2022 Mike Chambers
+* Copyright 2023 Mike Chambers
 * https://github.com/mikechambers/dcli
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -214,7 +214,8 @@ struct Opt {
     ///
     /// Addition values available are crimsom_doubles, supremacy, survival,
     /// countdown, all_doubles, doubles, private_clash, private_control,
-    /// private_survival, private_rumble, showdown, lockdown, iron_banner_rift,
+    /// private_survival, private_rumble, showdown_competitive, survival_competitive,
+    /// rift_competitive, showdown, lockdown, iron_banner_rift,
     /// zone_control, iron_banner_zone_control, rift,
     /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine
     #[structopt(long = "mode", short = "M", 

@@ -66,7 +66,7 @@ OPTIONS:
             rumble, pvp_competitive, quickplay and trials_of_osiris.
 
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
-            private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, rift, iron_banner_rift, zone_control, iron_banner_zone_control
+            private_clash, private_control, private_survival, private_rumble, showdown_competitive, survival_competitive, rift_competitive, showdown, lockdown, scorched, rift, iron_banner_rift, zone_control, iron_banner_zone_control
             scorched_team, breakthrough, clash_quickplay, trials_of_the_nine [default: all_pvp]
     -n, --name <name>
             Bungie name for player
@@ -77,9 +77,9 @@ OPTIONS:
             The number of weapons to display details for [default: 5]
 ```
 
-| ARGUMENT | OPTIONS                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| --mode   | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown, lockdown, scorched, rift, iron_banner_rift, zone_control, iron_banner_zone_control, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
+| ARGUMENT | OPTIONS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --mode   | all_pvp (default), control, clash, elimination, mayhem, iron_banner, all_private, rumble, pvp_competitive, quickplay and trials_of_osiris, crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles private_clash, private_control, private_survival, private_rumble, showdown_competitive, survival_competitive, rift_competitive, showdown, lockdown, scorched, rift, iron_banner_rift, zone_control, iron_banner_zone_control, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine |
 
 Manifest can be downloaded and synced with from [dclim](https://github.com/mikechambers/dcli/tree/main/src/dclim).
 

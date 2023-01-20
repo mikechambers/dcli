@@ -1,5 +1,11 @@
 # dcli Release Notes
 
+## v0.97.0 January 20, 2023
+
+-   Removed some workaround for API bugs for Competitive and IronBanner (API was fixed). IronBanner matches now appear.
+-   Added support for RIFT_COMPETITIVE, SHOWDOWN_COMPETITIVE and SURVIVAL_COMPETITIVE modes. Before, you could only search for all competitive.
+    -Recommended that you delete data store and resync from scratch.
+
 ## v0.96.0 December 25, 2022
 
 -   Refactored database schema. This is major refactor that should make it easier to work with the data. It will require data to be re-synced.
