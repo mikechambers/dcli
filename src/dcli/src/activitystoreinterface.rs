@@ -936,7 +936,7 @@ impl ActivityStoreInterface {
         }
 
         //API doesn't include modes for competitive rift, showdown, survival, which
-        //makes it difficult to distinnquish between comp and no comp modes
+        //makes it difficult to distinguish between comp and no comp modes
         //We add these modes ourselves
         if activity.activity_details.director_activity_hash
             == COMPETITIVE_PVP_ACTIVITY_HASH
