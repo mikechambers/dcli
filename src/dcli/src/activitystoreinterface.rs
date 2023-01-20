@@ -962,14 +962,6 @@ impl ActivityStoreInterface {
             }
         }
 
-        if activity.activity_details.mode == Mode::Rift
-            && activity.activity_details.director_activity_hash == 2754695317
-        {
-            self.add_mode(activity, Mode::RiftCompetitive);
-            self.add_to_modes(activity, Mode::RiftCompetitive);
-            was_updated = true;
-        }
-
         if activity.activity_details.mode == Mode::PrivateMatchesAll {
             was_updated = self.fix_private_match(activity);
         }
