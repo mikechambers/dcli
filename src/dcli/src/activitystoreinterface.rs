@@ -27,7 +27,6 @@ use tell::{Tell, TellLevel};
 use chrono::{DateTime, Utc};
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 
-use crate::enums::moment::Moment;
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
 use crate::utils::{
     format_error, COMPETITIVE_PVP_ACTIVITY_HASH,
@@ -936,43 +935,43 @@ impl ActivityStoreInterface {
             }
         }
 
-        if activity.activity_details.mode == Mode::PrivateMatchesAll {
-            was_updated = self.fix_private_match(activity);
+        //API doesn't include modes for competitive rift, showdown, survival, which
+        //makes it difficult to distinnquish between comp and no comp modes
+        //We add these modes ourselves
+        if activity.activity_details.director_activity_hash
+            == COMPETITIVE_PVP_ACTIVITY_HASH
+            || activity.activity_details.director_activity_hash
+                == FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH
+        {
+            if activity.activity_details.mode == Mode::Rift {
+                self.add_mode(activity, Mode::RiftCompetitive);
+                self.add_to_modes(activity, Mode::RiftCompetitive);
+                was_updated = true;
+            }
+
+            if activity.activity_details.mode == Mode::Showdown {
+                self.add_mode(activity, Mode::ShowdownCompetitive);
+                self.add_to_modes(activity, Mode::ShowdownCompetitive);
+                was_updated = true;
+            }
+
+            if activity.activity_details.mode == Mode::Survival {
+                self.add_mode(activity, Mode::SurvivalCompetitive);
+                self.add_to_modes(activity, Mode::SurvivalCompetitive);
+                was_updated = true;
+            }
         }
 
-        //comp fixes for Season of the Seraph
-        //todo: test if new data is still broken
-        if chrono::offset::Utc::now()
-            > Moment::SeasonOfTheSeraph.get_date_time()
+        if activity.activity_details.mode == Mode::Rift
+            && activity.activity_details.director_activity_hash == 2754695317
         {
-            if activity.activity_details.mode == Mode::None
-                && (activity.activity_details.director_activity_hash
-                    == COMPETITIVE_PVP_ACTIVITY_HASH
-                    || activity.activity_details.director_activity_hash
-                        == FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH)
-            {
-                //fix for https://github.com/Bungie-net/api/issues/1740
-                //We assume a competitive pvp activity with no mode is Rift
+            self.add_mode(activity, Mode::RiftCompetitive);
+            self.add_to_modes(activity, Mode::RiftCompetitive);
+            was_updated = true;
+        }
 
-                //println!("found competitive pvp activity with mode None");
-
-                self.add_to_modes(activity, Mode::PvPCompetitive);
-                self.add_mode(activity, Mode::Rift);
-
-                was_updated = true;
-            } else if activity.activity_details.mode == Mode::Showdown {
-                //fix for https://github.com/Bungie-net/api/issues/1740
-                //println!("found activity with mode Showdown");
-
-                if !activity
-                    .activity_details
-                    .modes
-                    .contains(&Mode::PvPCompetitive)
-                {
-                    activity.activity_details.modes.push(Mode::PvPCompetitive);
-                    was_updated = true;
-                }
-            }
+        if activity.activity_details.mode == Mode::PrivateMatchesAll {
+            was_updated = self.fix_private_match(activity);
         }
 
         was_updated

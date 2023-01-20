@@ -116,6 +116,11 @@ pub enum Mode {
     ZoneControl = 89,
     IronBannerRift = 90,
     IronBannerZoneControl = 91,
+
+    //Added by dcli
+    RiftCompetitive = 700,
+    ShowdownCompetitive = 701,
+    SurvivalCompetitive = 702,
 }
 
 impl Mode {
@@ -206,6 +211,10 @@ impl Mode {
             90 => Ok(Mode::IronBannerRift),
             91 => Ok(Mode::IronBannerZoneControl),
 
+            700 => Ok(Mode::RiftCompetitive),
+            701 => Ok(Mode::ShowdownCompetitive),
+            702 => Ok(Mode::SurvivalCompetitive),
+
             _ => Err(Error::UnknownEnumValue),
         }
     }
@@ -276,6 +285,9 @@ impl Mode {
             || *self == Mode::ZoneControl
             || *self == Mode::IronBannerRift
             || *self == Mode::IronBannerZoneControl
+            || *self == Mode::RiftCompetitive
+            || *self == Mode::ShowdownCompetitive
+            || *self == Mode::SurvivalCompetitive
     }
 
     pub fn is_private(&self) -> bool {
@@ -384,6 +396,9 @@ impl FromStr for Mode {
             "iron_banner_rift" => Ok(Mode::IronBannerRift),
             "zone_control" => Ok(Mode::ZoneControl),
             "iron_banner_zone_control" => Ok(Mode::IronBannerZoneControl),
+            "rift_competitive" => Ok(Mode::RiftCompetitive),
+            "showdown_competitive" => Ok(Mode::ShowdownCompetitive),
+            "survival_competitive" => Ok(Mode::SurvivalCompetitive),
 
             _ => Err("Unknown Mode type"),
         }
@@ -477,6 +492,9 @@ impl fmt::Display for Mode {
             Mode::ZoneControl => "Zone Control",
             Mode::IronBannerRift => "Iron Banner Rift",
             Mode::IronBannerZoneControl => "Iron Banner Zone Control",
+            Mode::RiftCompetitive => "Rift Competitive",
+            Mode::ShowdownCompetitive => "Showdown Competitive",
+            Mode::SurvivalCompetitive => "Survival Competitive",
         };
 
         write!(f, "{}", out)
