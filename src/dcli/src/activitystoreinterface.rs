@@ -465,8 +465,7 @@ impl ActivityStoreInterface {
 
         for c in characters.characters {
             let character_id = &c.id;
-            self.insert_character(&c.id, &c.class_type, &member.id)
-                .await?;
+            self.insert_character(&c.id, &c.class_type, &member).await?;
             tell::progress!("{}", format!("[{}]", c.class_type).to_uppercase());
 
             //these calls could be a little more general purpose by taking api ids and not db ids.
@@ -1041,7 +1040,7 @@ impl ActivityStoreInterface {
 
             let class_type = CharacterClass::from_hash(entry.player.class_hash);
 
-            self.insert_character(&entry.character_id, &class_type, &member.id)
+            self.insert_character(&entry.character_id, &class_type, &member)
                 .await?;
 
             self._insert_character_activity_stats(
@@ -1335,9 +1334,11 @@ impl ActivityStoreInterface {
         &mut self,
         character_id: &i64,
         class_type: &CharacterClass,
-        member_id: &i64,
+        member: &Member,
     ) -> Result<(), Error> {
         let mut stored_class_type = CharacterClass::Unknown;
+
+        let member_id = &member.id;
 
         //first, check if it exists and has valid data
         match sqlx::query(
@@ -1361,7 +1362,6 @@ impl ActivityStoreInterface {
         if stored_class_type != CharacterClass::Unknown {
             return Ok(());
         }
-        //didn't exists or had invalid data (from API), so lets insert
 
         sqlx::query(
             r#"

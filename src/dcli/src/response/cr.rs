@@ -20,15 +20,34 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-pub mod activities;
-pub mod character;
-pub mod cr;
-pub mod drs;
-pub mod ggms;
-pub mod gmd;
-pub mod gpr;
-pub mod manifest;
-pub mod pgcr;
-pub mod sdpr;
-pub mod stats;
-pub mod utils;
+use serde_derive::{Deserialize, Serialize};
+
+use crate::enums::mode::Mode;
+use crate::response::character::CharacterData;
+use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
+use crate::response::utils::str_to_datetime;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetCharacterResponse {
+    #[serde(rename = "Response")]
+    pub response: Option<CharacterResponse>, //should this be an option?
+
+    #[serde(flatten)]
+    pub status: DestinyResponseStatus,
+}
+
+impl IsDestinyAPIResponse for GetCharacterResponse {
+    fn get_status(&self) -> &DestinyResponseStatus {
+        &self.status
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CharacterResponse {
+    pub character: Option<CharacterDataFieldData>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CharacterDataFieldData {
+    pub data: Option<CharacterData>,
+}
