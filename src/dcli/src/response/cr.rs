@@ -22,10 +22,8 @@
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::enums::mode::Mode;
 use crate::response::character::CharacterData;
 use crate::response::drs::{DestinyResponseStatus, IsDestinyAPIResponse};
-use crate::response::utils::str_to_datetime;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetCharacterResponse {

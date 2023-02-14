@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.98.0
+
+-   Added support for Lightfall (lightfall), and Season of Definance (season_of_definance) moments.
+
 ## v0.97.0 January 20, 2023
 
 -   Removed some workaround for API bugs for Competitive and IronBanner (API was fixed). IronBanner matches now appear.
