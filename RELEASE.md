@@ -1,5 +1,8 @@
 # dcli Release Notes
 
+## v0.99.1 May 24, 2023
+-   Updating Mac build environment to macos-11.
+
 ## v0.99.0 May 24, 2023
 -   Added support for Season of the Deep (season_of_the_deep) moment.
 
