@@ -74,6 +74,7 @@ pub enum Moment {
     SeasonOfTheSeraph,
     Lightfall,
     SeasonOfDefiance,
+    SeasonOfTheDeep
 }
 
 impl Moment {
@@ -166,6 +167,11 @@ impl Moment {
             Moment::SeasonOfDefiance => {
                 Utc.with_ymd_and_hms(2023, 2, 28, 17, 0, 0).unwrap()
             }
+
+            
+            Moment::SeasonOfTheDeep => {
+                Utc.with_ymd_and_hms(2023, 5, 23, 17, 0, 0).unwrap()
+            }
         }
     }
 }
@@ -217,6 +223,7 @@ impl FromStr for Moment {
             "season_of_the_seraph" => Ok(Moment::SeasonOfTheSeraph),
             "lightfall" => Ok(Moment::Lightfall),
             "season_of_defiance" => Ok(Moment::SeasonOfDefiance),
+            "season_of_the_deep" => Ok(Moment::SeasonOfTheDeep),
 
             _ => Err("Unknown Moment type"),
         }
@@ -265,6 +272,7 @@ impl fmt::Display for Moment {
             Moment::SeasonOfTheSeraph => "Season of the Seraph",
             Moment::Lightfall => "Lightfall",
             Moment::SeasonOfDefiance => "Season of Defiance",
+            Moment::SeasonOfTheDeep => "Season of the Deep"
         };
 
         write!(f, "{}", out)

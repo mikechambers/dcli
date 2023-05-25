@@ -1,5 +1,8 @@
 # dcli Release Notes
 
+## v0.99.0 May 24, 2023
+-   Added support for Season of the Deep (season_of_the_deep) moment.
+
 ## v0.98.0 March 3 2023
 
 -   Added support for Lightfall (lightfall), and Season of Definance (season_of_defiance) moments.
