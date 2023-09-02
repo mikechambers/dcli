@@ -508,7 +508,7 @@ struct Opt {
     /// private_survival, private_rumble, showdown_competitive, survival_competitive,
     /// rift_competitive, showdown, lockdown, iron_banner_rift,
     /// zone_control, iron_banner_zone_control, rift,
-    /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine
+    /// scorched, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine, relic
     #[structopt(long = "mode", short = "M", 
         parse(try_from_str=parse_and_validate_mode), default_value = "all_pvp")]
     mode: Mode,
