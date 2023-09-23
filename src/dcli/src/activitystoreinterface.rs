@@ -20,6 +20,7 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+use std::ops::Index;
 use std::str::FromStr;
 use std::{collections::HashMap, path::Path};
 use tell::{Tell, TellLevel};
@@ -29,8 +30,8 @@ use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
 use crate::utils::{
-    format_error, COMPETITIVE_PVP_ACTIVITY_HASH,
-    FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH,
+    format_error, CHECKMATE_CONTROL_ACTIVITY_HASH,
+    COMPETITIVE_PVP_ACTIVITY_HASH, FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH,
 };
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
@@ -817,7 +818,26 @@ impl ActivityStoreInterface {
         }
     }
 
-    fn add_mode(
+    fn remove_from_modes(
+        &self,
+        activity: &mut DestinyPostGameCarnageReportData,
+        mode: Mode,
+    ) {
+        let o: Option<usize> = activity
+            .activity_details
+            .modes
+            .iter()
+            .position(|m| m == &mode);
+
+        if o.is_none() {
+            return;
+        }
+
+        let index: usize = o.unwrap();
+        activity.activity_details.modes.remove(index);
+    }
+
+    fn set_mode(
         &self,
         activity: &mut DestinyPostGameCarnageReportData,
         mode: Mode,
@@ -850,53 +870,53 @@ impl ActivityStoreInterface {
 
         match activity.activity_details.director_activity_hash {
             4242525388 | 559852413 => {
-                self.add_mode(activity, Mode::PrivateMatchesClash);
+                self.set_mode(activity, Mode::PrivateMatchesClash);
                 self.add_to_modes(activity, Mode::Clash);
             }
             1859507212 | 3959500077 => {
-                self.add_mode(activity, Mode::PrivateMatchesControl);
+                self.set_mode(activity, Mode::PrivateMatchesControl);
                 self.add_to_modes(activity, Mode::Control);
             }
             2491884566 | 3076038389 => {
-                self.add_mode(activity, Mode::PrivateMatchesRumble);
+                self.set_mode(activity, Mode::PrivateMatchesRumble);
                 self.add_to_modes(activity, Mode::Rumble);
             }
             29726492 | 1543557109 => {
-                self.add_mode(activity, Mode::PrivateMatchesMayhem);
+                self.set_mode(activity, Mode::PrivateMatchesMayhem);
                 self.add_to_modes(activity, Mode::AllMayhem);
             }
             2143799792 | 2903879783 => {
-                self.add_mode(activity, Mode::PrivateMatchesSurvival);
+                self.set_mode(activity, Mode::PrivateMatchesSurvival);
                 self.add_to_modes(activity, Mode::Survival);
             }
             2923123473 => {
-                self.add_mode(activity, Mode::Elimination);
+                self.set_mode(activity, Mode::Elimination);
             }
             3530889940 => {
-                self.add_mode(activity, Mode::Momentum);
+                self.set_mode(activity, Mode::Momentum);
             }
             84526555 => {
-                self.add_mode(activity, Mode::ScorchedTeam);
+                self.set_mode(activity, Mode::ScorchedTeam);
                 self.add_to_modes(activity, Mode::Scorched);
             }
             3344441646 => {
-                self.add_mode(activity, Mode::Scorched);
+                self.set_mode(activity, Mode::Scorched);
             }
             1887396202 => {
-                self.add_mode(activity, Mode::Showdown);
+                self.set_mode(activity, Mode::Showdown);
             }
             1978116819 => {
-                self.add_mode(activity, Mode::Rift);
+                self.set_mode(activity, Mode::Rift);
             }
             2404525917 => {
-                self.add_mode(activity, Mode::Breakthrough);
+                self.set_mode(activity, Mode::Breakthrough);
             }
             1218001922 => {
-                self.add_mode(activity, Mode::PrivateMatchesSupremacy);
+                self.set_mode(activity, Mode::PrivateMatchesSupremacy);
                 self.add_to_modes(activity, Mode::Supremacy);
             }
             3767360267 => {
-                self.add_mode(activity, Mode::PrivateMatchesCountdown);
+                self.set_mode(activity, Mode::PrivateMatchesCountdown);
                 self.add_to_modes(activity, Mode::Countdown);
             }
             _ => was_updated = false,
@@ -919,15 +939,15 @@ impl ActivityStoreInterface {
         if activity.activity_details.mode == Mode::None {
             match activity.activity_details.director_activity_hash {
                 2259621230 => {
-                    self.add_mode(activity, Mode::Rumble);
+                    self.set_mode(activity, Mode::Rumble);
                     was_updated = true;
                 }
                 903584917 | 3847433434 => {
-                    self.add_mode(activity, Mode::AllMayhem);
+                    self.set_mode(activity, Mode::AllMayhem);
                     was_updated = true;
                 }
                 1113451448 => {
-                    self.add_mode(activity, Mode::Rift);
+                    self.set_mode(activity, Mode::Rift);
                     was_updated = true;
                 }
                 _ => (),
@@ -943,22 +963,36 @@ impl ActivityStoreInterface {
                 == FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH
         {
             if activity.activity_details.mode == Mode::Rift {
-                self.add_mode(activity, Mode::RiftCompetitive);
+                self.set_mode(activity, Mode::RiftCompetitive);
                 self.add_to_modes(activity, Mode::RiftCompetitive);
                 was_updated = true;
             }
 
             if activity.activity_details.mode == Mode::Showdown {
-                self.add_mode(activity, Mode::ShowdownCompetitive);
+                self.set_mode(activity, Mode::ShowdownCompetitive);
                 self.add_to_modes(activity, Mode::ShowdownCompetitive);
                 was_updated = true;
             }
 
             if activity.activity_details.mode == Mode::Survival {
-                self.add_mode(activity, Mode::SurvivalCompetitive);
+                self.set_mode(activity, Mode::SurvivalCompetitive);
                 self.add_to_modes(activity, Mode::SurvivalCompetitive);
                 was_updated = true;
             }
+        }
+
+        //add support for checkmate (adding modes)
+
+        if activity.activity_details.director_activity_hash
+            == CHECKMATE_CONTROL_ACTIVITY_HASH
+        {
+            self.set_mode(activity, Mode::CheckmateControl);
+
+            self.add_to_modes(activity, Mode::CheckmateAll);
+            self.add_to_modes(activity, Mode::CheckmateControl);
+
+            self.remove_from_modes(activity, Mode::PvPQuickplay);
+            self.remove_from_modes(activity, Mode::ControlQuickplay);
         }
 
         if activity.activity_details.mode == Mode::PrivateMatchesAll {

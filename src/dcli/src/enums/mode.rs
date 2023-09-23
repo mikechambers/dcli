@@ -122,6 +122,11 @@ pub enum Mode {
     RiftCompetitive = 700,
     ShowdownCompetitive = 701,
     SurvivalCompetitive = 702,
+
+    CheckmateAll = 710,
+    CheckmateControl = 711,
+    CheckmateSurvival = 712,
+    CheckmateRumble = 713,
 }
 
 impl Mode {
@@ -217,6 +222,11 @@ impl Mode {
             701 => Ok(Mode::ShowdownCompetitive),
             702 => Ok(Mode::SurvivalCompetitive),
 
+            710 => Ok(Mode::CheckmateAll),
+            711 => Ok(Mode::CheckmateControl),
+            712 => Ok(Mode::CheckmateSurvival),
+            713 => Ok(Mode::CheckmateRumble),
+
             _ => Err(Error::UnknownEnumValue),
         }
     }
@@ -291,6 +301,10 @@ impl Mode {
             || *self == Mode::ShowdownCompetitive
             || *self == Mode::SurvivalCompetitive
             || *self == Mode::Relic
+            || *self == Mode::CheckmateAll
+            || *self == Mode::CheckmateControl
+            || *self == Mode::CheckmateSurvival
+            || *self == Mode::CheckmateRumble
     }
 
     pub fn is_private(&self) -> bool {
@@ -404,6 +418,11 @@ impl FromStr for Mode {
             "survival_competitive" => Ok(Mode::SurvivalCompetitive),
             "relic" => Ok(Mode::Relic),
 
+            "checkmate_all" => Ok(Mode::CheckmateAll),
+            "checkmate_control" => Ok(Mode::CheckmateControl),
+            "checkmate_survival" => Ok(Mode::CheckmateSurvival),
+            "checkmate_rumble" => Ok(Mode::CheckmateRumble),
+
             _ => Err("Unknown Mode type"),
         }
     }
@@ -500,6 +519,11 @@ impl fmt::Display for Mode {
             Mode::ShowdownCompetitive => "Showdown Competitive",
             Mode::SurvivalCompetitive => "Survival Competitive",
             Mode::Relic => "Relic",
+
+            Mode::CheckmateAll => "All Checkmate",
+            Mode::CheckmateControl => "Checkmate Control",
+            Mode::CheckmateSurvival => "Checkmate Survival",
+            Mode::CheckmateRumble => "Checkmate Rumble",
         };
 
         write!(f, "{}", out)

@@ -93,7 +93,7 @@ OPTIONS:
             rumble, pvp_competitive, quickplay and trials_of_osiris.
 
             Addition values available are crimsom_doubles, supremacy, survival, countdown, all_doubles, doubles,
-            private_clash, private_control, private_survival, private_rumble, showdown_competitive, survival_competitive, rift_competitive, showdown, lockdown, scorched, rift, iron_banner_rift,zone_control, iron_banner_zone_control, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine, relic [default: all_pvp]
+            private_clash, private_control, private_survival, private_rumble, showdown_competitive, survival_competitive, rift_competitive, showdown, lockdown, scorched, rift, iron_banner_rift,zone_control, iron_banner_zone_control, scorched_team, breakthrough, clash_quickplay, trials_of_the_nine, relic, checkmate_all, checkmate_control, checkmate_rumble, checkmate_survival [default: all_pvp]
     -T, --moment <moment>
             Start moment from which to pull activities from
 
