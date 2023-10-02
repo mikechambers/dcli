@@ -169,4 +169,8 @@ CREATE INDEX modes_activity_index ON modes (activity);
 CREATE INDEX character_activity_stats_char_index ON character_activity_stats (character);
 CREATE INDEX activity_period_index ON activity (period);
 
+CREATE INDEX idx_character_activity_stats_activity ON character_activity_stats(activity);
+
+CREATE INDEX idx_character_activity_stats_fireteam_id ON character_activity_stats(fireteam_id);
+
 COMMIT;
