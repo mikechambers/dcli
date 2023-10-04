@@ -1001,7 +1001,6 @@ impl ActivityStoreInterface {
             self.set_mode(activity, Mode::CheckmateSurvival);
 
             self.add_to_modes(activity, Mode::CheckmateAll);
-            self.add_to_modes(activity, Mode::CheckmateSurvival);
 
             self.remove_from_modes(activity, Mode::PvPCompetitive)
         }
