@@ -20,7 +20,6 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-use std::ops::Index;
 use std::str::FromStr;
 use std::{collections::HashMap, path::Path};
 use tell::{Tell, TellLevel};
@@ -31,7 +30,8 @@ use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
 use crate::utils::{
     format_error, CHECKMATE_CONTROL_ACTIVITY_HASH,
-    COMPETITIVE_PVP_ACTIVITY_HASH, FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH,
+    CHECKMATE_SURVIVAL_ACTIVITY_HASH, COMPETITIVE_PVP_ACTIVITY_HASH,
+    FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH,
 };
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
@@ -989,10 +989,21 @@ impl ActivityStoreInterface {
             self.set_mode(activity, Mode::CheckmateControl);
 
             self.add_to_modes(activity, Mode::CheckmateAll);
-            self.add_to_modes(activity, Mode::CheckmateControl);
+            //self.add_to_modes(activity, Mode::CheckmateControl);
 
             self.remove_from_modes(activity, Mode::PvPQuickplay);
             self.remove_from_modes(activity, Mode::ControlQuickplay);
+        }
+
+        if activity.activity_details.director_activity_hash
+            == CHECKMATE_SURVIVAL_ACTIVITY_HASH
+        {
+            self.set_mode(activity, Mode::CheckmateSurvival);
+
+            self.add_to_modes(activity, Mode::CheckmateAll);
+            self.add_to_modes(activity, Mode::CheckmateSurvival);
+
+            self.remove_from_modes(activity, Mode::PvPCompetitive)
         }
 
         if activity.activity_details.mode == Mode::PrivateMatchesAll {

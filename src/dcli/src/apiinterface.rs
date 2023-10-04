@@ -717,6 +717,7 @@ impl ApiInterface {
 
             let len = t.len() as i32;
 
+            //todo: this seems redundant from check above
             if len == 0 {
                 break;
             }
