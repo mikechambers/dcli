@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.99.4 September 22,2023
+
+-   Added support for Checkmate Survival (checkmate_survival), and Checkmate Control (checkmate_control)
+
 ## v0.99.3 September 22,2023
 
 -   Added support for Checkmate All (checkmate_all), and Checkmate Control (checkmate_control)
