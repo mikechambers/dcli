@@ -122,11 +122,14 @@ pub enum Mode {
     RiftCompetitive = 700,
     ShowdownCompetitive = 701,
     SurvivalCompetitive = 702,
+    CountdownCompetitive = 703,
 
     CheckmateAll = 710,
     CheckmateControl = 711,
     CheckmateSurvival = 712,
     CheckmateRumble = 713,
+    CheckmateClash = 714,
+    CheckmateCountdown = 715,
 }
 
 impl Mode {
@@ -221,11 +224,14 @@ impl Mode {
             700 => Ok(Mode::RiftCompetitive),
             701 => Ok(Mode::ShowdownCompetitive),
             702 => Ok(Mode::SurvivalCompetitive),
+            703 => Ok(Mode::CountdownCompetitive),
 
             710 => Ok(Mode::CheckmateAll),
             711 => Ok(Mode::CheckmateControl),
             712 => Ok(Mode::CheckmateSurvival),
             713 => Ok(Mode::CheckmateRumble),
+            714 => Ok(Mode::CheckmateClash),
+            715 => Ok(Mode::CheckmateCountdown),
 
             _ => Err(Error::UnknownEnumValue),
         }
@@ -300,11 +306,14 @@ impl Mode {
             || *self == Mode::RiftCompetitive
             || *self == Mode::ShowdownCompetitive
             || *self == Mode::SurvivalCompetitive
+            || *self == Mode::CountdownCompetitive
             || *self == Mode::Relic
             || *self == Mode::CheckmateAll
             || *self == Mode::CheckmateControl
             || *self == Mode::CheckmateSurvival
             || *self == Mode::CheckmateRumble
+            || *self == Mode::CheckmateClash
+            || *self == Mode::CheckmateCountdown
     }
 
     pub fn is_private(&self) -> bool {
@@ -416,12 +425,15 @@ impl FromStr for Mode {
             "rift_competitive" => Ok(Mode::RiftCompetitive),
             "showdown_competitive" => Ok(Mode::ShowdownCompetitive),
             "survival_competitive" => Ok(Mode::SurvivalCompetitive),
+            "countdown_competitive" => Ok(Mode::CountdownCompetitive),
             "relic" => Ok(Mode::Relic),
 
             "checkmate_all" => Ok(Mode::CheckmateAll),
             "checkmate_control" => Ok(Mode::CheckmateControl),
             "checkmate_survival" => Ok(Mode::CheckmateSurvival),
             "checkmate_rumble" => Ok(Mode::CheckmateRumble),
+            "checkmate_clash" => Ok(Mode::CheckmateClash),
+            "checkmate_countdown" => Ok(Mode::CheckmateCountdown),
 
             _ => Err("Unknown Mode type"),
         }
@@ -518,12 +530,15 @@ impl fmt::Display for Mode {
             Mode::RiftCompetitive => "Rift Competitive",
             Mode::ShowdownCompetitive => "Showdown Competitive",
             Mode::SurvivalCompetitive => "Survival Competitive",
+            Mode::CountdownCompetitive => "Countdown Competitive",
             Mode::Relic => "Relic",
 
             Mode::CheckmateAll => "All Checkmate",
             Mode::CheckmateControl => "Checkmate Control",
             Mode::CheckmateSurvival => "Checkmate Survival",
             Mode::CheckmateRumble => "Checkmate Rumble",
+            Mode::CheckmateClash => "Checkmate Clash",
+            Mode::CheckmateCountdown => "Checkmate Countdown",
         };
 
         write!(f, "{}", out)

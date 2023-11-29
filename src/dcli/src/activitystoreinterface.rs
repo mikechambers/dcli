@@ -29,9 +29,10 @@ use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 
 use crate::playeractivitiessummary::PlayerActivitiesSummary;
 use crate::utils::{
-    format_error, CHECKMATE_CONTROL_ACTIVITY_HASH,
-    CHECKMATE_SURVIVAL_ACTIVITY_HASH, COMPETITIVE_PVP_ACTIVITY_HASH,
-    FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH,
+    format_error, CHECKMATE_CLASH_ACTIVITY_HASH,
+    CHECKMATE_CONTROL_ACTIVITY_HASHES, CHECKMATE_COUNTDOWN_ACTIVITY_HASH,
+    CHECKMATE_RUMBLE_ACTIVITY_HASH, CHECKMATE_SURVIVAL_ACTIVITY_HASH,
+    COMPETITIVE_PVP_ACTIVITY_HASH, FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH,
 };
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
@@ -979,30 +980,58 @@ impl ActivityStoreInterface {
                 self.add_to_modes(activity, Mode::SurvivalCompetitive);
                 was_updated = true;
             }
+
+            if activity.activity_details.mode == Mode::Countdown {
+                self.set_mode(activity, Mode::CountdownCompetitive);
+                self.add_to_modes(activity, Mode::PvPCompetitive);
+                was_updated = true;
+            }
         }
 
         //add support for checkmate (adding modes)
 
-        if activity.activity_details.director_activity_hash
-            == CHECKMATE_CONTROL_ACTIVITY_HASH
+        if CHECKMATE_CONTROL_ACTIVITY_HASHES
+            .contains(&activity.activity_details.director_activity_hash)
         {
             self.set_mode(activity, Mode::CheckmateControl);
 
             self.add_to_modes(activity, Mode::CheckmateAll);
-            //self.add_to_modes(activity, Mode::CheckmateControl);
 
             self.remove_from_modes(activity, Mode::PvPQuickplay);
             self.remove_from_modes(activity, Mode::ControlQuickplay);
         }
 
         if activity.activity_details.director_activity_hash
+            == CHECKMATE_CLASH_ACTIVITY_HASH
+        {
+            self.set_mode(activity, Mode::CheckmateClash);
+            self.add_to_modes(activity, Mode::CheckmateAll);
+            self.remove_from_modes(activity, Mode::ClashQuickplay);
+            self.remove_from_modes(activity, Mode::PvPQuickplay);
+        }
+
+        if activity.activity_details.director_activity_hash
+            == CHECKMATE_COUNTDOWN_ACTIVITY_HASH
+        {
+            self.set_mode(activity, Mode::CheckmateCountdown);
+            self.add_to_modes(activity, Mode::CheckmateAll);
+            self.remove_from_modes(activity, Mode::PvPQuickplay);
+        }
+
+        if activity.activity_details.director_activity_hash
+            == CHECKMATE_RUMBLE_ACTIVITY_HASH
+        {
+            self.set_mode(activity, Mode::CheckmateRumble);
+            self.add_to_modes(activity, Mode::CheckmateAll);
+            self.remove_from_modes(activity, Mode::PvPQuickplay);
+        }
+
+        if activity.activity_details.director_activity_hash
             == CHECKMATE_SURVIVAL_ACTIVITY_HASH
         {
             self.set_mode(activity, Mode::CheckmateSurvival);
-
             self.add_to_modes(activity, Mode::CheckmateAll);
-
-            self.remove_from_modes(activity, Mode::PvPCompetitive)
+            self.remove_from_modes(activity, Mode::PvPCompetitive);
         }
 
         if activity.activity_details.mode == Mode::PrivateMatchesAll {

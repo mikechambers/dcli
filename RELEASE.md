@@ -1,5 +1,10 @@
 # dcli Release Notes
 
+## v0.99.5 November 28,2023
+
+-   Added support for Countdown Competitive (countdown_competitive), Checkmate Rumble (checkmate_control), Checkmate Clash (checkmate_clash), Checkmate Countdown (checkmate_countdown)
+-   Added support for Season of the Wish (season_of_the_wish)
+
 ## v0.99.4 September 22,2023
 
 -   Added support for Checkmate Survival (checkmate_survival), and Checkmate Control (checkmate_control)

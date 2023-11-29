@@ -1,7 +1,7 @@
 [package]
 name = "tell"
 #version
-version = "0.99.4"
+version = "0.99.5"
 authors = ["Mike Chambers <mikechambers@gmail.com>"]
 edition = "2018"
 description = "Simple library for handling different levels of user output for command line apps."
