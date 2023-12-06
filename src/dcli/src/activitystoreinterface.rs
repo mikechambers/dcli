@@ -33,6 +33,7 @@ use crate::utils::{
     CHECKMATE_CONTROL_ACTIVITY_HASHES, CHECKMATE_COUNTDOWN_ACTIVITY_HASH,
     CHECKMATE_RUMBLE_ACTIVITY_HASH, CHECKMATE_SURVIVAL_ACTIVITY_HASH,
     COMPETITIVE_PVP_ACTIVITY_HASH, FREELANCE_COMPETITIVE_PVP_ACTIVITY_HASH,
+    IRON_BANNER_TRIBUTE_ACTIVITY_HASH,
 };
 use crate::{
     crucible::{CrucibleActivity, Member, PlayerName, Team},
@@ -986,6 +987,13 @@ impl ActivityStoreInterface {
                 self.add_to_modes(activity, Mode::PvPCompetitive);
                 was_updated = true;
             }
+        }
+
+        if activity.activity_details.director_activity_hash
+            == IRON_BANNER_TRIBUTE_ACTIVITY_HASH
+        {
+            self.set_mode(activity, Mode::IronBannerTribute);
+            self.remove_from_modes(activity, Mode::IronBannerSupremacy);
         }
 
         //add support for checkmate (adding modes)

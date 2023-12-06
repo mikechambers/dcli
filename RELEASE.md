@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.99.6 December 5,2023
+
+-   Added support for Iron Banner Tribute (iron_banner_tribute)
+
 ## v0.99.5 November 28,2023
 
 -   Added support for Countdown Competitive (countdown_competitive), Checkmate Rumble (checkmate_control), Checkmate Clash (checkmate_clash), Checkmate Countdown (checkmate_countdown)

@@ -130,6 +130,8 @@ pub enum Mode {
     CheckmateRumble = 713,
     CheckmateClash = 714,
     CheckmateCountdown = 715,
+
+    IronBannerTribute = 800,
 }
 
 impl Mode {
@@ -232,6 +234,7 @@ impl Mode {
             713 => Ok(Mode::CheckmateRumble),
             714 => Ok(Mode::CheckmateClash),
             715 => Ok(Mode::CheckmateCountdown),
+            800 => Ok(Mode::IronBannerTribute),
 
             _ => Err(Error::UnknownEnumValue),
         }
@@ -314,6 +317,7 @@ impl Mode {
             || *self == Mode::CheckmateRumble
             || *self == Mode::CheckmateClash
             || *self == Mode::CheckmateCountdown
+            || *self == Mode::IronBannerTribute
     }
 
     pub fn is_private(&self) -> bool {
@@ -434,6 +438,7 @@ impl FromStr for Mode {
             "checkmate_rumble" => Ok(Mode::CheckmateRumble),
             "checkmate_clash" => Ok(Mode::CheckmateClash),
             "checkmate_countdown" => Ok(Mode::CheckmateCountdown),
+            "iron_banner_tribute" => Ok(Mode::IronBannerTribute),
 
             _ => Err("Unknown Mode type"),
         }
@@ -539,6 +544,7 @@ impl fmt::Display for Mode {
             Mode::CheckmateRumble => "Checkmate Rumble",
             Mode::CheckmateClash => "Checkmate Clash",
             Mode::CheckmateCountdown => "Checkmate Countdown",
+            Mode::IronBannerTribute => "Iron Banner Tribute",
         };
 
         write!(f, "{}", out)
