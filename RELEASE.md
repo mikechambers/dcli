@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.99.8 January 26, 2024
+
+-   Fixed crash when adding player with no player profiles.
+
 ## v0.99.7 January 26, 2024
 
 -   Added support for Iron Banner Fortress (iron_banner_fortress)

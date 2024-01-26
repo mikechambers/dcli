@@ -265,6 +265,10 @@ impl ApiInterface {
             //TODO: should we have an error here if no profiles are returned?
             //that should not happen
 
+            if linked_profiles.profiles.is_empty() {
+                return Err(Error::NoProfilesFound);
+            }
+
             let mut most_recent: &DestinyProfileUserInfoCard =
                 &linked_profiles.profiles[0];
 
