@@ -1,5 +1,9 @@
 # dcli Release Notes
 
+## v0.99.7 January 26, 2024
+
+-   Added support for Iron Banner Fortress (iron_banner_fortress)
+
 ## v0.99.6 December 5,2023
 
 -   Added support for Iron Banner Tribute (iron_banner_tribute)
