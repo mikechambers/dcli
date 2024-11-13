@@ -123,6 +123,7 @@ pub enum Mode {
     ShowdownCompetitive = 701,
     SurvivalCompetitive = 702,
     CountdownCompetitive = 703,
+    CollisionCompetitive = 704,
 
     CheckmateAll = 710,
     CheckmateControl = 711,
@@ -228,6 +229,7 @@ impl Mode {
             701 => Ok(Mode::ShowdownCompetitive),
             702 => Ok(Mode::SurvivalCompetitive),
             703 => Ok(Mode::CountdownCompetitive),
+            704 => Ok(Mode::CollisionCompetitive),
 
             710 => Ok(Mode::CheckmateAll),
             711 => Ok(Mode::CheckmateControl),
@@ -319,6 +321,7 @@ impl Mode {
             || *self == Mode::CheckmateRumble
             || *self == Mode::CheckmateClash
             || *self == Mode::CheckmateCountdown
+            || *self == Mode::CollisionCompetitive
             || *self == Mode::IronBannerTribute
             || *self == Mode::IronBannerFortress
     }
@@ -441,6 +444,8 @@ impl FromStr for Mode {
             "checkmate_rumble" => Ok(Mode::CheckmateRumble),
             "checkmate_clash" => Ok(Mode::CheckmateClash),
             "checkmate_countdown" => Ok(Mode::CheckmateCountdown),
+            "collision_competitive" => Ok(Mode::CollisionCompetitive),
+
             "iron_banner_tribute" => Ok(Mode::IronBannerTribute),
             "iron_banner_fortress" => Ok(Mode::IronBannerFortress),
 
@@ -540,6 +545,8 @@ impl fmt::Display for Mode {
             Mode::ShowdownCompetitive => "Showdown Competitive",
             Mode::SurvivalCompetitive => "Survival Competitive",
             Mode::CountdownCompetitive => "Countdown Competitive",
+            Mode::CollisionCompetitive => "Collision Competitive",
+
             Mode::Relic => "Relic",
 
             Mode::CheckmateAll => "All Checkmate",

@@ -1,5 +1,10 @@
 # dcli Release Notes
 
+## v0.99.9 November 12, 2024
+
+-   Fix API issues for competitive matches.
+-   Added Mode support for CollisionCompetitive (collision_competitive)
+
 ## v0.99.8 January 26, 2024
 
 -   Fixed crash when adding player with no player profiles.
