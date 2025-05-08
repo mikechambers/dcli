@@ -56,6 +56,8 @@ impl ApiClient {
 
         headers.insert("X-API-Key", HeaderValue::from_str(key).unwrap());
 
+        headers.insert("User-Agent", HeaderValue::from_static("dcli"));
+
         let client = Client::builder()
             .default_headers(headers)
             .timeout(std::time::Duration::from_secs(API_TIMEOUT))
